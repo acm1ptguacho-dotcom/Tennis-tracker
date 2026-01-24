@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Tennis Direction Tracker (Web v2)</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="layout">
+    <section class="courtPanel">
+      <div class="courtWrap">
+        <div id="court" class="court" aria-label="Pista de tenis con zonas">
+          <!-- Saque: sólo se habilita el cuadro cruzado correcto -->
+          <div id="serveTop" class="serveGrid serveGrid-top" aria-label="Cuadros de saque lado A"></div>
+          <div id="serveBottom" class="serveGrid serveGrid-bottom" aria-label="Cuadros de saque lado B"></div>
+
+          <!-- Rally: 3x3 por lado (singles) -->
+          <div id="gridA" class="zoneGrid zoneGrid-top" aria-label="Zonas rally lado A"></div>
+          <div id="gridB" class="zoneGrid zoneGrid-bottom" aria-label="Zonas rally lado B"></div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legendItem"><span class="dot dot-active"></span> Zona activa (donde toca el entrenador)</div>
+        <div class="legendItem"><span class="dot dot-inactive"></span> Zona inactiva</div>
+        <div class="legendItem"><b>Auto:</b> 1º golpe = <b>S</b> (saque), 2º = <b>R</b> (resto)</div>
+      </div>
+    </section>
+
+    <aside class="rightCol">
+      <header class="topbar">
+        <div class="names">
+      <div class="namebox">
+        <label>Jugador A</label>
+        <input id="nameA" value="Jugador A" />
+      </div>
+      <div class="namebox">
+        <label>Jugador B</label>
+        <input id="nameB" value="Jugador B" />
+      </div>
+
+      <div class="topActions">
+        <button type="button" id="btnHistory" class="chip chip-cta" onclick="window.__TDT?.openHistory?.()">Historial</button>
+        <button type="button" id="btnAnalytics" class="chip" onclick="window.__TDT?.openAnalytics?.()">Analíticas</button>
+        <button type="button" id="btnExport" class="chip" onclick="window.__TDT?.openExport?.()">Exportar</button>
+        <button type="button" id="btnFinishMatch" class="chip chip-warn">Finalizar partido</button>
+        <button type="button" id="btnResumeMatch" class="chip chip-cta hidden">Reanudar partido</button>
+        <button type="button" id="btnNewMatch" class="chip">Nuevo partido</button>
+      </div>
+    </div>
+
+    <div class="scoreboard">
+      <div class="scorecol">
+        <div class="scorelabel">Sets</div>
+        <div id="setsA" class="scoreval">0</div>
+      </div>
+      <div class="scorecol">
+        <div class="scorelabel">Games</div>
+        <div id="gamesA" class="scoreval">0</div>
+      </div>
+      <div class="scorecol">
+        <div class="scorelabel">Pts</div>
+        <div id="pointsA" class="scoreval">0</div>
+      </div>
+
+      <div class="mid">
+        <div id="centerStatus" class="status">DEUCE</div>
+        <div class="serverRow">
+          <button type="button" id="btnServer" class="chip">Servidor: A</button>
+          <span id="serveSide" class="chip chip-soft">SD</span>
+          <span id="tapHint" class="hint">Toca en lado B</span>
+          <span id="phaseHint" class="hint hint-strong">SAQUE</span>
+        </div>
+      </div>
+
+      <div class="scorecol">
+        <div class="scorelabel">Pts</div>
+        <div id="pointsB" class="scoreval">0</div>
+      </div>
+      <div class="scorecol">
+        <div class="scorelabel">Games</div>
+        <div id="gamesB" class="scoreval">0</div>
+      </div>
+      <div class="scorecol">
+        <div class="scorelabel">Sets</div>
+        <div id="setsB" class="scoreval">0</div>
+      </div>
+      </header>
+
+      <div class="sidePanel">
+      <div class="controls">
+        <button type="button" id="btnUndo" class="btn">DESHACER</button>
+        <button type="button" id="btnResetPoint" class="btn btn-soft">REINICIAR PUNTO</button>
+        <button type="button" id="btnRedoPoint" class="btn btn-soft">REHACER ÚLTIMO PUNTO</button>
+
+        <div class="divider"></div>
+
+        <!-- Botones SAQUE -->
+        <div id="serveButtons" class="grid2">
+          <button type="button" id="btnFault" class="btn btn-soft">FALTA</button>
+          <button type="button" id="btnDoubleFault" class="btn btn-red">DOBLE FALTA</button>
+        </div>
+
+        <!-- Botones FINALIZAR PUNTO -->
+        <div id="rallyButtons" class="hidden">
+          <div class="endTitle">Finalizar punto</div>
+          <div class="endGrid">
+            <div class="endCol">
+              <div class="endColTitle">A</div>
+              <button type="button" id="btnUNF_A" class="btn btn-soft">Error no forzado</button>
+              <button type="button" id="btnFOR_A" class="btn btn-soft">Error forzado</button>
+              <button type="button" id="btnWIN_A" class="btn btn-green">Winner</button>
+            </div>
+            <div class="endCol">
+              <div class="endColTitle">B</div>
+              <button type="button" id="btnUNF_B" class="btn btn-soft">Error no forzado</button>
+              <button type="button" id="btnFOR_B" class="btn btn-soft">Error forzado</button>
+              <button type="button" id="btnWIN_B" class="btn btn-green">Winner</button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="grid2">
+            <button type="button" id="btnPointA" class="btn btn-green">FIN PUNTO A</button>
+            <button type="button" id="btnPointB" class="btn btn-orange">FIN PUNTO B</button>
+          </div>
+        </div>
+
+        <div id="matchEndedBanner" class="banner hidden">
+          Partido finalizado. Abre <b>Historial</b> para revisar.
+        </div>
+      </div>
+
+      <div class="shotsPanel">
+        <div class="shotsHeader">
+          <div>
+            <div class="shotsTitle">Secuencia del punto</div>
+            <div id="shotsSub" class="shotsSub">0 eventos</div>
+          </div>
+          <button type="button" id="btnToBottom" class="btnTiny hidden" title="Ir al último">↓</button>
+        </div>
+
+        <div id="shotsScroll" class="shotsScroll">
+          <ol id="shotsList" class="shotsList"></ol>
+        </div>
+
+        <div class="shotsFooter">
+          <div class="kbd">Tip: scroll ↑/↓ para ver intercambios largos</div>
+        </div>
+      </div>
+
+      <div class="miniHelp">
+        <details>
+          <summary>Códigos rally</summary>
+          <div class="helpGrid">
+            <div><b>Dirección:</b> C=Cruzado, P=Paralelo, M=Medio</div>
+            <div><b>Profundidad:</b> P=Profundo, M=Medio, C=Corto</div>
+            <div><b>Ejemplos:</b> CP=Cruzado Profundo, CC=Cruzado Corto, PP=Paralelo Profundo</div>
+          </div>
+        </details>
+      </div>
+    </div>
+    </aside>
+  </main>
+
+  <!-- Modal Historial -->
+  <div id="historyModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalHeader">
+        <div>
+          <div class="modalTitle">Historial del partido</div>
+          <div id="historySub" class="modalSub">0 puntos</div>
+        </div>
+        <div class="modalActions">
+          <button type="button" id="btnCloseHistory" class="chip" onclick="window.__TDT?.closeHistory?.()">Cerrar</button>
+        </div>
+      </div>
+
+      <div class="modalBody">
+        <div class="historyLayout">
+          <div class="historyListWrap">
+            <div class="historyListTitle">Puntos</div>
+            <div id="historyList" class="historyList"></div>
+          </div>
+          <div class="historyDetailWrap">
+            <div class="historyListTitle">Detalle</div>
+            <div id="historyDetail" class="historyDetail">Selecciona un punto.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- Modal Analíticas -->
+  <div id="analyticsModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalHeader">
+        <div>
+          <div class="modalTitle">Analíticas del partido</div>
+          <div id="analyticsSub" class="modalSub">Top patrones</div>
+        </div>
+        <div class="modalActions">
+          <button id="btnCloseAnalytics" class="chip" type="button">Cerrar</button>
+        </div>
+      </div>
+
+      <div class="modalBody">
+        <div class="analyticsTopRow">
+          <div>
+            <div class="analyticsHint">Top 5 patrones (elige vista)</div>
+            <div class="analyticsHintSmall">Tip: “Efectivos” ordena por % de éxito (con mínimo de repeticiones).</div>
+          </div>
+          <div class="analyticsControls">
+            <label class="selectWrap">
+              <span>Vista</span>
+              <select id="analyticsView" class="select">
+                <option value="repeat" selected>Más repetidos</option>
+                <option value="effective">Más efectivos</option>
+                <option value="deucead">Deuce vs Ventaja</option>
+                <option value="server">Por servidor</option>
+              </select>
+            </label>
+
+            <label class="selectWrap" id="minOccWrap">
+              <span>Mín. ocurrencias</span>
+              <select id="minOcc" class="select">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="5">5</option>
+              </select>
+            </label>
+
+            <label class="toggle">
+              <input id="toggleIncludeServe" type="checkbox" checked />
+              <span>Incluir saque</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="analyticsContent"></div>
+
+        <div class="analyticsDetail">
+          <div class="historyListTitle">Detalle</div>
+          <div id="analyticsDetail" class="historyDetail">Selecciona un patrón.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal Exportar -->
+  <div id="exportModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalHeader">
+        <div>
+          <div class="modalTitle">Exportar puntos</div>
+          <div id="exportSub" class="modalSub">Tabla punto a punto</div>
+        </div>
+        <div class="modalActions">
+          <button id="btnCloseExport" class="chip" type="button">Cerrar</button>
+        </div>
+      </div>
+
+      <div class="modalBody">
+        <div class="exportTop">
+          <div class="exportOptions">
+            <label class="toggle">
+              <input id="exportIncludeServe" type="checkbox" checked />
+              <span>Incluir saque</span>
+            </label>
+            <label class="toggle">
+              <input id="exportSplitShots" type="checkbox" checked />
+              <span>Columnas por golpe</span>
+            </label>
+          </div>
+
+          <div class="exportBtns">
+            <button id="btnExportCSV" class="btn btn-primary" type="button">Descargar Excel (CSV)</button>
+            <button id="btnExportWord" class="btn btn-soft" type="button">Descargar Word (tabla)</button>
+            <button id="btnCopyTSV" class="btn btn-soft" type="button">Copiar tabla</button>
+          </div>
+        </div>
+
+        <div class="exportPreviewWrap">
+          <div class="historyListTitle">Vista previa</div>
+          <div id="exportPreview" class="exportPreview"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<footer class="footer">
+    <span>Web v2. Recomendado abrir en localhost para PWA/offline.</span>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+      });
+    }
+  </script>
+</body>
+</html>
