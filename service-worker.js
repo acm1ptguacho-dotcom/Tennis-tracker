@@ -1,31 +1,29 @@
-// Basic offline cache (v2.1)
-// Note: service workers work on https or localhost.
-const CACHE = "tennis-tracker-web-v2.21";
+
+const CACHE = "tennis-tracker-web-v2.25";
 const ASSETS = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
-  "./manifest.json",
-  "./assets/court.jpg",
+  "./assets/court_top_view.png"
 ];
 
 self.addEventListener("install", (e) => {
-  self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
-});
-
-self.addEventListener("activate", (e) => {
   e.waitUntil(
-    Promise.all([
-      self.clients.claim(),
-      caches.keys().then(keys => Promise.all(keys.map(k => (k !== CACHE) ? caches.delete(k) : null))),
-    ])
+    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(()=>self.skipWaiting())
   );
 });
-
+self.addEventListener("activate", (e) => {
+  e.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())
+  );
+});
 self.addEventListener("fetch", (e) => {
   e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request))
+    caches.match(e.request).then(r => r || fetch(e.request).then(res=>{
+      const copy = res.clone();
+      caches.open(CACHE).then(c=>c.put(e.request, copy)).catch(()=>{});
+      return res;
+    }).catch(()=>caches.match("./index.html")))
   );
 });
