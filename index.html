@@ -2,42 +2,43 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Tennis Direction Tracker</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<div class="app">
-  <!-- DIAGRAMA -->
-  <div class="mainLeft">
-    <div class="topbar topbarLeft">
-      <div class="chips">
-        <button class="chip ghost" id="btnTheme">Modo claro</button>
-        <button class="chip ghost" id="btnCoach">Modo entrenador</button>
-        <button class="chip" id="btnHistory">Historial</button>
-        <button class="chip" id="btnAnalytics">Analíticas</button>
-        <button class="chip" id="btnExport">Exportar</button>
-        <button class="chip warn" id="btnFinish">Finalizar partido</button>
-        <button class="chip good hidden" id="btnResume">Reanudar partido</button>
-        <button class="chip primary" id="btnNew">Nuevo partido</button>
-      </div>
-    </div>
+<div class="app single" id="appRoot">
 
-    <!-- nombres + marcador (compacto, sutil) -->
-    <div class="section scoreCompact" id="scoreSection">
-      <div class="row scoreNames">
-        <div class="playerCard compact">
-          <label>Jugador A</label>
+  <!-- TOP: menú + nombres + marcador (todo en la misma vista) -->
+  <header class="topbar topbarInline">
+    <div class="chips chipsScroll">
+      <button class="chip ghost" id="btnTheme" type="button">Modo claro</button>
+      <button class="chip ghost" id="btnCoach" type="button">Modo entrenador</button>
+
+      <button class="chip" id="btnHistory" type="button">Historial</button>
+      <button class="chip" id="btnAnalytics" type="button">Analíticas</button>
+      <button class="chip" id="btnExport" type="button">Exportar</button>
+      <button class="chip warn" id="btnFinish" type="button">Finalizar partido</button>
+      <button class="chip good hidden" id="btnResume" type="button">Reanudar partido</button>
+      <button class="chip primary" id="btnNew" type="button">Nuevo partido</button>
+    </div>
+  </header>
+
+  <section class="scoreMini" id="scoreSection">
+    <div class="scoreMiniTop">
+      <div class="scoreNamesMini">
+        <div class="playerMini">
+          <span class="lbl">A</span>
           <input id="nameA" value="Jugador A" />
         </div>
-        <div class="playerCard compact">
-          <label>Jugador B</label>
+        <div class="playerMini">
+          <span class="lbl">B</span>
           <input id="nameB" value="Jugador B" />
         </div>
       </div>
 
-      <div class="kpis kpisCompact">
+      <div class="kpis kpisMini">
         <div class="kpi"><div class="t">S</div><div class="v" id="setsA">0</div></div>
         <div class="kpi"><div class="t">G</div><div class="v" id="gamesA">0</div></div>
         <div class="kpi"><div class="t">P</div><div class="v" id="ptsA">0</div></div>
@@ -46,223 +47,92 @@
         <div class="kpi"><div class="t">G</div><div class="v" id="gamesB">0</div></div>
         <div class="kpi"><div class="t">S</div><div class="v" id="setsB">0</div></div>
       </div>
-
-      <div class="stateLine stateCompact">
-        <span class="badge" id="badgeScore">0-0</span>
-        <span class="badge" id="badgeServer">Servidor: A</span>
-        <span class="badge" id="badgeSide">SD</span>
-        <span class="badge" id="badgePhase">SAQUE</span>
-      </div>
     </div>
 
-    <!-- pista -->
-    <div class="section diagramOnly">
-      <div class="courtWrap">
-        <div class="court" id="court">
-          <img src="assets/court_top_view.png" alt="pista" id="courtImg">
-          <div class="zoneLayer" id="zoneLayer"></div>
-          <div class="zoneLabel" id="zoneHint">Toca en pista</div>
+    <div class="stateLine stateMini">
+      <span class="badge" id="badgeScore">0-0</span>
+      <span class="badge" id="badgeServer">Servidor: A</span>
+      <span class="badge" id="badgeSide">SD</span>
+      <span class="badge" id="badgePhase">SAQUE</span>
+    </div>
+  </section>
 
-          <!-- botón acciones (bola) -->
-          <button id="finishBall" class="tennisBall inCourt" type="button" aria-label="Finalizar punto"></button>
+  <!-- DIAGRAMA: pista + bola menú + 3 botones rápidos -->
+  <main class="diagramArea">
+    <div class="courtWrap">
+      <div class="court" id="court">
+        <img src="assets/court_top_view.png" alt="pista" id="courtImg">
+
+        <div class="zoneLayer" id="zoneLayer"></div>
+        <div class="zoneLabel" id="zoneHint">Toca en pista</div>
+
+        <!-- bola de acciones (saque/finalización) -->
+        <button id="finishBall" class="tennisBall inCourt" type="button" aria-label="Acciones del punto"></button>
+
+        <!-- botones rápidos (en el margen derecho del diagrama) -->
+        <div class="courtQuickBtns" aria-label="Acciones rápidas">
+          <button class="quickBtn" id="btnUndo" type="button" title="Deshacer último golpe">↶</button>
+          <button class="quickBtn" id="btnRedoPoint" type="button" title="Rehacer último punto">↷</button>
+          <button class="quickBtn" id="btnResetPoint" type="button" title="Reiniciar punto">⟲</button>
         </div>
       </div>
     </div>
+  </main>
+
+</div>
+
+<!-- BOTTOM SHEET: Timeline + leyenda (oculto, se abre con swipe up) -->
+<div class="bottomSheet" id="bottomSheet" aria-label="Timeline del rally">
+  <div class="sheetHandle" id="sheetHandle" role="button" aria-label="Abrir timeline">
+    <div class="pill"></div>
+    <div class="handleText">
+      <div class="handleTitle">Secuencia del punto</div>
+      <div class="handleSub" id="lastTouch">Último: —</div>
+    </div>
+    <button class="sheetClose" id="sheetClose" type="button" aria-label="Cerrar">✕</button>
   </div>
 
-  <!-- ACCIONES (más estrecha): timeline + leyenda -->
-  <div class="mainRight actionCol">
-    <div class="section" id="serveActions">
-      <div class="sectionTitle">Saque</div>
-      <div class="muted">Primer golpe · marca T/C/A dentro del cuadro</div>
-      <div class="twoCols" style="margin-top:10px;">
-        <button class="btn" id="btnFault">Falta</button>
-        <button class="btn bad" id="btnDoubleFault">Doble falta</button>
-      </div>
-    
-    <div class="section hidden" id="finishActions">
-      <div class="sectionTitle">Finalizar punto</div>
-      <div class="twoCols">
-        <button class="btn bad" id="btnUeA">Error no forzado (A)</button>
-        <button class="btn bad" id="btnUeB">Error no forzado (B)</button>
-        <button class="btn warn" id="btnFeA">Error forzado (A)</button>
-        <button class="btn warn" id="btnFeB">Error forzado (B)</button>
-        <button class="btn good" id="btnWinA">Winner (A)</button>
-        <button class="btn good" id="btnWinB">Winner (B)</button>
-      </div>
+  <div class="sheetBody">
+    <div class="sheetActions">
+      <button class="btn" id="btnReplay" type="button">▶ Reproducir</button>
     </div>
 
-
-    <!-- botones grandes de control + timeline -->
-    <div class="section" id="timelineSection">
-      <div class="sectionTitle">Timeline del rally</div>
-      <div class="muted">Toques en orden · ▶ reproduce el punto</div>
-
-      <div class="actionRow" style="margin-top:10px;">
-        <button class="btn" id="btnReplay">▶ Reproducir</button>
-        <button class="btn" id="btnUndo">Deshacer</button>
-        <button class="btn" id="btnResetPoint">Reiniciar punto</button>
-        <button class="btn" id="btnRedoPoint">Rehacer último punto</button>
-      </div>
-
-      <div id="timeline" class="timeline" style="margin-top:12px;"></div>
-      <div id="seqList" class="seqList" style="margin-top:10px;"></div>
-      <div class="muted" id="lastTouch" style="margin-top:10px;">Último: —</div>
+    <div class="timelineWrap">
+      <div class="timeline" id="timeline"></div>
+      <div class="seqList" id="seqList"></div>
+      <div class="muted tip">Tip: desliza ↑ para abrir / ↓ para cerrar</div>
     </div>
 
-    <details class="section" open>
-      <summary><span>▶</span> Códigos rally</summary>
+    <details class="legend" open>
+      <summary>Códigos rally</summary>
       <div class="legendGrid">
         <div><b>Dirección</b>: C=Cruzado, P=Paralelo, M=Medio</div>
         <div><b>Profundidad</b>: P=Profundo, M=Medio, C=Corto</div>
-        <div>Ej: <b>A-S SD T</b> = Saque de A desde DEUCE a la T</div>
-        <div>Ej: <b>B-R CP</b> = Resto de B cruzado profundo</div>
-        <div>Ej: <b>A-PP</b> = A paralelo profundo</div>
+        <div><b>Ejemplos</b>: CP=Cruzado Profundo, CC=Cruzado Corto, PP=Paralelo Profundo</div>
+        <div><b>Saque</b>: SD/SV + T/C/A</div>
       </div>
     </details>
   </div>
 </div>
 
+<!-- Menú de acciones (bola) -->
+<div class="finishMenu hidden" id="finishMenu" role="dialog" aria-modal="true" aria-label="Acciones del punto">
+  <div class="finishMenuCard">
+    <button class="finishMenuClose" id="finishMenuClose" type="button" aria-label="Cerrar">✕</button>
 
-<!-- History modal -->
-  <div class="modal hidden" id="historyModal">
-    <div class="modalCard">
-      <div class="modalHeader">
-        <div>
-          <div class="modalTitle">Historial del partido</div>
-          <div class="modalSub" id="historySub">0 puntos</div>
-        </div>
-        <button class="chip" id="btnCloseHistory">Cerrar</button>
-      </div>
-      <div class="modalBody">
-        <div class="filters">
-          <label>Servidor</label>
-          <select id="fServer">
-            <option value="">Todos</option>
-            <option value="A">Saca A</option>
-            <option value="B">Saca B</option>
-          </select>
-          <label>Lado</label>
-          <select id="fSide">
-            <option value="">Todos</option>
-            <option value="SD">DEUCE</option>
-            <option value="SV">AD</option>
-          </select>
-          <label>Ganador</label>
-          <select id="fWinner">
-            <option value="">Todos</option>
-            <option value="A">Gana A</option>
-            <option value="B">Gana B</option>
-          </select>
-          <label>Final</label>
-          <select id="fEnd">
-            <option value="">Todos</option>
-            <option value="Winner">Winner</option>
-            <option value="Error no forzado">Error no forzado</option>
-            <option value="Error forzado">Error forzado</option>
-            <option value="Doble falta">Doble falta</option>
-          </select>
-          <label>Buscar patrón</label>
-          <input id="fSearch" placeholder="Ej: A-CP - B-CP" />
-        </div>
+    <div class="finishMenuTitle">Acciones del punto</div>
+    <div class="finishMenuSub">Selecciona una opción (se cierra automáticamente)</div>
 
-        <div class="historyGrid">
-  <div class="historyCol historyListCol">
-    <div id="historyList" class="historyList"></div>
-  </div>
-  <div class="historyCol historyDetailCol">
-    <div id="historyDetail" class="historyDetail">Selecciona un punto.</div>
-  </div>
-</div>
-        <div class="muted" style="margin-top:10px;">Tip: escribe “A-CP” o “B-R CP” para filtrar rápido.</div>
+    <div class="finishGroup" id="finishServeGroup">
+      <div class="finishGroupTitle">Saque</div>
+      <div class="finishMenuGrid two">
+        <button class="finishBtn" id="mFault" type="button">Falta</button>
+        <button class="finishBtn bad" id="mDoubleFault" type="button">Doble falta</button>
       </div>
     </div>
-  </div>
 
-  <!-- Analytics modal -->
-  <div class="modal hidden" id="analyticsModal">
-    <div class="modalCard">
-      <div class="modalHeader">
-        <div>
-          <div class="modalTitle">Analíticas del partido</div>
-          <div class="modalSub">Top patrones · dominancia · deuce/ad · por servidor</div>
-        </div>
-        <button class="chip" id="btnCloseAnalytics">Cerrar</button>
-      </div>
-      <div class="modalBody">
-        <div class="filters">
-          <label>Vista</label>
-          <select id="aView">
-            <option value="freq">Más repetidos</option>
-            <option value="eff">Más efectivos (% éxito)</option>
-            <option value="deucead">DEUCE vs AD</option>
-            <option value="server">Por servidor</option>
-          </select>
-          <label>Mín. ocurrencias</label>
-          <select id="aMin">
-            <option>2</option><option>3</option><option selected>5</option><option>8</option><option>10</option>
-          </select>
-          <label><input type="checkbox" id="aIncludeServe" checked /> Incluir saque</label>
-        </div>
-
-        <table class="table" id="analyticsTable">
-          <thead>
-            <tr>
-              <th>Patrón</th><th>Veces</th><th>Gana A</th><th>Gana B</th><th>Dominante</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-
-        <div class="section" style="margin-top:12px;">
-          <div class="modalTitle">Detalle</div>
-          <div class="modalSub">Clic en un patrón para ver secuencia y puntos</div>
-          <div id="analyticsDetail" class="muted" style="margin-top:8px;">Selecciona un patrón.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Export modal -->
-  <div class="modal hidden" id="exportModal">
-    <div class="modalCard">
-      <div class="modalHeader">
-        <div>
-          <div class="modalTitle">Exportar</div>
-          <div class="modalSub" id="exportSub">Tabla punto a punto</div>
-        </div>
-        <button class="chip" id="btnCloseExport">Cerrar</button>
-      </div>
-      <div class="modalBody">
-        <div class="filters">
-          <label><input type="checkbox" id="eIncludeServe" checked /> Incluir saque</label>
-          <label><input type="checkbox" id="eSplitShots" checked /> Columnas por golpe</label>
-          <label>Brand</label>
-          <input id="eBrand" value="Tennis Direction Tracker" />
-        </div>
-
-        <div class="row" style="margin-top:10px; justify-content:flex-end;">
-          <button class="btn btnBig primary" id="btnCSV">Descargar Excel (CSV)</button>
-          <button class="btn btnBig soft" id="btnWord">Descargar Word (tabla)</button>
-          <button class="btn btnBig soft" id="btnPDF">Export PDF (premium)</button>
-        </div>
-
-        <div class="muted" style="margin-top:10px;">PDF abre una vista premium lista para “Imprimir → Guardar como PDF”.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast">OK</div>
-
-  <script src="app.js"></script>
-
-  <!-- Floating tennis ball finish menu -->
-<div id="finishMenu" class="finishMenu hidden" role="dialog" aria-modal="true">
-    <div class="finishMenuCard">
-      <button id="finishMenuClose" class="finishMenuClose" type="button" aria-label="Cerrar">×</button>
-      <div class="finishMenuTitle">Finalizar punto</div>
-      <div class="finishMenuSub">Selecciona el resultado (se cierra automáticamente)</div>
-
+    <div class="finishGroup" id="finishRallyGroup">
+      <div class="finishGroupTitle">Finalizar punto</div>
       <div class="finishMenuGrid">
         <button class="finishBtn bad" id="mUeA" type="button">Error no forzado (A)</button>
         <button class="finishBtn bad" id="mUeB" type="button">Error no forzado (B)</button>
@@ -273,7 +143,104 @@
       </div>
     </div>
   </div>
+</div>
 
-  <script src="app.js"></script>
+<!-- MODALS -->
+<div class="modal hidden" id="historyModal">
+  <div class="modalCard solid">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Historial del partido</div>
+        <div class="muted" id="historySub">0 puntos</div>
+      </div>
+      <button class="chip" id="btnCloseHistory" type="button">Cerrar</button>
+    </div>
+
+    <div class="filters">
+      <label>Servidor <select id="fServer"><option value="">Todos</option><option value="A">A</option><option value="B">B</option></select></label>
+      <label>Lado <select id="fSide"><option value="">Todos</option><option value="SD">SD</option><option value="SV">SV</option></select></label>
+      <label>Ganador <select id="fWinner"><option value="">Todos</option><option value="A">A</option><option value="B">B</option></select></label>
+      <label>Final <select id="fEnd"><option value="">Todos</option><option value="Winner">Winner</option><option value="Error no forzado">Error no forzado</option><option value="Error forzado">Error forzado</option><option value="Doble falta">Doble falta</option></select></label>
+      <label class="search">Buscar patrón <input id="fSearch" placeholder="Ej: A-CP - B-CP"></label>
+    </div>
+
+    <div class="historyTwoCol">
+      <div class="historyList" id="historyList"></div>
+      <div class="historyDetail" id="historyDetail">Selecciona un punto.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="analyticsModal">
+  <div class="modalCard solid">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Analíticas del partido</div>
+        <div class="muted">Top patrones</div>
+      </div>
+      <button class="chip" id="btnCloseAnalytics" type="button">Cerrar</button>
+    </div>
+
+    <div class="filters">
+      <label>Vista
+        <select id="aView">
+          <option value="freq">Más repetidos</option>
+          <option value="effective">Más efectivos</option>
+          <option value="deucead">DEUCE vs AD</option>
+          <option value="server">Por servidor</option>
+        </select>
+      </label>
+      <label>Mín. ocurrencias
+        <select id="aMin">
+          <option value="1">1</option>
+          <option value="3">3</option>
+          <option value="5" selected>5</option>
+          <option value="8">8</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="aIncludeServe" checked> Incluir saque</label>
+    </div>
+
+    <div class="analyticsBody">
+      <div class="analyticsList" id="analyticsList"></div>
+      <div class="analyticsDetail" id="analyticsDetail">Selecciona un patrón.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="exportModal">
+  <div class="modalCard solid">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Exportar</div>
+        <div class="muted" id="exportSub">Puntos y patrones</div>
+      </div>
+      <button class="chip" id="btnCloseExport" type="button">Cerrar</button>
+    </div>
+
+    <div class="exportGrid">
+      <button class="btn" id="btnCSV" type="button">Exportar CSV</button>
+      <button class="btn" id="btnWord" type="button">Tabla Word (HTML)</button>
+      <button class="btn primary" id="btnPDF" type="button">PDF premium (imprimir)</button>
+    </div>
+    <div class="muted">Tip: en PDF premium usa “Imprimir → Guardar como PDF”.</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- placeholders (compatibilidad) -->
+<div id="serveActions" class="hidden"></div>
+<div id="finishActions" class="hidden"></div>
+<button id="btnFault" class="hidden" type="button"></button>
+<button id="btnDoubleFault" class="hidden" type="button"></button>
+<button id="btnUeA" class="hidden" type="button"></button>
+<button id="btnUeB" class="hidden" type="button"></button>
+<button id="btnFeA" class="hidden" type="button"></button>
+<button id="btnFeB" class="hidden" type="button"></button>
+<button id="btnWinA" class="hidden" type="button"></button>
+<button id="btnWinB" class="hidden" type="button"></button>
+
+<script src="app.js"></script>
 </body>
 </html>

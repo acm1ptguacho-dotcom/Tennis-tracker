@@ -424,40 +424,38 @@ function zoneCodeFromTap(side, row, col){
 function onServeTap(side, box, target, el){
   if (state.matchFinished) return;
   if (!state.point) initPoint();
-  if (state.point.phase!=="serve") return;
+  if (state.point.phase !== "serve") return;
 
-  // Determine who is serving based on point.server. Serve can only be tapped on receiver side:
-  // If server is A, receiver is B (top half) -> user taps serveTop.
-  // If server is B, receiver is A (bottom half) -> user taps serveBottom.
+  // Serve must be tapped on receiver side
   const server = state.point.server;
-  const neededSide = server==="A" ? "top" : "bottom";
+  const neededSide = (server === "A") ? "top" : "bottom";
   if (side !== neededSide){
     toast("Toca el cuadro de saque correcto");
     return;
+  }
 
+  // Serve is always cross-court: only the required box is valid
   const reqBox = serveRequiredBox(neededSide, state.point.side);
   if (box !== reqBox){
     toast("Saque siempre cruzado: selecciona el cuadro correcto");
     return;
   }
 
-  }
-
-  const sideLabel = state.point.side;
-  const boxLabel = (box===0) ? "Cruzado" : "T"; // not used
   const ev = {
-    type:"serve",
+    type: "serve",
     player: server,
-    code: `S ${sideLabel} ${target}`,
+    code: `S ${state.point.side} ${target}`,
     meta: { side, box, target },
     elId: elIdForServe(side, box, target)
   };
+
   state.point.events.push(ev);
 
-  // after serve tap => move to rally
-  state.point.phase="rally";
+  // after serve => rally
+  state.point.phase = "rally";
   updateZoneHint();
   renderPoint();
+  applyTapConstraints();
   persist();
 }
 
@@ -538,9 +536,10 @@ function renderPoint(){
     list.appendChild(row);
   });
 
-  // Serve actions visibility
-  $("#serveActions").classList.toggle("hidden", p.phase!=="serve");
-  $("#finishActions").classList.toggle("hidden", p.phase!=="rally");
+  // Serve/finish actions visibility (legacy placeholders)
+  const __sa=$("#serveActions"); if(__sa) __sa.classList.toggle("hidden", p.phase!=="serve");
+  const __fa=$("#finishActions"); if(__fa) __fa.classList.toggle("hidden", p.phase!=="rally");
+  refreshFinishMenuMode();
 }
 
 function renderScore(){
@@ -751,7 +750,17 @@ function closeExport(){ closeModal("#exportModal"); }
 
 
 /** FINISH MENU (tennis ball) **/
+function refreshFinishMenuMode(){
+  const p = state.point;
+  const serveGrp = $("#finishServeGroup");
+  const rallyGrp = $("#finishRallyGroup");
+  const isServe = !!p && p.phase === "serve";
+  if (serveGrp) serveGrp.classList.toggle("hidden", !isServe);
+  if (rallyGrp) rallyGrp.classList.toggle("hidden", isServe);
+}
+
 function openFinishMenu(){
+  refreshFinishMenuMode();
   const m=$("#finishMenu");
   if (!m) return;
   m.classList.remove("hidden");
@@ -1165,108 +1174,162 @@ function renderAll(){
 }
 
 function wire(){
+  const on = (id, ev, fn, opts) => {
+    const el = $("#"+id);
+    if (el) el.addEventListener(ev, fn, opts);
+    return el;
+  };
+
   // names
-  $("#nameA").addEventListener("change", ()=>{ state.names.A=$("#nameA").value||"Jugador A"; persist(); renderAll(); });
-  $("#nameB").addEventListener("change", ()=>{ state.names.B=$("#nameB").value||"Jugador B"; persist(); renderAll(); });
+  on("nameA","change", ()=>{ state.names.A=$("#nameA").value||"Jugador A"; persist(); renderAll(); });
+  on("nameB","change", ()=>{ state.names.B=$("#nameB").value||"Jugador B"; persist(); renderAll(); });
 
   // controls
-  $("#btnNew").addEventListener("click", newMatch);
-  $("#btnFinish").addEventListener("click", finishMatch);
-  $("#btnResume").addEventListener("click", resumeMatch);
+  on("btnNew","click", newMatch);
+  on("btnFinish","click", finishMatch);
+  on("btnResume","click", resumeMatch);
 
-  $("#btnHistory").addEventListener("click", openHistory);
-  $("#btnAnalytics").addEventListener("click", openAnalytics);
-  $("#btnExport").addEventListener("click", openExport);
+  on("btnHistory","click", openHistory);
+  on("btnAnalytics","click", openAnalytics);
+  on("btnExport","click", openExport);
 
-  $("#btnCloseHistory").addEventListener("click", closeHistory);
-  $("#btnCloseAnalytics").addEventListener("click", closeAnalytics);
-  $("#btnCloseExport").addEventListener("click", closeExport);
+  on("btnCloseHistory","click", closeHistory);
+  on("btnCloseAnalytics","click", closeAnalytics);
+  on("btnCloseExport","click", closeExport);
 
-  $("#btnTheme").addEventListener("click", toggleTheme);
-  $("#btnCoach").addEventListener("click", toggleCoach);
-
+  on("btnTheme","click", toggleTheme);
+  on("btnCoach","click", toggleCoach);
 
   // finish ball menu
-  const __fb = $("#finishBall");
-  if (__fb) __fb.addEventListener("click", toggleFinishMenu);
-  const __fclose = $("#finishMenuClose");
-  if (__fclose) __fclose.addEventListener("click", closeFinishMenu);
+  on("finishBall","click", toggleFinishMenu);
+  on("finishMenuClose","click", closeFinishMenu);
 
-  const bindFinish = (id, winner, reason) => {
+  const bindMenu = (id, cb) => {
     const el = $("#"+id);
-    if (el) el.addEventListener("click", ()=>{
-      endPoint(winner, reason);
+    if (!el) return;
+    el.addEventListener("click", ()=>{
+      cb();
       closeFinishMenu();
     });
   };
-  bindFinish("mUeA", "B", "Error no forzado (A)");
-  bindFinish("mUeB", "A", "Error no forzado (B)");
-  bindFinish("mFeA", "B", "Error forzado (A)");
-  bindFinish("mFeB", "A", "Error forzado (B)");
-  bindFinish("mWinA","A", "Winner (A)");
-  bindFinish("mWinB","B", "Winner (B)");
 
-  // point actions
-  $("#btnUndo").addEventListener("click", undo);
-  $("#btnResetPoint").addEventListener("click", resetPoint);
-  $("#btnRedoPoint").addEventListener("click", redoLastPoint);
-  $("#btnReplay").addEventListener("click", replayCurrentPoint);
+  // Serve actions inside menu
+  bindMenu("mFault", ()=> fault());
+  bindMenu("mDoubleFault", ()=> doubleFault());
 
-  $("#btnFault").addEventListener("click", fault);
-  $("#btnDoubleFault").addEventListener("click", doubleFault);
+  // End point actions inside menu
+  bindMenu("mUeA", ()=> endPoint("B", "Error no forzado (A)"));
+  bindMenu("mUeB", ()=> endPoint("A", "Error no forzado (B)"));
+  bindMenu("mFeA", ()=> endPoint("B", "Error forzado (A)"));
+  bindMenu("mFeB", ()=> endPoint("A", "Error forzado (B)"));
+  bindMenu("mWinA", ()=> endPoint("A", "Winner (A)"));
+  bindMenu("mWinB", ()=> endPoint("B", "Winner (B)"));
 
-  $("#btnUeA").addEventListener("click", ()=> endPoint("B","Error no forzado (A)"));
-  $("#btnUeB").addEventListener("click", ()=> endPoint("A","Error no forzado (B)"));
-  $("#btnFeA").addEventListener("click", ()=> endPoint("B","Error forzado (A)"));
-  $("#btnFeB").addEventListener("click", ()=> endPoint("A","Error forzado (B)"));
-  $("#btnWinA").addEventListener("click", ()=> endPoint("A","Winner (A)"));
-  $("#btnWinB").addEventListener("click", ()=> endPoint("B","Winner (B)"));
+  // quick actions
+  on("btnUndo","click", undo);
+  on("btnResetPoint","click", resetPoint);
+  on("btnRedoPoint","click", redoLastPoint);
+  on("btnReplay","click", replayCurrentPoint);
 
   // history filters
   ["fServer","fSide","fWinner","fEnd","fSearch"].forEach(id=>{
-    $("#"+id).addEventListener("input", renderHistory);
-    $("#"+id).addEventListener("change", renderHistory);
+    on(id,"input", renderHistory);
+    on(id,"change", renderHistory);
   });
 
   // analytics filters
   ["aView","aMin","aIncludeServe"].forEach(id=>{
-    $("#"+id).addEventListener("input", renderAnalytics);
-    $("#"+id).addEventListener("change", renderAnalytics);
+    on(id,"input", renderAnalytics);
+    on(id,"change", renderAnalytics);
   });
 
   // export
-  $("#btnCSV").addEventListener("click", exportCSV);
-  $("#btnWord").addEventListener("click", exportWord);
-  $("#btnPDF").addEventListener("click", exportPDF);
+  on("btnCSV","click", exportCSV);
+  on("btnWord","click", exportWord);
+  on("btnPDF","click", exportPDF);
 
   // close modals clicking outside
   ["historyModal","analyticsModal","exportModal"].forEach(mid=>{
-    const m=$("#"+mid);
-    m.addEventListener("click",(e)=>{ if (e.target.id===mid) closeModal("#"+mid); });
+    const m = $("#"+mid);
+    if (!m) return;
+    m.addEventListener("click", (e)=>{
+      if (e.target === m){
+        try{ closeModal(mid); }catch(_){}
+      }
+    });
   });
 
-  // close finish menu clicking outside
-  document.addEventListener("click",(e)=>{
-    const menu=$("#finishMenu");
-    const ball=$("#finishBall");
-    if (!menu || !ball) return;
-    if (menu.classList.contains("hidden")) return;
-    const card = menu.querySelector(".finishMenuCard");
-    const t = e.target;
-    if (t===ball || ball.contains(t)) return;
-    if (card && (t===card || card.contains(t))) return;
-    closeFinishMenu();
-  });
-
-  // ESC closes
-  document.addEventListener("keydown",(e)=>{
+  // keyboard shortcuts
+  window.addEventListener("keydown", (e)=>{
     if (e.key==="Escape"){
-      ["#historyModal","#analyticsModal","#exportModal"].forEach(id=>{
-        try{ closeModal(id); }catch(_){}
+      ["historyModal","analyticsModal","exportModal","finishMenu"].forEach(id=>{
+        const el=$("#"+id);
+        if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
       });
       clearReplay();
+      setSheetOpen(false);
     }
   });
+
+  initBottomSheet();
+}
+
+
+
+let __sheetOpen = false;
+function setSheetOpen(open){
+  __sheetOpen = !!open;
+  const sheet = $("#bottomSheet");
+  if (!sheet) return;
+  sheet.classList.toggle("open", __sheetOpen);
+}
+function toggleSheet(){
+  setSheetOpen(!__sheetOpen);
+}
+
+function initBottomSheet(){
+  const sheet = $("#bottomSheet");
+  const handle = $("#sheetHandle");
+  const close = $("#sheetClose");
+  if (!sheet || !handle) return;
+
+  // default closed
+  setSheetOpen(false);
+
+  if (close){
+    close.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      setSheetOpen(false);
+    });
+  }
+
+  // tap handle toggles
+  handle.addEventListener("click", (e)=>{
+    if (close && e.target === close) return;
+    toggleSheet();
+  });
+
+  // wheel up/down on handle
+  handle.addEventListener("wheel", (e)=>{
+    if (e.deltaY < 0) setSheetOpen(true);
+    if (e.deltaY > 0) setSheetOpen(false);
+  }, {passive:true});
+
+  // touch swipe on handle
+  let startY = null;
+  handle.addEventListener("touchstart", (e)=>{
+    if (!e.touches || !e.touches.length) return;
+    startY = e.touches[0].clientY;
+  }, {passive:true});
+
+  handle.addEventListener("touchmove", (e)=>{
+    if (startY === null || !e.touches || !e.touches.length) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy < -20) setSheetOpen(true);
+    if (dy > 20) setSheetOpen(false);
+  }, {passive:true});
+
+  handle.addEventListener("touchend", ()=>{ startY = null; }, {passive:true});
 }
 
 function registerSW(){
