@@ -59,8 +59,8 @@ a{color:inherit}
 
 .app{
   display:grid;
-  grid-template-columns: 1fr 420px;
-  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr 360px;
+  grid-template-rows: 1fr;
   gap:14px;
   padding:14px;
   min-height: 100vh;
@@ -72,9 +72,7 @@ a{color:inherit}
   position: sticky;
   top: 0;
   z-index: 30;
-
-  grid-column: 2 / 3;
-  display:flex;
+display:flex;
   align-items:center;
   justify-content:space-between;
   gap:12px;
@@ -207,7 +205,7 @@ body.light .courtWrap{
 }
 .court{
   position:relative;
-  width:min(520px, 94%);
+  width:min(760px, 98%);
   aspect-ratio: 9 / 18;
   border-radius: 22px;
   box-shadow: 0 30px 70px rgba(0,0,0,.28);
@@ -437,8 +435,8 @@ body.coach .kpi .v{font-size:24px}
 }
 
 
-.mainLeft{grid-column:1 / 2; grid-row:1 / span 2;}
-.mainRight{grid-column:2 / 3; grid-row:2 / 3;}
+.mainLeft{grid-column:1 / 2; grid-row:1 / 2;}
+.mainRight{grid-column:2 / 3; grid-row:1 / 2;}
 
 .diagramOnly{padding:10px;}
 #scoreSection .row{margin-bottom:10px;}
@@ -498,9 +496,9 @@ body.coach .kpi .v{font-size:24px}
 
 /* Floating tennis ball menu */
 .tennisBall{
-  position: fixed;
-  right: 14px;
-  top: calc(env(safe-area-inset-top, 0px) + 78px);
+  position: absolute;
+  right: 12px;
+  top: 12px;
   width: 64px;
   height: 64px;
   border-radius: 999px;
@@ -656,4 +654,76 @@ body.coach .kpi .v{font-size:24px}
 @media (max-width: 820px){
   .historyGrid{ height: 60vh; }
   .historyListCol{ width: 48%; }
+}
+
+
+/* Layout mobile order */
+@media (max-width: 820px){
+  .app{ grid-template-columns: 1fr; }
+  .mainRight{ grid-column:1 / 2; grid-row:1 / 2; }
+  .mainLeft{ grid-column:1 / 2; grid-row:2 / 3; }
+  .topbar{ position: sticky; top: 0; z-index: 35; }
+  .scorebar{ top: 58px; }
+  /* reduce header height a bit */
+  .chips{ gap:8px; flex-wrap: nowrap; overflow-x:auto; padding-bottom: 4px; }
+}
+
+
+/* ---- Layout refinements (v2.27) ---- */
+.mainRight.actionCol{ padding:14px; gap:12px; }
+.topbarLeft{ padding:10px 12px; }
+.topbar .brand{ display:none; } /* remove logo/nota */
+
+.scoreCompact{ padding:10px 12px; }
+.scoreCompact .scoreNames{ margin-bottom:8px; gap:10px; }
+.playerCard.compact label{ font-size:12px; opacity:.85; }
+.playerCard.compact input{
+  height: 38px;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 14px;
+}
+.kpisCompact{
+  margin-top: 8px;
+  gap: 8px;
+}
+.kpisCompact .kpi{
+  padding: 8px 8px;
+  min-width: 54px;
+}
+.kpisCompact .kpi .t{ font-size: 11px; opacity:.85; }
+.kpisCompact .kpi .v{ font-size: 18px; }
+
+.stateCompact{
+  margin-top: 8px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.stateCompact .badge{
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* Put action tennis ball inside the diagram corner (as requested) */
+.tennisBall.inCourt{
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 25;
+  width: 58px;
+  height: 58px;
+}
+
+/* Ensure diagram column uses space better */
+.mainLeft{ padding:14px; display:flex; flex-direction:column; gap:12px; }
+.diagramOnly{ padding:10px; }
+.courtWrap{ display:flex; justify-content:center; align-items:flex-start; padding-top:4px; }
+.zoneLabel{ top: 12px; left: 12px; }
+
+/* Mobile: stack columns, keep menu+score+court visible */
+@media (max-width: 900px){
+  .app{ grid-template-columns: 1fr; }
+  .mainRight.actionCol{ order: 2; }
+  .mainLeft{ order: 1; }
+  .topbar{ position: sticky; top: 0; z-index: 30; }
 }

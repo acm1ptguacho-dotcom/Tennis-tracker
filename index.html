@@ -7,16 +7,11 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app">
-    <div class="topbar">
-      <div class="brand">
-        <span class="logoDot"></span>
-        <div>
-          <b>Tennis Direction Tracker</b><br/>
-          <small class="muted">Tracking de direcciones en directo</small>
-        </div>
-      </div>
 
+<div class="app">
+  <!-- DIAGRAMA -->
+  <div class="mainLeft">
+    <div class="topbar topbarLeft">
       <div class="chips">
         <button class="chip ghost" id="btnTheme">Modo claro</button>
         <button class="chip ghost" id="btnCoach">Modo entrenador</button>
@@ -26,125 +21,110 @@
         <button class="chip warn" id="btnFinish">Finalizar partido</button>
         <button class="chip good hidden" id="btnResume">Reanudar partido</button>
         <button class="chip primary" id="btnNew">Nuevo partido</button>
-      
-    <div class="scorebar">
-      <div class="section" id="scoreSection">
-        <div class="row">
-          <div class="playerCard">
-            <label>Jugador A</label>
-            <input id="nameA" value="Jugador A" />
-          </div>
-          <div class="playerCard">
-            <label>Jugador B</label>
-            <input id="nameB" value="Jugador B" />
-          </div>
-        </div>
-    </div>
-</div>
+      </div>
     </div>
 
-        <div class="mainLeft">
-      <div class="section diagramOnly">
-        <div class="courtWrap">
+    <!-- nombres + marcador (compacto, sutil) -->
+    <div class="section scoreCompact" id="scoreSection">
+      <div class="row scoreNames">
+        <div class="playerCard compact">
+          <label>Jugador A</label>
+          <input id="nameA" value="Jugador A" />
+        </div>
+        <div class="playerCard compact">
+          <label>Jugador B</label>
+          <input id="nameB" value="Jugador B" />
+        </div>
+      </div>
+
+      <div class="kpis kpisCompact">
+        <div class="kpi"><div class="t">S</div><div class="v" id="setsA">0</div></div>
+        <div class="kpi"><div class="t">G</div><div class="v" id="gamesA">0</div></div>
+        <div class="kpi"><div class="t">P</div><div class="v" id="ptsA">0</div></div>
+
+        <div class="kpi"><div class="t">P</div><div class="v" id="ptsB">0</div></div>
+        <div class="kpi"><div class="t">G</div><div class="v" id="gamesB">0</div></div>
+        <div class="kpi"><div class="t">S</div><div class="v" id="setsB">0</div></div>
+      </div>
+
+      <div class="stateLine stateCompact">
+        <span class="badge" id="badgeScore">0-0</span>
+        <span class="badge" id="badgeServer">Servidor: A</span>
+        <span class="badge" id="badgeSide">SD</span>
+        <span class="badge" id="badgePhase">SAQUE</span>
+      </div>
+    </div>
+
+    <!-- pista -->
+    <div class="section diagramOnly">
+      <div class="courtWrap">
         <div class="court" id="court">
           <img src="assets/court_top_view.png" alt="pista" id="courtImg">
           <div class="zoneLayer" id="zoneLayer"></div>
           <div class="zoneLabel" id="zoneHint">Toca en pista</div>
+
+          <!-- botón acciones (bola) -->
+          <button id="finishBall" class="tennisBall inCourt" type="button" aria-label="Finalizar punto"></button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ACCIONES (más estrecha): timeline + leyenda -->
+  <div class="mainRight actionCol">
+    <div class="section" id="serveActions">
+      <div class="sectionTitle">Saque</div>
+      <div class="muted">Primer golpe · marca T/C/A dentro del cuadro</div>
+      <div class="twoCols" style="margin-top:10px;">
+        <button class="btn" id="btnFault">Falta</button>
+        <button class="btn bad" id="btnDoubleFault">Doble falta</button>
+      </div>
+    
+    <div class="section hidden" id="finishActions">
+      <div class="sectionTitle">Finalizar punto</div>
+      <div class="twoCols">
+        <button class="btn bad" id="btnUeA">Error no forzado (A)</button>
+        <button class="btn bad" id="btnUeB">Error no forzado (B)</button>
+        <button class="btn warn" id="btnFeA">Error forzado (A)</button>
+        <button class="btn warn" id="btnFeB">Error forzado (B)</button>
+        <button class="btn good" id="btnWinA">Winner (A)</button>
+        <button class="btn good" id="btnWinB">Winner (B)</button>
       </div>
     </div>
 
-    <div class="mainRight">
-      
 
-        <div class="kpis">
-          <div class="kpi"><div class="t">Sets</div><div class="v" id="setsA">0</div></div>
-          <div class="kpi"><div class="t">Games</div><div class="v" id="gamesA">0</div></div>
-          <div class="kpi"><div class="t">Pts</div><div class="v" id="ptsA">0</div></div>
-          <div class="kpi"><div class="t">Pts</div><div class="v" id="ptsB">0</div></div>
-          <div class="kpi"><div class="t">Games</div><div class="v" id="gamesB">0</div></div>
-          <div class="kpi"><div class="t">Sets</div><div class="v" id="setsB">0</div></div>
-        </div>
-        <div class="statusBar">
-        <span class="statusBadge" id="badgeScore">DEUCE</span>
-        <span class="statusBadge" id="badgeServer">Servidor: A</span>
-        <span class="statusBadge" id="badgeSide">SD</span>
-        <span class="muted smallHide" id="badgePhase">SAQUE</span>
-        <span class="muted smallHide" id="lastTouch">Último: —</span>
-      </div>
+    <!-- botones grandes de control + timeline -->
+    <div class="section" id="timelineSection">
+      <div class="sectionTitle">Timeline del rally</div>
+      <div class="muted">Toques en orden · ▶ reproduce el punto</div>
+
+      <div class="actionRow" style="margin-top:10px;">
+        <button class="btn" id="btnReplay">▶ Reproducir</button>
+        <button class="btn" id="btnUndo">Deshacer</button>
+        <button class="btn" id="btnResetPoint">Reiniciar punto</button>
+        <button class="btn" id="btnRedoPoint">Rehacer último punto</button>
       </div>
 
-      <div class="section" id="serveActions">
-        <div class="modalTitle">Saque</div>
-        <div class="modalSub">Primer golpe · marca T/C/A dentro del cuadro</div>
-        <div class="gridBtns" style="margin-top:10px;">
-          <button class="btn btnBig bad" id="btnFault">Falta</button>
-          <button class="btn btnBig bad" id="btnDoubleFault">Doble falta</button>
-        </div>
-      </div>
+      <div id="timeline" class="timeline" style="margin-top:12px;"></div>
+      <div id="seqList" class="seqList" style="margin-top:10px;"></div>
+      <div class="muted" id="lastTouch" style="margin-top:10px;">Último: —</div>
+    </div>
 
-      <div class="section hidden" id="finishActions">
-        <div class="modalTitle">Finalizar punto</div>
-        <div class="modalSub">Indica quién gana / pierde el punto</div>
-        <div class="gridBtns" style="margin-top:10px;">
-          <button class="btn btnBig bad" id="btnUeA">Error no forzado (A)</button>
-          <button class="btn btnBig bad" id="btnUeB">Error no forzado (B)</button>
-          <button class="btn btnBig warn" id="btnFeA">Error forzado (A)</button>
-          <button class="btn btnBig warn" id="btnFeB">Error forzado (B)</button>
-          <button class="btn btnBig good" id="btnWinA">Winner (A)</button>
-          <button class="btn btnBig good" id="btnWinB">Winner (B)</button>
-        </div>
+    <details class="section" open>
+      <summary><span>▶</span> Códigos rally</summary>
+      <div class="legendGrid">
+        <div><b>Dirección</b>: C=Cruzado, P=Paralelo, M=Medio</div>
+        <div><b>Profundidad</b>: P=Profundo, M=Medio, C=Corto</div>
+        <div>Ej: <b>A-S SD T</b> = Saque de A desde DEUCE a la T</div>
+        <div>Ej: <b>B-R CP</b> = Resto de B cruzado profundo</div>
+        <div>Ej: <b>A-PP</b> = A paralelo profundo</div>
       </div>
-
-      <div class="section">
-        <div class="row" style="justify-content:space-between; align-items:center;">
-          <div>
-            <div class="modalTitle">Timeline del rally</div>
-            <div class="modalSub">Toques en orden · <span class="muted">▶ reproduce el punto</span></div>
-          </div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
-            <button class="btn btnBig soft" id="btnReplay">▶ Reproducir</button>
-            <button class="btn btnBig soft" id="btnUndo">Deshacer</button>
-            <button class="btn btnBig soft" id="btnResetPoint">Reiniciar punto</button>
-            <button class="btn btnBig soft" id="btnRedoPoint">Rehacer último punto</button>
-          </div>
-        </div>
-
-        <div class="timeline" id="timeline"></div>
-        <div class="seqList" id="seqList"></div>
-      </div>
-
-            <div class="section" id="legendSection">
-        <div class="modalTitle">Leyenda de nomenclaturas</div>
-        <div class="modalSub">Referencia rápida de códigos</div>
-        <div class="legendGrid">
-          <div class="legendItem"><b>P</b><span>Profundo</span></div>
-          <div class="legendItem"><b>M</b><span>Medio</span></div>
-          <div class="legendItem"><b>C</b><span>Corto</span></div>
-          <div class="legendItem"><b>CP</b><span>Cruzado profundo</span></div>
-          <div class="legendItem"><b>CM</b><span>Cruzado medio</span></div>
-          <div class="legendItem"><b>CC</b><span>Cruzado corto</span></div>
-          <div class="legendItem"><b>PP</b><span>Paralelo profundo</span></div>
-          <div class="legendItem"><b>PM</b><span>Paralelo medio</span></div>
-          <div class="legendItem"><b>PC</b><span>Paralelo corto</span></div>
-          <div class="legendItem"><b>MV</b><span>Medio por ventaja</span></div>
-          <div class="legendItem"><b>R</b><span>Resto (primer golpe)</span></div>
-          <div class="legendItem"><b>S SD/SV T/C/A</b><span>Saque: DEUCE/AD + T/C/A</span></div>
-        </div>
-        <details class="legendMore">
-          <summary>Ver ejemplos</summary>
-          <div class="legendExamples">
-            <div>Ej: <b>A-S SD T</b> = Saque de A desde DEUCE a la T</div>
-            <div>Ej: <b>B-R CP</b> = Resto de B cruzado profundo</div>
-            <div>Ej: <b>A-PP</b> = A paralelo profundo</div>
-          </div>
-        </details>
-      </div>
-    </div></div>
+    </details>
   </div>
+</div>
 
-  <!-- History modal -->
+
+<!-- History modal -->
   <div class="modal hidden" id="historyModal">
     <div class="modalCard">
       <div class="modalHeader">
@@ -277,8 +257,7 @@
   <script src="app.js"></script>
 
   <!-- Floating tennis ball finish menu -->
-  <button id="finishBall" class="tennisBall" type="button" aria-label="Finalizar punto"></button>
-  <div id="finishMenu" class="finishMenu hidden" role="dialog" aria-modal="true">
+<div id="finishMenu" class="finishMenu hidden" role="dialog" aria-modal="true">
     <div class="finishMenuCard">
       <button id="finishMenuClose" class="finishMenuClose" type="button" aria-label="Cerrar">×</button>
       <div class="finishMenuTitle">Finalizar punto</div>
@@ -295,5 +274,6 @@
     </div>
   </div>
 
+  <script src="app.js"></script>
 </body>
 </html>
