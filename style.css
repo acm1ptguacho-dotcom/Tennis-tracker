@@ -221,7 +221,10 @@ body.light .court{border:1px solid rgba(10,22,55,.18);}
   filter:saturate(1.05) contrast(1.02);
 }
 
-.zoneLayer{position:absolute; inset:0; pointer-events:none;}
+.zoneLayer{position:absolute; inset:0; pointer-events:auto;}
+
+.gridLayer{position:absolute;inset:0;pointer-events:auto;}
+.zoneCell,.serveCell{touch-action:manipulation;}
 .zoneGrid{
   position:absolute;
   display:grid;
@@ -931,7 +934,8 @@ body.coach .kpi .v{font-size:24px}
   padding: 12px;
   max-height: calc(var(--open) - var(--peek));
   box-shadow: 0 18px 50px rgba(0,0,0,.30);
-}
+max-width:720px;margin:0 auto;width:100%;}
+
 
 .sheetActions{ display:flex; gap:10px; margin-bottom:10px; }
 .timelineWrap{ display:flex; flex-direction:column; gap:10px; }
@@ -953,3 +957,5 @@ body.coach .kpi .v{font-size:24px}
   background: rgba(15,23,42,.96);
   backdrop-filter: none !important;
 }
+
+.sheetBody>*{width:100%;}

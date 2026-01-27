@@ -361,7 +361,7 @@ function applyTapConstraints(){
 
     // Only receiver side is clickable
     document.querySelectorAll(`.serveCell[data-side="${otherSide}"]`).forEach(el=>{
-      el.classList.add("disabled","hidden");
+      el.classList.add("disabled");
     });
 
     const reqBox = serveRequiredBox(neededSide, p.side);
@@ -370,7 +370,7 @@ function applyTapConstraints(){
     document.querySelectorAll(`.serveCell[data-side="${neededSide}"]`).forEach(el=>{
       const box = Number(el.dataset.box||"0");
       if (box !== reqBox){
-        el.classList.add("disabled","hidden");
+        el.classList.add("disabled");
       }
     });
   }
@@ -385,7 +385,7 @@ function applyTapConstraints(){
 
     // Only expected side clickable
     document.querySelectorAll(`.zoneCell[data-side="${otherSide}"]`).forEach(el=>{
-      el.classList.add("disabled","hidden");
+      el.classList.add("disabled");
     });
   }
 }
