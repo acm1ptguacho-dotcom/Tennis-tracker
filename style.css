@@ -805,14 +805,16 @@ body.coach .kpi .v{font-size:24px}
 
 .diagramArea{
   display:flex;
-  justify-content:center;
+  justify-content:stretch;
+  padding: 0;
   width:100%;
 }
 
 .courtWrap{
   width: 100%;
   display:flex;
-  justify-content:center;
+  justify-content:stretch;
+  padding: 0;
 }
 .court{
   position: relative;
@@ -877,7 +879,8 @@ body.coach .kpi .v{font-size:24px}
   transform: translateY(calc(var(--open) - var(--peek)));
   transition: transform 320ms cubic-bezier(.2,.9,.1,1);
   display:flex;
-  justify-content:center;
+  justify-content:stretch;
+  padding: 0;
   pointer-events:auto;
 }
 .bottomSheet.open{
@@ -885,8 +888,8 @@ body.coach .kpi .v{font-size:24px}
 }
 
 .bottomSheet .sheetHandle{
-  width: min(980px, 100%);
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   display:flex;
   align-items:center;
   gap:10px;
@@ -919,7 +922,7 @@ body.coach .kpi .v{font-size:24px}
 }
 
 .bottomSheet .sheetBody{
-  width: min(980px, 100%);
+  width: 100%;
   background: rgba(24,37,68,.98);
   border: 1px solid rgba(255,255,255,.14);
   border-top: none;

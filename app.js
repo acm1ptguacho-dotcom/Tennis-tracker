@@ -380,7 +380,7 @@ function applyTapConstraints(){
     const receiver = other(server);
     const rallyCount = p.events.filter(e=>e.type==="rally").length;
     const hitter = (rallyCount % 2 === 0) ? receiver : server;
-    const expectedSide = (hitter==="A") ? "bottom" : "top";
+    const expectedSide = (hitter==="A") ? "top" : "bottom"; // tap = lado donde cae la bola (opuesto al hitter)
     const otherSide = expectedSide==="top" ? "bottom" : "top";
 
     // Only expected side clickable
@@ -472,7 +472,7 @@ function onRallyTap(side, row, col, el){
   const hitter = (rallyCount % 2 === 0) ? receiver : server; // first rally hit is receiver
 
   // Validate tapping correct side: top grid corresponds to player B hitting, bottom grid corresponds to player A hitting.
-  const expectedSide = (hitter==="A") ? "bottom" : "top";
+  const expectedSide = (hitter==="A") ? "top" : "bottom"; // tap = lado donde cae la bola (opuesto al hitter)
   if (side !== expectedSide){
     toast("Toca el lado del jugador correcto");
     return;
@@ -1199,6 +1199,28 @@ function wire(){
 
   on("btnTheme","click", toggleTheme);
   on("btnCoach","click", toggleCoach);
+
+  // cambiar servidor manualmente (solo antes de iniciar el punto)
+  const badgeSrv = $("#badgeServer");
+  if (badgeSrv){
+    badgeSrv.style.cursor = "pointer";
+    badgeSrv.title = "Toca para cambiar servidor (A/B)";
+    badgeSrv.addEventListener("click", ()=>{
+      // No permitir cambiar si ya hay golpes registrados en el punto actual
+      if (state.point && state.point.events && state.point.events.length>0){
+        toast("No puedes cambiar el servidor durante el punto");
+        return;
+      }
+      state.currentServer = other(state.currentServer);
+      if (state.point && state.point.phase==="serve"){
+        state.point.server = state.currentServer;
+        state.point.side = serveSideLabel();
+      }
+      updateZoneHint();
+      renderAll();
+      persist();
+    });
+  }
 
   // finish ball menu
   on("finishBall","click", toggleFinishMenu);
