@@ -57,9 +57,10 @@
     </div>
   </section>
 
-  <!-- DIAGRAMA: pista + bola menú + 3 botones rápidos -->
+  <!-- DIAGRAMA + TIMELINE (lado derecho) -->
   <main class="diagramArea">
-    <div class="courtWrap">
+    <div class="diagramGrid">
+      <div class="courtWrap">
       <div class="court" id="court">
         <img src="assets/court_top_view.png" alt="pista" id="courtImg">
 
@@ -76,30 +77,24 @@
           <button class="quickBtn" id="btnResetPoint" type="button" title="Reiniciar punto">⟲</button>
         </div>
       </div>
-    </div>
-  </main>
+    
+      </div>
 
-</div>
+      <aside class="timelineSide" id="timelineSide" aria-label="Timeline del rally">
+        <div class="timelineCard">
+          <div class="timelineHeader">
+            <div class="timelineHeaderText">
+              <div class="timelineTitle">Secuencia del punto</div>
+              <div class="timelineSub" id="lastTouch">Último: —</div>
+            </div>
+          </div>
 
-<!-- BOTTOM SHEET: Timeline + leyenda (oculto, se abre con swipe up) -->
-<div class="bottomSheet" id="bottomSheet" aria-label="Timeline del rally">
-  <div class="sheetHandle" id="sheetHandle" role="button" aria-label="Abrir timeline">
-    <div class="pill"></div>
-    <div class="handleText">
-      <div class="handleTitle">Secuencia del punto</div>
-      <div class="handleSub" id="lastTouch">Último: —</div>
-    </div>
-    <button class="sheetClose" id="sheetClose" type="button" aria-label="Cerrar">✕</button>
-  </div>
+          <div class="timelineWrap">
+            <div class="timeline" id="timeline"></div>
+            <div class="seqList" id="seqList"></div>
+          </div>
 
-  <div class="sheetBody">
-<div class="timelineWrap">
-      <div class="timeline" id="timeline"></div>
-      <div class="seqList" id="seqList"></div>
-      <div class="muted tip">Tip: desliza ↑ para abrir / ↓ para cerrar</div>
-    </div>
-
-    <details class="legend" open>
+          <details class="legend" open>
       <summary>Códigos rally</summary>
       <div class="legendGrid">
         <div><b>Dirección</b>: C=Cruzado, P=Paralelo, M=Medio</div>
@@ -108,8 +103,13 @@
         <div><b>Saque</b>: SD/SV + T/C/A</div>
       </div>
     </details>
-  </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
 </div>
+
 
 <!-- Menú de acciones (bola) -->
 <div class="finishMenu hidden" id="finishMenu" role="dialog" aria-modal="true" aria-label="Acciones del punto">
