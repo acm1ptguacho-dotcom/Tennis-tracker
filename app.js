@@ -86,6 +86,7 @@ function initPoint(){
   };
   updateZoneHint();
   renderPoint();
+  applyTapConstraints();
 }
 
 function snapshotMatchState(){
@@ -489,6 +490,7 @@ function onRallyTap(side, row, col, el){
   };
   state.point.events.push(ev);
   renderPoint();
+  applyTapConstraints();
   persist();
 }
 
@@ -540,6 +542,7 @@ function renderPoint(){
   const __sa=$("#serveActions"); if(__sa) __sa.classList.toggle("hidden", p.phase!=="serve");
   const __fa=$("#finishActions"); if(__fa) __fa.classList.toggle("hidden", p.phase!=="rally");
   refreshFinishMenuMode();
+  applyTapConstraints();
 }
 
 function renderScore(){
@@ -596,6 +599,7 @@ function savePoint(winner, reason){
   const p=state.point;
   const n = state.matchPoints.length + 1;
   const snapshot = `S ${state.sets.A}-${state.sets.B} · G ${state.games.A}-${state.games.B} · P ${scoreLabel()} · Srv ${p.server} ${p.side}`;
+  const finishDetail = p.finishDetail ? JSON.parse(JSON.stringify(p.finishDetail)) : null;
   state.matchPoints.push({
     n,
     winner,
@@ -603,7 +607,8 @@ function savePoint(winner, reason){
     server: p.server,
     side: p.side,
     snapshot,
-    events: p.events.slice(),
+    finishDetail,
+        events: p.events.slice(),
   });
 }
 
@@ -629,6 +634,7 @@ function undo(){
   }
   updateZoneHint();
   renderPoint();
+  applyTapConstraints();
   persist();
 }
 
@@ -760,12 +766,14 @@ function refreshFinishMenuMode(){
 }
 
 function openFinishMenu(){
+  setFinishMode(finishMode);
   refreshFinishMenuMode();
   const m=$("#finishMenu");
   if (!m) return;
   m.classList.remove("hidden");
 }
 function closeFinishMenu(){
+  closeAdvStep2();
   const m=$("#finishMenu");
   if (!m) return;
   m.classList.add("hidden");
@@ -776,9 +784,139 @@ function toggleFinishMenu(){
   if (m.classList.contains("hidden")) openFinishMenu(); else closeFinishMenu();
 }
 
+// --- Avanzado (menú bola) ---
+let finishMode = (()=>{
+  try { return localStorage.getItem("tdt_finish_mode") || "normal"; }
+  catch(e){ return "normal"; }
+})();
+
+let pendingFinish = null; // { kind:"UE"|"FE"|"WINNER", offender:"A"|"B", winner:"A"|"B", reason:string }
+
+const ADV_STROKES = [
+  { key:"FH", label:"Derecha" },
+  { key:"BH", label:"Revés" },
+  { key:"VOL", label:"Volea" },
+  { key:"SM", label:"Smash" },
+  { key:"OTHER", label:"Otro" },
+];
+
+const ADV_WINNERS = [
+  { key:"ACE", label:"Ace" },
+  { key:"PASS", label:"Passing" },
+  { key:"DROP", label:"Dejada" },
+  { key:"VOL", label:"Volea winner" },
+  { key:"WIN", label:"Winner" },
+  { key:"OTHER", label:"Otro" },
+];
+
+function setFinishMode(mode){
+  finishMode = mode;
+  try { localStorage.setItem("tdt_finish_mode", mode); } catch(e){}
+  const tn=$("#tabNormal"), ta=$("#tabAdvanced");
+  if (tn && ta){
+    tn.classList.toggle("active", mode==="normal");
+    ta.classList.toggle("active", mode==="advanced");
+    tn.setAttribute("aria-selected", mode==="normal" ? "true" : "false");
+    ta.setAttribute("aria-selected", mode==="advanced" ? "true" : "false");
+  }
+  closeAdvStep2();
+}
+
+function openAdvStep2(meta){
+  pendingFinish = meta;
+  const step=$("#advStep2"), chips=$("#advChips"), title=$("#advTitle");
+  if (!step || !chips || !title) return;
+
+  // Hide main groups to focus
+  const serveGrp=$("#finishServeGroup");
+  const rallyGrp=$("#finishRallyGroup");
+  if (serveGrp) serveGrp.classList.add("hidden");
+  if (rallyGrp) rallyGrp.classList.add("hidden");
+
+  let opts=[];
+  if (meta.kind==="WINNER") opts = ADV_WINNERS;
+  else opts = ADV_STROKES;
+
+  title.textContent =
+    meta.kind==="WINNER" ? "Tipo de winner" :
+    meta.kind==="UE" ? "Tipo de error no forzado" :
+    "Tipo de error forzado";
+
+  chips.innerHTML="";
+  opts.forEach(o=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="advChip";
+    b.textContent=o.label;
+    b.addEventListener("click", ()=>{
+      commitAdvancedFinish(o.key);
+    });
+    chips.appendChild(b);
+  });
+
+  step.classList.remove("hidden");
+}
+
+function closeAdvStep2(){
+  pendingFinish = null;
+  const step=$("#advStep2");
+  if (step) step.classList.add("hidden");
+
+  // Restore correct groups
+  refreshFinishMenuMode();
+}
+
+function commitAdvancedFinish(detailKey){
+  if (!pendingFinish) return;
+  if (!state.point) initPoint();
+
+  // Attach detail onto current point (copied into matchPoints by savePoint)
+  state.point.finishDetail = {
+    mode: "advanced",
+    kind: pendingFinish.kind,
+    offender: pendingFinish.offender,
+  };
+  if (pendingFinish.kind==="WINNER"){
+    state.point.finishDetail.winnerType = detailKey;
+  } else {
+    state.point.finishDetail.strokeType = detailKey;
+  }
+
+  closeAdvStep2();
+  closeFinishMenu();
+  endPoint(pendingFinish.winner, pendingFinish.reason);
+}
+
+function finishAction(kind, offender){
+  // kind: "UE"|"FE"|"WINNER"
+  const winner = (kind==="WINNER") ? offender : other(offender);
+  const reason =
+    kind==="UE" ? `Error no forzado (${offender})` :
+    kind==="FE" ? `Error forzado (${offender})` :
+    `Winner (${offender})`;
+
+  if (finishMode==="advanced"){
+    openAdvStep2({ kind, offender, winner, reason });
+    return false; // do not auto-close menu
+  }
+  endPoint(winner, reason);
+  return true;
+}
+
+
 
 
 /** HISTORY FILTERS **/
+
+function finishDetailLabel(fd){
+  if (!fd) return "";
+  const strokeMap = { FH:"Derecha", BH:"Revés", VOL:"Volea", SM:"Smash", OTHER:"Otro" };
+  const winMap = { ACE:"Ace", PASS:"Passing", DROP:"Dejada", VOL:"Volea winner", WIN:"Winner", OTHER:"Otro" };
+  if (fd.kind==="WINNER" && fd.winnerType) return winMap[fd.winnerType] || fd.winnerType;
+  if ((fd.kind==="UE" || fd.kind==="FE") && fd.strokeType) return strokeMap[fd.strokeType] || fd.strokeType;
+  return "";
+}
+
 function renderHistory(){
   const sub=$("#historySub");
   if (sub) sub.textContent = `${state.matchPoints.length} puntos`;
@@ -826,7 +964,7 @@ function renderHistory(){
       <div class="historyItemTop">
         <div>
           <div class="historyItemTitle">Punto ${p.n}</div>
-          <div class="historyItemMeta">${escapeHtml(p.snapshot)}<br/>${escapeHtml(p.reason||"")}</div>
+          <div class="historyItemMeta">${escapeHtml(p.snapshot)}<br/>${escapeHtml((p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : ""))}</div>
         </div>
         <span class="pill ${p.winner==="A"?"pillGood":"pillWarn"}">Gana ${escapeHtml(p.winner)}</span>
       </div>
@@ -854,7 +992,7 @@ function renderHistoryDetail(p){
     <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
       <div>
         <div class="modalTitle" style="margin:0;">Punto ${p.n} · Gana ${escapeHtml(p.winner)}</div>
-        <div class="modalSub" style="margin-top:4px;">${escapeHtml(p.snapshot)}<br/>${escapeHtml(p.reason||"")}</div>
+        <div class="modalSub" style="margin-top:4px;">${escapeHtml(p.snapshot)}<br/>${escapeHtml((p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : ""))}</div>
       </div>
       <div class="pill ${p.winner==="A"?"pillGood":"pillWarn"}">${escapeHtml(winName)}</div>
     </div>
@@ -976,6 +1114,7 @@ function getExport(includeServe, splitShots){
       server:`${p.server} (${p.side})`,
       winner:p.winner,
       reason:p.reason,
+      finishDetail: p.finishDetail || null,
       evs,
       pattern: evs.join(" - "),
     };
@@ -1003,13 +1142,14 @@ function exportCSV(){
   const {rows, maxShots} = getExport(includeServe, splitShots);
   const nameA=state.names.A, nameB=state.names.B;
 
-  const base = ["Punto","Marcador","Servidor","Ganador","Motivo","NºGolpes","Patrón"];
+  const base = ["Punto","Marcador","Servidor","Ganador","Motivo","Detalle","NºGolpes","Patrón"];
   const shotCols = splitShots ? Array.from({length:maxShots},(_,i)=>`Golpe${i+1}`) : [];
   const lines=[];
   lines.push([...base,...shotCols].map(csvEscape).join(","));
   rows.forEach(r=>{
     const winnerName = (r.winner==="A")?nameA:nameB;
-    const row = [r.n, r.snapshot, r.server, winnerName, r.reason, r.evs.length, r.pattern];
+    const detail = finishDetailLabel(r.finishDetail);
+    const row = [r.n, r.snapshot, r.server, winnerName, r.reason, detail, r.evs.length, r.pattern];
     const shots = splitShots ? Array.from({length:maxShots},(_,i)=>r.evs[i]||"") : [];
     lines.push([...row,...shots].map(csvEscape).join(","));
   });
@@ -1026,7 +1166,7 @@ function exportWord(){
   const bodyRows = rows.map(r=>{
     const win = r.winner==="A"?nameA:nameB;
     const seq = r.evs.map((s,i)=>`${i+1}. ${escapeHtml(s)}`).join("<br/>");
-    return `<tr><td>${r.n}</td><td>${escapeHtml(r.snapshot)}</td><td>${escapeHtml(r.server)}</td><td><b>${win}</b></td><td>${escapeHtml(r.reason)}</td><td class="mono">${seq}</td></tr>`;
+    return `<tr><td>${r.n}</td><td>${escapeHtml(r.snapshot)}</td><td>${escapeHtml(r.server)}</td><td><b>${win}</b></td><td>${escapeHtml(r.reason)}</td><td>${escapeHtml(finishDetailLabel(r.finishDetail))}</td><td class="mono">${seq}</td></tr>`;
   }).join("");
 
   const brand = escapeHtml($("#eBrand").value || "Tennis Direction Tracker");
@@ -1044,7 +1184,7 @@ function exportWord(){
   </style></head><body>
     <h1>${brand} · ${nameA} vs ${nameB}</h1>
     <p class="sub">Exportado: ${escapeHtml(stamp)} · Puntos: ${rows.length}</p>
-    <table><thead><tr><th>#</th><th>Marcador</th><th>Servidor</th><th>Ganador</th><th>Motivo</th><th>Secuencia</th></tr></thead>
+    <table><thead><tr><th>#</th><th>Marcador</th><th>Servidor</th><th>Ganador</th><th>Motivo</th><th>Detalle</th><th>Secuencia</th></tr></thead>
     <tbody>${bodyRows}</tbody></table>
   </body></html>`;
   const stampFile = new Date().toISOString().slice(0,16).replace(":","").replace("T","_");
@@ -1079,7 +1219,7 @@ function exportPDF(){
       <td>${escapeHtml(r.snapshot)}</td>
       <td>${escapeHtml(r.server)}</td>
       <td><b>${escapeHtml(win)}</b></td>
-      <td>${escapeHtml(r.reason)}</td>
+      <td>${escapeHtml(r.reason)}</td><td>${escapeHtml(finishDetailLabel(r.finishDetail))}</td>
       <td class="mono">${escapeHtml(r.pattern)}</td>
     </tr>`;
   }).join("");
@@ -1224,14 +1364,20 @@ function wire(){
 
   // finish ball menu
   on("finishBall","click", toggleFinishMenu);
-  on("finishMenuClose","click", closeFinishMenu);
+  on("finishMenuClose","click", ()=>{ closeFinishMenu(); closeAdvStep2(); });
+  on("tabNormal","click", ()=> setFinishMode("normal"));
+  on("tabAdvanced","click", ()=> setFinishMode("advanced"));
+  on("advBack","click", closeAdvStep2);
+  // set initial mode
+  setFinishMode(finishMode);
+
 
   const bindMenu = (id, cb) => {
     const el = $("#"+id);
     if (!el) return;
     el.addEventListener("click", ()=>{
-      cb();
-      closeFinishMenu();
+      const res = cb();
+      if (res !== false) closeFinishMenu();
     });
   };
 
@@ -1240,12 +1386,12 @@ function wire(){
   bindMenu("mDoubleFault", ()=> doubleFault());
 
   // End point actions inside menu
-  bindMenu("mUeA", ()=> endPoint("B", "Error no forzado (A)"));
-  bindMenu("mUeB", ()=> endPoint("A", "Error no forzado (B)"));
-  bindMenu("mFeA", ()=> endPoint("B", "Error forzado (A)"));
-  bindMenu("mFeB", ()=> endPoint("A", "Error forzado (B)"));
-  bindMenu("mWinA", ()=> endPoint("A", "Winner (A)"));
-  bindMenu("mWinB", ()=> endPoint("B", "Winner (B)"));
+  bindMenu("mUeA", ()=> finishAction("UE","A"));
+  bindMenu("mUeB", ()=> finishAction("UE","B"));
+  bindMenu("mFeA", ()=> finishAction("FE","A"));
+  bindMenu("mFeB", ()=> finishAction("FE","B"));
+  bindMenu("mWinA", ()=> finishAction("WINNER","A"));
+  bindMenu("mWinB", ()=> finishAction("WINNER","B"));
 
   // quick actions
   on("btnUndo","click", undo);

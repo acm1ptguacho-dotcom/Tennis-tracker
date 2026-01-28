@@ -116,10 +116,23 @@
   <div class="finishMenuCard">
     <button class="finishMenuClose" id="finishMenuClose" type="button" aria-label="Cerrar">✕</button>
 
-    <div class="finishMenuTitle">Acciones del punto</div>
+    
+    <div class="finishMenuTabs" role="tablist" aria-label="Modo de registro">
+      <button class="finishTab active" id="tabNormal" type="button" role="tab" aria-selected="true">Normal</button>
+      <button class="finishTab" id="tabAdvanced" type="button" role="tab" aria-selected="false">Avanzado</button>
+    </div>
+
+<div class="finishMenuTitle">Acciones del punto</div>
     <div class="finishMenuSub">Selecciona una opción (se cierra automáticamente)</div>
 
-    <div class="finishGroup" id="finishServeGroup">
+    
+    <div class="advStep2 hidden" id="advStep2" aria-label="Detalle avanzado">
+      <div class="advTitle" id="advTitle">Detalle</div>
+      <div class="advChips" id="advChips"></div>
+      <button class="advBackBtn" id="advBack" type="button">← Volver</button>
+    </div>
+
+<div class="finishGroup" id="finishServeGroup">
       <div class="finishGroupTitle">Saque</div>
       <div class="finishMenuGrid two">
         <button class="finishBtn" id="mFault" type="button">Falta</button>
