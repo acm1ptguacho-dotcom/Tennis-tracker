@@ -1077,3 +1077,172 @@ body.printing .app{ display:none; }
   .app, .modal, .toast, #finishBall{ display:none !important; }
   #printReport{ display:block !important; }
 }
+
+
+/* === Pro TV Scoreboard (v2.37) === */
+.scoreTv{
+  margin: 10px auto 10px;
+  max-width: 980px;
+  padding: 10px 12px 10px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 18px 50px rgba(0,0,0,.25);
+}
+
+.tvHeader{
+  display:grid;
+  grid-template-columns: 1fr auto 54px;
+  align-items:end;
+  gap: 10px;
+  padding: 0 6px 6px;
+  opacity: .9;
+}
+.tvHeaderSpacer{height:1px;}
+.tvHeaderSets{
+  display:flex;
+  gap: 6px;
+  justify-content:flex-end;
+}
+.tvSetHdr{
+  width: 34px;
+  text-align:center;
+  font-weight: 900;
+  font-size: 12px;
+  color: rgba(255,255,255,.78);
+}
+.tvHeaderPts{
+  text-align:right;
+  font-weight: 900;
+  font-size: 12px;
+  color: rgba(255,255,255,.78);
+}
+
+.tvRow{
+  display:grid;
+  grid-template-columns: 1fr 22px auto 54px;
+  align-items:center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 14px;
+}
+.tvRow + .tvRow{ margin-top: 4px; }
+
+.tvName{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  min-width: 0;
+}
+.tvTag{
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 1000;
+  color: rgba(255,255,255,.92);
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  flex: 0 0 auto;
+}
+.scoreTv input{
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.18);
+  color: rgba(255,255,255,.92);
+  font-weight: 900;
+  outline: none;
+}
+.scoreTv input:focus{
+  border-color: rgba(255,255,255,.22);
+  box-shadow: 0 0 0 4px rgba(255,255,255,.06);
+}
+
+.tvServe{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.serveBall{
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display:inline-block;
+  opacity: 0;
+  transform: scale(.85);
+  transition: opacity .16s ease, transform .16s ease;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,.0) 38%),
+    radial-gradient(circle at 55% 60%, rgba(255,230,0,1), rgba(255,230,0,.85) 55%, rgba(255,160,0,.55));
+  box-shadow: 0 6px 16px rgba(255,230,0,.35), 0 0 0 2px rgba(0,0,0,.25);
+}
+.serveBall.on{
+  opacity: 1;
+  transform: scale(1);
+}
+
+.tvSets{
+  display:flex;
+  gap: 6px;
+  justify-content:flex-end;
+}
+.tvSetCell{
+  width: 34px;
+  padding: 8px 0;
+  border-radius: 12px;
+  text-align:center;
+  font-weight: 1000;
+  color: rgba(255,255,255,.92);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+}
+.tvSetCell.active{
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.16);
+  box-shadow: inset 0 -10px 18px rgba(0,0,0,.18);
+}
+
+.tvPts{
+  text-align:right;
+  font-weight: 1100;
+  font-size: 18px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  color: rgba(255,255,255,.95);
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.tvMeta{
+  display:flex;
+  gap: 8px;
+  justify-content:flex-start;
+  padding: 8px 6px 0;
+  flex-wrap: wrap;
+  opacity: .92;
+}
+.tvMeta .badge{
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+/* Compact on phones */
+@media (max-width: 520px){
+  .scoreTv{
+    margin: 8px 10px;
+    padding: 8px 10px 8px;
+  }
+  .tvHeader{
+    grid-template-columns: 1fr auto 44px;
+  }
+  .tvSetHdr, .tvSetCell{ width: 28px; border-radius: 10px; }
+  .tvPts{ width: 44px; font-size: 16px; padding: 8px 8px; }
+  .tvTag{ width: 26px; height: 26px; border-radius: 10px;}
+  .scoreTv input{ padding: 8px 10px; }
+}

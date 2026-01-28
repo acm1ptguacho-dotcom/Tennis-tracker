@@ -36,6 +36,7 @@ function load(){
     state.tb = state.tb || {A:0,B:0};
     state.undoStack = state.undoStack || [];
     state.matchPoints = state.matchPoints || [];
+    state.setHistory = state.setHistory || [];
     state.ui = state.ui || {theme:"dark", coach:false};
   }catch(e){ console.error(e); }
 }
@@ -130,6 +131,11 @@ function updateScoring(winner){
     const a=state.tb.A, b=state.tb.B;
     if ((a>=7 || b>=7) && Math.abs(a-b)>=2){
       const setWinner = a>b ? "A":"B";
+      // record completed set as 7-6 and store TB score
+      const finA = state.games.A + (setWinner==="A" ? 1 : 0);
+      const finB = state.games.B + (setWinner==="B" ? 1 : 0);
+      state.setHistory = state.setHistory || [];
+      state.setHistory.push({A:finA, B:finB, tb:`${a}-${b}`});
       state.sets[setWinner]+=1;
       state.games={A:0,B:0};
       state.points={A:0,B:0};
@@ -162,6 +168,8 @@ function updateScoring(winner){
       // set win at 6 by 2 (simple)
       if ((state.games.A>=6 || state.games.B>=6) && Math.abs(state.games.A-state.games.B)>=2){
         const setWinner = state.games.A>state.games.B ? "A":"B";
+        state.setHistory = state.setHistory || [];
+        state.setHistory.push({A:state.games.A, B:state.games.B});
         state.sets[setWinner]+=1;
         state.games={A:0,B:0};
         state.points={A:0,B:0};
@@ -187,8 +195,10 @@ function updateScoring(winner){
       state.tbStartingServer = state.currentServer;
     }
     if ((state.games.A>=6 || state.games.B>=6) && Math.abs(state.games.A-state.games.B)>=2){
-      const setWinner = state.games.A>state.games.B ? "A":"B";
-      state.sets[setWinner]+=1;
+        const setWinner = state.games.A>state.games.B ? "A":"B";
+        state.setHistory = state.setHistory || [];
+        state.setHistory.push({A:state.games.A, B:state.games.B});
+        state.sets[setWinner]+=1;
       state.games={A:0,B:0};
       state.points={A:0,B:0};
       state.currentServer = other(state.currentServer);
@@ -545,21 +555,68 @@ function renderPoint(){
   applyTapConstraints();
 }
 
+function pointText(player){
+  if (state.isTiebreak) return String(state.tb[player] ?? 0);
+  const pA = state.points.A, pB = state.points.B;
+  const map = ["0","15","30","40"];
+  if (pA>=3 && pB>=3){
+    if (pA===pB) return "40";
+    if (player==="A") return (pA>pB) ? "AD" : "40";
+    return (pB>pA) ? "AD" : "40";
+  }
+  return map[state.points[player]] ?? String(state.points[player] ?? 0);
+}
+
 function renderScore(){
   $("#nameA").value = state.names.A;
   $("#nameB").value = state.names.B;
 
-  $("#setsA").textContent = state.sets.A;
-  $("#gamesA").textContent = state.games.A;
-  $("#ptsA").textContent = state.isTiebreak ? state.tb.A : state.points.A;
+  // Serve indicator
+  $("#serveA").classList.toggle("on", state.currentServer==="A");
+  $("#serveB").classList.toggle("on", state.currentServer==="B");
 
-  $("#setsB").textContent = state.sets.B;
-  $("#gamesB").textContent = state.games.B;
-  $("#ptsB").textContent = state.isTiebreak ? state.tb.B : state.points.B;
+  // Sets (completed) + current set games
+  const hist = state.setHistory || [];
+  const cols = Math.min(5, Math.max(1, hist.length + 1));
+  const hdr = $("#tvSetHeaders");
+  if (hdr){
+    hdr.innerHTML = "";
+    for (let i=0;i<cols;i++){
+      const el = document.createElement("div");
+      el.className = "tvSetHdr";
+      el.textContent = String(i+1);
+      hdr.appendChild(el);
+    }
+  }
 
+  const rowA = $("#setsRowA"), rowB = $("#setsRowB");
+  const fillRow = (row, player)=>{
+    if (!row) return;
+    row.innerHTML = "";
+    for (let i=0;i<cols;i++){
+      const cell = document.createElement("div");
+      cell.className = "tvSetCell" + (i===hist.length ? " active" : "");
+      let val = "";
+      if (i < hist.length){
+        val = String(hist[i][player] ?? "");
+      }else if (i === hist.length){
+        val = String(state.games[player] ?? 0);
+      }
+      cell.textContent = val;
+      row.appendChild(cell);
+    }
+  };
+  fillRow(rowA, "A");
+  fillRow(rowB, "B");
+
+  // Points
+  $("#tvPtsA").textContent = pointText("A");
+  $("#tvPtsB").textContent = pointText("B");
+
+  // Meta badges
   $("#badgeScore").textContent = scoreLabel();
-  $("#badgeServer").textContent = `Servidor: ${state.currentServer}`;
   $("#badgeSide").textContent = serveSideLabel();
+  $("#badgePhase").textContent = (state.point?.phase==="serve") ? "SAQUE" : "RALLY";
 
   $("#btnFinish").classList.toggle("hidden", state.matchFinished);
   $("#btnResume").classList.toggle("hidden", !state.matchFinished);
@@ -576,6 +633,7 @@ function newMatch(){
   state.currentServer="A";
   state.matchFinished=false;
   state.matchPoints=[];
+  state.setHistory=[];
   state.undoStack=[];
   initPoint();
   persist();
@@ -1372,26 +1430,28 @@ function wire(){
   on("btnCoach","click", toggleCoach);
 
   // cambiar servidor manualmente (solo antes de iniciar el punto)
-  const badgeSrv = $("#badgeServer");
-  if (badgeSrv){
-    badgeSrv.style.cursor = "pointer";
-    badgeSrv.title = "Toca para cambiar servidor (A/B)";
-    badgeSrv.addEventListener("click", ()=>{
-      // No permitir cambiar si ya hay golpes registrados en el punto actual
-      if (state.point && state.point.events && state.point.events.length>0){
-        toast("No puedes cambiar el servidor durante el punto");
-        return;
-      }
-      state.currentServer = other(state.currentServer);
-      if (state.point && state.point.phase==="serve"){
-        state.point.server = state.currentServer;
-        state.point.side = serveSideLabel();
-      }
-      updateZoneHint();
-      renderAll();
-      persist();
-    });
-  }
+  const setServer = (p)=>{
+    if (state.point && state.point.events && state.point.events.length>0){
+      toast("No puedes cambiar el servidor durante el punto");
+      return;
+    }
+    state.currentServer = p;
+    if (state.point && state.point.phase==="serve"){
+      state.point.server = state.currentServer;
+      state.point.side = serveSideLabel();
+    }
+    updateZoneHint();
+    renderAll();
+    persist();
+  };
+
+  const rowA = $("#tvRowA"), rowB = $("#tvRowB");
+  const sA = $("#serveA"), sB = $("#serveB");
+  if (rowA) { rowA.style.cursor="pointer"; rowA.title="Toca para poner servidor A"; rowA.addEventListener("click", ()=>setServer("A")); }
+  if (rowB) { rowB.style.cursor="pointer"; rowB.title="Toca para poner servidor B"; rowB.addEventListener("click", ()=>setServer("B")); }
+  if (sA) { sA.style.pointerEvents="none"; }
+  if (sB) { sB.style.pointerEvents="none"; }
+
 
   // finish ball menu
   on("finishBall","click", toggleFinishMenu);

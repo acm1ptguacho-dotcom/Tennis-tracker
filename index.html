@@ -25,33 +25,35 @@
     </div>
   </header>
 
-  <section class="scoreMini" id="scoreSection">
-    <div class="scoreMiniTop">
-      <div class="scoreNamesMini">
-        <div class="playerMini">
-          <span class="lbl">A</span>
-          <input id="nameA" value="Jugador A" />
-        </div>
-        <div class="playerMini">
-          <span class="lbl">B</span>
-          <input id="nameB" value="Jugador B" />
-        </div>
-      </div>
-
-      <div class="kpis kpisMini">
-        <div class="kpi"><div class="t">S</div><div class="v" id="setsA">0</div></div>
-        <div class="kpi"><div class="t">G</div><div class="v" id="gamesA">0</div></div>
-        <div class="kpi"><div class="t">P</div><div class="v" id="ptsA">0</div></div>
-
-        <div class="kpi"><div class="t">P</div><div class="v" id="ptsB">0</div></div>
-        <div class="kpi"><div class="t">G</div><div class="v" id="gamesB">0</div></div>
-        <div class="kpi"><div class="t">S</div><div class="v" id="setsB">0</div></div>
-      </div>
+  <section class="scoreTv" id="scoreSection">
+    <div class="tvHeader">
+      <div class="tvHeaderSpacer"></div>
+      <div class="tvHeaderSets" id="tvSetHeaders"></div>
+      <div class="tvHeaderPts">Pts</div>
     </div>
 
-    <div class="stateLine stateMini">
+    <div class="tvRow" id="tvRowA">
+      <div class="tvName">
+        <span class="tvTag">A</span>
+        <input id="nameA" value="Jugador A" />
+      </div>
+      <div class="tvServe"><span class="serveBall" id="serveA" aria-label="Servidor A"></span></div>
+      <div class="tvSets" id="setsRowA"></div>
+      <div class="tvPts" id="tvPtsA">0</div>
+    </div>
+
+    <div class="tvRow" id="tvRowB">
+      <div class="tvName">
+        <span class="tvTag">B</span>
+        <input id="nameB" value="Jugador B" />
+      </div>
+      <div class="tvServe"><span class="serveBall" id="serveB" aria-label="Servidor B"></span></div>
+      <div class="tvSets" id="setsRowB"></div>
+      <div class="tvPts" id="tvPtsB">0</div>
+    </div>
+
+    <div class="tvMeta">
       <span class="badge" id="badgeScore">0-0</span>
-      <span class="badge" id="badgeServer">Servidor: A</span>
       <span class="badge" id="badgeSide">SD</span>
       <span class="badge" id="badgePhase">SAQUE</span>
     </div>
