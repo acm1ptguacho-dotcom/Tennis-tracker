@@ -328,7 +328,10 @@ body.light .timeline{background: rgba(255,255,255,.62);}
   background: rgba(14, 20, 32, 0.98);
   box-shadow: var(--shadow);
   overflow:hidden;
+  display:flex;
+  flex-direction:column;
 }
+
 body.light .modalCard{background: rgba(14, 20, 32, 0.98);}
 .modalHeader{
   display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
@@ -618,26 +621,37 @@ body.coach .kpi .v{font-size:24px}
   display:flex;
   gap: 12px;
   margin-top: 12px;
-  height: min(62vh, 520px);
+  flex: 1;
+  min-height: 0;
 }
+
 .historyCol{
   border: 1px solid rgba(255,255,255,.10);
   border-radius: 14px;
   background: rgba(0,0,0,.12);
   overflow: hidden;
+  height: 100%;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
 }
+
 .historyListCol{ width: 46%; }
 .historyDetailCol{ flex: 1; }
 .historyList{
-  height: 100%;
+  flex:1;
+  min-height:0;
   overflow:auto;
 }
+
 .historyDetail{
-  height: 100%;
+  flex:1;
+  min-height:0;
   overflow:auto;
   padding: 12px;
   color: rgba(255,255,255,.92);
 }
+
 .historyItem{
   padding: 12px;
   border-bottom: 1px solid rgba(255,255,255,.08);
@@ -1009,4 +1023,57 @@ body.coach .kpi .v{font-size:24px}
   background: rgba(255,255,255,.03);
   color: rgba(255,255,255,.88);
   font-weight: 1000;
+}
+
+@media (max-width: 860px){
+  .historyGrid{ flex-direction:column; }
+  .historyListCol{ width:100% !important; }
+}
+
+/* Analytics */
+.analyticsBody{
+  display:flex;
+  gap: 12px;
+  margin-top: 12px;
+  flex: 1;
+  min-height: 0;
+}
+.analyticsList{
+  width: 46%;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  background: rgba(0,0,0,.12);
+  overflow:auto;
+  min-height:0;
+}
+.analyticsDetail{
+  flex: 1;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  background: rgba(0,0,0,.12);
+  padding: 12px;
+  overflow:auto;
+  min-height:0;
+}
+.analyticsItem{
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  cursor:pointer;
+}
+.analyticsItem:hover{ background: rgba(255,255,255,.06); }
+.analyticsItem.active{ background: rgba(255,255,255,.10); }
+.analyticsItemTitle{ font-weight: 900; }
+.analyticsItemMeta{ color: rgba(255,255,255,.70); font-size: 12px; margin-top: 6px; }
+@media (max-width: 860px){
+  .analyticsBody{ flex-direction:column; }
+  .analyticsList{ width: 100%; }
+}
+
+/* Print / PDF report */
+#printReport{ display:none; }
+body.printing #printReport{ display:block; }
+body.printing .app{ display:none; }
+@media print{
+  .app, .modal, .toast, #finishBall{ display:none !important; }
+  #printReport{ display:block !important; }
 }

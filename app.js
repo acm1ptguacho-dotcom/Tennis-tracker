@@ -743,8 +743,9 @@ function openHistory(){
 function closeHistory(){ closeModal("#historyModal"); }
 
 function openAnalytics(){
-  renderAnalytics();
   openModal("#analyticsModal");
+  try{ renderAnalytics(); }
+  catch(e){ console.error(e); toast("Error al abrir analíticas"); }
 }
 function closeAnalytics(){ closeModal("#analyticsModal"); }
 
@@ -1020,46 +1021,69 @@ function pointPattern(p, includeServe){
 
 /** ANALYTICS **/
 function renderAnalytics(){
-  const view=$("#aView").value;
-  const min = parseInt($("#aMin").value,10) || 5;
-  const includeServe=$("#aIncludeServe").checked;
+  const view=$("#aView")?.value || "freq";
+  const min = parseInt($("#aMin")?.value,10) || 5;
+  const includeServe=$("#aIncludeServe")?.checked ?? true;
 
-  const tbody=$("#analyticsTable tbody");
-  tbody.innerHTML="";
-  $("#analyticsDetail").innerHTML="Selecciona un patrón.";
+  const list=$("#analyticsList");
+  const detail=$("#analyticsDetail");
+  if (!list || !detail) return;
+
+  list.innerHTML="";
+  detail.innerHTML="Selecciona un patrón.";
 
   const stats = computePatternStats(includeServe);
-
   let items = Object.values(stats).filter(x=>x.count>=min);
 
   if (view==="freq"){
     items.sort((a,b)=>b.count-a.count);
     items = items.slice(0,5);
-  } else if (view==="eff"){
-    items = items.filter(x=>x.count>=min);
-    // effectiveness: max win rate of either player
+  } else if (view==="effective"){
     items.sort((a,b)=>b.bestRate-a.bestRate);
     items = items.slice(0,5);
   } else if (view==="deucead"){
-    // separate keys by side
+    // más repetidos por lado (SD/SV)
     items.sort((a,b)=> (b.sdCount+b.svCount) - (a.sdCount+a.svCount));
     items = items.slice(0,5);
   } else if (view==="server"){
-    items.sort((a,b)=> (b.srvA+b.srvB) - (a.srvA+b.srvB));
+    items.sort((a,b)=> (b.srvA+b.srvB) - (a.srvA+a.srvB));
     items = items.slice(0,5);
   }
 
+  if (!items.length){
+    list.innerHTML = `<div class="analyticsItem"><div class="analyticsItemTitle">Sin datos suficientes</div><div class="analyticsItemMeta">Baja el mínimo de ocurrencias o registra más puntos.</div></div>`;
+    return;
+  }
+
+  const nameA=state.names.A, nameB=state.names.B;
+
+  // mantener selección si existe
+  const selKey = state.ui?.analyticsSelKey || items[0].key;
+  const chosen = items.find(x=>x.key===selKey) || items[0];
+  state.ui = state.ui || {};
+  state.ui.analyticsSelKey = chosen.key;
+
   items.forEach(it=>{
-    const tr=document.createElement("tr");
-    tr.style.cursor="pointer";
-    tr.innerHTML = `<td class="mono">${escapeHtml(it.key)}</td>
-      <td>${it.count}</td>
-      <td>${it.winA}</td>
-      <td>${it.winB}</td>
-      <td><b>${escapeHtml(it.dominant)}</b></td>`;
-    tr.addEventListener("click", ()=> showPatternDetail(it, includeServe));
-    tbody.appendChild(tr);
+    const div=document.createElement("div");
+    div.className="analyticsItem" + (it.key===chosen.key ? " active" : "");
+    const rateA = Math.round((it.winA/it.count)*100);
+    const rateB = Math.round((it.winB/it.count)*100);
+    div.innerHTML = `
+      <div class="analyticsItemTitle mono">${escapeHtml(it.key)}</div>
+      <div class="analyticsItemMeta">
+        Veces: <b>${it.count}</b> · ${escapeHtml(nameA)}: <b>${it.winA}</b> (${rateA}%) · ${escapeHtml(nameB)}: <b>${it.winB}</b> (${rateB}%) · Dominante: <b>${escapeHtml(it.dominant)}</b>
+      </div>
+    `;
+    div.addEventListener("click", ()=>{
+      state.ui.analyticsSelKey = it.key;
+      [...list.querySelectorAll(".analyticsItem")].forEach(el=>el.classList.remove("active"));
+      div.classList.add("active");
+      showPatternDetail(it, includeServe);
+    });
+    list.appendChild(div);
   });
+
+  showPatternDetail(chosen, includeServe);
 }
 
 function computePatternStats(includeServe){
@@ -1140,8 +1164,8 @@ function downloadFile(filename, mime, content){
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function exportCSV(){
-  const includeServe=$("#eIncludeServe").checked;
-  const splitShots=$("#eSplitShots").checked;
+  const includeServe = $("#eIncludeServe")?.checked ?? true;
+  const splitShots = $("#eSplitShots")?.checked ?? false;
   const {rows, maxShots} = getExport(includeServe, splitShots);
   const nameA=state.names.A, nameB=state.names.B;
 
@@ -1195,9 +1219,8 @@ function exportWord(){
 }
 
 function exportPDF(){
-  // Open a premium report in new tab and trigger print (user chooses Save as PDF)
-  const includeServe=$("#eIncludeServe").checked;
-  const brand = $("#eBrand").value || "Tennis Direction Tracker";
+  const includeServe = true;
+  const brand = "Tennis Direction Tracker";
   const {rows} = getExport(includeServe, false);
   const aStats = computePatternStats(includeServe);
   const top = Object.values(aStats).sort((x,y)=>y.count-x.count).slice(0,5);
@@ -1222,73 +1245,78 @@ function exportPDF(){
       <td>${escapeHtml(r.snapshot)}</td>
       <td>${escapeHtml(r.server)}</td>
       <td><b>${escapeHtml(win)}</b></td>
-      <td>${escapeHtml(r.reason)}</td><td>${escapeHtml(finishDetailLabel(r.finishDetail))}</td>
+      <td>${escapeHtml(r.reason || "")}${finishDetailLabel(r.finishDetail) ? " · " + escapeHtml(finishDetailLabel(r.finishDetail)) : ""}</td>
       <td class="mono">${escapeHtml(r.pattern)}</td>
     </tr>`;
   }).join("");
 
-  const win = window.open("", "_blank");
-  win.document.write(`<!doctype html><html><head><meta charset="utf-8">
-    <title>${escapeHtml(brand)} - Report</title>
-    <style>
-      :root{--b:#0b1430;--m:#334155;--line:#cbd5e1;--bg:#f8fafc;--c:#0f172a;--a:#2563eb;}
-      body{margin:0;font-family:Arial, sans-serif;background:var(--bg);color:var(--c);}
-      .wrap{padding:26px 28px;}
-      .hero{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--line);padding-bottom:14px;margin-bottom:16px;}
-      .brand{font-size:16px;font-weight:900;letter-spacing:.3px;}
-      .title{font-size:22px;font-weight:900;margin:0;}
-      .sub{color:var(--m);font-size:12px;margin-top:4px;}
-      .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;}
-      .card{border:1px solid var(--line);border-radius:14px;background:white;padding:12px;}
-      .card h3{margin:0 0 8px;font-size:13px;}
-      table{width:100%;border-collapse:collapse;font-size:11px;}
-      th,td{border-bottom:1px solid var(--line);padding:8px 8px;vertical-align:top;}
-      th{background:#eef2ff;color:#1e3a8a;border-top:1px solid var(--line);}
-      .mono{font-family:Menlo,Consolas,monospace;}
-      .footer{margin-top:16px;color:var(--m);font-size:11px;}
-      @media print{
-        .noPrint{display:none;}
-        body{background:white;}
-      }
-    </style></head><body>
-      <div class="wrap">
-        <div class="hero">
-          <div>
-            <div class="brand">${escapeHtml(brand)}</div>
-            <h1 class="title">Reporte del partido: ${escapeHtml(nameA)} vs ${escapeHtml(nameB)}</h1>
-            <div class="sub">Exportado: ${escapeHtml(stamp)} · Sets ${state.sets.A}-${state.sets.B} · Games ${state.games.A}-${state.games.B} · Puntos ${rows.length}</div>
-          </div>
-          <div class="noPrint">
-            <button onclick="window.print()" style="padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#2563eb;color:white;font-weight:800;cursor:pointer;">Imprimir / Guardar PDF</button>
-          </div>
-        </div>
+  // Build printable report inline (no popups)
+  const existing = document.getElementById("printReport");
+  if (existing) existing.remove();
 
-        <div class="cards">
-          <div class="card">
-            <h3>Top 5 patrones más repetidos</h3>
-            <table><thead><tr><th>Patrón</th><th>Veces</th><th>Gana A</th><th>Gana B</th><th>Dominante</th></tr></thead>
-              <tbody>${topRows || "<tr><td colspan='5'>Sin datos</td></tr>"}</tbody>
-            </table>
-          </div>
-          <div class="card">
-            <h3>Resumen</h3>
-            <div class="sub">Servidor actual: <b>${escapeHtml(state.currentServer)}</b> · Modo: <b>${state.matchFinished?"Finalizado":"En juego"}</b></div>
-            <div class="sub" style="margin-top:8px;">Notas: Este reporte está optimizado para compartir con jugador/club.</div>
-          </div>
+  const wrap = document.createElement("div");
+  wrap.id = "printReport";
+  wrap.innerHTML = `<!---->
+    <div style="font-family:Arial,sans-serif; background:#fff; color:#0f172a; padding:26px 28px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #cbd5e1; padding-bottom:14px; margin-bottom:16px;">
+        <div>
+          <div style="font-size:16px;font-weight:900; letter-spacing:.3px;">${escapeHtml(brand)}</div>
+          <div style="font-size:22px;font-weight:900; margin-top:6px;">Reporte del partido: ${escapeHtml(nameA)} vs ${escapeHtml(nameB)}</div>
+          <div style="color:#334155;font-size:12px;margin-top:6px;">Exportado: ${escapeHtml(stamp)} · Sets ${state.sets.A}-${state.sets.B} · Games ${state.games.A}-${state.games.B} · Puntos ${rows.length}</div>
         </div>
+      </div>
 
-        <div class="card">
-          <h3>Puntos (punto a punto)</h3>
-          <table>
-            <thead><tr><th>#</th><th>Marcador</th><th>Servidor</th><th>Ganador</th><th>Motivo</th><th>Patrón</th></tr></thead>
-            <tbody>${ptsRows || "<tr><td colspan='6'>Sin puntos</td></tr>"}</tbody>
+      <div style="display:grid; grid-template-columns: 1fr; gap:12px; margin: 16px 0;">
+        <div style="border:1px solid #cbd5e1; border-radius:14px; background:#fff; padding:12px;">
+          <div style="font-weight:900; font-size:13px; margin-bottom:8px;">Top 5 patrones más repetidos</div>
+          <table style="width:100%; border-collapse:collapse; font-size:11px;">
+            <thead><tr>
+              <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">Patrón</th>
+              <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">Veces</th>
+              <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">Gana A</th>
+              <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">Gana B</th>
+              <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">Dominante</th>
+            </tr></thead>
+            <tbody>
+              ${topRows || "<tr><td colspan='5' style='padding:8px;border-bottom:1px solid #cbd5e1;'>Sin datos</td></tr>"}
+            </tbody>
           </table>
         </div>
 
-        <div class="footer">© ${new Date().getFullYear()} ${escapeHtml(brand)} · Export premium</div>
+        <div style="border:1px solid #cbd5e1; border-radius:14px; background:#fff; padding:12px;">
+          <div style="font-weight:900; font-size:13px; margin-bottom:8px;">Puntos (punto a punto)</div>
+          <table style="width:100%; border-collapse:collapse; font-size:11px;">
+            <thead><tr>
+              <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">#</th>
+              <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">Marcador</th>
+              <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">Servidor</th>
+              <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">Ganador</th>
+              <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">Final</th>
+              <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">Patrón</th>
+            </tr></thead>
+            <tbody>
+              ${ptsRows || "<tr><td colspan='6' style='padding:8px;border-bottom:1px solid #cbd5e1;'>Sin puntos</td></tr>"}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </body></html>`);
-  win.document.close();
+
+      <div style="margin-top:16px;color:#334155;font-size:11px;">© ${new Date().getFullYear()} ${escapeHtml(brand)} · Export premium</div>
+    </div>`;
+
+  document.body.appendChild(wrap);
+  document.body.classList.add("printing");
+
+  const cleanup = ()=>{
+    document.body.classList.remove("printing");
+    const el = document.getElementById("printReport");
+    if (el) el.remove();
+    window.removeEventListener("afterprint", cleanup);
+  };
+  window.addEventListener("afterprint", cleanup);
+
+  // open print dialog (user chooses "Guardar como PDF")
+  window.print();
 }
 
 function applyTheme(){

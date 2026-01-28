@@ -1,5 +1,5 @@
 
-const CACHE = "tennis-tracker-web-v2.35";
+const CACHE = "tennis-tracker-web-v2.36";
 const ASSETS = [
   "./",
   "./index.html",
