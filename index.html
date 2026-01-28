@@ -13,8 +13,8 @@
   <!-- TOP: menú + nombres + marcador (todo en la misma vista) -->
   <header class="topbar topbarInline">
     <div class="chips chipsScroll">
-      <button class="chip ghost" id="btnTheme" type="button">Modo claro</button>
-      <button class="chip ghost" id="btnCoach" type="button">Modo entrenador</button>
+      <button class="chip" id="btnToggleScore" type="button">Ocultar marcador</button>
+      <button class="chip" id="btnRotateCourt" type="button">Rotar pista</button>
 
       <button class="chip" id="btnHistory" type="button">Historial</button>
       <button class="chip" id="btnAnalytics" type="button">Analíticas</button>
@@ -22,6 +22,9 @@
       <button class="chip warn" id="btnFinish" type="button">Finalizar partido</button>
       <button class="chip good hidden" id="btnResume" type="button">Reanudar partido</button>
       <button class="chip primary" id="btnNew" type="button">Nuevo partido</button>
+
+      <button class="chip ghost" id="btnCoach" type="button">Modo entrenador</button>
+      <button class="chip ghost" id="btnTheme" type="button">Modo claro</button>
     </div>
   </header>
 
@@ -64,15 +67,21 @@
     <div class="diagramGrid">
       <div class="courtWrap">
       <div class="court" id="court">
-        <img src="assets/court_top_view.png" alt="pista" id="courtImg">
+        <div class="courtSurface" id="courtSurface">
+          <img src="assets/court_top_view.png" alt="pista" id="courtImg">
 
-        <!-- overlay flechas (direcciones) -->
-        <svg id="arrowSvg" class="arrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <!-- overlay flechas (direcciones) -->
+          <svg id="arrowSvg" class="arrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
 
-        <div class="zoneLayer" id="zoneLayer"></div>
+          <div class="zoneLayer" id="zoneLayer"></div>
+
+          <!-- nombres en el fondo (dentro del verde) -->
+          <div class="baselineName baselineTop" id="baselineTop">Jugador B</div>
+          <div class="baselineName baselineBottom" id="baselineBottom">Jugador A</div>
+        </div>
+
         <div class="zoneLabel" id="zoneHint">Toca en pista</div>
-
-        <!-- bola de acciones (saque/finalización) -->
+<!-- bola de acciones (saque/finalización) -->
         <button id="finishBall" class="tennisBall inCourt" type="button" aria-label="Acciones del punto"></button>
 
         <!-- botones rápidos (en el margen derecho del diagrama) -->

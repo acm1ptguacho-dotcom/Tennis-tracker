@@ -213,6 +213,47 @@ body.light .courtWrap{
 }
 body.light .court{border:1px solid rgba(10,22,55,.18);}
 
+
+.courtSurface{
+  position:absolute;
+  inset:0;
+  transform-origin: 50% 50%;
+  transition: transform 260ms cubic-bezier(.2,.9,.2,1);
+}
+.court.rotated .courtSurface{
+  transform: rotate(180deg);
+}
+
+/* keep labels upright when rotated */
+.court.rotated .zoneTxt{
+  display:inline-block;
+  transform: rotate(180deg);
+}
+.court.rotated .baselineName{
+  transform: rotate(180deg);
+  transform-origin: 50% 50%;
+}
+.court.rotated .arrowNumText{
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: rotate(180deg);
+}
+
+.baselineName{
+  position:absolute;
+  left:0; right:0;
+  text-align:center;
+  color: rgba(255,255,255,.96);
+  font-weight: 1000;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-shadow: 0 4px 16px rgba(0,0,0,.40);
+  pointer-events:none;
+  z-index: 2;
+  font-size: 13px;
+}
+.baselineTop{ top: 18px; }
+.baselineBottom{ bottom: 18px; }
 .court img{
   width:100%;
   height:100%;

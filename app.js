@@ -18,7 +18,7 @@ const state = {
   matchPoints: [], // completed points
   undoStack: [],
 
-  ui: { theme:"dark", coach:true, showHistoryArrows:true }
+  ui: { theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false }
 };
 
 function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -37,8 +37,10 @@ function load(){
     state.undoStack = state.undoStack || [];
     state.matchPoints = state.matchPoints || [];
     state.setHistory = state.setHistory || [];
-    state.ui = state.ui || {theme:"dark", coach:false, showHistoryArrows:true};
+    state.ui = state.ui || {theme:"dark", coach:false, showHistoryArrows:true, hideScore:false, rotated:false};
     if (typeof state.ui.showHistoryArrows === "undefined") state.ui.showHistoryArrows = true;
+    if (typeof state.ui.hideScore === "undefined") state.ui.hideScore = false;
+    if (typeof state.ui.rotated === "undefined") state.ui.rotated = false;
   }catch(e){ console.error(e); }
 }
 
@@ -309,6 +311,7 @@ function centerNormFromEl(el){
   const er = el.getBoundingClientRect();
   const x = (er.left + er.width/2 - cr.left) / cr.width;
   const y = (er.top + er.height/2 - cr.top) / cr.height;
+  if (state.ui && state.ui.rotated){ x = 1 - x; y = 1 - y; }
   return { x: clamp01(x), y: clamp01(y) };
 }
 
@@ -348,7 +351,7 @@ function recordArrow({hitter, throughEl, isServe=false}){
   }
 
   const opponent = other(hitter);
-  const to = extendToOpponentBaseline(from, through, opponent);
+  const to = isServe ? extendToOpponentBaseline(from, through, opponent) : through;
 
   const n = p.arrows.length + 1;
   p.arrows.push({
@@ -505,7 +508,7 @@ function buildZones(){
     btn.dataset.side="top";
     btn.dataset.row=r;
     btn.dataset.col=c;
-    btn.textContent = (r===0?"P":(r===1?"M":"C"));
+    btn.innerHTML = `<span class="zoneTxt">${(r===0?"P":(r===1?"M":"C"))}</span>`;
     btn.addEventListener("click",(e)=>{ flashTap(btn,e); onRallyTap("top", r, c, btn); });
     return btn;
   });
@@ -517,7 +520,7 @@ function buildZones(){
     btn.dataset.side="bottom";
     btn.dataset.row=r;
     btn.dataset.col=c;
-    btn.textContent = (r===0?"C":(r===1?"M":"P"));
+    btn.innerHTML = `<span class="zoneTxt">${(r===0?"C":(r===1?"M":"P"))}</span>`;
     btn.addEventListener("click",(e)=>{ flashTap(btn,e); onRallyTap("bottom", r, c, btn); });
     return btn;
   });
@@ -529,7 +532,7 @@ function buildZones(){
     btn.dataset.side=side;
     btn.dataset.box=box; // 0 left, 1 right
     btn.dataset.target=target; // T/C/A
-    btn.textContent="SAQUE";
+    btn.innerHTML=`<span class="zoneTxt">SAQUE</span>`;
     btn.style.fontSize="11px";
     btn.style.fontWeight="1100";
     btn.addEventListener("click",(e)=>{ flashTap(btn,e); onServeTap(side, box, target, btn); });
@@ -1277,6 +1280,8 @@ function renderHistoryDetail(p){
   // defaults
   if (!state.ui) state.ui = { theme:"dark", coach:true };
   if (typeof state.ui.showHistoryArrows === "undefined") state.ui.showHistoryArrows = true;
+    if (typeof state.ui.hideScore === "undefined") state.ui.hideScore = false;
+    if (typeof state.ui.rotated === "undefined") state.ui.rotated = false;
 
   const nameA=state.names.A, nameB=state.names.B;
   const winName = p.winner==="A"?nameA:nameB;
@@ -1730,8 +1735,44 @@ function toggleCoach(){
   persist();
 }
 
+function applyScoreVisibility(){
+  const s = $("#scoreSection");
+  if (s) s.classList.toggle("hidden", !!state.ui.hideScore);
+  const b = $("#btnToggleScore");
+  if (b) b.textContent = state.ui.hideScore ? "Mostrar marcador" : "Ocultar marcador";
+}
+function toggleScoreVisibility(){
+  state.ui.hideScore = !state.ui.hideScore;
+  applyScoreVisibility();
+  persist();
+}
+
+function applyRotation(){
+  const c = $("#court");
+  if (c) c.classList.toggle("rotated", !!state.ui.rotated);
+  const b = $("#btnRotateCourt");
+  if (b) b.textContent = state.ui.rotated ? "Restaurar pista" : "Rotar pista";
+  // ensure arrows reflect the current orientation
+  renderLiveArrows(false);
+}
+function toggleRotation(){
+  state.ui.rotated = !state.ui.rotated;
+  applyRotation();
+  persist();
+}
+
+function renderCourtNames(){
+  const t = $("#baselineTop");
+  const b = $("#baselineBottom");
+  if (t) t.textContent = (state.names && state.names.B) ? state.names.B : "Jugador B";
+  if (b) b.textContent = (state.names && state.names.A) ? state.names.A : "Jugador A";
+}
+
 /** WIRING **/
 function renderAll(){
+  applyScoreVisibility();
+  applyRotation();
+  renderCourtNames();
   renderScore();
   renderPoint();
 }
@@ -1755,6 +1796,9 @@ function wire(){
   on("btnHistory","click", openHistory);
   on("btnAnalytics","click", openAnalytics);
   on("btnExport","click", openExport);
+
+  on("btnToggleScore","click", toggleScoreVisibility);
+  on("btnRotateCourt","click", toggleRotation);
 
   on("btnCloseHistory","click", closeHistory);
   on("btnCloseAnalytics","click", closeAnalytics);
