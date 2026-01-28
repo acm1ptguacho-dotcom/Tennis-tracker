@@ -18,7 +18,7 @@ const state = {
   matchPoints: [], // completed points
   undoStack: [],
 
-  ui: { theme:"dark", coach:true }
+  ui: { theme:"dark", coach:true, showHistoryArrows:true }
 };
 
 function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -37,7 +37,8 @@ function load(){
     state.undoStack = state.undoStack || [];
     state.matchPoints = state.matchPoints || [];
     state.setHistory = state.setHistory || [];
-    state.ui = state.ui || {theme:"dark", coach:false};
+    state.ui = state.ui || {theme:"dark", coach:false, showHistoryArrows:true};
+    if (typeof state.ui.showHistoryArrows === "undefined") state.ui.showHistoryArrows = true;
   }catch(e){ console.error(e); }
 }
 
@@ -84,7 +85,9 @@ function initPoint(){
     phase: "serve", // serve | rally
     firstServeFault: false,
     events: [], // {type:"serve"/"rally", player, code, meta, elId}
+    arrows: [], // flechas de dirección (durante el punto)
   };
+  clearLiveArrows();
   updateZoneHint();
   renderPoint();
   applyTapConstraints();
@@ -263,6 +266,213 @@ const Z = {
   serveTop: { left:.22, top:.285, width:.56, height:.18 },     // B receiving service boxes (upper service line area)
   serveBottom: { left:.22, top:.535, width:.56, height:.18 },  // A receiving boxes (lower service line area)
 };
+
+
+// ---------- ARROWS (direcciones) ----------
+let __liveArrowCountRendered = 0;
+
+function singlesBounds(){
+  // Use rallyTop bounds (singles area)
+  const left = Z.rallyTop.left;
+  const right = Z.rallyTop.left + Z.rallyTop.width;
+  const center = (left + right) / 2;
+  return { left, right, center };
+}
+
+function baselineY(player){
+  // Player A is bottom, player B is top
+  const topY = Z.rallyTop.top + 0.005;
+  const bottomY = (Z.rallyBottom.top + Z.rallyBottom.height) - 0.005;
+  return (player === "A") ? bottomY : topY;
+}
+
+function serveOriginNorm(server, sideLabel){
+  // sideLabel: "SD" (deuce) | "SV" (ventaja)
+  const {left, right, center} = singlesBounds();
+  const half = right - center;
+  const frac = 0.25; // 1/4 of the quadrant from the inner edge (near center)
+  // Mapping of deuce/ad to screen: top player is inverted
+  // - server A (bottom): SD is right, SV is left
+  // - server B (top):    SD is left,  SV is right
+  const isRightHalf = (server === "A")
+    ? (sideLabel === "SD")
+    : (sideLabel === "SV");
+  const x = isRightHalf ? (center + frac * half) : (center - frac * half);
+  const y = baselineY(server);
+  return {x, y};
+}
+
+function centerNormFromEl(el){
+  const court = $("#court");
+  if (!court || !el) return {x:0.5, y:0.5};
+  const cr = court.getBoundingClientRect();
+  const er = el.getBoundingClientRect();
+  const x = (er.left + er.width/2 - cr.left) / cr.width;
+  const y = (er.top + er.height/2 - cr.top) / cr.height;
+  return { x: clamp01(x), y: clamp01(y) };
+}
+
+function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+
+function extendToOpponentBaseline(from, through, opponent){
+  const yT = baselineY(opponent);
+  const dx = (through.x - from.x);
+  const dy = (through.y - from.y);
+  // If dy is ~0, just drop to target baseline
+  if (Math.abs(dy) < 1e-6){
+    return { x: through.x, y: yT };
+  }
+  const t = (yT - from.y) / dy;
+  // ensure it goes beyond the through point
+  const tt = Math.max(t, 1.02);
+  return { x: from.x + dx*tt, y: from.y + dy*tt };
+}
+
+function lastArrowEnd(p){
+  if (!p || !p.arrows || p.arrows.length===0) return null;
+  return p.arrows[p.arrows.length-1].to;
+}
+
+function recordArrow({hitter, throughEl, isServe=false}){
+  const p = state.point;
+  if (!p) return;
+  if (!p.arrows) p.arrows = [];
+
+  const through = centerNormFromEl(throughEl);
+  let from = null;
+
+  if (isServe){
+    from = serveOriginNorm(hitter, p.side);
+  } else {
+    from = lastArrowEnd(p) || { x: singlesBounds().center, y: baselineY(hitter) };
+  }
+
+  const opponent = other(hitter);
+  const to = extendToOpponentBaseline(from, through, opponent);
+
+  const n = p.arrows.length + 1;
+  p.arrows.push({
+    n,
+    hitter,
+    from: {x: clamp01(from.x), y: clamp01(from.y)},
+    through: {x: clamp01(through.x), y: clamp01(through.y)},
+    to: {x: clamp01(to.x), y: clamp01(to.y)}
+  });
+
+  renderLiveArrows(true);
+}
+
+function svgPt(pt){
+  return { x: pt.x * 1000, y: pt.y * 1000 };
+}
+
+function arrowDefs(){
+  return `
+    <defs>
+      <marker id="ahA" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#FFF200"></path>
+      </marker>
+      <marker id="ahB" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#FF2A2A"></path>
+      </marker>
+    </defs>`;
+}
+
+function renderArrows(svgEl, arrows, opts={}){
+  if (!svgEl) return;
+  const {animateFromIndex=null, fadeOld=true, highlightIndex=null} = opts;
+  svgEl.innerHTML = arrowDefs();
+
+  if (!arrows || arrows.length===0) return;
+
+  arrows.forEach((a, idx)=>{
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("data-idx", idx);
+
+    const A = svgPt(a.from);
+    const P = svgPt(a.through);
+    const E = svgPt(a.to);
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", `M ${A.x.toFixed(1)} ${A.y.toFixed(1)} L ${P.x.toFixed(1)} ${P.y.toFixed(1)} L ${E.x.toFixed(1)} ${E.y.toFixed(1)}`);
+    path.classList.add("arrowLine", (a.hitter==="A"?"a":"b"), "subtle");
+    path.setAttribute("stroke-width", "3");
+    path.setAttribute("marker-end", `url(#${a.hitter==="A"?"ahA":"ahB"})`);
+
+    if (fadeOld && idx < arrows.length-6){
+      path.classList.add("old");
+    }
+
+    if (highlightIndex!==null && idx===highlightIndex){
+      path.setAttribute("stroke-width","4");
+      path.style.opacity="1";
+    }
+
+    g.appendChild(path);
+
+    const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx", A.x.toFixed(1));
+    c.setAttribute("cy", A.y.toFixed(1));
+    c.setAttribute("r", "14");
+    c.classList.add("arrowNumCircle", (a.hitter==="A"?"a":"b"));
+    g.appendChild(c);
+
+    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", A.x.toFixed(1));
+    t.setAttribute("y", A.y.toFixed(1));
+    t.textContent = String(a.n);
+    t.classList.add("arrowNumText");
+    g.appendChild(t);
+
+    svgEl.appendChild(g);
+
+    // animate new arrows only
+    if (animateFromIndex!==null && idx >= animateFromIndex){
+      // use stroke-dash animation
+      try{
+        const len = path.getTotalLength();
+        path.style.setProperty("--dash", String(Math.max(120, len)));
+        path.classList.add("draw");
+      }catch(e){}
+    }
+  });
+}
+
+function renderLiveArrows(animate=false){
+  const svg = $("#arrowSvg");
+  if (!svg) return;
+  const p = state.point;
+  const arrows = p && p.arrows ? p.arrows : [];
+  if (!arrows || arrows.length===0){
+    svg.innerHTML = arrowDefs();
+    __liveArrowCountRendered = 0;
+    return;
+  }
+  const animateFromIndex = (animate && arrows.length > __liveArrowCountRendered) ? __liveArrowCountRendered : null;
+  __liveArrowCountRendered = arrows.length;
+  renderArrows(svg, arrows, { animateFromIndex, fadeOld:true });
+}
+
+function clearLiveArrows(){
+  const svg = $("#arrowSvg");
+  if (svg) svg.innerHTML = arrowDefs();
+  __liveArrowCountRendered = 0;
+}
+
+function replayArrowsIn(svgEl, arrows){
+  if (!svgEl || !arrows || arrows.length===0) return;
+  svgEl.innerHTML = arrowDefs();
+  let i = 0;
+  const step = ()=>{
+    renderArrows(svgEl, arrows.slice(0, i+1), { animateFromIndex:i, fadeOld:false, highlightIndex:i });
+    i++;
+    if (i < arrows.length){
+      setTimeout(step, 320);
+    }
+  };
+  step();
+}
+
 
 function clearZoneLayer(){ $("#zoneLayer").innerHTML=""; }
 
@@ -461,6 +671,7 @@ function onServeTap(side, box, target, el){
   };
 
   state.point.events.push(ev);
+  recordArrow({ hitter: server, throughEl: el, isServe: true });
 
   // after serve => rally
   state.point.phase = "rally";
@@ -499,6 +710,7 @@ function onRallyTap(side, row, col, el){
     elId: elIdForRally(side, row, col)
   };
   state.point.events.push(ev);
+  recordArrow({ hitter, throughEl: el, isServe: false });
   renderPoint();
   applyTapConstraints();
   persist();
@@ -525,6 +737,7 @@ function renderPoint(){
   const p=state.point;
   if (!p){
     if (last) last.textContent="Último: —";
+    clearLiveArrows();
     return;
   }
 
@@ -552,6 +765,7 @@ function renderPoint(){
   const __sa=$("#serveActions"); if(__sa) __sa.classList.toggle("hidden", p.phase!=="serve");
   const __fa=$("#finishActions"); if(__fa) __fa.classList.toggle("hidden", p.phase!=="rally");
   refreshFinishMenuMode();
+  renderLiveArrows(false);
   applyTapConstraints();
 }
 
@@ -667,6 +881,7 @@ function savePoint(winner, reason){
     snapshot,
     finishDetail,
         events: p.events.slice(),
+    arrows: p.arrows ? JSON.parse(JSON.stringify(p.arrows)) : [],
   });
 }
 
@@ -683,6 +898,8 @@ function endPoint(winner, reason){
 function undo(){
   if (!state.point || state.point.events.length===0) return;
   state.point.events.pop();
+  if (state.point.arrows && state.point.arrows.length) state.point.arrows.pop();
+
   // if popped last serve and phase was rally, maybe revert phase
   if (state.point.events.length===0){
     state.point.phase="serve";
@@ -766,6 +983,14 @@ function replayPoint(startIndex=0, endIndex=null){
     const ev = events[i];
     const el = elementFromElId(ev.elId);
     if (el) flashTap(el, null);
+
+    // highlight corresponding arrow
+    const svg = $("#arrowSvg");
+    if (svg && p.arrows && p.arrows[i]){
+      renderArrows(svg, p.arrows, { fadeOld:true, highlightIndex:i });
+    } else {
+      renderLiveArrows(false);
+    }
 
     if (i < end){
       i++;
@@ -1048,23 +1273,75 @@ function renderHistory(){
 function renderHistoryDetail(p){
   const detail=$("#historyDetail");
   if (!detail) return;
+
+  // defaults
+  if (!state.ui) state.ui = { theme:"dark", coach:true };
+  if (typeof state.ui.showHistoryArrows === "undefined") state.ui.showHistoryArrows = true;
+
   const nameA=state.names.A, nameB=state.names.B;
   const winName = p.winner==="A"?nameA:nameB;
+  const showArrows = !!state.ui.showHistoryArrows;
+  const hasArrows = (p.arrows && p.arrows.length);
+
   const header = `
-    <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
-      <div>
+    <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+      <div style="min-width:0;">
         <div class="modalTitle" style="margin:0;">Punto ${p.n} · Gana ${escapeHtml(p.winner)}</div>
-        <div class="modalSub" style="margin-top:4px;">${escapeHtml(p.snapshot)}<br/>${escapeHtml((p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : ""))}</div>
+        <div class="modalSub" style="margin-top:4px;">
+          ${escapeHtml(p.snapshot)}<br/>
+          ${escapeHtml((p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : ""))}
+        </div>
       </div>
-      <div class="pill ${p.winner==="A"?"pillGood":"pillWarn"}">${escapeHtml(winName)}</div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+        <div class="pill ${p.winner==="A"?"pillGood":"pillWarn"}">${escapeHtml(winName)}</div>
+        <div class="historyDetailTools">
+          <button class="chip" id="btnHistToggleArrows" type="button">${showArrows ? "Flechas: ON" : "Flechas: OFF"}</button>
+          <button class="chip" id="btnHistReplayArrows" type="button" ${hasArrows ? "" : "disabled"}>Reproducir</button>
+        </div>
+      </div>
     </div>
-    <div style="height:10px;"></div>
   `;
+
+  const courtBlock = `
+    <div class="miniCourtWrap" ${showArrows ? "" : "style='display:none;'"}>
+      <div class="miniCourt">
+        <img src="assets/court_top_view.png" alt="pista mini">
+        <svg id="historyArrowSvg" class="arrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
+      </div>
+      ${hasArrows ? "" : "<div class='muted' style='margin-top:8px;'>Este punto no tiene flechas.</div>"}
+    </div>
+  `;
+
   const evs = (p.events||[]);
   const lines = evs.map((e,i)=>`<div class="mono" style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,.08);">
     <b>${i+1}.</b> ${escapeHtml(e.player)} - ${escapeHtml(e.code)}
   </div>`).join("");
-  detail.innerHTML = header + `<div>${lines || "<div class='muted'>Sin eventos</div>"}</div>`;
+
+  detail.innerHTML = header + courtBlock + `<div>${lines || "<div class='muted'>Sin eventos</div>"}</div>`;
+
+  // bind tools
+  const btnT=$("#btnHistToggleArrows");
+  if (btnT){
+    btnT.onclick = ()=>{
+      state.ui.showHistoryArrows = !state.ui.showHistoryArrows;
+      persist();
+      renderHistoryDetail(p);
+    };
+  }
+  const btnR=$("#btnHistReplayArrows");
+  if (btnR){
+    btnR.onclick = ()=>{
+      const svg=$("#historyArrowSvg");
+      if (!svg) return;
+      replayArrowsIn(svg, (p.arrows||[]));
+    };
+  }
+
+  // render arrows (static)
+  if (showArrows){
+    const svg=$("#historyArrowSvg");
+    if (svg) renderArrows(svg, (p.arrows||[]), { fadeOld:false });
+  }
 }
 
 
@@ -1200,6 +1477,7 @@ function getExport(includeServe, splitShots){
       winner:p.winner,
       reason:p.reason,
       finishDetail: p.finishDetail || null,
+      arrows: p.arrows ? p.arrows : [],
       evs,
       pattern: evs.join(" - "),
     };
@@ -1307,6 +1585,56 @@ function exportPDF(){
       <td class="mono">${escapeHtml(r.pattern)}</td>
     </tr>`;
   }).join("");
+const miniSvg = (arrows, idx)=>{
+    const defs = `
+      <defs>
+        <marker id="ahA_${idx}" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#FFF200"></path>
+        </marker>
+        <marker id="ahB_${idx}" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#FF2A2A"></path>
+        </marker>
+      </defs>`;
+    const segs = (arrows||[]).map(a=>{
+      const A = {x:a.from.x*1000, y:a.from.y*1000};
+      const P = {x:a.through.x*1000, y:a.through.y*1000};
+      const E = {x:a.to.x*1000, y:a.to.y*1000};
+      const col = (a.hitter==="A") ? "#FFF200" : "#FF2A2A";
+      const mid = (a.hitter==="A") ? `url(#ahA_${idx})` : `url(#ahB_${idx})`;
+      return `
+        <path d="M ${A.x.toFixed(1)} ${A.y.toFixed(1)} L ${P.x.toFixed(1)} ${P.y.toFixed(1)} L ${E.x.toFixed(1)} ${E.y.toFixed(1)}"
+          fill="none" stroke="${col}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="${mid}" opacity=".86"></path>
+        <circle cx="${A.x.toFixed(1)}" cy="${A.y.toFixed(1)}" r="14" fill="rgba(0,0,0,.55)" stroke="${col}" stroke-width="2"></circle>
+        <text x="${A.x.toFixed(1)}" y="${A.y.toFixed(1)}" font-size="18" font-weight="900" fill="#fff" text-anchor="middle" dominant-baseline="middle">${a.n}</text>
+      `;
+    }).join("");
+    return `<svg viewBox="0 0 1000 1000" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">${defs}${segs}</svg>`;
+  };
+
+  const pointCards = rows.map((r, idx)=>{
+    const win = r.winner==="A"?nameA:nameB;
+    const arrows = r.arrows || [];
+    const mini = arrows.length ? `
+      <div class="miniCourtWrap">
+        <div class="miniCourt" style="width:190px; border-radius:10px; border:1px solid #cbd5e1; background:#fff;">
+          <img src="assets/court_top_view.png" alt="court" style="width:100%; height:100%; object-fit:cover; display:block;">
+          ${miniSvg(arrows, idx)}
+        </div>
+      </div>` : `<div style="color:#64748b; font-size:11px;">(Sin flechas)</div>`;
+
+    return `
+      <div style="display:grid; grid-template-columns: 210px 1fr; gap:14px; align-items:start; border:1px solid #e2e8f0; border-radius:14px; padding:10px 12px; margin:10px 0; page-break-inside: avoid;">
+        <div>${mini}</div>
+        <div>
+          <div style="font-weight:900; font-size:12px;">Punto ${r.n} · Gana ${escapeHtml(win)}</div>
+          <div style="color:#334155; font-size:11px; margin-top:4px;">${escapeHtml(r.snapshot)}</div>
+          <div style="color:#0f172a; font-size:11px; margin-top:6px;"><b>${escapeHtml(r.reason || "")}</b>${finishDetailLabel(r.finishDetail) ? " · " + escapeHtml(finishDetailLabel(r.finishDetail)) : ""}</div>
+          <div style="font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono','Courier New', monospace; font-size:11px; margin-top:8px;">${escapeHtml(r.pattern)}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
 
   // Build printable report inline (no popups)
   const existing = document.getElementById("printReport");
@@ -1356,6 +1684,12 @@ function exportPDF(){
               ${ptsRows || "<tr><td colspan='6' style='padding:8px;border-bottom:1px solid #cbd5e1;'>Sin puntos</td></tr>"}
             </tbody>
           </table>
+        </div>
+
+        <div style="border:1px solid #cbd5e1; border-radius:14px; background:#fff; padding:12px;">
+          <div style="font-weight:900; font-size:13px; margin-bottom:8px;">Puntos con diagrama (flechas)</div>
+          <div style="font-size:11px; color:#334155; margin-bottom:10px;">Cada punto incluye un mini-diagrama con flechas (A amarillo, B rojo).</div>
+          ${pointCards || "<div style=\'color:#64748b;font-size:11px;\'>Sin datos.</div>"}
         </div>
       </div>
 

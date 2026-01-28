@@ -221,7 +221,7 @@ body.light .court{border:1px solid rgba(10,22,55,.18);}
   filter:saturate(1.05) contrast(1.02);
 }
 
-.zoneLayer{position:absolute; inset:0; pointer-events:auto;}
+.zoneLayer{position:absolute; inset:0; pointer-events:auto; z-index:4;}
 
 .gridLayer{position:absolute;inset:0;pointer-events:auto;}
 .zoneCell,.serveCell{touch-action:manipulation;}
@@ -1255,3 +1255,79 @@ body.printing .app{ display:none; }
 .scoreTv{padding-top:10px !important; padding-bottom:10px !important;}
 .scoreTv .tvRow{margin-top:8px !important;}
 
+
+
+/* ==== Flechas de direcciones ==== */
+.arrowSvg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index: 6; /* encima de pista, debajo de bola y botones */
+}
+.arrowSvg .arrowLine{
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.arrowSvg .arrowLine.a{ stroke: #FFF200; }
+.arrowSvg .arrowLine.b{ stroke: #FF2A2A; }
+.arrowSvg .arrowLine.subtle{ opacity:.86; }
+.arrowSvg .arrowLine.old{ opacity:.55; }
+.arrowSvg .arrowNumCircle{
+  fill: rgba(0,0,0,.55);
+  stroke-width: 2;
+}
+.arrowSvg .arrowNumCircle.a{ stroke:#FFF200; }
+.arrowSvg .arrowNumCircle.b{ stroke:#FF2A2A; }
+.arrowSvg .arrowNumText{
+  font-weight: 900;
+  font-size: 18px;
+  fill: #ffffff;
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+.arrowSvg .draw{
+  stroke-dasharray: var(--dash, 1000);
+  stroke-dashoffset: var(--dash, 1000);
+  animation: dashDraw .28s ease-out forwards;
+}
+@keyframes dashDraw{ to{ stroke-dashoffset: 0; } }
+
+
+/* Historial: mini pista con flechas */
+.historyDetailTools{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  margin-top: 6px;
+}
+.miniCourtWrap{ margin: 10px 0 12px; }
+.miniCourt{
+  position:relative;
+  width: min(420px, 100%);
+  aspect-ratio: 2 / 3;
+  border-radius: 18px;
+  overflow:hidden;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.2);
+}
+.miniCourt img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.miniCourt .arrowSvg{ z-index: 4; }
+
+/* Print (PDF) mini court */
+@media print{
+  #printReport .miniCourt{
+    width: 190px !important;
+    border-radius: 10px !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+  #printReport .miniCourtWrap{ margin: 6px 0 0 !important; }
+}
