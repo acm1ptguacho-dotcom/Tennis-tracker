@@ -1246,3 +1246,12 @@ body.printing .app{ display:none; }
   .tvTag{ width: 26px; height: 26px; border-radius: 10px;}
   .scoreTv input{ padding: 8px 10px; }
 }
+
+
+/* v2.38: compact TV scoreboard (remove header labels + meta row) */
+.scoreTv .tvHeader{display:none !important;}
+.scoreTv .tvMeta{display:none !important;}
+/* tighten spacing */
+.scoreTv{padding-top:10px !important; padding-bottom:10px !important;}
+.scoreTv .tvRow{margin-top:8px !important;}
+
