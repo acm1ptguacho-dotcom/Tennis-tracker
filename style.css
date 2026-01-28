@@ -405,10 +405,10 @@ body.coach .kpi .v{font-size:24px}
 .zoneCell::before, .serveCell::before{
   content:""; position:absolute; inset:0; pointer-events:none; opacity:0; z-index:1;
   background: rgba(255,255,0,.92);
-  border:6px solid rgba(255,0,0,.98);
+  border:8px solid rgba(255,0,0,.99);
   border-radius: 8px;
   box-sizing:border-box;
-  box-shadow: 0 0 18px rgba(255,255,0,.35), 0 0 10px rgba(255,0,0,.22);
+  box-shadow: 0 0 28px rgba(255,255,0,.55), 0 0 18px rgba(255,0,0,.35), 0 0 60px rgba(255,255,0,.22);
   transition: opacity 140ms ease;
 }
 .zoneCell.tapHold::before, .serveCell.tapHold::before{opacity:1;}
@@ -417,12 +417,12 @@ body.coach .kpi .v{font-size:24px}
   background: rgba(255,255,0,1);
   border-radius:8px;
   clip-path: circle(0% at var(--tap-x,50%) var(--tap-y,50%));
-  filter: drop-shadow(0 0 14px rgba(255,255,0,.55));
+  filter: drop-shadow(0 0 22px rgba(255,255,0,.85)) drop-shadow(0 0 10px rgba(255,0,0,.40));
 }
 .zoneCell.tapFlash::after, .serveCell.tapFlash::after{animation: tapFillPro 520ms cubic-bezier(.12,.92,.18,1) forwards;}
 .zoneCell.tapFlash, .serveCell.tapFlash{
   animation: tapPopPro 520ms cubic-bezier(.14,.88,.2,1) forwards;
-  box-shadow: 0 0 0 7px rgba(255,0,0,.95) inset, 0 0 42px rgba(255,255,0,.18), 0 0 18px rgba(255,0,0,.16);
+  box-shadow: 0 0 0 10px rgba(255,0,0,.98) inset, 0 0 70px rgba(255,255,0,.35), 0 0 30px rgba(255,0,0,.25), 0 0 14px rgba(255,255,255,.10);
 }
 @keyframes tapFillPro{
   0%{opacity:1; clip-path: circle(0% at var(--tap-x,50%) var(--tap-y,50%));}

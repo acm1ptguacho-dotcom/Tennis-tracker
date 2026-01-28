@@ -870,21 +870,24 @@ function commitAdvancedFinish(detailKey){
   if (!pendingFinish) return;
   if (!state.point) initPoint();
 
+  // Capture meta BEFORE closing UI (closeAdvStep2 clears pendingFinish)
+  const meta = pendingFinish;
+
   // Attach detail onto current point (copied into matchPoints by savePoint)
   state.point.finishDetail = {
     mode: "advanced",
-    kind: pendingFinish.kind,
-    offender: pendingFinish.offender,
+    kind: meta.kind,
+    offender: meta.offender,
   };
-  if (pendingFinish.kind==="WINNER"){
+  if (meta.kind==="WINNER"){
     state.point.finishDetail.winnerType = detailKey;
   } else {
     state.point.finishDetail.strokeType = detailKey;
   }
 
-  closeAdvStep2();
+  // End point first, then close UI
+  endPoint(meta.winner, meta.reason);
   closeFinishMenu();
-  endPoint(pendingFinish.winner, pendingFinish.reason);
 }
 
 function finishAction(kind, offender){
