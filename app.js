@@ -1969,6 +1969,612 @@ function initBottomSheet(){
   handle.addEventListener("touchend", ()=>{ startY = null; }, {passive:true});
 }
 
+
+// -------------------- Modo Pizarra (coach board) --------------------
+const BOARD_KEY = "tdt_board_patterns_v1";
+
+let boardPatterns = [];
+let boardSelectedId = null;
+
+const board = {
+  open:false,
+  startMode:"SAQUE", // "SAQUE" | "RALLY"
+  server:"A",
+  serveSide:"SD", // SD=deuce, SV=ad
+  starter:"A",    // only for startMode=RALLY
+  events:[],       // {type:"serve"|"rally", hitter:"A"|"B", code:string}
+  arrows:[],       // {from:{x,y},through:{x,y},to:{x,y},label:number,color:string}
+  playing:false,
+  loop:false,
+  playIdx:0,       // next arrow index to play
+  timer:null,
+  editing:false
+};
+
+function loadBoardPatterns(){
+  try{
+    const raw = localStorage.getItem(BOARD_KEY);
+    boardPatterns = raw ? JSON.parse(raw) : [];
+    if(!Array.isArray(boardPatterns)) boardPatterns = [];
+  }catch(e){ boardPatterns = []; }
+}
+function saveBoardPatterns(){
+  try{ localStorage.setItem(BOARD_KEY, JSON.stringify(boardPatterns)); }catch(e){}
+}
+
+function openBoard(){
+  board.open = true;
+  $("#boardModal")?.classList.remove("hidden");
+  boardRefreshControls();
+  boardRenderAll();
+}
+function closeBoard(){
+  board.open = false;
+  $("#boardModal")?.classList.add("hidden");
+  boardStop();
+}
+
+function boardResetSequence(){
+  board.events = [];
+  board.arrows = [];
+  board.playIdx = 0;
+  boardStop();
+  boardApplyConstraints();
+  boardRenderAll();
+}
+
+function boardRefreshControls(){
+  // toggles
+  $("#btnBoardStartServe")?.classList.toggle("active", board.startMode==="SAQUE");
+  $("#btnBoardStartRally")?.classList.toggle("active", board.startMode==="RALLY");
+  $("#boardServeControls")?.classList.toggle("hidden", board.startMode!=="SAQUE");
+  $("#boardRallyControls")?.classList.toggle("hidden", board.startMode!=="RALLY");
+
+  $("#btnBoardSrvA")?.classList.toggle("active", board.server==="A");
+  $("#btnBoardSrvB")?.classList.toggle("active", board.server==="B");
+  $("#btnBoardSideD")?.classList.toggle("active", board.serveSide==="SD");
+  $("#btnBoardSideA")?.classList.toggle("active", board.serveSide==="SV");
+
+  $("#btnBoardStartA")?.classList.toggle("active", board.starter==="A");
+  $("#btnBoardStartB")?.classList.toggle("active", board.starter==="B");
+
+  $("#btnBoardLoop")?.classList.toggle("active", board.loop);
+
+  // edit mode buttons
+  $("#btnBoardSave")?.classList.toggle("hidden", !board.editing);
+  $("#btnBoardCancel")?.classList.toggle("hidden", !board.editing);
+  $("#btnBoardUndo")?.classList.toggle("hidden", !board.editing);
+
+  // names
+  $("#boardNameBottom").textContent = state.players?.A || "Jugador A";
+  $("#boardNameTop").textContent = state.players?.B || "Jugador B";
+}
+
+function boardCourtRect(){
+  return $("#boardCourt").getBoundingClientRect();
+}
+function boardCenterNormFromEl(el){
+  const c = boardCourtRect();
+  const r = el.getBoundingClientRect();
+  const x = ((r.left + r.right)/2 - c.left) / c.width;
+  const y = ((r.top + r.bottom)/2 - c.top) / c.height;
+  return clamp01({x,y});
+}
+
+function boardArrowColorFor(hitter){
+  // por jugador: A amarillo, B rojo
+  return hitter==="A" ? "#FFE600" : "#FF3B30";
+}
+
+function boardRecordArrow(isServe, hitSide, throughEl, hitter){
+  const through = boardCenterNormFromEl(throughEl);
+  let from;
+  if(isServe){
+    from = serveOrigin(board.server, board.serveSide, 0.25);
+  }else{
+    const last = board.arrows[board.arrows.length-1];
+    from = last ? last.to : (hitter==="A" ? {x:0.25,y:baselineY("bottom")} : {x:0.25,y:baselineY("top")});
+  }
+  let to = through;
+  if(isServe){
+    // solo el saque se extiende hasta el fondo contrario
+    const y = hitSide==="top" ? baselineY("top") : baselineY("bottom");
+    const b = singlesBounds();
+    const dir = {x: through.x - from.x, y: through.y - from.y};
+    const t = rayIntersectY(from, dir, y);
+    to = clamp01({x: clamp(t.x, b.x1, b.x2), y});
+  }
+  board.arrows.push({
+    from, through, to,
+    label: board.arrows.length+1,
+    color: boardArrowColorFor(hitter)
+  });
+}
+
+function boardGetInsertIndex(){
+  // if playing paused and editing, we edit from the current playIdx (next shot)
+  if(board.editing) return board.playIdx;
+  return board.events.length;
+}
+function boardPrefixEvents(n){
+  return board.events.slice(0, n);
+}
+function boardRallyCountInPrefix(n){
+  return boardPrefixEvents(n).filter(e=>e.type==="rally").length;
+}
+
+function boardNextHitterForInsert(insertIndex){
+  // Determine hitter for the *next* event at insertIndex
+  if(board.startMode==="SAQUE" && insertIndex===0) return board.server; // serve hitter
+  const server = board.server;
+  const receiver = server==="A" ? "B" : "A";
+
+  const rallyCount = boardRallyCountInPrefix(insertIndex);
+
+  if(board.startMode==="SAQUE"){
+    // first rally = receiver, then alternate
+    return (rallyCount % 2 === 0) ? receiver : server;
+  }
+  // startMode=RALLY
+  const other = board.starter==="A" ? "B" : "A";
+  return (rallyCount % 2 === 0) ? board.starter : other;
+}
+
+function boardExpectedTapSideForHitter(hitter){
+  // tap side = where ball lands (opposite hitter side)
+  return hitter==="A" ? "top" : "bottom";
+}
+
+function boardApplyConstraints(){
+  // enable/disable board zones based on next expected input
+  const insertIndex = boardGetInsertIndex();
+  const serveTop = $("#boardServeGridTop");
+  const serveBottom = $("#boardServeGridBottom");
+  const rallyTop = $("#boardRallyGridTop");
+  const rallyBottom = $("#boardRallyGridBottom");
+
+  const enable = (el,on)=>{ if(!el) return; el.classList.toggle("disabled", !on); };
+  const enableBoxes = (grid, requiredBox)=>{
+    if(!grid) return;
+    [...grid.querySelectorAll(".serveCell")].forEach(z=>{
+      const box = Number(z.dataset.box);
+      z.classList.toggle("disabled", box!==requiredBox);
+    });
+  };
+
+  if(board.startMode==="SAQUE" && insertIndex===0){
+    const expectedSide = (board.server==="A") ? "top" : "bottom";
+    enable(serveTop, expectedSide==="top");
+    enable(serveBottom, expectedSide==="bottom");
+    enable(rallyTop,false); enable(rallyBottom,false);
+    const requiredBox = (board.serveSide==="SD") ? 0 : 1;
+    enableBoxes(expectedSide==="top"?serveTop:serveBottom, requiredBox);
+    return;
+  }
+
+  // rally phase
+  enable(serveTop,false); enable(serveBottom,false);
+
+  const hitter = boardNextHitterForInsert(insertIndex);
+  const expectedSide = boardExpectedTapSideForHitter(hitter);
+  enable(rallyTop, expectedSide==="top");
+  enable(rallyBottom, expectedSide==="bottom");
+
+  // disable the other side zones fully
+  const otherGrid = expectedSide==="top" ? rallyBottom : rallyTop;
+  if(otherGrid){
+    [...otherGrid.querySelectorAll(".zone")].forEach(z=>z.classList.add("disabled"));
+  }
+  const activeGrid = expectedSide==="top" ? rallyTop : rallyBottom;
+  if(activeGrid){
+    [...activeGrid.querySelectorAll(".zone")].forEach(z=>z.classList.remove("disabled"));
+  }
+}
+
+function boardAddEvent(event){
+  const insertIndex = boardGetInsertIndex();
+  // truncate if editing from mid-sequence
+  if(insertIndex < board.events.length){
+    board.events = board.events.slice(0, insertIndex);
+    board.arrows = board.arrows.slice(0, insertIndex);
+  }
+  board.events.push(event);
+}
+
+function boardOnServeTap(side, el){
+  // side is expected landing side (top if server A)
+  const insertIndex = boardGetInsertIndex();
+  if(!(board.startMode==="SAQUE" && insertIndex===0)) return;
+
+  // validate correct side
+  const expectedSide = (board.server==="A") ? "top" : "bottom";
+  if(side !== expectedSide) return;
+
+  const requiredBox = (board.serveSide==="SD") ? 0 : 1;
+  const box = Number(el.dataset.box);
+  if(box !== requiredBox) return;
+
+  const target = el.dataset.target; // T/C/A
+  const hitter = board.server;
+  boardAddEvent({type:"serve", hitter, code:`S ${board.serveSide} ${target}`});
+  boardRecordArrow(true, side, el, hitter);
+
+  // after serve -> rally
+  boardApplyConstraints();
+  boardRenderAll();
+}
+
+function boardOnRallyTap(side, el){
+  const insertIndex = boardGetInsertIndex();
+  if(board.startMode==="SAQUE" && insertIndex===0) return; // still need serve
+
+  const hitter = boardNextHitterForInsert(insertIndex);
+  const expectedSide = boardExpectedTapSideForHitter(hitter);
+  if(side !== expectedSide) return;
+
+  const code = zoneCodeFromTap(el, side); // e.g. CP/MP/CC
+  // add "R " only if startMode=SAQUE and this is the first rally (the return)
+  const rallyCount = boardRallyCountInPrefix(insertIndex);
+  const prefix = (board.startMode==="SAQUE" && rallyCount===0) ? "R " : "";
+  boardAddEvent({type:"rally", hitter, code: `${prefix}${code}`});
+  boardRecordArrow(false, side, el, hitter);
+
+  boardApplyConstraints();
+  boardRenderAll();
+}
+
+
+function boardMakeGridOnLayer(layer, id, rect, rows, cols, cellRenderer){
+  const grid = document.createElement("div");
+  grid.className = "zoneGrid "+id;
+  grid.id = id;
+  grid.dataset.grid = id;
+
+  // position
+  grid.style.left = (rect.x*100)+"%";
+  grid.style.top = (rect.y*100)+"%";
+  grid.style.width = (rect.w*100)+"%";
+  grid.style.height = (rect.h*100)+"%";
+  grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const cell = cellRenderer(r,c);
+      grid.appendChild(cell);
+    }
+  }
+  layer.appendChild(grid);
+  return grid;
+}
+
+function boardServeCell(side, box, target){
+  const el = document.createElement("div");
+  el.className = "serveCell";
+  el.dataset.side = side;
+  el.dataset.box = String(box);
+  el.dataset.target = target;
+
+  const label = document.createElement("div");
+  label.className = "serveLabel";
+  label.textContent = "SAQUE";
+  el.appendChild(label);
+
+  el.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    if(el.classList.contains("disabled")) return;
+    flashTap(el);
+    boardOnServeTap(side, el);
+  });
+  return el;
+}
+
+function boardRallyCell(side, dir, deep){
+  const el = document.createElement("div");
+  el.className = "zone";
+  el.dataset.side = side;
+  el.dataset.dir = dir;
+  el.dataset.deep = deep;
+
+  const label = document.createElement("div");
+  label.className = "zoneLabel";
+  label.textContent = dir;
+  el.appendChild(label);
+
+  el.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    if(el.classList.contains("disabled")) return;
+    flashTap(el);
+    boardOnRallyTap(side, el);
+  });
+  return el;
+}
+
+function boardBuildZones(){
+  const layer = $("#boardZoneLayer");
+  if(!layer) return;
+  layer.innerHTML = "";
+
+  // Rally (3x3) top/bottom
+  const map = [
+    ["P","P"],["M","P"],["C","P"],
+    ["P","M"],["M","M"],["C","M"],
+    ["P","C"],["M","C"],["C","C"],
+  ];
+  boardMakeGridOnLayer(layer, "boardRallyGridTop", Z.rallyTop, 3, 3, (r,c)=>{
+    const idx = r*3 + c;
+    const [dir,deep] = map[idx];
+    return boardRallyCell("top", dir, deep);
+  });
+  boardMakeGridOnLayer(layer, "boardRallyGridBottom", Z.rallyBottom, 3, 3, (r,c)=>{
+    const idx = r*3 + c;
+    const [dir,deep] = map[idx];
+    return boardRallyCell("bottom", dir, deep);
+  });
+
+  // Serve (1x6) top/bottom
+  boardMakeGridOnLayer(layer, "boardServeGridTop", Z.serveTop, 1, 6, (r,c)=>{
+    const box = c<3 ? 0 : 1;
+    const idx = c%3;
+    const target = idx===0 ? "T" : (idx===1 ? "C" : "A");
+    return boardServeCell("top", box, target);
+  });
+  boardMakeGridOnLayer(layer, "boardServeGridBottom", Z.serveBottom, 1, 6, (r,c)=>{
+    const box = c<3 ? 0 : 1;
+    const idx = c%3;
+    const target = idx===0 ? "T" : (idx===1 ? "C" : "A");
+    return boardServeCell("bottom", box, target);
+  });
+
+  boardApplyConstraints();
+}
+
+
+function boardRenderSeq(){
+  const list = $("#boardSeqList");
+  if(!list) return;
+  list.innerHTML = "";
+  if(board.events.length===0){
+    $("#boardSeqHint").textContent = "Toca zonas para crear el patrón.";
+    return;
+  }
+  $("#boardSeqHint").textContent = "Puedes reproducir, pausar o editar desde cualquier golpe.";
+  board.events.forEach((ev,i)=>{
+    const item = document.createElement("div");
+    item.className="seqItem"+(i===board.playIdx ? " active":"");
+    item.innerHTML = `<div class="n">${i+1}.</div><div class="code">${ev.hitter} · ${ev.code}</div>`;
+    list.appendChild(item);
+  });
+}
+
+function boardRenderArrowsFull(){
+  const svg = $("#boardArrowSvg");
+  if(!svg) return;
+  renderArrows(svg, board.arrows, null);
+}
+
+function boardRenderAll(){
+  boardRefreshControls();
+  boardRenderSeq();
+  boardRenderArrowsFull();
+}
+
+function boardStep(){
+  if(!board.playing) return;
+  const svg = $("#boardArrowSvg");
+  if(!svg) return;
+
+  // render up to current index with animation for the last one
+  const i = board.playIdx;
+  if(i >= board.arrows.length){
+    board.playing = false;
+    if(board.loop && board.arrows.length){
+      board.playIdx = 0;
+      board.playing = true;
+      board.timer = setTimeout(boardStep, 250);
+    }
+    boardRenderSeq();
+    return;
+  }
+  renderArrows(svg, board.arrows.slice(0,i+1), i);
+  board.playIdx = i+1;
+  boardRenderSeq();
+  board.timer = setTimeout(boardStep, 1000);
+}
+
+function boardPlay(){
+  if(board.arrows.length===0) return;
+  boardStop(false);
+  board.playing = true;
+  board.timer = setTimeout(boardStep, 50);
+}
+
+function boardStop(resetTimerOnly=true){
+  if(board.timer){ clearTimeout(board.timer); board.timer = null; }
+  board.playing = false;
+  if(resetTimerOnly===true){
+    // keep playIdx
+  }
+}
+
+function boardPause(){
+  boardStop();
+  boardRenderSeq();
+}
+
+function boardToggleEdit(on){
+  board.editing = on;
+  if(on){
+    boardPause();
+  }else{
+    // ensure playIdx doesn't exceed length
+    board.playIdx = clamp(board.playIdx, 0, board.events.length);
+  }
+  boardApplyConstraints();
+  boardRenderAll();
+}
+
+function boardUndo(){
+  const insertIndex = boardGetInsertIndex();
+  if(insertIndex<=0) return;
+  // undo previous event before insertIndex
+  const newLen = insertIndex-1;
+  board.events = board.events.slice(0,newLen);
+  board.arrows = board.arrows.slice(0,newLen);
+  board.playIdx = newLen;
+  boardApplyConstraints();
+  boardRenderAll();
+}
+
+function boardQuickSave(){
+  const name = ($("#boardPatternName")?.value || "").trim() || `Patrón ${boardPatterns.length+1}`;
+  const p = {
+    id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random().toString(16).slice(2),
+    name,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    config: {startMode: board.startMode, server: board.server, serveSide: board.serveSide, starter: board.starter},
+    events: board.events,
+    arrows: board.arrows
+  };
+  // upsert by name if exact match (simple)
+  const idx = boardPatterns.findIndex(x=>x.name===name);
+  if(idx>=0){
+    p.id = boardPatterns[idx].id;
+    p.createdAt = boardPatterns[idx].createdAt;
+    boardPatterns[idx]=p;
+  }else{
+    boardPatterns.unshift(p);
+  }
+  saveBoardPatterns();
+  $("#boardPatternName").value = "";
+}
+
+function openBoardPatterns(){
+  $("#boardPatternsModal")?.classList.remove("hidden");
+  boardRenderPatternsList();
+}
+function closeBoardPatterns(){
+  $("#boardPatternsModal")?.classList.add("hidden");
+  boardSelectedId = null;
+}
+
+function boardRenderPatternsList(){
+  const list = $("#boardPatternsList");
+  const sub = $("#boardPatternsSub");
+  if(sub) sub.textContent = `${boardPatterns.length} patrones`;
+  if(!list) return;
+  list.innerHTML = "";
+  if(boardPatterns.length===0){
+    list.innerHTML = `<div class="muted">Aún no hay patrones guardados.</div>`;
+    return;
+  }
+  boardPatterns.forEach(p=>{
+    const row = document.createElement("div");
+    row.className="patternRow"+(p.id===boardSelectedId?" active":"");
+    row.innerHTML = `<div style="font-weight:800">${escapeHtml(p.name)}</div><div class="muted small">${new Date(p.updatedAt||p.createdAt).toLocaleString()}</div>`;
+    row.addEventListener("click", ()=>{
+      boardSelectedId = p.id;
+      boardRenderPatternsList();
+      boardPreviewPattern(p);
+    });
+    list.appendChild(row);
+  });
+}
+
+function boardPreviewPattern(p){
+  const svg = $("#boardPreviewArrowSvg");
+  if(svg) renderArrows(svg, p.arrows||[], null);
+  const seq = $("#boardPatternsSeq");
+  if(seq){
+    seq.innerHTML = "";
+    (p.events||[]).forEach((ev,i)=>{
+      const it = document.createElement("div");
+      it.className="seqItem";
+      it.innerHTML = `<div class="n">${i+1}.</div><div class="code">${ev.hitter} · ${ev.code}</div>`;
+      seq.appendChild(it);
+    });
+  }
+}
+
+function boardLoadSelected(){
+  const p = boardPatterns.find(x=>x.id===boardSelectedId);
+  if(!p) return;
+  board.startMode = p.config?.startMode || "SAQUE";
+  board.server = p.config?.server || "A";
+  board.serveSide = p.config?.serveSide || "SD";
+  board.starter = p.config?.starter || "A";
+  board.events = JSON.parse(JSON.stringify(p.events||[]));
+  board.arrows = JSON.parse(JSON.stringify(p.arrows||[]));
+  board.playIdx = 0;
+  board.editing = false;
+  boardApplyConstraints();
+  boardRenderAll();
+  closeBoardPatterns();
+}
+
+function boardDeleteSelected(){
+  if(!boardSelectedId) return;
+  boardPatterns = boardPatterns.filter(x=>x.id!==boardSelectedId);
+  saveBoardPatterns();
+  boardSelectedId = null;
+  boardRenderPatternsList();
+  const svg = $("#boardPreviewArrowSvg");
+  if(svg) renderArrows(svg, [], null);
+  const seq = $("#boardPatternsSeq");
+  if(seq) seq.innerHTML = "";
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+function wireBoard(){
+  $("#btnBoard")?.addEventListener("click", ()=>openBoard());
+  $("#btnBoardClose")?.addEventListener("click", ()=>closeBoard());
+  $("#btnBoardNew")?.addEventListener("click", ()=>{
+    boardResetSequence();
+  });
+  $("#btnBoardMy")?.addEventListener("click", ()=>openBoardPatterns());
+  $("#btnCloseBoardPatterns")?.addEventListener("click", ()=>closeBoardPatterns());
+  $("#btnBoardLoadSelected")?.addEventListener("click", ()=>boardLoadSelected());
+  $("#btnBoardDeleteSelected")?.addEventListener("click", ()=>boardDeleteSelected());
+
+  $("#btnBoardStartServe")?.addEventListener("click", ()=>{
+    board.startMode="SAQUE";
+    boardResetSequence();
+    boardRefreshControls();
+  });
+  $("#btnBoardStartRally")?.addEventListener("click", ()=>{
+    board.startMode="RALLY";
+    boardResetSequence();
+    boardRefreshControls();
+  });
+
+  $("#btnBoardSrvA")?.addEventListener("click", ()=>{ board.server="A"; boardResetSequence(); });
+  $("#btnBoardSrvB")?.addEventListener("click", ()=>{ board.server="B"; boardResetSequence(); });
+  $("#btnBoardSideD")?.addEventListener("click", ()=>{ board.serveSide="SD"; boardResetSequence(); });
+  $("#btnBoardSideA")?.addEventListener("click", ()=>{ board.serveSide="SV"; boardResetSequence(); });
+
+  $("#btnBoardStartA")?.addEventListener("click", ()=>{ board.starter="A"; boardResetSequence(); });
+  $("#btnBoardStartB")?.addEventListener("click", ()=>{ board.starter="B"; boardResetSequence(); });
+
+  $("#btnBoardPlay")?.addEventListener("click", ()=>boardPlay());
+  $("#btnBoardPause")?.addEventListener("click", ()=>boardPause());
+  $("#btnBoardLoop")?.addEventListener("click", ()=>{
+    board.loop = !board.loop; boardRefreshControls();
+  });
+  $("#btnBoardEdit")?.addEventListener("click", ()=>boardToggleEdit(!board.editing));
+  $("#btnBoardSave")?.addEventListener("click", ()=>{ boardQuickSave(); boardToggleEdit(false); });
+  $("#btnBoardCancel")?.addEventListener("click", ()=>{ boardToggleEdit(false); });
+  $("#btnBoardUndo")?.addEventListener("click", ()=>boardUndo());
+
+  $("#btnBoardQuickSave")?.addEventListener("click", ()=>boardQuickSave());
+
+  // click outside patterns modal to close? keep simple
+}
+
+
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
   navigator.serviceWorker.register("./service-worker.js").catch(console.error);
@@ -1982,7 +2588,11 @@ function init(){
   initPoint();
   wire();
   renderAll();
-  registerSW();
+  
+  loadBoardPatterns();
+  boardBuildZones();
+  wireBoard();
+registerSW();
 }
 
 window.addEventListener("load", init);

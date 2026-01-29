@@ -15,6 +15,7 @@
     <div class="chips chipsScroll">
       <button class="chip" id="btnToggleScore" type="button">Ocultar marcador</button>
       <button class="chip" id="btnRotateCourt" type="button">Rotar pista</button>
+      <button class="chip" id="btnBoard" type="button">Modo pizarra</button>
 
       <button class="chip" id="btnHistory" type="button">Historial</button>
       <button class="chip" id="btnAnalytics" type="button">Analíticas</button>
@@ -269,5 +270,134 @@
 <button id="btnWinB" class="hidden" type="button"></button>
 
 <script src="app.js"></script>
+
+<div class="modal hidden" id="boardModal">
+  <div class="modalCard boardCard">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Modo pizarra</div>
+        <div class="muted">Crea y guarda patrones propios (play/pausa/loop/editar).</div>
+      </div>
+      <div class="modalActions">
+        <button class="chip" id="btnBoardClose" type="button">Cerrar</button>
+      </div>
+    </div>
+
+    <div class="boardTopBar">
+      <div class="boardLeft">
+        <button class="boardIcon" id="btnBoardMy" type="button" title="Mis patrones">
+          <span class="i">📚</span><span>Mis patrones</span>
+        </button>
+        <button class="boardIcon" id="btnBoardNew" type="button" title="Nuevo patrón">
+          <span class="i">✏️</span><span>Nuevo</span>
+        </button>
+
+        <div class="boardToggle">
+          <span class="muted">Inicio:</span>
+          <button class="chip small" id="btnBoardStartServe" type="button">Saque</button>
+          <button class="chip small" id="btnBoardStartRally" type="button">Rally</button>
+        </div>
+
+        <div class="boardToggle" id="boardServeControls">
+          <span class="muted">Servidor:</span>
+          <button class="chip small" id="btnBoardSrvA" type="button">A</button>
+          <button class="chip small" id="btnBoardSrvB" type="button">B</button>
+          <span class="muted">Lado:</span>
+          <button class="chip small" id="btnBoardSideD" type="button">DEUCE</button>
+          <button class="chip small" id="btnBoardSideA" type="button">AD</button>
+        </div>
+
+        <div class="boardToggle hidden" id="boardRallyControls">
+          <span class="muted">Empieza golpeando:</span>
+          <button class="chip small" id="btnBoardStartA" type="button">A</button>
+          <button class="chip small" id="btnBoardStartB" type="button">B</button>
+        </div>
+      </div>
+
+      <div class="boardRight">
+        <button class="boardCircle" id="btnBoardPlay" type="button" title="Play">
+          <span>▶</span>
+        </button>
+        <button class="boardCircle" id="btnBoardPause" type="button" title="Pausa">
+          <span>⏸</span>
+        </button>
+        <button class="boardCircle" id="btnBoardLoop" type="button" title="Loop">
+          <span>🔁</span>
+        </button>
+        <button class="boardCircle" id="btnBoardEdit" type="button" title="Editar">
+          <span>🛠</span>
+        </button>
+        <button class="boardCircle hidden" id="btnBoardSave" type="button" title="Guardar">
+          <span>💾</span>
+        </button>
+        <button class="boardCircle hidden" id="btnBoardCancel" type="button" title="Cancelar">
+          <span>✖</span>
+        </button>
+        <button class="boardCircle hidden" id="btnBoardUndo" type="button" title="Deshacer">
+          <span>↩</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="boardBody">
+      <div class="boardStage">
+        <div class="court boardCourt" id="boardCourt">
+          <img class="courtImg" id="boardCourtImg" src="assets/board_court.png" alt="Pizarra court" />
+          <svg class="arrowSvg" id="boardArrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg>
+          <div class="zoneLayer" id="boardZoneLayer"></div>
+          <div class="baselineName top" id="boardNameTop">Jugador B</div>
+          <div class="baselineName bottom" id="boardNameBottom">Jugador A</div>
+        </div>
+      </div>
+
+      <div class="boardPanel">
+        <div class="panelTitle">Secuencia</div>
+        <div class="muted small" id="boardSeqHint">Toca zonas para crear el patrón.</div>
+        <div class="seqList" id="boardSeqList"></div>
+        <div class="divider"></div>
+        <div class="panelTitle">Guardar en “Mis patrones”</div>
+        <div class="row">
+          <input class="textInput" id="boardPatternName" placeholder="Nombre del patrón (ej: Saque abierto + derecha a la red)" />
+          <button class="chip good" id="btnBoardQuickSave" type="button">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="boardPatternsModal">
+  <div class="modalCard solid">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Mis patrones</div>
+        <div class="muted" id="boardPatternsSub">0 patrones</div>
+      </div>
+      <div class="modalActions">
+        <button class="chip" id="btnCloseBoardPatterns" type="button">Cerrar</button>
+      </div>
+    </div>
+    <div class="twoCol">
+      <div class="listCol" id="boardPatternsList"></div>
+      <div class="detailCol">
+        <div class="panelTitle">Vista previa</div>
+        <div class="muted small">Selecciona un patrón para previsualizar y cargar.</div>
+        <div class="previewBox">
+          <div class="court boardCourt previewCourt" id="boardPreviewCourt">
+            <img class="courtImg" src="assets/board_court.png" alt="Preview" />
+            <svg class="arrowSvg" id="boardPreviewArrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+        <div class="row">
+          <button class="chip good" id="btnBoardLoadSelected" type="button">Cargar</button>
+          <button class="chip warn" id="btnBoardDeleteSelected" type="button">Eliminar</button>
+        </div>
+        <div class="divider"></div>
+        <div class="panelTitle">Secuencia</div>
+        <div class="seqList" id="boardPatternsSeq"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
