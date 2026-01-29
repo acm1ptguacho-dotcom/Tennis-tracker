@@ -2005,6 +2005,7 @@ function saveBoardPatterns(){
 function openBoard(){
   board.open = true;
   $("#boardModal")?.classList.remove("hidden");
+  boardBuildZones();
   boardRefreshControls();
   boardRenderAll();
 }
@@ -2260,18 +2261,26 @@ function boardServeCell(side, box, target){
   label.textContent = "SAQUE";
   el.appendChild(label);
 
-  el.addEventListener("click", (e)=>{
+  const _tap=(e)=>{
     e.stopPropagation();
     if(el.classList.contains("disabled")) return;
-    flashTap(el);
+    flashTap(el, e);
     boardOnServeTap(side, el);
-  });
+  };
+  el.addEventListener("click", _tap);
+  el.addEventListener("touchstart", (evt)=>{
+    if(el.classList.contains("disabled")) return;
+    evt.stopPropagation();
+    const t = (evt.touches && evt.touches[0]) ? evt.touches[0] : evt;
+    flashTap(el, t);
+    boardOnServeTap(side, el);
+  }, {passive:true});
   return el;
 }
 
 function boardRallyCell(side, dir, deep){
   const el = document.createElement("div");
-  el.className = "zone";
+  el.className = "zoneCell";
   el.dataset.side = side;
   el.dataset.dir = dir;
   el.dataset.deep = deep;
@@ -2281,12 +2290,20 @@ function boardRallyCell(side, dir, deep){
   label.textContent = dir;
   el.appendChild(label);
 
-  el.addEventListener("click", (e)=>{
+  const _tap=(e)=>{
     e.stopPropagation();
     if(el.classList.contains("disabled")) return;
-    flashTap(el);
+    flashTap(el, e);
     boardOnRallyTap(side, el);
-  });
+  };
+  el.addEventListener("click", _tap);
+  el.addEventListener("touchstart", (evt)=>{
+    if(el.classList.contains("disabled")) return;
+    evt.stopPropagation();
+    const t = (evt.touches && evt.touches[0]) ? evt.touches[0] : evt;
+    flashTap(el, t);
+    boardOnRallyTap(side, el);
+  }, {passive:true});
   return el;
 }
 

@@ -1423,8 +1423,11 @@ body.printing .app{ display:none; }
   grid-template-columns: 1.1fr 0.9fr;
   gap: 12px;
   padding: 12px;
-  height: calc(92vh - 160px);
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
+
 .boardStage{ display:flex; align-items:center; justify-content:center; }
 .boardPanel{
   border: 1px solid rgba(255,255,255,0.08);
@@ -1487,3 +1490,37 @@ body.printing .app{ display:none; }
 @media (max-width: 900px){
   .boardBody{ grid-template-columns: 1fr; height: auto; }
 }
+
+
+/* --- MODO PIZARRA: responsive iPhone / pantallas pequeñas --- */
+@media (max-width: 900px){
+  .boardBody{ grid-template-columns: 1fr; }
+  .boardPanel{ max-height: none; }
+}
+
+@media (max-width: 820px){
+  .modal{ padding: 0; align-items: stretch; justify-content: stretch; }
+  .modalCard.boardCard{
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .boardTopBar{ flex-wrap: wrap; }
+  .boardLeft{ width: 100%; display:flex; flex-wrap:wrap; gap: 10px; }
+  .boardRight{ margin-left:auto; }
+}
+
+/* Fallback para iOS antiguos sin aspect-ratio */
+.court::before{
+  content:"";
+  display:block;
+  padding-top: 200%; /* 18/9 = 2.0 */
+}
+@supports (aspect-ratio: 1 / 1){
+  .court::before{ display:none; content:none; padding-top:0; }
+}
+
+/* Board rally cells use zoneCell; make label subtle in pizarra */
+.boardCourt .zoneLabel{font-size:12px; padding:5px 9px; background: rgba(0,0,0,.22);}

@@ -1,11 +1,12 @@
 
-const CACHE = "tennis-tracker-web-v2.40";
+const CACHE = "tennis-tracker-web-v2.42";
 const ASSETS = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
-  "./assets/court_top_view.png"
+  "./assets/court_top_view.png",
+  "./assets/board_court.png"
 ];
 
 self.addEventListener("install", (e) => {
