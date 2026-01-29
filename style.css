@@ -1467,6 +1467,21 @@ body.printing .app{ display:none; }
   background: rgba(255,255,255,0.04);
   color: #eaf1ff;
 }
+.boardCourt .zoneCell, .boardCourt .serveCell{
+  border-color: rgba(0, 120, 255, 0.75) !important;
+  background: rgba(255,255,255,0.06) !important;
+  color: rgba(0, 70, 170, 0.95) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,120,255,0.18);
+}
+.boardCourt .zoneLabel, .boardCourt .serveLabel{
+  border-color: rgba(0,120,255,0.65) !important;
+  background: rgba(255,255,255,0.85) !important;
+  color: rgba(0,70,170,0.98) !important;
+}
+.boardCourt .zoneCell.disabled, .boardCourt .serveCell.disabled{
+  opacity: 0.18 !important;
+  filter: none !important;
+}
 .boardCourt .courtImg{ filter: contrast(1.05) brightness(1.05); }
 .previewCourt{ width: min(420px, 100%); }
 .previewBox{ padding: 10px 0; }

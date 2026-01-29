@@ -1991,10 +1991,27 @@ const board = {
   editing:false
 };
 
+function normalizeBoardPattern(p){
+  if(!p) return p;
+  // Backward compatibility: arrow objects may use {label} instead of {n}, or omit hitter
+  if(Array.isArray(p.arrows)){
+    p.arrows = p.arrows.map((a,idx)=>{
+      const hitter = a.hitter || a.player || (a.color && a.color.toLowerCase().includes("fff") ? "A" : undefined) || "A";
+      return {
+        from: a.from, through: a.through || a.to, to: a.to || a.through,
+        hitter,
+        n: a.n ?? a.label ?? (idx+1)
+      };
+    });
+  }
+  return p;
+}
+
 function loadBoardPatterns(){
   try{
     const raw = localStorage.getItem(BOARD_KEY);
     boardPatterns = raw ? JSON.parse(raw) : [];
+    boardPatterns = boardPatterns.map(normalizeBoardPattern);
     if(!Array.isArray(boardPatterns)) boardPatterns = [];
   }catch(e){ boardPatterns = []; }
 }
@@ -2087,8 +2104,8 @@ function boardRecordArrow(isServe, hitSide, throughEl, hitter){
   }
   board.arrows.push({
     from, through, to,
-    label: board.arrows.length+1,
-    color: boardArrowColorFor(hitter)
+    hitter,
+    n: board.arrows.length+1
   });
 }
 
@@ -2154,21 +2171,22 @@ function boardApplyConstraints(){
   }
 
   // rally phase
-  enable(serveTop,false); enable(serveBottom,false);
+  // disable all serve cells
+  if (serveTop) [...serveTop.querySelectorAll(".serveCell")].forEach(z=>z.classList.add("disabled"));
+  if (serveBottom) [...serveBottom.querySelectorAll(".serveCell")].forEach(z=>z.classList.add("disabled"));
 
   const hitter = boardNextHitterForInsert(insertIndex);
   const expectedSide = boardExpectedTapSideForHitter(hitter);
-  enable(rallyTop, expectedSide==="top");
-  enable(rallyBottom, expectedSide==="bottom");
 
-  // disable the other side zones fully
-  const otherGrid = expectedSide==="top" ? rallyBottom : rallyTop;
-  if(otherGrid){
-    [...otherGrid.querySelectorAll(".zone")].forEach(z=>z.classList.add("disabled"));
-  }
+  // enable only the expected rally grid cells
   const activeGrid = expectedSide==="top" ? rallyTop : rallyBottom;
-  if(activeGrid){
-    [...activeGrid.querySelectorAll(".zone")].forEach(z=>z.classList.remove("disabled"));
+  const otherGrid  = expectedSide==="top" ? rallyBottom : rallyTop;
+
+  if (activeGrid){
+    [...activeGrid.querySelectorAll(".zoneCell")].forEach(z=>z.classList.remove("disabled"));
+  }
+  if (otherGrid){
+    [...otherGrid.querySelectorAll(".zoneCell")].forEach(z=>z.classList.add("disabled"));
   }
 }
 
@@ -2213,7 +2231,9 @@ function boardOnRallyTap(side, el){
   const expectedSide = boardExpectedTapSideForHitter(hitter);
   if(side !== expectedSide) return;
 
-  const code = zoneCodeFromTap(el, side); // e.g. CP/MP/CC
+  const row = Number(el.dataset.row);
+  const col = Number(el.dataset.col);
+  const code = zoneCodeFromTap(side, row, col);
   // add "R " only if startMode=SAQUE and this is the first rally (the return)
   const rallyCount = boardRallyCountInPrefix(insertIndex);
   const prefix = (board.startMode==="SAQUE" && rallyCount===0) ? "R " : "";
@@ -2278,12 +2298,14 @@ function boardServeCell(side, box, target){
   return el;
 }
 
-function boardRallyCell(side, dir, deep){
+function boardRallyCell(side, row, col, dir, deep){
   const el = document.createElement("div");
   el.className = "zoneCell";
   el.dataset.side = side;
   el.dataset.dir = dir;
   el.dataset.deep = deep;
+  el.dataset.row = String(row);
+  el.dataset.col = String(col);
 
   const label = document.createElement("div");
   label.className = "zoneLabel";
@@ -2321,12 +2343,12 @@ function boardBuildZones(){
   boardMakeGridOnLayer(layer, "boardRallyGridTop", Z.rallyTop, 3, 3, (r,c)=>{
     const idx = r*3 + c;
     const [dir,deep] = map[idx];
-    return boardRallyCell("top", dir, deep);
+    return boardRallyCell("top", r, c, dir, deep);
   });
   boardMakeGridOnLayer(layer, "boardRallyGridBottom", Z.rallyBottom, 3, 3, (r,c)=>{
     const idx = r*3 + c;
     const [dir,deep] = map[idx];
-    return boardRallyCell("bottom", dir, deep);
+    return boardRallyCell("bottom", r, c, dir, deep);
   });
 
   // Serve (1x6) top/bottom
@@ -2367,7 +2389,7 @@ function boardRenderSeq(){
 function boardRenderArrowsFull(){
   const svg = $("#boardArrowSvg");
   if(!svg) return;
-  renderArrows(svg, board.arrows, null);
+  renderArrows(svg, board.arrows, { fadeOld:true });
 }
 
 function boardRenderAll(){
@@ -2393,7 +2415,7 @@ function boardStep(){
     boardRenderSeq();
     return;
   }
-  renderArrows(svg, board.arrows.slice(0,i+1), i);
+  renderArrows(svg, board.arrows.slice(0,i+1), { animateFromIndex:i, fadeOld:false });
   board.playIdx = i+1;
   boardRenderSeq();
   board.timer = setTimeout(boardStep, 1000);
@@ -2501,7 +2523,7 @@ function boardRenderPatternsList(){
 
 function boardPreviewPattern(p){
   const svg = $("#boardPreviewArrowSvg");
-  if(svg) renderArrows(svg, p.arrows||[], null);
+  if(svg) renderArrows(svg, p.arrows||[], { fadeOld:false });
   const seq = $("#boardPatternsSeq");
   if(seq){
     seq.innerHTML = "";
@@ -2537,7 +2559,7 @@ function boardDeleteSelected(){
   boardSelectedId = null;
   boardRenderPatternsList();
   const svg = $("#boardPreviewArrowSvg");
-  if(svg) renderArrows(svg, [], null);
+  if(svg) renderArrows(svg, [], { fadeOld:false });
   const seq = $("#boardPatternsSeq");
   if(seq) seq.innerHTML = "";
 }
