@@ -33,6 +33,7 @@
     <div class="tvHeader">
       <div class="tvHeaderSpacer"></div>
       <div class="tvHeaderSets" id="tvSetHeaders"></div>
+      <div class="tvHeaderGames">G</div>
       <div class="tvHeaderPts">Pts</div>
     </div>
 
@@ -43,6 +44,7 @@
       </div>
       <div class="tvServe"><span class="serveBall" id="serveA" aria-label="Servidor A"></span></div>
       <div class="tvSets" id="setsRowA"></div>
+      <div class="tvGames" id="tvGamesA">0</div>
       <div class="tvPts" id="tvPtsA">0</div>
     </div>
 
@@ -53,6 +55,7 @@
       </div>
       <div class="tvServe"><span class="serveBall" id="serveB" aria-label="Servidor B"></span></div>
       <div class="tvSets" id="setsRowB"></div>
+      <div class="tvGames" id="tvGamesB">0</div>
       <div class="tvPts" id="tvPtsB">0</div>
     </div>
 
@@ -66,7 +69,7 @@
   <!-- DIAGRAMA + TIMELINE (lado derecho) -->
   <main class="diagramArea">
     <div class="diagramGrid">
-      <div class="courtWrap">
+      <div class="courtWrap courtRow">
       <div class="court" id="court">
         <div class="courtSurface" id="courtSurface">
           <img src="assets/court_top_view.png" alt="pista" id="courtImg">
@@ -82,15 +85,15 @@
         </div>
 
         <div class="zoneLabel" id="zoneHint">Toca en pista</div>
-<!-- bola de acciones (saque/finalización) -->
-        <button id="finishBall" class="tennisBall inCourt" type="button" aria-label="Acciones del punto"></button>
+<!-- botón de acciones (confirmar / finalizar punto) -->
+        <button id="finishBall" class="tennisBall inCourt fab" type="button" aria-label="Acciones del punto">✓</button>
+      </div>
 
-        <!-- botones rápidos (en el margen derecho del diagrama) -->
-        <div class="courtQuickBtns" aria-label="Acciones rápidas">
-          <button class="quickBtn" id="btnUndo" type="button" title="Deshacer último golpe">↶</button>
-          <button class="quickBtn" id="btnRedoPoint" type="button" title="Rehacer último punto">↷</button>
-          <button class="quickBtn" id="btnResetPoint" type="button" title="Reiniciar punto">⟲</button>
-        </div>
+      <!-- rail lateral: evita tapar zonas clicables en móvil -->
+      <div class="courtRail" aria-label="Acciones rápidas">
+        <button class="quickBtn" id="btnUndo" type="button" title="Deshacer último golpe">↶</button>
+        <button class="quickBtn" id="btnRedoPoint" type="button" title="Rehacer último punto">↷</button>
+        <button class="quickBtn" id="btnResetPoint" type="button" title="Reiniciar punto">⟲</button>
       </div>
     
       </div>

@@ -805,9 +805,9 @@ function renderScore(){
   $("#serveA").classList.toggle("on", state.currentServer==="A");
   $("#serveB").classList.toggle("on", state.currentServer==="B");
 
-  // Sets (completed) + current set games
+  // Sets (completed) se muestran como historial; juegos actuales van en columna aparte (G)
   const hist = state.setHistory || [];
-  const cols = Math.min(5, Math.max(1, hist.length + 1));
+  const cols = Math.min(5, hist.length);
   const hdr = $("#tvSetHeaders");
   if (hdr){
     hdr.innerHTML = "";
@@ -825,19 +825,18 @@ function renderScore(){
     row.innerHTML = "";
     for (let i=0;i<cols;i++){
       const cell = document.createElement("div");
-      cell.className = "tvSetCell" + (i===hist.length ? " active" : "");
-      let val = "";
-      if (i < hist.length){
-        val = String(hist[i][player] ?? "");
-      }else if (i === hist.length){
-        val = String(state.games[player] ?? 0);
-      }
-      cell.textContent = val;
+      cell.className = "tvSetCell";
+      cell.textContent = String(hist[i][player] ?? "");
       row.appendChild(cell);
     }
   };
   fillRow(rowA, "A");
   fillRow(rowB, "B");
+
+  // Juegos actuales del set
+  const gA = $("#tvGamesA"), gB = $("#tvGamesB");
+  if (gA) gA.textContent = String(state.games.A ?? 0);
+  if (gB) gB.textContent = String(state.games.B ?? 0);
 
   // Points
   $("#tvPtsA").textContent = pointText("A");
