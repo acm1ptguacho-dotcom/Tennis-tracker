@@ -21,7 +21,14 @@ const state = {
   ui: { theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false }
 };
 
-function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function persist(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){
+    console.error(e);
+    try{ toast("⚠️ No se pudo guardar (almacenamiento lleno o bloqueado)"); }catch(_){}
+  }
+}
 function load(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -304,13 +311,19 @@ function serveOriginNorm(server, sideLabel){
   return {x, y};
 }
 
+function serveOrigin(server, sideLabel, scale=1){
+  // Compatibility helper for board mode (pizarra)
+  // (scale kept for backward compatibility)
+  return serveOriginNorm(server, sideLabel);
+}
+
 function centerNormFromEl(el){
   const court = $("#court");
   if (!court || !el) return {x:0.5, y:0.5};
   const cr = court.getBoundingClientRect();
   const er = el.getBoundingClientRect();
-  const x = (er.left + er.width/2 - cr.left) / cr.width;
-  const y = (er.top + er.height/2 - cr.top) / cr.height;
+  let x = (er.left + er.width/2 - cr.left) / cr.width;
+  let y = (er.top + er.height/2 - cr.top) / cr.height;
   if (state.ui && state.ui.rotated){ x = 1 - x; y = 1 - y; }
   return { x: clamp01(x), y: clamp01(y) };
 }
@@ -674,7 +687,7 @@ function onServeTap(side, box, target, el){
   };
 
   state.point.events.push(ev);
-  recordArrow({ hitter: server, throughEl: el, isServe: true });
+  try { recordArrow({ hitter: server, throughEl: el, isServe: true }); } catch(e){ console.error(e); }
 
   // after serve => rally
   state.point.phase = "rally";
@@ -713,7 +726,7 @@ function onRallyTap(side, row, col, el){
     elId: elIdForRally(side, row, col)
   };
   state.point.events.push(ev);
-  recordArrow({ hitter, throughEl: el, isServe: false });
+  try { recordArrow({ hitter, throughEl: el, isServe: false }); } catch(e){ console.error(e); }
   renderPoint();
   applyTapConstraints();
   persist();
@@ -2064,8 +2077,8 @@ function boardRefreshControls(){
   $("#btnBoardUndo")?.classList.toggle("hidden", !board.editing);
 
   // names
-  $("#boardNameBottom").textContent = state.players?.A || "Jugador A";
-  $("#boardNameTop").textContent = state.players?.B || "Jugador B";
+  $("#boardNameBottom").textContent = state.names?.A || "Jugador A";
+  $("#boardNameTop").textContent = state.names?.B || "Jugador B";
 }
 
 function boardCourtRect(){
@@ -2076,7 +2089,7 @@ function boardCenterNormFromEl(el){
   const r = el.getBoundingClientRect();
   const x = ((r.left + r.right)/2 - c.left) / c.width;
   const y = ((r.top + r.bottom)/2 - c.top) / c.height;
-  return clamp01({x,y});
+  return { x: clamp01(x), y: clamp01(y) };
 }
 
 function boardArrowColorFor(hitter){
@@ -2091,16 +2104,16 @@ function boardRecordArrow(isServe, hitSide, throughEl, hitter){
     from = serveOrigin(board.server, board.serveSide, 0.25);
   }else{
     const last = board.arrows[board.arrows.length-1];
-    from = last ? last.to : (hitter==="A" ? {x:0.25,y:baselineY("bottom")} : {x:0.25,y:baselineY("top")});
+    from = last ? last.to : { x: 0.25, y: baselineY(hitter) };
   }
   let to = through;
   if(isServe){
     // solo el saque se extiende hasta el fondo contrario
-    const y = hitSide==="top" ? baselineY("top") : baselineY("bottom");
+    const y = hitSide==="top" ? baselineY("B") : baselineY("A");
     const b = singlesBounds();
     const dir = {x: through.x - from.x, y: through.y - from.y};
     const t = rayIntersectY(from, dir, y);
-    to = clamp01({x: clamp(t.x, b.x1, b.x2), y});
+    to = { x: clamp01(clamp(t.x, b.x1, b.x2)), y: clamp01(y) };
   }
   board.arrows.push({
     from, through, to,
@@ -2216,7 +2229,7 @@ function boardOnServeTap(side, el){
   const target = el.dataset.target; // T/C/A
   const hitter = board.server;
   boardAddEvent({type:"serve", hitter, code:`S ${board.serveSide} ${target}`});
-  boardRecordArrow(true, side, el, hitter);
+  try { boardRecordArrow(true, side, el, hitter); } catch(e){ console.error(e); }
 
   // after serve -> rally
   boardApplyConstraints();
@@ -2238,7 +2251,7 @@ function boardOnRallyTap(side, el){
   const rallyCount = boardRallyCountInPrefix(insertIndex);
   const prefix = (board.startMode==="SAQUE" && rallyCount===0) ? "R " : "";
   boardAddEvent({type:"rally", hitter, code: `${prefix}${code}`});
-  boardRecordArrow(false, side, el, hitter);
+  try { boardRecordArrow(false, side, el, hitter); } catch(e){ console.error(e); }
 
   boardApplyConstraints();
   boardRenderAll();
