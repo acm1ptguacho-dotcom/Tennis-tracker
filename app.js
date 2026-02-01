@@ -220,15 +220,16 @@ function updateScoring(winner){
 
 function updateZoneHint(){
   const p = state.point;
-  const hint=$("#zoneHint");
-  const phase=$("#badgePhase");
-  if (!p || !hint || !phase) return;
+  const hint = $("#zoneHint");
+  const phase = $("#badgePhase");
+  if (!p) return;
+
   if (p.phase==="serve"){
-    hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca T/C/A`;
-    phase.textContent = "SAQUE";
+    if (hint) hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca T/C/A`;
+    if (phase) phase.textContent = "SAQUE";
   } else {
-    hint.textContent = `RALLY · toca dirección (P/M/C)`;
-    phase.textContent = "RALLY";
+    if (hint) hint.textContent = `RALLY · toca dirección (P/M/C)`;
+    if (phase) phase.textContent = "RALLY";
   }
 }
 
@@ -401,13 +402,55 @@ function renderArrows(svgEl, arrows, opts={}){
 
   if (!arrows || arrows.length===0) return;
 
+  // If a direction/segment is repeated (same geometry), offset it slightly so arrows + numbers don't overlap.
+  const quant = (v)=> Math.round(v*1000)/1000;
+  const keyFor = (a)=> [
+    quant(a.from.x), quant(a.from.y),
+    quant(a.through.x), quant(a.through.y),
+    quant(a.to.x), quant(a.to.y),
+    a.hitter
+  ].join("|");
+
+  const groups = new Map();
+  arrows.forEach((a, idx)=>{
+    const k = keyFor(a);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(idx);
+  });
+
+  const offsetUnits = new Array(arrows.length).fill(0);
+  groups.forEach((idxs)=>{
+    if (idxs.length<=1) return;
+    const m = idxs.length;
+    idxs.forEach((idx, i)=>{
+      offsetUnits[idx] = i - (m-1)/2;
+    });
+  });
+
+  const STEP = 20; // SVG units (viewBox 0..1000). ~separación entre flechas repetidas.
+  const clampSvg = (v)=> Math.max(0, Math.min(1000, v));
+  const applyOffset = (pt, px, py, amt)=> ({ x: clampSvg(pt.x + px*amt), y: clampSvg(pt.y + py*amt) });
+
   arrows.forEach((a, idx)=>{
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     g.setAttribute("data-idx", idx);
 
-    const A = svgPt(a.from);
-    const P = svgPt(a.through);
-    const E = svgPt(a.to);
+    let A = svgPt(a.from);
+    let P = svgPt(a.through);
+    let E = svgPt(a.to);
+
+    const u = offsetUnits[idx] || 0;
+    if (u){
+      const dx = (E.x - A.x);
+      const dy = (E.y - A.y);
+      const len = Math.hypot(dx, dy) || 1;
+      const px = -dy / len;
+      const py =  dx / len;
+      const amt = u * STEP;
+      A = applyOffset(A, px, py, amt);
+      P = applyOffset(P, px, py, amt);
+      E = applyOffset(E, px, py, amt);
+    }
 
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", `M ${A.x.toFixed(1)} ${A.y.toFixed(1)} L ${P.x.toFixed(1)} ${P.y.toFixed(1)} L ${E.x.toFixed(1)} ${E.y.toFixed(1)}`);
@@ -842,12 +885,16 @@ function renderScore(){
   $("#tvPtsA").textContent = pointText("A");
   $("#tvPtsB").textContent = pointText("B");
 
-  // Meta badges
-  $("#badgeScore").textContent = scoreLabel();
-  $("#badgeSide").textContent = serveSideLabel();
-  $("#badgePhase").textContent = (state.point?.phase==="serve") ? "SAQUE" : "RALLY";
 
-  $("#btnFinish").classList.toggle("hidden", state.matchFinished);
+// Meta badges (opcionales: la UI puede ocultarlos/eliminarlos)
+const bScore = $("#badgeScore");
+const bSide  = $("#badgeSide");
+const bPhase = $("#badgePhase");
+if (bScore) bScore.textContent = scoreLabel();
+if (bSide)  bSide.textContent  = serveSideLabel();
+if (bPhase) bPhase.textContent = (state.point?.phase==="serve") ? "SAQUE" : "RALLY";
+
+$("#btnFinish").classList.toggle("hidden", state.matchFinished);
   $("#btnResume").classList.toggle("hidden", !state.matchFinished);
   $("#btnRedoPoint").disabled = state.matchPoints.length===0;
 }
@@ -1747,6 +1794,22 @@ function toggleCoach(){
   persist();
 }
 
+let __menuOpen = false;
+function setMenuOpen(open){
+  __menuOpen = !!open;
+  const drawer = $("#drawerMenu");
+  const overlay = $("#menuOverlay");
+  if (drawer) drawer.classList.toggle("open", __menuOpen);
+  if (overlay){
+    overlay.classList.toggle("open", __menuOpen);
+    overlay.setAttribute("aria-hidden", __menuOpen ? "false" : "true");
+  }
+}
+function toggleMenu(){
+  setMenuOpen(!__menuOpen);
+}
+
+
 function applyScoreVisibility(){
   const s = $("#scoreSection");
   if (s) s.classList.toggle("hidden", !!state.ui.hideScore);
@@ -1805,6 +1868,13 @@ function wire(){
   on("btnFinish","click", finishMatch);
   on("btnResume","click", resumeMatch);
 
+// menú (hamburguesa)
+on("btnMenu","click", toggleMenu);
+on("btnCloseMenu","click", ()=>setMenuOpen(false));
+const ov = $("#menuOverlay");
+if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
+
+
   on("btnHistory","click", openHistory);
   on("btnAnalytics","click", openAnalytics);
   on("btnExport","click", openExport);
@@ -1818,6 +1888,13 @@ function wire(){
 
   on("btnTheme","click", toggleTheme);
   on("btnCoach","click", toggleCoach);
+
+// cerrar menú al elegir una opción
+["btnToggleScore","btnRotateCourt","btnBoard","btnHistory","btnAnalytics","btnExport","btnCoach","btnTheme"].forEach(id=>{
+  const el = $("#"+id);
+  if (el) el.addEventListener("click", ()=>setMenuOpen(false));
+});
+
 
   // cambiar servidor manualmente (solo antes de iniciar el punto)
   const setServer = (p)=>{
@@ -1915,6 +1992,7 @@ function wire(){
         const el=$("#"+id);
         if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
       });
+      setMenuOpen(false);
       clearReplay();
       setSheetOpen(false);
     }

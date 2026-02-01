@@ -817,6 +817,98 @@ body.coach .kpi .v{font-size:24px}
   padding-top: env(safe-area-inset-top);
 }
 
+/* Menú hamburguesa */
+.topbarRow{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding: 8px 2px 10px;
+}
+.topbarRight{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.iconChip{
+  width: 44px;
+  padding: 10px 0;
+  display:grid;
+  place-items:center;
+  font-size: 18px;
+}
+
+/* Drawer */
+.menuOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(5px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+  z-index: 60;
+}
+.menuOverlay.open{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer{
+  position: fixed;
+  left: 12px;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  width: min(340px, 88vw);
+  max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
+  overflow:auto;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: linear-gradient(180deg, rgba(16,26,40,.98), rgba(10,16,26,.98));
+  box-shadow: 0 22px 60px rgba(0,0,0,.55);
+  transform: translateX(-120%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .18s ease;
+  z-index: 61;
+  padding: 12px;
+}
+body.light .drawer{
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(245,246,250,.96));
+  border: 1px solid rgba(10,22,55,.18);
+}
+
+.drawer.open{
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.drawerHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom: 10px;
+}
+.drawerTitle{
+  font-weight: 1100;
+  letter-spacing: .02em;
+}
+.drawerBody{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.drawerDivider{
+  height:1px;
+  background: rgba(255,255,255,.10);
+  margin: 6px 2px;
+}
+body.light .drawerDivider{ background: rgba(10,22,55,.12); }
+
+
 .chipsScroll{
   overflow-x:auto;
   overflow-y:hidden;
@@ -1427,11 +1519,11 @@ body.printing .app{ display:none; }
   justify-content:flex-end;
   margin-top: 6px;
 }
-.miniCourtWrap{ margin: 10px 0 12px; }
+.miniCourtWrap{ margin: 10px 0 12px; display:flex; flex-direction:column; align-items:center; }
 .miniCourt{
   position:relative;
-  width: min(420px, 100%);
-  aspect-ratio: 2 / 3;
+  width: min(520px, 100%);
+  aspect-ratio: 1 / 2; /* igual que assets/court_top_view.png (300x600) */
   border-radius: 18px;
   overflow:hidden;
   border: 1px solid rgba(255,255,255,.14);

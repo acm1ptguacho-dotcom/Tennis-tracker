@@ -12,22 +12,41 @@
 
   <!-- TOP: menú + nombres + marcador (todo en la misma vista) -->
   <header class="topbar topbarInline">
-    <div class="chips chipsScroll">
-      <button class="chip" id="btnToggleScore" type="button">Ocultar marcador</button>
-      <button class="chip" id="btnRotateCourt" type="button">Rotar pista</button>
-      <button class="chip" id="btnBoard" type="button">Modo pizarra</button>
+  <div class="topbarRow">
+    <button class="chip iconChip" id="btnMenu" type="button" aria-label="Abrir menú">☰</button>
 
-      <button class="chip" id="btnHistory" type="button">Historial</button>
-      <button class="chip" id="btnAnalytics" type="button">Analíticas</button>
-      <button class="chip" id="btnExport" type="button">Exportar</button>
+    <div class="topbarRight">
       <button class="chip warn" id="btnFinish" type="button">Finalizar partido</button>
       <button class="chip good hidden" id="btnResume" type="button">Reanudar partido</button>
       <button class="chip primary" id="btnNew" type="button">Nuevo partido</button>
-
-      <button class="chip ghost" id="btnCoach" type="button">Modo entrenador</button>
-      <button class="chip ghost" id="btnTheme" type="button">Modo claro</button>
     </div>
-  </header>
+  </div>
+</header>
+
+<div class="menuOverlay" id="menuOverlay" aria-hidden="true"></div>
+<nav class="drawer" id="drawerMenu" aria-label="Menú">
+  <div class="drawerHead">
+    <div class="drawerTitle">Menú</div>
+    <button class="chip iconChip" id="btnCloseMenu" type="button" aria-label="Cerrar menú">✕</button>
+  </div>
+
+  <div class="drawerBody">
+    <button class="chip" id="btnToggleScore" type="button">Ocultar marcador</button>
+    <button class="chip" id="btnRotateCourt" type="button">Rotar pista</button>
+    <button class="chip" id="btnBoard" type="button">Modo pizarra</button>
+
+    <div class="drawerDivider"></div>
+
+    <button class="chip" id="btnHistory" type="button">Historial</button>
+    <button class="chip" id="btnAnalytics" type="button">Analíticas</button>
+    <button class="chip" id="btnExport" type="button">Exportar</button>
+
+    <div class="drawerDivider"></div>
+
+    <button class="chip ghost" id="btnCoach" type="button">Modo normal</button>
+    <button class="chip ghost" id="btnTheme" type="button">Modo claro</button>
+  </div>
+</nav>
 
   <section class="scoreTv" id="scoreSection">
     <div class="tvHeader">
@@ -58,13 +77,7 @@
       <div class="tvGames" id="tvGamesB">0</div>
       <div class="tvPts" id="tvPtsB">0</div>
     </div>
-
-    <div class="tvMeta">
-      <span class="badge" id="badgeScore">0-0</span>
-      <span class="badge" id="badgeSide">SD</span>
-      <span class="badge" id="badgePhase">SAQUE</span>
-    </div>
-  </section>
+</section>
 
   <!-- DIAGRAMA + TIMELINE (lado derecho) -->
   <main class="diagramArea">
@@ -83,8 +96,6 @@
           <div class="baselineName baselineTop" id="baselineTop">Jugador B</div>
           <div class="baselineName baselineBottom" id="baselineBottom">Jugador A</div>
         </div>
-
-        <div class="zoneLabel" id="zoneHint">Toca en pista</div>
 <!-- botón de acciones (confirmar / finalizar punto) -->
         <button id="finishBall" class="tennisBall inCourt fab" type="button" aria-label="Acciones del punto">✓</button>
       </div>
