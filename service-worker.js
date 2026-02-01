@@ -1,30 +1,102 @@
+// Service Worker
+// Estrategia para que los cambios se apliquen sin tener que borrar caché manualmente.
+// - HTML (navegación): network-first
+// - JS/CSS: stale-while-revalidate
+// - Imágenes: cache-first
 
-const CACHE = "tennis-tracker-web-v2.44-ui";
-const ASSETS = [
+const CACHE = "tennis-tracker-web-v2.44.1-ui";
+const CORE = [
   "./",
   "./index.html",
-  "./style.css",
-  "./app.js",
+  "./style.css?v=2441",
+  "./app.js?v=2441",
   "./assets/court_top_view.png",
-  "./assets/board_court.png"
+  "./assets/board_court.png",
 ];
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(()=>self.skipWaiting())
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE)
+      .then((cache) => cache.addAll(CORE))
+      .then(() => self.skipWaiting())
   );
 });
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
-self.addEventListener("fetch", (e) => {
-  e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).then(res=>{
-      const copy = res.clone();
-      caches.open(CACHE).then(c=>c.put(e.request, copy)).catch(()=>{});
+
+function isHTMLRequest(request) {
+  return request.mode === "navigate" || (request.headers.get("accept") || "").includes("text/html");
+}
+
+function isAssetSWROrCacheFirst(request) {
+  const dest = request.destination;
+  if (dest === "script" || dest === "style") return "swr";
+  if (dest === "image" || dest === "font") return "cache-first";
+  return "cache-first";
+}
+
+async function networkFirst(request) {
+  try {
+    const res = await fetch(request);
+    const cache = await caches.open(CACHE);
+    cache.put(request, res.clone());
+    return res;
+  } catch (e) {
+    const cached = await caches.match(request);
+    return cached || caches.match("./index.html");
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE);
+  const cached = await cache.match(request);
+  const fetchPromise = fetch(request)
+    .then((res) => {
+      cache.put(request, res.clone());
       return res;
-    }).catch(()=>caches.match("./index.html")))
-  );
+    })
+    .catch(() => null);
+
+  // Devuelve caché si existe; si no, espera a la red.
+  return cached || (await fetchPromise) || (await caches.match(request));
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {
+    const res = await fetch(request);
+    const cache = await caches.open(CACHE);
+    cache.put(request, res.clone());
+    return res;
+  } catch (e) {
+    // fallback razonable
+    if (isHTMLRequest(request)) return caches.match("./index.html");
+    throw e;
+  }
+}
+
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+
+  // Solo manejamos http(s)
+  if (!req.url.startsWith(self.location.origin)) return;
+
+  if (isHTMLRequest(req)) {
+    event.respondWith(networkFirst(req));
+    return;
+  }
+
+  const strategy = isAssetSWROrCacheFirst(req);
+  if (strategy === "swr") {
+    event.respondWith(staleWhileRevalidate(req));
+  } else {
+    event.respondWith(cacheFirst(req));
+  }
 });

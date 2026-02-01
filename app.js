@@ -2628,7 +2628,7 @@ function wireBoard(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2441").catch(console.error);
 }
 
 function init(){
