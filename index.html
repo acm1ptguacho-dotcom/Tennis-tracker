@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Tennis Direction Tracker</title>
-  <link rel="stylesheet" href="style.css?v=2441" />
+  <link rel="stylesheet" href="style.css?v=2450" />
 </head>
 <body>
 
@@ -202,13 +202,41 @@
       <label class="search">Buscar patrón <input id="fSearch" placeholder="Ej: A-CP - B-CP"></label>
     </div>
 
-    <div class="historyGrid">
-      <div class="historyCol historyListCol">
-        <div class="historyList" id="historyList"></div>
+    <div class="historyHint muted">Toca un punto para ver el diagrama en pantalla completa y reproducirlo.</div>
+    <div class="historyList historyListFull" id="historyList"></div>
+  </div>
+</div>
+
+<!-- Visor de punto (pantalla completa) -->
+<div class="modal hidden" id="pointViewerModal">
+  <div class="modalCard solid pointCard">
+    <div class="modalHead">
+      <div style="min-width:0;">
+        <div class="modalTitle" id="pvTitle">Punto</div>
+        <div class="muted" id="pvSub">—</div>
       </div>
-      <div class="historyCol historyDetailCol">
-        <div class="historyDetail" id="historyDetail">Selecciona un punto.</div>
+      <button class="chip" id="btnClosePointViewer" type="button">Cerrar</button>
+    </div>
+
+    <div class="pointViewerBody">
+      <div class="pointViewerTools">
+        <button class="chip" id="btnPvToggleArrows" type="button">Flechas: ON</button>
+        <button class="chip" id="btnPvReplay" type="button">Reproducir</button>
       </div>
+
+      <div class="pointViewerCourtWrap">
+        <div class="pointViewerCourt" id="pvCourt" aria-label="Diagrama del punto">
+          <img src="assets/court_top_view.png" alt="pista">
+          <svg id="pvArrowSvg" class="arrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="baselineName baselineTop" id="pvTopName">Jugador B</div>
+          <div class="baselineName baselineBottom" id="pvBottomName">Jugador A</div>
+        </div>
+      </div>
+
+      <details class="pointViewerDetails" id="pvDetails">
+        <summary>Detalles del punto</summary>
+        <div class="pointViewerEvents" id="pvEvents"></div>
+      </details>
     </div>
   </div>
 </div>
@@ -283,7 +311,7 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2441"></script>
+<script src="app.js?v=2450"></script>
 
 <div class="modal hidden" id="boardModal">
   <div class="modalCard boardCard">

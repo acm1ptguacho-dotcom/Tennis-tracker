@@ -1078,14 +1078,125 @@ function elementFromElId(elId){
 function replayCurrentPoint(){ replayPoint(0, null); }
 
 /** MODALS **/
-function openModal(id){ $(id).classList.remove("hidden"); }
-function closeModal(id){ $(id).classList.add("hidden"); }
+function modalSel(id){
+  const s = String(id||"");
+  if (!s) return null;
+  return s.startsWith("#") ? s : ("#"+s);
+}
+function openModal(id){
+  const el = $(modalSel(id));
+  if (el) el.classList.remove("hidden");
+}
+function closeModal(id){
+  const el = $(modalSel(id));
+  if (el) el.classList.add("hidden");
+}
 
 function openHistory(){
   renderHistory();
   openModal("#historyModal");
 }
 function closeHistory(){ closeModal("#historyModal"); }
+
+function openPointViewer(point){
+  if (!point) return;
+  state.ui = state.ui || {};
+  state.ui.pointViewerSelN = point.n;
+  if (typeof state.ui.showPointViewerArrows === "undefined") state.ui.showPointViewerArrows = true;
+  openModal("#pointViewerModal");
+  renderPointViewer(point);
+}
+function closePointViewer(){
+  closeModal("#pointViewerModal");
+}
+
+function renderPointViewer(point){
+  const p = point || state.matchPoints.find(x=>x.n===state.ui?.pointViewerSelN);
+  if (!p) return;
+
+  // defaults
+  if (!state.ui) state.ui = { theme:"dark", coach:true };
+  if (typeof state.ui.showPointViewerArrows === "undefined") state.ui.showPointViewerArrows = true;
+
+  const nameA=state.names.A, nameB=state.names.B;
+  const winName = p.winner==="A" ? nameA : nameB;
+
+  const title = $("#pvTitle");
+  const sub = $("#pvSub");
+  if (title) title.textContent = `Punto ${p.n} · Gana ${p.winner}`;
+
+  const reasonLine = (p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : "");
+  if (sub) sub.textContent = `${p.snapshot}${reasonLine ? " · " + reasonLine : ""}`;
+
+  const topName = $("#pvTopName");
+  const botName = $("#pvBottomName");
+  if (topName) topName.textContent = nameB || "Jugador B";
+  if (botName) botName.textContent = nameA || "Jugador A";
+
+  // events
+  const evs = (p.events||[]);
+  const pvEvents = $("#pvEvents");
+  if (pvEvents){
+    if (!evs.length){
+      pvEvents.innerHTML = `<div class="muted">Sin eventos</div>`;
+    } else {
+      pvEvents.innerHTML = evs.map((e,i)=>`
+        <div class="mono" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,.08);">
+          <b>${i+1}.</b> ${escapeHtml(e.player)} - ${escapeHtml(e.code)}
+        </div>
+      `).join("");
+    }
+  }
+
+  // tools
+  const showArrows = !!state.ui.showPointViewerArrows;
+  const hasArrows = !!(p.arrows && p.arrows.length);
+
+  const btnT = $("#btnPvToggleArrows");
+  const btnR = $("#btnPvReplay");
+  if (btnT){
+    btnT.textContent = showArrows ? "Flechas: ON" : "Flechas: OFF";
+    btnT.onclick = ()=>{
+      state.ui.showPointViewerArrows = !state.ui.showPointViewerArrows;
+      persist();
+      renderPointViewer(p);
+    };
+  }
+  if (btnR){
+    btnR.disabled = !hasArrows;
+    btnR.onclick = ()=>{
+      if (!hasArrows) return;
+      if (!state.ui.showPointViewerArrows){
+        state.ui.showPointViewerArrows = true;
+        persist();
+        renderPointViewer(p);
+        setTimeout(()=>{
+          const svg2 = $("#pvArrowSvg");
+          if (svg2) replayArrowsIn(svg2, (p.arrows||[]));
+        }, 0);
+        return;
+      }
+      const svg = $("#pvArrowSvg");
+      if (svg) replayArrowsIn(svg, (p.arrows||[]));
+    };
+  }
+
+  // render arrows (static)
+  const svg = $("#pvArrowSvg");
+  if (svg){
+    svg.innerHTML = arrowDefs();
+    if (showArrows && hasArrows){
+      // esperar a que el modal tenga tamaño real (iPhone)
+      requestAnimationFrame(()=>{
+        setTimeout(()=>{
+          try{ renderArrows(svg, (p.arrows||[]), { fadeOld:false }); }
+          catch(e){ console.error(e); }
+        }, 0);
+      });
+    }
+    svg.style.display = showArrows ? "block" : "none";
+  }
+}
 
 function openAnalytics(){
   openModal("#analyticsModal");
@@ -1277,8 +1388,7 @@ function renderHistory(){
   const search=$("#fSearch").value.trim().toLowerCase();
 
   const list=$("#historyList");
-  const detail=$("#historyDetail");
-  if (!list || !detail) return;
+  if (!list) return;
 
   const nameA=state.names.A, nameB=state.names.B;
   const rows = state.matchPoints.filter(p=>{
@@ -1294,19 +1404,17 @@ function renderHistory(){
   list.innerHTML="";
   if (!rows.length){
     list.innerHTML = `<div class="historyItem"><div class="historyItemTitle">No hay puntos.</div><div class="historyItemMeta">Cambia filtros o registra puntos.</div></div>`;
-    detail.textContent = "Selecciona un punto.";
     return;
   }
 
-  // keep current selection if exists
+  // keep current selection if exists (solo para resaltar)
   const selN = state.ui?.historySelN || rows[0].n;
-  const chosen = rows.find(p=>p.n===selN) || rows[0];
   state.ui = state.ui || {};
-  state.ui.historySelN = chosen.n;
+  state.ui.historySelN = selN;
 
   rows.forEach(p=>{
     const item=document.createElement("div");
-    item.className="historyItem" + (p.n===chosen.n ? " active" : "");
+    item.className="historyItem" + (p.n===selN ? " active" : "");
     const pat=pointPattern(p, true);
     const winName = p.winner==="A"?nameA:nameB;
     item.innerHTML = `
@@ -1324,12 +1432,10 @@ function renderHistory(){
       // update active class
       [...list.querySelectorAll(".historyItem")].forEach(el=>el.classList.remove("active"));
       item.classList.add("active");
-      renderHistoryDetail(p);
+      openPointViewer(p);
     });
     list.appendChild(item);
   });
-
-  renderHistoryDetail(chosen);
 }
 
 function renderHistoryDetail(p){
@@ -1883,6 +1989,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnRotateCourt","click", toggleRotation);
 
   on("btnCloseHistory","click", closeHistory);
+  on("btnClosePointViewer","click", closePointViewer);
   on("btnCloseAnalytics","click", closeAnalytics);
   on("btnCloseExport","click", closeExport);
 
@@ -1975,7 +2082,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnPDF","click", exportPDF);
 
   // close modals clicking outside
-  ["historyModal","analyticsModal","exportModal"].forEach(mid=>{
+  ["historyModal","pointViewerModal","analyticsModal","exportModal"].forEach(mid=>{
     const m = $("#"+mid);
     if (!m) return;
     m.addEventListener("click", (e)=>{
@@ -1988,7 +2095,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // keyboard shortcuts
   window.addEventListener("keydown", (e)=>{
     if (e.key==="Escape"){
-      ["historyModal","analyticsModal","exportModal","finishMenu"].forEach(id=>{
+      ["historyModal","pointViewerModal","analyticsModal","exportModal","finishMenu"].forEach(id=>{
         const el=$("#"+id);
         if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
       });
