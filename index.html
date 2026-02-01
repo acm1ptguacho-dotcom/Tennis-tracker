@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Tennis Direction Tracker</title>
-  <link rel="stylesheet" href="style.css?v=2461" />
+  <link rel="stylesheet" href="style.css?v=2462" />
 </head>
 <body>
 
@@ -39,6 +39,7 @@
 
     <button class="chip" id="btnHistory" type="button">Historial</button>
     <button class="chip" id="btnAnalytics" type="button">Analíticas</button>
+    <button class="chip" id="btnStats" type="button">Estadísticas</button>
     <button class="chip" id="btnExport" type="button">Exportar</button>
 
     <div class="drawerDivider"></div>
@@ -278,6 +279,54 @@
   </div>
 </div>
 
+<div class="modal hidden" id="statsModal">
+  <div class="modalCard solid statsCard">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Estadísticas del partido</div>
+        <div class="muted" id="statsSub">—</div>
+      </div>
+      <button class="chip" id="btnCloseStats" type="button">Cerrar</button>
+    </div>
+
+    <div class="filters statsFilters">
+      <label>Rango
+        <select id="sRange">
+          <option value="all" selected>Partido</option>
+          <option value="10">Últimos 10</option>
+          <option value="25">Últimos 25</option>
+          <option value="50">Últimos 50</option>
+        </select>
+      </label>
+
+      <label>Set
+        <select id="sSet">
+          <option value="all" selected>Todos</option>
+        </select>
+      </label>
+
+      <label>Servidor
+        <select id="sServer">
+          <option value="" selected>Todos</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+        </select>
+      </label>
+
+      <label>Situación
+        <select id="sContext">
+          <option value="all" selected>Todas</option>
+          <option value="bp">Break points</option>
+          <option value="deuce">Deuce/Adv</option>
+          <option value="3030">30-30+</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="statsBody" id="statsBody"></div>
+  </div>
+</div>
+
 <div class="modal hidden" id="exportModal">
   <div class="modalCard solid">
     <div class="modalHead">
@@ -311,7 +360,7 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2461"></script>
+<script src="app.js?v=2462"></script>
 
 <div class="modal hidden" id="boardModal">
   <div class="modalCard boardCard">

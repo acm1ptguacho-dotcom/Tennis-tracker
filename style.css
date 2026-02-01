@@ -1348,6 +1348,113 @@ body.light .drawerDivider{ background: rgba(10,22,55,.12); }
   .analyticsList{ width: 100%; }
 }
 
+/* === Estadísticas (v2.49) === */
+.statsCard{ width: min(1100px, 96vw); max-height: 92vh; overflow:hidden; }
+.statsFilters{ align-items:end; }
+.statsBody{
+  padding: 10px 0 2px;
+  overflow:auto;
+  max-height: calc(92vh - 180px);
+}
+.statsNote{ padding: 0 2px 10px; color: rgba(255,255,255,.70); font-size: 12px; }
+.statsSection{
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  background: rgba(0,0,0,.12);
+  margin: 10px 0;
+  overflow:hidden;
+}
+.statsSectionTitle{
+  padding: 12px 14px;
+  font-weight: 900;
+  background: rgba(255,255,255,.04);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.statsSectionHead{
+  display:grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,.04);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  align-items:center;
+}
+.statsColHead{ font-weight: 900; }
+.statsColHead.mid{ text-align:center; opacity:.95; }
+.statsColHead.a{ color:#FFF200; }
+.statsColHead.b{ color:#FF2A2A; text-align:right; }
+.statsTable{ display:flex; flex-direction:column; }
+.statsRow{
+  display:grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 10px;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  align-items:center;
+}
+.statsRow:first-child{ border-top:none; }
+.statsKey{ text-align:center; color: rgba(255,255,255,.88); font-weight: 800; }
+.statsVal{ font-variant-numeric: tabular-nums; }
+.statsVal.a{ color:#FFF200; }
+.statsVal.b{ color:#FF2A2A; text-align:right; }
+.statsMuted{ color: rgba(255,255,255,.65); font-weight: 600; }
+.statsPill{
+  display:inline-flex;
+  gap:6px;
+  align-items:center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+}
+.statsSmall{ font-size: 12px; opacity:.9; }
+
+.statsHeaderRow{
+  display:grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 10px;
+  padding: 10px 2px 8px;
+  align-items:center;
+  position: sticky;
+  top: 0;
+  background: rgba(6,16,30,.88);
+  backdrop-filter: blur(10px);
+  z-index: 3;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.statsPlayerHead{ font-weight: 1000; }
+.statsPlayerHead.a{ color:#FFF200; }
+.statsPlayerHead.b{ color:#FF2A2A; text-align:right; }
+.statsMidHead{ text-align:center; font-weight: 900; opacity:.80; }
+.statsGrid{ display:flex; flex-direction:column; gap: 12px; padding: 0 2px 18px; }
+.statsHint{ padding: 0 2px 10px; font-size: 12px; }
+
+.statsDetails{
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  background: rgba(0,0,0,.12);
+  overflow:hidden;
+}
+.statsDetails summary{
+  padding: 12px 14px;
+  font-weight: 900;
+  cursor: pointer;
+  background: rgba(255,255,255,.04);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.statsDetails[open] summary{ border-bottom-color: rgba(255,255,255,.12); }
+.statsDetails .statsTable{ padding-bottom: 6px; }
+
+@media (max-width: 860px){
+  .statsSectionHead, .statsRow{ grid-template-columns: 1fr 1fr 1fr; }
+  .statsKey{ font-size: 12px; }
+}
+@media (max-width: 520px){
+  .statsBody{ max-height: calc(92vh - 210px); }
+  .statsSectionHead{ padding: 10px 12px; }
+  .statsRow{ padding: 10px 12px; }
+}
+
 /* Print / PDF report */
 #printReport{ display:none; }
 body.printing #printReport{ display:block; }
@@ -1849,3 +1956,64 @@ body.printing .app{ display:none; }
 
 /* Board rally cells use zoneCell; make label subtle in pizarra */
 .boardCourt .zoneLabel{font-size:12px; padding:5px 9px; background: rgba(0,0,0,.22);}
+
+/* === Print PRO: salto de pagina inteligente para export === */
+@media print{
+  #printReport table thead{ display: table-header-group; }
+  #printReport table tfoot{ display: table-footer-group; }
+
+  #printReport .printKeepTogether{
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+  #printReport .printKeepWithNext{
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+  #printReport .printPageBreakBefore{
+    break-before: page;
+    page-break-before: always;
+  }
+
+  #printReport .printSectionTitle{
+    font-weight: 900 !important;
+    font-size: 13px !important;
+    margin: 0 0 8px !important;
+  }
+
+  #printReport .printPointCard{
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin: 10px 0;
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+  #printReport .printPointGrid{
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+  #printReport .printPointTitle{ font-weight: 900; font-size: 12px; }
+  #printReport .printPointMeta{ color: #334155; font-size: 11px; margin-top: 4px; }
+  #printReport .printPointEnd{ color: #0f172a; font-size: 11px; margin-top: 6px; }
+  #printReport .printPointPattern{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono','Courier New', monospace;
+    font-size: 11px;
+    margin-top: 8px;
+  }
+
+  #printReport .printSetDivider{
+    border: 2px solid #cbd5e1;
+    border-radius: 14px;
+    background: #f8fafc;
+    padding: 8px 10px;
+    margin: 10px 0 6px;
+  }
+  #printReport .printSetTitle{
+    font-weight: 900;
+    font-size: 12px;
+    color: #0f172a;
+  }
+}

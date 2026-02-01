@@ -1205,6 +1205,13 @@ function openAnalytics(){
 }
 function closeAnalytics(){ closeModal("#analyticsModal"); }
 
+function openStats(){
+  openModal("#statsModal");
+  try{ buildStatsSetOptions(); renderStats(); }
+  catch(e){ console.error(e); toast("Error al abrir estadísticas"); }
+}
+function closeStats(){ closeModal("#statsModal"); }
+
 function openExport(){
   $("#exportSub").textContent = `${state.matchPoints.length} puntos`;
   openModal("#exportModal");
@@ -1636,6 +1643,481 @@ function showPatternDetail(it, includeServe){
   `;
 }
 
+
+/** STATS **/
+
+function parseSnapshot(snapshot){
+  const s = String(snapshot||"");
+  const out = { setsA:0, setsB:0, gamesA:0, gamesB:0, pointLabel:"", server:"", side:"" };
+  const mS = s.match(/S\s*(\d+)-(\d+)/);
+  const mG = s.match(/G\s*(\d+)-(\d+)/);
+  const mP = s.match(/P\s*([^·]+)/);
+  const mSrv = s.match(/Srv\s*([AB])\s*(SD|SV)/);
+  if (mS){ out.setsA=parseInt(mS[1],10)||0; out.setsB=parseInt(mS[2],10)||0; }
+  if (mG){ out.gamesA=parseInt(mG[1],10)||0; out.gamesB=parseInt(mG[2],10)||0; }
+  if (mP){ out.pointLabel=(mP[1]||"").trim(); }
+  if (mSrv){ out.server=mSrv[1]; out.side=mSrv[2]; }
+  return out;
+}
+
+function parsePointLabel(label){
+  const t = String(label||"").trim();
+  if (!t) return { kind:"unknown" };
+  if (t.startsWith("TB ")){
+    const m=t.match(/TB\s*(\d+)-(\d+)/);
+    return { kind:"tb", a: intOr0(m?.[1]), b: intOr0(m?.[2]) };
+  }
+  if (t === "DEUCE") return { kind:"deuce" };
+  if (t.startsWith("AD ")) return { kind:"ad", adv: t.endsWith("A") ? "A" : (t.endsWith("B") ? "B" : "") };
+  const m=t.match(/(0|15|30|40)\s*-\s*(0|15|30|40)/);
+  if (m){
+    const map={"0":0,"15":15,"30":30,"40":40};
+    return { kind:"reg", a: map[m[1]], b: map[m[2]] };
+  }
+  return { kind:"unknown" };
+}
+
+function intOr0(x){
+  const n=parseInt(x,10);
+  return isFinite(n) ? n : 0;
+}
+
+function setIndexFromPoint(p){
+  const snap=parseSnapshot(p.snapshot);
+  return (snap.setsA + snap.setsB + 1);
+}
+
+function isDeuceOrAd(labelInfo){
+  return labelInfo.kind==="deuce" || labelInfo.kind==="ad";
+}
+
+function is30AllPlus(labelInfo){
+  if (labelInfo.kind==="deuce" || labelInfo.kind==="ad") return true;
+  if (labelInfo.kind!=="reg") return false;
+  const a=labelInfo.a, b=labelInfo.b;
+  // 30-30, 40-30, 30-40, 40-40 (no llega aquí), etc
+  return (a>=30 && b>=30);
+}
+
+function isBreakPoint(point, labelInfo){
+  if (!point) return false;
+  if (labelInfo.kind==="tb") return false;
+  const server = point.server;
+  const receiver = other(server);
+  if (labelInfo.kind==="ad") return labelInfo.adv===receiver;
+  if (labelInfo.kind!=="reg") return false;
+  const s = (server==="A") ? labelInfo.a : labelInfo.b;
+  const r = (receiver==="A") ? labelInfo.a : labelInfo.b;
+  return (r===40 && s<40);
+}
+
+function normalizeShotCode(evCode){
+  const c=String(evCode||"").trim();
+  if (c.startsWith("R ")) return { code: c.slice(2).trim(), isReturn:true };
+  return { code: c, isReturn:false };
+}
+
+function decodeDirDepth(two){
+  const code = String(two||"").trim();
+  if (!/^[PMC][CMP]$/.test(code)) return null;
+  return { depth: code[0], dir: code[1] };
+}
+
+function parseReason(reason){
+  const r=String(reason||"");
+  const m=r.match(/\(([AB])\)/);
+  const offender = m ? m[1] : "";
+  if (r.startsWith("Winner")) return { kind:"WIN", offender };
+  if (r.startsWith("Error no forzado")) return { kind:"UE", offender };
+  if (r.startsWith("Error forzado")) return { kind:"FE", offender };
+  if (r.startsWith("Doble falta")) return { kind:"DF", offender };
+  return { kind:"OTHER", offender };
+}
+
+function emptyPlayerStats(){
+  return {
+    pointsWon:0,
+    servePoints:0, servePointsWon:0,
+    firstIn:0, firstInWon:0,
+    secondPlayed:0, secondIn:0, secondInWon:0,
+    doubleFaults:0, aces:0,
+    serveTargets:{T:0,C:0,A:0},
+
+    returnPoints:0, returnPointsWon:0,
+    returnsIn:0,
+    returnDir:{C:0,M:0,P:0},
+    returnDepth:{P:0,M:0,C:0},
+
+    strokes:0,
+    strokeDir:{C:0,M:0,P:0},
+    strokeDepth:{P:0,M:0,C:0},
+
+    winners:0, ue:0, fe:0, feDrawn:0,
+
+    bpOpp:0, bpConv:0,
+    bpFaced:0, bpSaved:0,
+
+    pressureDeucePlayed:0, pressureDeuceWon:0,
+    pressure3030Played:0, pressure3030Won:0,
+
+    rallyWonPoints:0, rallyWonTotalLen:0,
+    rallyWonBuckets:{b02:0,b35:0,b68:0,b9p:0},
+
+    advWinners:{ACE:0,PASS:0,DROP:0,VOL:0,WIN:0,OTHER:0},
+    advUE:{FH:0,BH:0,VOL:0,SM:0,OTHER:0},
+    advFE:{FH:0,BH:0,VOL:0,SM:0,OTHER:0},
+  };
+}
+
+function computeStats(points){
+  const agg={ totalPoints: points.length, A: emptyPlayerStats(), B: emptyPlayerStats() };
+
+  for (const pt of (points||[])){
+    const server = pt.server;
+    const receiver = other(server);
+
+    // points won
+    if (pt.winner==="A") agg.A.pointsWon++; else if (pt.winner==="B") agg.B.pointsWon++;
+
+    // server/return points
+    agg[server].servePoints++;
+    if (pt.winner===server) agg[server].servePointsWon++;
+
+    agg[receiver].returnPoints++;
+    if (pt.winner===receiver) agg[receiver].returnPointsWon++;
+
+    // snapshot contexts
+    const snap = parseSnapshot(pt.snapshot);
+    const labelInfo = parsePointLabel(snap.pointLabel);
+
+    // pressure points (both players)
+    if (isDeuceOrAd(labelInfo)){
+      agg.A.pressureDeucePlayed++; agg.B.pressureDeucePlayed++;
+      if (pt.winner==="A") agg.A.pressureDeuceWon++; else if (pt.winner==="B") agg.B.pressureDeuceWon++;
+    }
+    if (is30AllPlus(labelInfo)){
+      agg.A.pressure3030Played++; agg.B.pressure3030Played++;
+      if (pt.winner==="A") agg.A.pressure3030Won++; else if (pt.winner==="B") agg.B.pressure3030Won++;
+    }
+
+    // break points
+    const bp = isBreakPoint(pt, labelInfo);
+    if (bp){
+      agg[receiver].bpOpp++;
+      if (pt.winner===receiver) agg[receiver].bpConv++;
+      agg[server].bpFaced++;
+      if (pt.winner===server) agg[server].bpSaved++;
+    }
+
+    // serve analysis
+    const evs = (pt.events||[]);
+    const serveEvs = evs.filter(e=>e && e.type==="serve" && e.player===server);
+    const hasDF = serveEvs.some(e=>e?.meta?.df || /\sDF$/.test(String(e.code||"")));
+    const hasFault = serveEvs.some(e=>e?.meta?.fault || /\sF$/.test(String(e.code||"")));
+    const targetEvs = serveEvs.filter(e=>e?.meta?.target && ["T","C","A"].includes(e.meta.target));
+    const serveIn = targetEvs.length>0 && !hasDF;
+    const firstFaulted = hasFault || hasDF; // DF implica 1º fallado aunque no lo registre
+
+    if (hasDF) agg[server].doubleFaults++;
+
+    if (firstFaulted) agg[server].secondPlayed++;
+
+    if (serveIn && !firstFaulted){
+      agg[server].firstIn++;
+      if (pt.winner===server) agg[server].firstInWon++;
+    }
+    if (serveIn && firstFaulted && !hasDF){
+      agg[server].secondIn++;
+      if (pt.winner===server) agg[server].secondInWon++;
+    }
+
+    if (serveIn){
+      const lastT = targetEvs[targetEvs.length-1]?.meta?.target;
+      if (lastT && agg[server].serveTargets[lastT]!==undefined) agg[server].serveTargets[lastT]++;
+    }
+
+    // aces (solo si modo avanzado lo etiqueta)
+    if (pt.finishDetail && pt.finishDetail.kind==="WINNER" && pt.finishDetail.winnerType==="ACE"){
+      const pl = pt.finishDetail.offender || server; // offender suele ser ganador
+      if (pl==="A" || pl==="B") agg[pl].aces++;
+    }
+
+    // return analysis (primer golpe del resto)
+    const returnEv = evs.find(e=>e && e.type==="rally" && e.player===receiver && String(e.code||"").startsWith("R "));
+    if (returnEv){
+      agg[receiver].returnsIn++;
+      const n = normalizeShotCode(returnEv.code);
+      const dd = decodeDirDepth(n.code);
+      if (dd){
+        if (agg[receiver].returnDir[dd.dir]!==undefined) agg[receiver].returnDir[dd.dir]++;
+        if (agg[receiver].returnDepth[dd.depth]!==undefined) agg[receiver].returnDepth[dd.depth]++;
+      }
+    }
+
+    // rally strokes + direction/depth
+    const rallyEvs = evs.filter(e=>e && e.type==="rally");
+    for (const ev of rallyEvs){
+      const pl = ev.player;
+      if (pl!=="A" && pl!=="B") continue;
+      agg[pl].strokes++;
+      const n = normalizeShotCode(ev.code);
+      const dd = decodeDirDepth(n.code);
+      if (dd){
+        if (agg[pl].strokeDir[dd.dir]!==undefined) agg[pl].strokeDir[dd.dir]++;
+        if (agg[pl].strokeDepth[dd.depth]!==undefined) agg[pl].strokeDepth[dd.depth]++;
+      }
+    }
+
+    // rally length buckets for points won
+    const rallyLen = rallyEvs.length;
+    const w = pt.winner;
+    if (w==="A" || w==="B"){
+      agg[w].rallyWonPoints++;
+      agg[w].rallyWonTotalLen += rallyLen;
+      const b = rallyLen<=2 ? "b02" : (rallyLen<=5 ? "b35" : (rallyLen<=8 ? "b68" : "b9p"));
+      agg[w].rallyWonBuckets[b]++;
+    }
+
+    // end reason
+    const end = parseReason(pt.reason);
+    if (end.kind==="WIN" && (end.offender==="A" || end.offender==="B")) agg[end.offender].winners++;
+    if (end.kind==="UE" && (end.offender==="A" || end.offender==="B")) agg[end.offender].ue++;
+    if (end.kind==="FE" && (end.offender==="A" || end.offender==="B")){
+      agg[end.offender].fe++;
+      const otherPl = other(end.offender);
+      agg[otherPl].feDrawn++;
+    }
+
+    // advanced breakdown
+    const fd = pt.finishDetail;
+    if (fd && fd.mode==="advanced"){
+      const pl = fd.offender;
+      if (pl==="A" || pl==="B"){
+        if (fd.kind==="WINNER" && fd.winnerType && agg[pl].advWinners[fd.winnerType]!==undefined){
+          agg[pl].advWinners[fd.winnerType]++;
+        }
+        if (fd.kind==="UE" && fd.strokeType && agg[pl].advUE[fd.strokeType]!==undefined){
+          agg[pl].advUE[fd.strokeType]++;
+        }
+        if (fd.kind==="FE" && fd.strokeType && agg[pl].advFE[fd.strokeType]!==undefined){
+          agg[pl].advFE[fd.strokeType]++;
+        }
+      }
+    }
+  }
+
+  return agg;
+}
+
+function fmtPct(n,d){
+  if (!d) return "—";
+  return `${Math.round((n/d)*100)}%`;
+}
+function fmtRatio(n,d){
+  if (!d) return "—";
+  return `${n}/${d} (${Math.round((n/d)*100)}%)`;
+}
+function fmtAvg(n,d){
+  if (!d) return "—";
+  return `${(n/d).toFixed(1)}`;
+}
+
+function buildStatsSetOptions(){
+  const sel = $("#sSet");
+  if (!sel) return;
+  const prev = sel.value || "all";
+  let maxSet = 1;
+  for (const p of (state.matchPoints||[])) maxSet = Math.max(maxSet, setIndexFromPoint(p));
+  sel.innerHTML = '<option value="all">Todos</option>' + Array.from({length:maxSet}, (_,i)=>`<option value="${i+1}">Set ${i+1}</option>`).join('');
+  if ([...sel.options].some(o=>o.value==prev)) sel.value = prev;
+}
+
+function filterPointsForStats(){
+  let pts = (state.matchPoints||[]).slice();
+
+  const range = $("#sRange")?.value || "all";
+  const setV  = $("#sSet")?.value || "all";
+  const srvV  = $("#sServer")?.value || "";
+  const ctxV  = $("#sContext")?.value || "all";
+
+  if (setV !== "all"){
+    const want = parseInt(setV,10);
+    pts = pts.filter(p=> setIndexFromPoint(p) === want);
+  }
+  if (srvV){
+    pts = pts.filter(p=> p.server === srvV);
+  }
+
+  if (ctxV !== "all"){
+    pts = pts.filter(p=>{
+      const info = parsePointLabel(parseSnapshot(p.snapshot).pointLabel);
+      if (ctxV==="bp") return isBreakPoint(p, info);
+      if (ctxV==="deuce") return isDeuceOrAd(info);
+      if (ctxV==="3030") return is30AllPlus(info);
+      return true;
+    });
+  }
+
+  if (range !== "all"){
+    const n = parseInt(range,10);
+    if (isFinite(n) && n>0) pts = pts.slice(-n);
+  }
+  return pts;
+}
+
+function renderStats(){
+  const body = $("#statsBody");
+  if (!body) return;
+
+  const pts = filterPointsForStats();
+  const agg = computeStats(pts);
+
+  const nameA = state.names?.A || "Jugador A";
+  const nameB = state.names?.B || "Jugador B";
+
+  const sub = $("#statsSub");
+  if (sub) sub.textContent = `${pts.length} puntos (A ${agg.A.pointsWon} · B ${agg.B.pointsWon})`;
+
+  const row = (label, a, b) => (
+    `<div class="statsRow"><div class="statsVal a">${a}</div><div class="statsKey">${label}</div><div class="statsVal b">${b}</div></div>`
+  );
+
+  const section = (title, rows) => (
+    `<div class="statsSection"><div class="statsSectionTitle">${title}</div><div class="statsTable">${rows}</div></div>`
+  );
+
+  const total = agg.totalPoints || 0;
+
+  // --- Resumen ---
+  const resumen = [
+    row("Puntos ganados", fmtRatio(agg.A.pointsWon, total), fmtRatio(agg.B.pointsWon, total)),
+    row("% puntos ganados", fmtPct(agg.A.pointsWon, total), fmtPct(agg.B.pointsWon, total)),
+    row("Puntos al saque (ganados)", `${agg.A.servePointsWon}/${agg.A.servePoints}`, `${agg.B.servePointsWon}/${agg.B.servePoints}`),
+    row("% puntos al saque ganados", fmtPct(agg.A.servePointsWon, agg.A.servePoints), fmtPct(agg.B.servePointsWon, agg.B.servePoints)),
+    row("Puntos al resto (ganados)", `${agg.A.returnPointsWon}/${agg.A.returnPoints}`, `${agg.B.returnPointsWon}/${agg.B.returnPoints}`),
+    row("% puntos al resto ganados", fmtPct(agg.A.returnPointsWon, agg.A.returnPoints), fmtPct(agg.B.returnPointsWon, agg.B.returnPoints)),
+  ].join("");
+
+  // --- Servicio ---
+  const serveInA = agg.A.firstIn + agg.A.secondIn;
+  const serveInB = agg.B.firstIn + agg.B.secondIn;
+  const servicio = [
+    row("1º saque IN", fmtRatio(agg.A.firstIn, agg.A.servePoints), fmtRatio(agg.B.firstIn, agg.B.servePoints)),
+    row("2º saque jugado", fmtRatio(agg.A.secondPlayed, agg.A.servePoints), fmtRatio(agg.B.secondPlayed, agg.B.servePoints)),
+    row("2º saque IN", fmtRatio(agg.A.secondIn, agg.A.secondPlayed), fmtRatio(agg.B.secondIn, agg.B.secondPlayed)),
+    row("Doble faltas", fmtRatio(agg.A.doubleFaults, agg.A.servePoints), fmtRatio(agg.B.doubleFaults, agg.B.servePoints)),
+    row("Aces (modo avanzado)", fmtRatio(agg.A.aces, agg.A.servePoints), fmtRatio(agg.B.aces, agg.B.servePoints)),
+    row("Pts ganados con 1º", fmtRatio(agg.A.firstInWon, agg.A.firstIn), fmtRatio(agg.B.firstInWon, agg.B.firstIn)),
+    row("Pts ganados con 2º", fmtRatio(agg.A.secondInWon, agg.A.secondIn), fmtRatio(agg.B.secondInWon, agg.B.secondIn)),
+    row("Saque a T", fmtRatio(agg.A.serveTargets.T, serveInA), fmtRatio(agg.B.serveTargets.T, serveInB)),
+    row("Saque al cuerpo", fmtRatio(agg.A.serveTargets.C, serveInA), fmtRatio(agg.B.serveTargets.C, serveInB)),
+    row("Saque abierto", fmtRatio(agg.A.serveTargets.A, serveInA), fmtRatio(agg.B.serveTargets.A, serveInB)),
+  ].join("");
+
+  // --- Resto ---
+  const resto = [
+    row("Restos registrados", fmtRatio(agg.A.returnsIn, agg.A.returnPoints), fmtRatio(agg.B.returnsIn, agg.B.returnPoints)),
+    row("Resto cruzado", fmtRatio(agg.A.returnDir.C, agg.A.returnsIn), fmtRatio(agg.B.returnDir.C, agg.B.returnsIn)),
+    row("Resto paralelo", fmtRatio(agg.A.returnDir.P, agg.A.returnsIn), fmtRatio(agg.B.returnDir.P, agg.B.returnsIn)),
+    row("Resto medio", fmtRatio(agg.A.returnDir.M, agg.A.returnsIn), fmtRatio(agg.B.returnDir.M, agg.B.returnsIn)),
+    row("Resto profundo", fmtRatio(agg.A.returnDepth.P, agg.A.returnsIn), fmtRatio(agg.B.returnDepth.P, agg.B.returnsIn)),
+    row("Resto medio (prof.)", fmtRatio(agg.A.returnDepth.M, agg.A.returnsIn), fmtRatio(agg.B.returnDepth.M, agg.B.returnsIn)),
+    row("Resto corto", fmtRatio(agg.A.returnDepth.C, agg.A.returnsIn), fmtRatio(agg.B.returnDepth.C, agg.B.returnsIn)),
+  ].join("");
+
+  // --- Golpes / Dirección / Profundidad ---
+  const golpes = [
+    row("Golpes (rally) totales", String(agg.A.strokes), String(agg.B.strokes)),
+    row("Cruzado", fmtRatio(agg.A.strokeDir.C, agg.A.strokes), fmtRatio(agg.B.strokeDir.C, agg.B.strokes)),
+    row("Paralelo", fmtRatio(agg.A.strokeDir.P, agg.A.strokes), fmtRatio(agg.B.strokeDir.P, agg.B.strokes)),
+    row("Medio", fmtRatio(agg.A.strokeDir.M, agg.A.strokes), fmtRatio(agg.B.strokeDir.M, agg.B.strokes)),
+    row("Profundo", fmtRatio(agg.A.strokeDepth.P, agg.A.strokes), fmtRatio(agg.B.strokeDepth.P, agg.B.strokes)),
+    row("Medio (prof.)", fmtRatio(agg.A.strokeDepth.M, agg.A.strokes), fmtRatio(agg.B.strokeDepth.M, agg.B.strokes)),
+    row("Corto", fmtRatio(agg.A.strokeDepth.C, agg.A.strokes), fmtRatio(agg.B.strokeDepth.C, agg.B.strokes)),
+  ].join("");
+
+  // --- Rally ---
+  const rally = [
+    row("Media rally (puntos ganados)", fmtAvg(agg.A.rallyWonTotalLen, agg.A.rallyWonPoints), fmtAvg(agg.B.rallyWonTotalLen, agg.B.rallyWonPoints)),
+    row("Puntos ganados 0-2 golpes", fmtRatio(agg.A.rallyWonBuckets.b02, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b02, agg.B.rallyWonPoints)),
+    row("Puntos ganados 3-5 golpes", fmtRatio(agg.A.rallyWonBuckets.b35, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b35, agg.B.rallyWonPoints)),
+    row("Puntos ganados 6-8 golpes", fmtRatio(agg.A.rallyWonBuckets.b68, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b68, agg.B.rallyWonPoints)),
+    row("Puntos ganados 9+ golpes", fmtRatio(agg.A.rallyWonBuckets.b9p, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b9p, agg.B.rallyWonPoints)),
+  ].join("");
+
+  // --- Ganadores y errores ---
+  const cierres = [
+    row("Winners", fmtRatio(agg.A.winners, total), fmtRatio(agg.B.winners, total)),
+    row("Errores no forzados", fmtRatio(agg.A.ue, agg.A.strokes), fmtRatio(agg.B.ue, agg.B.strokes)),
+    row("Errores forzados (cometidos)", fmtRatio(agg.A.fe, agg.A.strokes), fmtRatio(agg.B.fe, agg.B.strokes)),
+    row("Errores forzados (provocados)", fmtRatio(agg.A.feDrawn, total), fmtRatio(agg.B.feDrawn, total)),
+    row("W/UE (ratio)", (agg.A.ue? (agg.A.winners/agg.A.ue).toFixed(2):"—"), (agg.B.ue? (agg.B.winners/agg.B.ue).toFixed(2):"—")),
+  ].join("");
+
+  // --- Puntos clave ---
+  const clave = [
+    row("Break points (convertidos)", fmtRatio(agg.A.bpConv, agg.A.bpOpp), fmtRatio(agg.B.bpConv, agg.B.bpOpp)),
+    row("Break points (salvados)", fmtRatio(agg.A.bpSaved, agg.A.bpFaced), fmtRatio(agg.B.bpSaved, agg.B.bpFaced)),
+    row("Puntos en Deuce/Adv ganados", fmtRatio(agg.A.pressureDeuceWon, agg.A.pressureDeucePlayed), fmtRatio(agg.B.pressureDeuceWon, agg.B.pressureDeucePlayed)),
+    row("Puntos 30-30+ ganados", fmtRatio(agg.A.pressure3030Won, agg.A.pressure3030Played), fmtRatio(agg.B.pressure3030Won, agg.B.pressure3030Played)),
+  ].join("");
+
+  // --- Avanzado ---
+  const adv = (title, rows) => (
+    `<details class="statsDetails"><summary>${title}</summary><div class="statsTable">${rows}</div></details>`
+  );
+
+  const advWinnerRows = [
+    row("Ace", String(agg.A.advWinners.ACE), String(agg.B.advWinners.ACE)),
+    row("Passing", String(agg.A.advWinners.PASS), String(agg.B.advWinners.PASS)),
+    row("Dejada", String(agg.A.advWinners.DROP), String(agg.B.advWinners.DROP)),
+    row("Volea winner", String(agg.A.advWinners.VOL), String(agg.B.advWinners.VOL)),
+    row("Winner", String(agg.A.advWinners.WIN), String(agg.B.advWinners.WIN)),
+    row("Otro", String(agg.A.advWinners.OTHER), String(agg.B.advWinners.OTHER)),
+  ].join("");
+
+  const advUERows = [
+    row("UE Derecha", String(agg.A.advUE.FH), String(agg.B.advUE.FH)),
+    row("UE Revés", String(agg.A.advUE.BH), String(agg.B.advUE.BH)),
+    row("UE Volea", String(agg.A.advUE.VOL), String(agg.B.advUE.VOL)),
+    row("UE Smash", String(agg.A.advUE.SM), String(agg.B.advUE.SM)),
+    row("UE Otro", String(agg.A.advUE.OTHER), String(agg.B.advUE.OTHER)),
+  ].join("");
+
+  const advFERows = [
+    row("FE Derecha", String(agg.A.advFE.FH), String(agg.B.advFE.FH)),
+    row("FE Revés", String(agg.A.advFE.BH), String(agg.B.advFE.BH)),
+    row("FE Volea", String(agg.A.advFE.VOL), String(agg.B.advFE.VOL)),
+    row("FE Smash", String(agg.A.advFE.SM), String(agg.B.advFE.SM)),
+    row("FE Otro", String(agg.A.advFE.OTHER), String(agg.B.advFE.OTHER)),
+  ].join("");
+
+  const advanced = `
+    <div class="statsHint muted">Ratios: cuando aparece n/total, el total son puntos o golpes registrados (según el caso).</div>
+    ${adv("Desglose winners (modo avanzado)", advWinnerRows)}
+    ${adv("Desglose UE por golpe (modo avanzado)", advUERows)}
+    ${adv("Desglose FE por golpe (modo avanzado)", advFERows)}
+  `;
+
+  body.innerHTML = `
+    <div class="statsHeaderRow">
+      <div class="statsPlayerHead a">${escapeHtml(nameA)}</div>
+      <div class="statsMidHead">Apartado</div>
+      <div class="statsPlayerHead b">${escapeHtml(nameB)}</div>
+    </div>
+    <div class="statsGrid">
+      ${section("Resumen", resumen)}
+      ${section("Servicio", servicio)}
+      ${section("Resto", resto)}
+      ${section("Golpes · Dirección · Profundidad", golpes)}
+      ${section("Rally", rally)}
+      ${section("Ganadores y errores", cierres)}
+      ${section("Puntos clave", clave)}
+      ${advanced}
+    </div>
+  `;
+}
+
 /** EXPORT **/
 function getExport(includeServe, splitShots){
   const rows = state.matchPoints.map(p=>{
@@ -1781,30 +2263,68 @@ const miniSvg = (arrows, idx)=>{
     return `<svg viewBox="0 0 1000 1000" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">${defs}${segs}</svg>`;
   };
 
-  const pointCards = rows.map((r, idx)=>{
-    const win = r.winner==="A"?nameA:nameB;
+
+  // --- Smart page breaks (Pro) ---
+  // - If there are many points, start the diagram section on a new page.
+  // - Avoid splitting a point card across pages.
+  // - Add a soft break every 2 point cards (A4 portrait).
+  // - If set score changes, force a new page and add a set divider.
+  const parseSetScore = (snapshot)=>{
+    const m = (snapshot||"").match(/\bS\s*([0-9]+)\s*-\s*([0-9]+)/i);
+    return m ? `${m[1]}-${m[2]}` : null;
+  };
+
+  let prevSet = null;
+  const pointCardsArr = [];
+  for (let idx=0; idx<rows.length; idx++){
+    const r = rows[idx];
+    const win = r.winner === "A" ? nameA : nameB;
     const arrows = r.arrows || [];
+
     const mini = arrows.length ? `
       <div class="miniCourtWrap">
-        <div class="miniCourt" style="width:190px; border-radius:10px; border:1px solid #cbd5e1; background:#fff;">
-          <img src="assets/court_top_view.png" alt="court" style="width:100%; height:100%; object-fit:cover; display:block;">
+        <div class="miniCourt" style="width:190px; aspect-ratio:1/2; border-radius:10px; border:1px solid #cbd5e1; background:#fff; position:relative; overflow:hidden;">
+          <img src="assets/court_top_view.png" alt="court" style="width:100%; height:100%; object-fit:contain; display:block; background:#fff;">
           ${miniSvg(arrows, idx)}
         </div>
       </div>` : `<div style="color:#64748b; font-size:11px;">(Sin flechas)</div>`;
 
-    return `
-      <div style="display:grid; grid-template-columns: 210px 1fr; gap:14px; align-items:start; border:1px solid #e2e8f0; border-radius:14px; padding:10px 12px; margin:10px 0; page-break-inside: avoid;">
-        <div>${mini}</div>
-        <div>
-          <div style="font-weight:900; font-size:12px;">Punto ${r.n} · Gana ${escapeHtml(win)}</div>
-          <div style="color:#334155; font-size:11px; margin-top:4px;">${escapeHtml(r.snapshot)}</div>
-          <div style="color:#0f172a; font-size:11px; margin-top:6px;"><b>${escapeHtml(r.reason || "")}</b>${finishDetailLabel(r.finishDetail) ? " · " + escapeHtml(finishDetailLabel(r.finishDetail)) : ""}</div>
-          <div style="font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono','Courier New', monospace; font-size:11px; margin-top:8px;">${escapeHtml(r.pattern)}</div>
+    const setScore = parseSetScore(r.snapshot);
+    const isNewSet = (idx>0 && setScore && prevSet && setScore !== prevSet);
+
+    // Hard break at new set
+    if (isNewSet){
+      pointCardsArr.push(`
+        <div class="printSetDivider printPageBreakBefore">
+          <div class="printSetTitle">Nuevo set (S ${escapeHtml(setScore)})</div>
+        </div>
+      `);
+    }
+
+    // Soft break every 2 points (keeps pages clean without risking cut-offs)
+    const softBreak = (!isNewSet && idx>0 && (idx % 2 === 0));
+    const breakClass = softBreak ? "printPageBreakBefore" : "";
+
+    pointCardsArr.push(`
+      <div class="printPointCard ${breakClass}">
+        <div class="printPointGrid">
+          <div>${mini}</div>
+          <div>
+            <div class="printPointTitle">Punto ${r.n} · Gana ${escapeHtml(win)}</div>
+            <div class="printPointMeta">${escapeHtml(r.snapshot)}</div>
+            <div class="printPointEnd"><b>${escapeHtml(r.reason || "")}</b>${finishDetailLabel(r.finishDetail) ? " · " + escapeHtml(finishDetailLabel(r.finishDetail)) : ""}</div>
+            <div class="printPointPattern">${escapeHtml(r.pattern)}</div>
+          </div>
         </div>
       </div>
-    `;
-  }).join("");
+    `);
 
+    if (setScore) prevSet = setScore;
+  }
+  const pointCards = pointCardsArr.join("");
+
+
+  const breakDiagrams = rows.length > 2; // salto inteligente: separa diagramas si hay muchos puntos
 
   // Build printable report inline (no popups)
   const existing = document.getElementById("printReport");
@@ -1823,8 +2343,8 @@ const miniSvg = (arrows, idx)=>{
       </div>
 
       <div style="display:grid; grid-template-columns: 1fr; gap:12px; margin: 16px 0;">
-        <div style="border:1px solid #cbd5e1; border-radius:14px; background:#fff; padding:12px;">
-          <div style="font-weight:900; font-size:13px; margin-bottom:8px;">Top 5 patrones más repetidos</div>
+        <div class="printSection printKeepTogether" style="border:1px solid #cbd5e1; border-radius:14px; background:#fff; padding:12px;">
+          <div class="printSectionTitle printKeepWithNext">Top 5 patrones más repetidos</div>
           <table style="width:100%; border-collapse:collapse; font-size:11px;">
             <thead><tr>
               <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">Patrón</th>
@@ -1839,8 +2359,8 @@ const miniSvg = (arrows, idx)=>{
           </table>
         </div>
 
-        <div style="border:1px solid #cbd5e1; border-radius:14px; background:#fff; padding:12px;">
-          <div style="font-weight:900; font-size:13px; margin-bottom:8px;">Puntos (punto a punto)</div>
+        <div class="printSection" style="border:1px solid #cbd5e1; border-radius:14px; background:#fff; padding:12px;">
+          <div class="printSectionTitle printKeepWithNext">Puntos (punto a punto)</div>
           <table style="width:100%; border-collapse:collapse; font-size:11px;">
             <thead><tr>
               <th style="background:#eef2ff;color:#1e3a8a;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:8px;">#</th>
@@ -1856,8 +2376,8 @@ const miniSvg = (arrows, idx)=>{
           </table>
         </div>
 
-        <div style="border:1px solid #cbd5e1; border-radius:14px; background:#fff; padding:12px;">
-          <div style="font-weight:900; font-size:13px; margin-bottom:8px;">Puntos con diagrama (flechas)</div>
+        <div class="printSection ${breakDiagrams ? 'printPageBreakBefore' : ''}" style="border:1px solid #cbd5e1; border-radius:14px; background:#fff; padding:12px;">
+          <div class="printSectionTitle printKeepWithNext">Puntos con diagrama (flechas)</div>
           <div style="font-size:11px; color:#334155; margin-bottom:10px;">Cada punto incluye un mini-diagrama con flechas (A amarillo, B rojo).</div>
           ${pointCards || "<div style=\'color:#64748b;font-size:11px;\'>Sin datos.</div>"}
         </div>
@@ -1983,6 +2503,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
 
   on("btnHistory","click", openHistory);
   on("btnAnalytics","click", openAnalytics);
+  on("btnStats","click", openStats);
   on("btnExport","click", openExport);
 
   on("btnToggleScore","click", toggleScoreVisibility);
@@ -1991,13 +2512,14 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCloseHistory","click", closeHistory);
   on("btnClosePointViewer","click", closePointViewer);
   on("btnCloseAnalytics","click", closeAnalytics);
+  on("btnCloseStats","click", closeStats);
   on("btnCloseExport","click", closeExport);
 
   on("btnTheme","click", toggleTheme);
   on("btnCoach","click", toggleCoach);
 
 // cerrar menú al elegir una opción
-["btnToggleScore","btnRotateCourt","btnBoard","btnHistory","btnAnalytics","btnExport","btnCoach","btnTheme"].forEach(id=>{
+["btnToggleScore","btnRotateCourt","btnBoard","btnHistory","btnAnalytics","btnStats","btnExport","btnCoach","btnTheme"].forEach(id=>{
   const el = $("#"+id);
   if (el) el.addEventListener("click", ()=>setMenuOpen(false));
 });
@@ -2076,13 +2598,19 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
     on(id,"change", renderAnalytics);
   });
 
+  // stats filters
+  ["sRange","sSet","sServer","sContext"].forEach(id=>{
+    on(id,"input", renderStats);
+    on(id,"change", renderStats);
+  });
+
   // export
   on("btnCSV","click", exportCSV);
   on("btnWord","click", exportWord);
   on("btnPDF","click", exportPDF);
 
   // close modals clicking outside
-  ["historyModal","pointViewerModal","analyticsModal","exportModal"].forEach(mid=>{
+  ["historyModal","pointViewerModal","analyticsModal","statsModal","exportModal"].forEach(mid=>{
     const m = $("#"+mid);
     if (!m) return;
     m.addEventListener("click", (e)=>{
@@ -2095,7 +2623,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // keyboard shortcuts
   window.addEventListener("keydown", (e)=>{
     if (e.key==="Escape"){
-      ["historyModal","pointViewerModal","analyticsModal","exportModal","finishMenu"].forEach(id=>{
+      ["historyModal","pointViewerModal","analyticsModal","statsModal","exportModal","finishMenu"].forEach(id=>{
         const el=$("#"+id);
         if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
       });
