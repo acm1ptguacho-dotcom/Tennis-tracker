@@ -1353,8 +1353,46 @@ body.light .drawerDivider{ background: rgba(10,22,55,.12); }
 body.printing #printReport{ display:block; }
 body.printing .app{ display:none; }
 @media print{
+  /*
+    IMPORTANT:
+    On screen we use html/body {height:100%; overflow:auto}.
+    In print mode, that can cause the report to be rendered inside a
+    single scrollable page (Chrome shows 1 page with a scrollbar), so
+    we must reset height/overflow for proper pagination.
+  */
+  @page{ size: A4 portrait; margin: 12mm; }
+
+  html, body{
+    height: auto !important;
+    overflow: visible !important;
+  }
+  body{
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   .app, .modal, .toast, #finishBall{ display:none !important; }
-  #printReport{ display:block !important; }
+  #printReport{
+    display:block !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+  #printReport *{
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Avoid cutting point cards across pages */
+  #printReport .printNoBreak,
+  #printReport .miniCourtWrap{
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
 }
 
 
