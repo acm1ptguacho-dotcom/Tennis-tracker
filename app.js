@@ -44,7 +44,8 @@ function load(){
     state.undoStack = state.undoStack || [];
     state.matchPoints = state.matchPoints || [];
     state.setHistory = state.setHistory || [];
-    state.ui = state.ui || {theme:"dark", coach:false, showHistoryArrows:true, hideScore:false, rotated:false};
+    // UI flags (bloqueamos tema en oscuro y modo entrenador activado)
+    state.ui = state.ui || {theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false};
     if (typeof state.ui.showHistoryArrows === "undefined") state.ui.showHistoryArrows = true;
     if (typeof state.ui.hideScore === "undefined") state.ui.hideScore = false;
     if (typeof state.ui.rotated === "undefined") state.ui.rotated = false;
@@ -2703,23 +2704,15 @@ function exportStatsPDF(){
   setTimeout(()=>{ try{ w.focus(); w.print(); }catch(_){ } }, 350);
 }
 
-function applyTheme(){
-  document.body.classList.toggle("light", state.ui.theme==="light");
-  $("#btnTheme").textContent = (state.ui.theme==="light") ? "Modo oscuro" : "Modo claro";
-}
-function toggleTheme(){
-  state.ui.theme = (state.ui.theme==="light") ? "dark" : "light";
-  applyTheme();
-  persist();
-}
-function applyCoach(){
-  document.body.classList.toggle("coach", !!state.ui.coach);
-  $("#btnCoach").textContent = state.ui.coach ? "Modo normal" : "Modo entrenador";
-}
-function toggleCoach(){
-  state.ui.coach = !state.ui.coach;
-  applyCoach();
-  persist();
+// Modos eliminados de la UI: dejamos un único modo estable
+// - Tema: oscuro
+// - Layout: entrenador (coach)
+function applyModes(){
+  if (!state.ui) state.ui = { theme:"dark", coach:true };
+  state.ui.theme = "dark";
+  state.ui.coach = true;
+  document.body.classList.remove("light");
+  document.body.classList.add("coach");
 }
 
 let __menuOpen = false;
@@ -2817,11 +2810,10 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCloseStats","click", closeStats);
   on("btnCloseExport","click", closeExport);
 
-  on("btnTheme","click", toggleTheme);
-  on("btnCoach","click", toggleCoach);
+  // (Eliminado) Tema y modo normal
 
 // cerrar menú al elegir una opción
-["btnToggleScore","btnRotateCourt","btnBoard","btnHistory","btnAnalytics","btnStats","btnExport","btnCoach","btnTheme"].forEach(id=>{
+["btnToggleScore","btnRotateCourt","btnBoard","btnHistory","btnAnalytics","btnStats","btnExport"].forEach(id=>{
   const el = $("#"+id);
   if (el) el.addEventListener("click", ()=>setMenuOpen(false));
 });
@@ -3647,13 +3639,12 @@ function wireBoard(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2511").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2520").catch(console.error);
 }
 
 function init(){
   load();
-  applyTheme();
-  applyCoach();
+  applyModes();
   buildZones();
   initPoint();
   wire();
