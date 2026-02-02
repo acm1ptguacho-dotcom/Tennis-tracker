@@ -2024,13 +2024,27 @@ function renderStats(){
   }
 
   if (!pts.length){
-    body.innerHTML = `<div class="statsCard"><div class="statsSectionTitle">Sin datos</div><div class="statsBodyText">No hay puntos para estos filtros.</div></div>`;
+    body.innerHTML = `
+      <div class="statsSection">
+        <div class="statsSectionTitle">Sin datos</div>
+        <div class="muted" style="padding: 12px 14px;">No hay puntos para estos filtros.</div>
+      </div>`;
     return;
   }
 
   const groups = buildStatsGroups(pts, subMode);
 
-  const buildBroadcast = (title, agg, isFirst)=>{
+  const headerRow = (midLabel)=> (
+    `<div class="statsHeaderRow">`+
+      `<div class="statsPlayerHead a">${escapeHtml(nameA)}</div>`+
+      `<div class="statsMidHead">${escapeHtml(midLabel)}</div>`+
+      `<div class="statsPlayerHead b">${escapeHtml(nameB)}</div>`+
+    `</div>`
+  );
+
+  const groupPill = (t)=> t ? (`<div class="statsHint"><span class="statsPill">${escapeHtml(t)}</span></div>`) : "";
+
+  const buildBroadcast = (title, agg)=>{
     const bRow = (label, a, b)=> (
       `<div class="broadcastRow">`+
         `<div class="broadcastL">${a}</div>`+
@@ -2054,13 +2068,9 @@ function renderStats(){
     ].join("");
 
     return `
-      <div class="statsCard">
-        <div class="statsHeadRow">
-          <div class="statsName">${escapeHtml(nameA)}</div>
-          <div class="statsMid">${escapeHtml(title)}</div>
-          <div class="statsName" style="text-align:right">${escapeHtml(nameB)}</div>
-        </div>
-        <div class="broadcastWrap">${rows}</div>
+      <div class="broadcastCard">
+        <div class="broadcastHead"><div class="t">${escapeHtml(title)}</div></div>
+        <div class="broadcastTable">${rows}</div>
       </div>
     `;
   };
@@ -2068,9 +2078,9 @@ function renderStats(){
   const buildTable = (title, agg)=>{
     const row = (label, a, b) => (
       `<div class="statsRow">`+
-        `<div class="statsCell statsCellA">${a}</div>`+
-        `<div class="statsCell statsCellLabel">${label}</div>`+
-        `<div class="statsCell statsCellB">${b}</div>`+
+        `<div class="statsVal a">${a}</div>`+
+        `<div class="statsKey">${label}</div>`+
+        `<div class="statsVal b">${b}</div>`+
       `</div>`
     );
     const section = (t, rowsHtml)=> (
@@ -2172,29 +2182,27 @@ function renderStats(){
     ].join("");
 
     return `
-      <div class="statsCard">
-        <div class="statsHeadRow">
-          <div class="statsName">${escapeHtml(nameA)}</div>
-          <div class="statsMid">${escapeHtml(title)}</div>
-          <div class="statsName" style="text-align:right">${escapeHtml(nameB)}</div>
-        </div>
-        ${section("Resumen", summaryRows)}
-        ${section("Servicio", serveRows)}
-        ${section("Resto", returnRows)}
-        ${section("Dirección y profundidad", shotRows)}
-        ${section("Rally", rallyRows)}
-        ${section("Puntos clave", keyRows)}
-        ${adv("Desglose winners (modo avanzado)", advWinnerRows)}
-        ${adv("Desglose UE (modo avanzado)", advUERows)}
-        ${adv("Desglose FE (modo avanzado)", advFERows)}
-      </div>
+      ${section("Resumen", summaryRows)}
+      ${section("Servicio", serveRows)}
+      ${section("Resto", returnRows)}
+      ${section("Dirección y profundidad", shotRows)}
+      ${section("Rally", rallyRows)}
+      ${section("Puntos clave", keyRows)}
+      ${adv("Desglose winners (modo avanzado)", advWinnerRows)}
+      ${adv("Desglose UE (modo avanzado)", advUERows)}
+      ${adv("Desglose FE (modo avanzado)", advFERows)}
     `;
   };
 
-  body.innerHTML = groups.map((g, idx)=>{
-    const title = (subMode==="none") ? "Estadísticas" : g.title;
+  // Sticky header row (players + current view)
+  const midLabel = (subMode==="none") ? "Estadísticas" : labelSubMode(subMode);
+  const header = headerRow(midLabel);
+
+  body.innerHTML = header + groups.map((g)=>{
+    const title = (subMode==="none") ? "Global" : g.title;
     const agg = computeStats(g.points);
-    return (mode==="broadcast") ? buildBroadcast(title, agg, idx===0) : buildTable(title, agg);
+    const top = (subMode==="none") ? "" : groupPill(g.title);
+    return top + ((mode==="broadcast") ? buildBroadcast(title, agg) : buildTable(title, agg));
   }).join("");
 }
 
@@ -3639,7 +3647,7 @@ function wireBoard(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2441").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2511").catch(console.error);
 }
 
 function init(){
