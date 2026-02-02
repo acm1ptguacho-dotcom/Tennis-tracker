@@ -1265,12 +1265,13 @@ const ADV_STROKES = [
 ];
 
 const ADV_WINNERS = [
-  { key:"ACE", label:"Ace" },
-  { key:"PASS", label:"Passing" },
-  { key:"DROP", label:"Dejada" },
-  { key:"VOL", label:"Volea winner" },
-  { key:"WIN", label:"Winner" },
-  { key:"OTHER", label:"Otro" },
+  {key:"ACE", label:"Ace"},
+  {key:"FH", label:"Derecha"},
+  {key:"BH", label:"Revés"},
+  {key:"VOL_FH", label:"Volea derecha"},
+  {key:"VOL_BH", label:"Volea revés"},
+  {key:"PASS", label:"Passing"},
+  {key:"DROP", label:"Dejada"},
 ];
 
 function setFinishMode(mode){
@@ -1297,14 +1298,14 @@ function openAdvStep2(meta){
   if (serveGrp) serveGrp.classList.add("hidden");
   if (rallyGrp) rallyGrp.classList.add("hidden");
 
-  let opts=[];
-  if (meta.kind==="WINNER") opts = ADV_WINNERS;
-  else opts = ADV_STROKES;
+  const opts = Array.isArray(meta.customOpts) ? meta.customOpts : (meta.kind==="WINNER" ? ADV_WINNERS : ADV_STROKES);
 
-  title.textContent =
+  const defaultTitle =
     meta.kind==="WINNER" ? "Tipo de winner" :
     meta.kind==="UE" ? "Tipo de error no forzado" :
     "Tipo de error forzado";
+
+  title.textContent = meta.customTitle || defaultTitle;
 
   chips.innerHTML="";
   opts.forEach(o=>{
@@ -1371,6 +1372,33 @@ function finishAction(kind, offender){
 }
 
 
+function finishVolley(offender){
+  // winner by volley, quick button in finish menu
+  const winner = offender;
+  const reason = `Winner (${offender})`;
+
+  if (finishMode==="advanced"){
+    openAdvStep2({
+      kind: "WINNER",
+      offender,
+      winner,
+      reason,
+      customTitle: "Tipo de volea",
+      customOpts: [
+        {key:"VOL_FH", label:"Volea derecha"},
+        {key:"VOL_BH", label:"Volea revés"},
+      ]
+    });
+    return false;
+  }
+
+  if (!state.point) initPoint();
+  state.point.finishDetail = { mode:"normal", kind:"WINNER", offender, winnerType:"VOL" };
+  endPoint(winner, reason);
+  return true;
+}
+
+
 
 
 /** HISTORY FILTERS **/
@@ -1378,7 +1406,7 @@ function finishAction(kind, offender){
 function finishDetailLabel(fd){
   if (!fd) return "";
   const strokeMap = { FH:"Derecha", BH:"Revés", VOL:"Volea", SM:"Smash", OTHER:"Otro" };
-  const winMap = { ACE:"Ace", PASS:"Passing", DROP:"Dejada", VOL:"Volea winner", WIN:"Winner", OTHER:"Otro" };
+  const winMap = { ACE:"Ace", FH:"Derecha", BH:"Revés", VOL_FH:"Volea derecha", VOL_BH:"Volea revés", PASS:"Passing", DROP:"Dejada", VOL:"Volea", WIN:"Winner", OTHER:"Otro" };
   if (fd.kind==="WINNER" && fd.winnerType) return winMap[fd.winnerType] || fd.winnerType;
   if ((fd.kind==="UE" || fd.kind==="FE") && fd.strokeType) return strokeMap[fd.strokeType] || fd.strokeType;
   return "";
@@ -1763,7 +1791,7 @@ function emptyPlayerStats(){
     rallyWonPoints:0, rallyWonTotalLen:0,
     rallyWonBuckets:{b02:0,b35:0,b68:0,b9p:0},
 
-    advWinners:{ACE:0,PASS:0,DROP:0,VOL:0,WIN:0,OTHER:0},
+    advWinners:{ACE:0,FH:0,BH:0,VOL_FH:0,VOL_BH:0,PASS:0,DROP:0,VOL:0,WIN:0,OTHER:0},
     advUE:{FH:0,BH:0,VOL:0,SM:0,OTHER:0},
     advFE:{FH:0,BH:0,VOL:0,SM:0,OTHER:0},
   };
@@ -1887,20 +1915,21 @@ function computeStats(points){
       const otherPl = other(end.offender);
       agg[otherPl].feDrawn++;
     }
-
-    // advanced breakdown
+    // advanced breakdown (winners can be tagged also in normal mode: volea)
     const fd = pt.finishDetail;
-    if (fd && fd.mode==="advanced"){
+    if (fd){
       const pl = fd.offender;
       if (pl==="A" || pl==="B"){
         if (fd.kind==="WINNER" && fd.winnerType && agg[pl].advWinners[fd.winnerType]!==undefined){
           agg[pl].advWinners[fd.winnerType]++;
         }
-        if (fd.kind==="UE" && fd.strokeType && agg[pl].advUE[fd.strokeType]!==undefined){
-          agg[pl].advUE[fd.strokeType]++;
-        }
-        if (fd.kind==="FE" && fd.strokeType && agg[pl].advFE[fd.strokeType]!==undefined){
-          agg[pl].advFE[fd.strokeType]++;
+        if (fd.mode==="advanced"){
+          if (fd.kind==="UE" && fd.strokeType && agg[pl].advUE[fd.strokeType]!==undefined){
+            agg[pl].advUE[fd.strokeType]++;
+          }
+          if (fd.kind==="FE" && fd.strokeType && agg[pl].advFE[fd.strokeType]!==undefined){
+            agg[pl].advFE[fd.strokeType]++;
+          }
         }
       }
     }
@@ -1921,6 +1950,12 @@ function fmtAvg(n,d){
   if (!d) return "—";
   return `${(n/d).toFixed(1)}`;
 }
+function fmtNum(n, digits=1){
+  const x = Number(n);
+  if (!isFinite(x)) return "—";
+  return digits===0 ? String(Math.round(x)) : x.toFixed(digits);
+}
+
 
 function buildStatsSetOptions(){
   const sel = $("#sSet");
@@ -1966,191 +2001,244 @@ function filterPointsForStats(){
 }
 
 function renderStats(){
+  const pts = filterPointsForStats();
+  const sub = $("#statsSub");
   const body = $("#statsBody");
   if (!body) return;
 
-  const pts = filterPointsForStats();
-  const agg = computeStats(pts);
+  const mode = $("#sMode")?.value || "table";           // table | broadcast
+  const subMode = $("#sSub")?.value || "none";          // none | set | game | side
 
-  const nameA = state.names?.A || "Jugador A";
-  const nameB = state.names?.B || "Jugador B";
+  const nameA = state.names.A;
+  const nameB = state.names.B;
 
-  const sub = $("#statsSub");
-  if (sub) sub.textContent = `${pts.length} puntos (A ${agg.A.pointsWon} · B ${agg.B.pointsWon})`;
+  const labelSubMode = (m)=>({
+    none: "Global",
+    set: "Por set",
+    game: "Por juego",
+    side: "Por lado",
+  }[m] || "Global");
 
-  const row = (label, a, b) => (
-    `<div class="statsRow"><div class="statsVal a">${a}</div><div class="statsKey">${label}</div><div class="statsVal b">${b}</div></div>`
-  );
+  if (sub){
+    sub.textContent = `${pts.length} puntos · Vista: ${mode==="broadcast"?"Broadcast":"Tabla"} · ${labelSubMode(subMode)}`;
+  }
 
-  const section = (title, rows) => (
-    `<div class="statsSection"><div class="statsSectionTitle">${title}</div><div class="statsTable">${rows}</div></div>`
-  );
+  if (!pts.length){
+    body.innerHTML = `<div class="statsCard"><div class="statsSectionTitle">Sin datos</div><div class="statsBodyText">No hay puntos para estos filtros.</div></div>`;
+    return;
+  }
 
-  const total = agg.totalPoints || 0;
+  const groups = buildStatsGroups(pts, subMode);
 
-  // --- Resumen ---
-  const resumen = [
-    row("Puntos ganados", fmtRatio(agg.A.pointsWon, total), fmtRatio(agg.B.pointsWon, total)),
-    row("% puntos ganados", fmtPct(agg.A.pointsWon, total), fmtPct(agg.B.pointsWon, total)),
-    row("Puntos al saque (ganados)", `${agg.A.servePointsWon}/${agg.A.servePoints}`, `${agg.B.servePointsWon}/${agg.B.servePoints}`),
-    row("% puntos al saque ganados", fmtPct(agg.A.servePointsWon, agg.A.servePoints), fmtPct(agg.B.servePointsWon, agg.B.servePoints)),
-    row("Puntos al resto (ganados)", `${agg.A.returnPointsWon}/${agg.A.returnPoints}`, `${agg.B.returnPointsWon}/${agg.B.returnPoints}`),
-    row("% puntos al resto ganados", fmtPct(agg.A.returnPointsWon, agg.A.returnPoints), fmtPct(agg.B.returnPointsWon, agg.B.returnPoints)),
-  ].join("");
+  const buildBroadcast = (title, agg, isFirst)=>{
+    const bRow = (label, a, b)=> (
+      `<div class="broadcastRow">`+
+        `<div class="broadcastL">${a}</div>`+
+        `<div class="broadcastMid"><span>${label}</span></div>`+
+        `<div class="broadcastR">${b}</div>`+
+      `</div>`
+    );
 
-  // --- Servicio ---
-  const serveInA = agg.A.firstIn + agg.A.secondIn;
-  const serveInB = agg.B.firstIn + agg.B.secondIn;
-  const servicio = [
-    row("1º saque IN", fmtRatio(agg.A.firstIn, agg.A.servePoints), fmtRatio(agg.B.firstIn, agg.B.servePoints)),
-    row("2º saque jugado", fmtRatio(agg.A.secondPlayed, agg.A.servePoints), fmtRatio(agg.B.secondPlayed, agg.B.servePoints)),
-    row("2º saque IN", fmtRatio(agg.A.secondIn, agg.A.secondPlayed), fmtRatio(agg.B.secondIn, agg.B.secondPlayed)),
-    row("Doble faltas", fmtRatio(agg.A.doubleFaults, agg.A.servePoints), fmtRatio(agg.B.doubleFaults, agg.B.servePoints)),
-    row("Aces (modo avanzado)", fmtRatio(agg.A.aces, agg.A.servePoints), fmtRatio(agg.B.aces, agg.B.servePoints)),
-    row("Pts ganados con 1º", fmtRatio(agg.A.firstInWon, agg.A.firstIn), fmtRatio(agg.B.firstInWon, agg.B.firstIn)),
-    row("Pts ganados con 2º", fmtRatio(agg.A.secondInWon, agg.A.secondIn), fmtRatio(agg.B.secondInWon, agg.B.secondIn)),
-    row("Saque a T", fmtRatio(agg.A.serveTargets.T, serveInA), fmtRatio(agg.B.serveTargets.T, serveInB)),
-    row("Saque al cuerpo", fmtRatio(agg.A.serveTargets.C, serveInA), fmtRatio(agg.B.serveTargets.C, serveInB)),
-    row("Saque abierto", fmtRatio(agg.A.serveTargets.A, serveInA), fmtRatio(agg.B.serveTargets.A, serveInB)),
-  ].join("");
+    const totalPts = agg.A.pointsWon + agg.B.pointsWon;
+    const rows = [
+      bRow("Puntos ganados %", fmtPct(agg.A.pointsWon, totalPts), fmtPct(agg.B.pointsWon, totalPts)),
+      bRow("Aces", String(agg.A.aces), String(agg.B.aces)),
+      bRow("Dobles faltas", String(agg.A.doubleFaults), String(agg.B.doubleFaults)),
+      bRow("1º saque IN %", fmtPct(agg.A.firstIn, agg.A.servePoints), fmtPct(agg.B.firstIn, agg.B.servePoints)),
+      bRow("% pts ganados con 1º", fmtPct(agg.A.firstInWon, agg.A.firstIn), fmtPct(agg.B.firstInWon, agg.B.firstIn)),
+      bRow("% pts ganados con 2º", fmtPct(agg.A.secondInWon, agg.A.secondIn), fmtPct(agg.B.secondInWon, agg.B.secondIn)),
+      bRow("Winners", String(agg.A.winners), String(agg.B.winners)),
+      bRow("Errores no forzados", String(agg.A.ue), String(agg.B.ue)),
+      bRow("Errores forzados (prov.)", String(agg.A.feDrawn), String(agg.B.feDrawn)),
+      bRow("Break points ganados", fmtRatio(agg.A.bpConv, agg.A.bpOpp), fmtRatio(agg.B.bpConv, agg.B.bpOpp)),
+    ].join("");
 
-  // --- Resto ---
-  const resto = [
-    row("Restos registrados", fmtRatio(agg.A.returnsIn, agg.A.returnPoints), fmtRatio(agg.B.returnsIn, agg.B.returnPoints)),
-    row("Resto cruzado", fmtRatio(agg.A.returnDir.C, agg.A.returnsIn), fmtRatio(agg.B.returnDir.C, agg.B.returnsIn)),
-    row("Resto paralelo", fmtRatio(agg.A.returnDir.P, agg.A.returnsIn), fmtRatio(agg.B.returnDir.P, agg.B.returnsIn)),
-    row("Resto medio", fmtRatio(agg.A.returnDir.M, agg.A.returnsIn), fmtRatio(agg.B.returnDir.M, agg.B.returnsIn)),
-    row("Resto profundo", fmtRatio(agg.A.returnDepth.P, agg.A.returnsIn), fmtRatio(agg.B.returnDepth.P, agg.B.returnsIn)),
-    row("Resto medio (prof.)", fmtRatio(agg.A.returnDepth.M, agg.A.returnsIn), fmtRatio(agg.B.returnDepth.M, agg.B.returnsIn)),
-    row("Resto corto", fmtRatio(agg.A.returnDepth.C, agg.A.returnsIn), fmtRatio(agg.B.returnDepth.C, agg.B.returnsIn)),
-  ].join("");
+    return `
+      <div class="statsCard">
+        <div class="statsHeadRow">
+          <div class="statsName">${escapeHtml(nameA)}</div>
+          <div class="statsMid">${escapeHtml(title)}</div>
+          <div class="statsName" style="text-align:right">${escapeHtml(nameB)}</div>
+        </div>
+        <div class="broadcastWrap">${rows}</div>
+      </div>
+    `;
+  };
 
-  // --- Golpes / Dirección / Profundidad ---
-  const golpes = [
-    row("Golpes (rally) totales", String(agg.A.strokes), String(agg.B.strokes)),
-    row("Cruzado", fmtRatio(agg.A.strokeDir.C, agg.A.strokes), fmtRatio(agg.B.strokeDir.C, agg.B.strokes)),
-    row("Paralelo", fmtRatio(agg.A.strokeDir.P, agg.A.strokes), fmtRatio(agg.B.strokeDir.P, agg.B.strokes)),
-    row("Medio", fmtRatio(agg.A.strokeDir.M, agg.A.strokes), fmtRatio(agg.B.strokeDir.M, agg.B.strokes)),
-    row("Profundo", fmtRatio(agg.A.strokeDepth.P, agg.A.strokes), fmtRatio(agg.B.strokeDepth.P, agg.B.strokes)),
-    row("Medio (prof.)", fmtRatio(agg.A.strokeDepth.M, agg.A.strokes), fmtRatio(agg.B.strokeDepth.M, agg.B.strokes)),
-    row("Corto", fmtRatio(agg.A.strokeDepth.C, agg.A.strokes), fmtRatio(agg.B.strokeDepth.C, agg.B.strokes)),
-  ].join("");
+  const buildTable = (title, agg)=>{
+    const row = (label, a, b) => (
+      `<div class="statsRow">`+
+        `<div class="statsCell statsCellA">${a}</div>`+
+        `<div class="statsCell statsCellLabel">${label}</div>`+
+        `<div class="statsCell statsCellB">${b}</div>`+
+      `</div>`
+    );
+    const section = (t, rowsHtml)=> (
+      `<div class="statsSection">`+
+        `<div class="statsSectionTitle">${t}</div>`+
+        `<div class="statsTable">${rowsHtml}</div>`+
+      `</div>`
+    );
 
-  // --- Rally ---
-  const rally = [
-    row("Media rally (puntos ganados)", fmtAvg(agg.A.rallyWonTotalLen, agg.A.rallyWonPoints), fmtAvg(agg.B.rallyWonTotalLen, agg.B.rallyWonPoints)),
-    row("Puntos ganados 0-2 golpes", fmtRatio(agg.A.rallyWonBuckets.b02, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b02, agg.B.rallyWonPoints)),
-    row("Puntos ganados 3-5 golpes", fmtRatio(agg.A.rallyWonBuckets.b35, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b35, agg.B.rallyWonPoints)),
-    row("Puntos ganados 6-8 golpes", fmtRatio(agg.A.rallyWonBuckets.b68, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b68, agg.B.rallyWonPoints)),
-    row("Puntos ganados 9+ golpes", fmtRatio(agg.A.rallyWonBuckets.b9p, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b9p, agg.B.rallyWonPoints)),
-  ].join("");
+    const totalPts = agg.A.pointsWon + agg.B.pointsWon;
 
-  // --- Ganadores y errores ---
-  const cierres = [
-    row("Winners", fmtRatio(agg.A.winners, total), fmtRatio(agg.B.winners, total)),
-    row("Errores no forzados", fmtRatio(agg.A.ue, agg.A.strokes), fmtRatio(agg.B.ue, agg.B.strokes)),
-    row("Errores forzados (cometidos)", fmtRatio(agg.A.fe, agg.A.strokes), fmtRatio(agg.B.fe, agg.B.strokes)),
-    row("Errores forzados (provocados)", fmtRatio(agg.A.feDrawn, total), fmtRatio(agg.B.feDrawn, total)),
-    row("W/UE (ratio)", (agg.A.ue? (agg.A.winners/agg.A.ue).toFixed(2):"—"), (agg.B.ue? (agg.B.winners/agg.B.ue).toFixed(2):"—")),
-  ].join("");
+        const summaryRows = [
+      row("Puntos ganados", fmtRatio(agg.A.pointsWon, totalPts), fmtRatio(agg.B.pointsWon, totalPts)),
+      row("Aces", String(agg.A.aces), String(agg.B.aces)),
+      row("Dobles faltas", String(agg.A.doubleFaults), String(agg.B.doubleFaults)),
+      row("Winners", String(agg.A.winners), String(agg.B.winners)),
+      row("Winners / golpes", fmtRatio(agg.A.winners, agg.A.strokes), fmtRatio(agg.B.winners, agg.B.strokes)),
+      row("Errores no forzados", String(agg.A.ue), String(agg.B.ue)),
+      row("UE / golpes", fmtRatio(agg.A.ue, agg.A.strokes), fmtRatio(agg.B.ue, agg.B.strokes)),
+      row("Errores forzados", String(agg.A.fe), String(agg.B.fe)),
+      row("FE / golpes", fmtRatio(agg.A.fe, agg.A.strokes), fmtRatio(agg.B.fe, agg.B.strokes)),
+      row("Errores forzados provocados", String(agg.A.feDrawn), String(agg.B.feDrawn)),
+    ].join("");
 
-  // --- Puntos clave ---
-  const clave = [
-    row("Break points (convertidos)", fmtRatio(agg.A.bpConv, agg.A.bpOpp), fmtRatio(agg.B.bpConv, agg.B.bpOpp)),
-    row("Break points (salvados)", fmtRatio(agg.A.bpSaved, agg.A.bpFaced), fmtRatio(agg.B.bpSaved, agg.B.bpFaced)),
-    row("Puntos en Deuce/Adv ganados", fmtRatio(agg.A.pressureDeuceWon, agg.A.pressureDeucePlayed), fmtRatio(agg.B.pressureDeuceWon, agg.B.pressureDeucePlayed)),
-    row("Puntos 30-30+ ganados", fmtRatio(agg.A.pressure3030Won, agg.A.pressure3030Played), fmtRatio(agg.B.pressure3030Won, agg.B.pressure3030Played)),
-  ].join("");
+    const serveRows = [
+      row("Puntos al saque", fmtRatio(agg.A.servePointsWon, agg.A.servePoints), fmtRatio(agg.B.servePointsWon, agg.B.servePoints)),
+      row("1º saque IN %", fmtPct(agg.A.firstIn, agg.A.servePoints), fmtPct(agg.B.firstIn, agg.B.servePoints)),
+      row("% pts ganados con 1º", fmtPct(agg.A.firstInWon, agg.A.firstIn), fmtPct(agg.B.firstInWon, agg.B.firstIn)),
+      row("% pts ganados con 2º", fmtPct(agg.A.secondInWon, agg.A.secondIn), fmtPct(agg.B.secondInWon, agg.B.secondIn)),
+      row("Aces", String(agg.A.aces), String(agg.B.aces)),
+      row("Dobles faltas", String(agg.A.doubleFaults), String(agg.B.doubleFaults)),
+    ].join("");
 
-  // --- Avanzado ---
-  const adv = (title, rows) => (
-    `<details class="statsDetails"><summary>${title}</summary><div class="statsTable">${rows}</div></details>`
-  );
+    const returnRows = [
+      row("Puntos al resto", fmtRatio(agg.A.returnPointsWon, agg.A.returnPoints), fmtRatio(agg.B.returnPointsWon, agg.B.returnPoints)),
+      row("Break points (ganados)", fmtRatio(agg.A.bpConv, agg.A.bpOpp), fmtRatio(agg.B.bpConv, agg.B.bpOpp)),
+      row("Break points (salvados)", fmtRatio(agg.A.bpSaved, agg.A.bpFaced), fmtRatio(agg.B.bpSaved, agg.B.bpFaced)),
+    ].join("");
 
-  const advWinnerRows = [
-    row("Ace", String(agg.A.advWinners.ACE), String(agg.B.advWinners.ACE)),
-    row("Passing", String(agg.A.advWinners.PASS), String(agg.B.advWinners.PASS)),
-    row("Dejada", String(agg.A.advWinners.DROP), String(agg.B.advWinners.DROP)),
-    row("Volea winner", String(agg.A.advWinners.VOL), String(agg.B.advWinners.VOL)),
-    row("Winner", String(agg.A.advWinners.WIN), String(agg.B.advWinners.WIN)),
-    row("Otro", String(agg.A.advWinners.OTHER), String(agg.B.advWinners.OTHER)),
-  ].join("");
+    const dirTotA = agg.A.strokeDir.C + agg.A.strokeDir.M + agg.A.strokeDir.P;
+    const dirTotB = agg.B.strokeDir.C + agg.B.strokeDir.M + agg.B.strokeDir.P;
+    const depTotA = agg.A.strokeDepth.P + agg.A.strokeDepth.M + agg.A.strokeDepth.C;
+    const depTotB = agg.B.strokeDepth.P + agg.B.strokeDepth.M + agg.B.strokeDepth.C;
 
-  const advUERows = [
-    row("UE Derecha", String(agg.A.advUE.FH), String(agg.B.advUE.FH)),
-    row("UE Revés", String(agg.A.advUE.BH), String(agg.B.advUE.BH)),
-    row("UE Volea", String(agg.A.advUE.VOL), String(agg.B.advUE.VOL)),
-    row("UE Smash", String(agg.A.advUE.SM), String(agg.B.advUE.SM)),
-    row("UE Otro", String(agg.A.advUE.OTHER), String(agg.B.advUE.OTHER)),
-  ].join("");
+    const shotRows = [
+      row("Golpes totales", String(agg.A.strokes), String(agg.B.strokes)),
+      row("Cruzados %", fmtPct(agg.A.strokeDir.C, dirTotA), fmtPct(agg.B.strokeDir.C, dirTotB)),
+      row("Medio %", fmtPct(agg.A.strokeDir.M, dirTotA), fmtPct(agg.B.strokeDir.M, dirTotB)),
+      row("Paralelos %", fmtPct(agg.A.strokeDir.P, dirTotA), fmtPct(agg.B.strokeDir.P, dirTotB)),
+      row("Profundos %", fmtPct(agg.A.strokeDepth.P, depTotA), fmtPct(agg.B.strokeDepth.P, depTotB)),
+      row("Medios %", fmtPct(agg.A.strokeDepth.M, depTotA), fmtPct(agg.B.strokeDepth.M, depTotB)),
+      row("Cortos %", fmtPct(agg.A.strokeDepth.C, depTotA), fmtPct(agg.B.strokeDepth.C, depTotB)),
+    ].join("");
 
-  const advFERows = [
-    row("FE Derecha", String(agg.A.advFE.FH), String(agg.B.advFE.FH)),
-    row("FE Revés", String(agg.A.advFE.BH), String(agg.B.advFE.BH)),
-    row("FE Volea", String(agg.A.advFE.VOL), String(agg.B.advFE.VOL)),
-    row("FE Smash", String(agg.A.advFE.SM), String(agg.B.advFE.SM)),
-    row("FE Otro", String(agg.A.advFE.OTHER), String(agg.B.advFE.OTHER)),
-  ].join("");
+    const rallyRows = [
+      row("Media golpes (puntos ganados)", fmtAvg(agg.A.rallyWonTotalLen, agg.A.rallyWonPoints), fmtAvg(agg.B.rallyWonTotalLen, agg.B.rallyWonPoints)),
+      row("0-2 golpes", fmtRatio(agg.A.rallyWonBuckets.b02, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b02, agg.B.rallyWonPoints)),
+      row("3-5 golpes", fmtRatio(agg.A.rallyWonBuckets.b35, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b35, agg.B.rallyWonPoints)),
+      row("6-8 golpes", fmtRatio(agg.A.rallyWonBuckets.b68, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b68, agg.B.rallyWonPoints)),
+      row("9+ golpes", fmtRatio(agg.A.rallyWonBuckets.b9p, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b9p, agg.B.rallyWonPoints)),
+    ].join("");
 
-  const advanced = `
-    <div class="statsHint muted">Ratios: cuando aparece n/total, el total son puntos o golpes registrados (según el caso).</div>
-    ${adv("Desglose winners (modo avanzado)", advWinnerRows)}
-    ${adv("Desglose UE por golpe (modo avanzado)", advUERows)}
-    ${adv("Desglose FE por golpe (modo avanzado)", advFERows)}
-  `;
+    const keyRows = [
+      row("Puntos en Deuce/Adv ganados", fmtRatio(agg.A.pressureDeuceWon, agg.A.pressureDeucePlayed), fmtRatio(agg.B.pressureDeuceWon, agg.B.pressureDeucePlayed)),
+      row("Puntos 30-30+ ganados", fmtRatio(agg.A.pressure3030Won, agg.A.pressure3030Played), fmtRatio(agg.B.pressure3030Won, agg.B.pressure3030Played)),
+    ].join("");
 
-  body.innerHTML = `
-    <div class="statsHeaderRow">
-      <div class="statsPlayerHead a">${escapeHtml(nameA)}</div>
-      <div class="statsMidHead">Apartado</div>
-      <div class="statsPlayerHead b">${escapeHtml(nameB)}</div>
-    </div>
-    <div class="statsGrid">
-      ${section("Resumen", resumen)}
-      ${section("Servicio", servicio)}
-      ${section("Resto", resto)}
-      ${section("Golpes · Dirección · Profundidad", golpes)}
-      ${section("Rally", rally)}
-      ${section("Ganadores y errores", cierres)}
-      ${section("Puntos clave", clave)}
-      ${advanced}
-    </div>
-  `;
+    const adv = (t, rowsHtml)=> (
+      `<details class="statsDetails"><summary>${t}</summary><div class="statsTable">${rowsHtml}</div></details>`
+    );
+
+    const advWinnerRowsBase = [
+      row("Ace", String(agg.A.advWinners.ACE||0), String(agg.B.advWinners.ACE||0)),
+      row("Winner derecha", String(agg.A.advWinners.FH||0), String(agg.B.advWinners.FH||0)),
+      row("Winner revés", String(agg.A.advWinners.BH||0), String(agg.B.advWinners.BH||0)),
+      row("Volea derecha", String(agg.A.advWinners.VOL_FH||0), String(agg.B.advWinners.VOL_FH||0)),
+      row("Volea revés", String(agg.A.advWinners.VOL_BH||0), String(agg.B.advWinners.VOL_BH||0)),
+      row("Passing", String(agg.A.advWinners.PASS||0), String(agg.B.advWinners.PASS||0)),
+      row("Dejada", String(agg.A.advWinners.DROP||0), String(agg.B.advWinners.DROP||0)),
+    ];
+    const legacyWinRows=[];
+    if ((agg.A.advWinners.VOL||0)+(agg.B.advWinners.VOL||0)>0) legacyWinRows.push(row("Volea (sin lado)", String(agg.A.advWinners.VOL||0), String(agg.B.advWinners.VOL||0)));
+    const advWinnerRows = [...advWinnerRowsBase, ...legacyWinRows].join("");
+
+    const advUERows = [
+      row("UE Derecha", String(agg.A.advUE.FH), String(agg.B.advUE.FH)),
+      row("UE Revés", String(agg.A.advUE.BH), String(agg.B.advUE.BH)),
+      row("UE Volea", String(agg.A.advUE.VOL), String(agg.B.advUE.VOL)),
+      row("UE Smash", String(agg.A.advUE.SM), String(agg.B.advUE.SM)),
+      row("UE Otro", String(agg.A.advUE.OTHER), String(agg.B.advUE.OTHER)),
+    ].join("");
+
+    const advFERows = [
+      row("FE Derecha", String(agg.A.advFE.FH), String(agg.B.advFE.FH)),
+      row("FE Revés", String(agg.A.advFE.BH), String(agg.B.advFE.BH)),
+      row("FE Volea", String(agg.A.advFE.VOL), String(agg.B.advFE.VOL)),
+      row("FE Smash", String(agg.A.advFE.SM), String(agg.B.advFE.SM)),
+      row("FE Otro", String(agg.A.advFE.OTHER), String(agg.B.advFE.OTHER)),
+    ].join("");
+
+    return `
+      <div class="statsCard">
+        <div class="statsHeadRow">
+          <div class="statsName">${escapeHtml(nameA)}</div>
+          <div class="statsMid">${escapeHtml(title)}</div>
+          <div class="statsName" style="text-align:right">${escapeHtml(nameB)}</div>
+        </div>
+        ${section("Resumen", summaryRows)}
+        ${section("Servicio", serveRows)}
+        ${section("Resto", returnRows)}
+        ${section("Dirección y profundidad", shotRows)}
+        ${section("Rally", rallyRows)}
+        ${section("Puntos clave", keyRows)}
+        ${adv("Desglose winners (modo avanzado)", advWinnerRows)}
+        ${adv("Desglose UE (modo avanzado)", advUERows)}
+        ${adv("Desglose FE (modo avanzado)", advFERows)}
+      </div>
+    `;
+  };
+
+  body.innerHTML = groups.map((g, idx)=>{
+    const title = (subMode==="none") ? "Estadísticas" : g.title;
+    const agg = computeStats(g.points);
+    return (mode==="broadcast") ? buildBroadcast(title, agg, idx===0) : buildTable(title, agg);
+  }).join("");
 }
 
-/** EXPORT **/
-function getExport(includeServe, splitShots){
-  const rows = state.matchPoints.map(p=>{
-    const evs = (p.events||[]).filter(e=> includeServe ? true : e.type!=="serve").map(compactEv);
-    return {
-      n:p.n,
-      snapshot:p.snapshot,
-      server:`${p.server} (${p.side})`,
-      winner:p.winner,
-      reason:p.reason,
-      finishDetail: p.finishDetail || null,
-      arrows: p.arrows ? p.arrows : [],
-      evs,
-      pattern: evs.join(" - "),
-    };
-  });
-  const maxShots = splitShots ? rows.reduce((m,r)=>Math.max(m,r.evs.length),0) : 0;
-  return {rows, maxShots};
+function buildStatsGroups(points, subMode){
+  // points already filtered by stats filters
+  if (subMode === "set"){
+    const by = new Map();
+    points.forEach(p=>{
+      const s = setIndexFromPoint(p) || 1;
+      const key = String(s);
+      if (!by.has(key)) by.set(key, []);
+      by.get(key).push(p);
+    });
+    return [...by.entries()].sort((a,b)=>Number(a[0])-Number(b[0])).map(([k,pts])=>({ title:`Set ${k}`, points:pts }));
+  }
+  if (subMode === "game"){
+    const by = new Map();
+    points.forEach(p=>{
+      const snap = parseSnapshot(p.snapshot||"");
+      const setN = (snap.setsA + snap.setsB + 1) || 1;
+      const gameN = (snap.gamesA + snap.gamesB + 1) || 1;
+      const key = `${setN}-${gameN}`;
+      if (!by.has(key)) by.set(key, { setN, gameN, pts: [] });
+      by.get(key).pts.push(p);
+    });
+    return [...by.values()].sort((a,b)=> a.setN===b.setN ? a.gameN-b.gameN : a.setN-b.setN)
+      .map(g=>({ title:`Set ${g.setN} · Juego ${g.gameN}`, points:g.pts }));
+  }
+  if (subMode === "side"){
+    const order = { SD:0, SV:1, "": 2 };
+    const by = new Map();
+    points.forEach(p=>{
+      const key = p.side || "";
+      if (!by.has(key)) by.set(key, []);
+      by.get(key).push(p);
+    });
+    const label = (k)=> k==="SD" ? "Lado Deuce (SD)" : k==="SV" ? "Lado Ventaja (SV)" : "Sin lado";
+    return [...by.entries()].sort((a,b)=>(order[a[0]]??9)-(order[b[0]]??9))
+      .map(([k,pts])=>({ title:label(k), points:pts }));
+  }
+  return [{ title:"Estadísticas", points }];
 }
-function csvEscape(v){
-  const s=String(v??"");
-  if (/[",\n\r\t;]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
-  return s;
-}
-function downloadFile(filename, mime, content){
-  const blob=new Blob([content], {type:mime});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url; a.download=filename;
-  document.body.appendChild(a);
-  a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
+
+
 function exportCSV(){
   const includeServe = $("#eIncludeServe")?.checked ?? true;
   const splitShots = $("#eSplitShots")?.checked ?? false;
@@ -2401,6 +2489,212 @@ const miniSvg = (arrows, idx)=>{
   window.print();
 }
 
+
+function exportStatsPDF(){
+  // Exporta la pantalla de Estadísticas a PDF (vía imprimir / Guardar como PDF)
+  const pts = filterPointsForStats();
+  const subMode = $("#sSub")?.value || "none";
+  const groups = buildStatsGroups(pts, subMode);
+
+  const nameA = state.names.A || "Jugador A";
+  const nameB = state.names.B || "Jugador B";
+  const stamp = new Date().toLocaleString();
+
+  const fRange = $("#sRange")?.value || "all";
+  const fSet = $("#sSet")?.value || "all";
+  const fServer = $("#sServer")?.value || "all";
+  const fContext = $("#sContext")?.value || "all";
+
+  const rangeLabel = {
+    all: "Todo el partido",
+    last10: "Últimos 10 puntos",
+    last20: "Últimos 20 puntos",
+    last50: "Últimos 50 puntos",
+  }[fRange] || "Todo el partido";
+
+  const serverLabel = (fServer==="A" ? `${nameA}` : fServer==="B" ? `${nameB}` : "Todos");
+  const contextLabel = {
+    all: "Todos",
+    bp: "Break points",
+    deuce: "Deuce/Adv",
+    tiebreak: "Tie-break",
+  }[fContext] || "Todos";
+
+  const setLabel = (fSet==="all" ? "Todos" : `Set ${fSet}`);
+
+  const filterLine = `Rango: ${escapeHtml(rangeLabel)} · Set: ${escapeHtml(setLabel)} · Servidor: ${escapeHtml(serverLabel)} · Contexto: ${escapeHtml(contextLabel)} · Puntos: ${pts.length}`;
+
+  const row = (label, a, b)=>`<tr><td class="num a">${escapeHtml(a)}</td><td class="lab">${escapeHtml(label)}</td><td class="num b">${escapeHtml(b)}</td></tr>`;
+  const section = (title, rowsHtml)=>`<div class="section"><div class="sectionTitle">${escapeHtml(title)}</div><table class="t"><tbody>${rowsHtml}</tbody></table></div>`;
+
+  const printTable = (title, agg)=>{
+    const totalPts = agg.A.pointsWon + agg.B.pointsWon;
+
+    const dirTotA = agg.A.strokeDir.C + agg.A.strokeDir.M + agg.A.strokeDir.P;
+    const dirTotB = agg.B.strokeDir.C + agg.B.strokeDir.M + agg.B.strokeDir.P;
+    const depTotA = agg.A.strokeDepth.P + agg.A.strokeDepth.M + agg.A.strokeDepth.C;
+    const depTotB = agg.B.strokeDepth.P + agg.B.strokeDepth.M + agg.B.strokeDepth.C;
+
+    const serveTotA = agg.A.serveTargets.T + agg.A.serveTargets.C + agg.A.serveTargets.A;
+    const serveTotB = agg.B.serveTargets.T + agg.B.serveTargets.C + agg.B.serveTargets.A;
+
+    const retDirTotA = agg.A.returnDir.C + agg.A.returnDir.M + agg.A.returnDir.P;
+    const retDirTotB = agg.B.returnDir.C + agg.B.returnDir.M + agg.B.returnDir.P;
+    const retDepTotA = agg.A.returnDepth.P + agg.A.returnDepth.M + agg.A.returnDepth.C;
+    const retDepTotB = agg.B.returnDepth.P + agg.B.returnDepth.M + agg.B.returnDepth.C;
+
+    const sumRows = [
+      row("Puntos ganados", fmtRatio(agg.A.pointsWon, totalPts), fmtRatio(agg.B.pointsWon, totalPts)),
+      row("Aces", String(agg.A.aces), String(agg.B.aces)),
+      row("Dobles faltas", String(agg.A.doubleFaults), String(agg.B.doubleFaults)),
+      row("Winners", String(agg.A.winners), String(agg.B.winners)),
+      row("Winners / golpes", fmtRatio(agg.A.winners, agg.A.strokes), fmtRatio(agg.B.winners, agg.B.strokes)),
+      row("Errores no forzados", String(agg.A.ue), String(agg.B.ue)),
+      row("UE / golpes", fmtRatio(agg.A.ue, agg.A.strokes), fmtRatio(agg.B.ue, agg.B.strokes)),
+      row("Errores forzados", String(agg.A.fe), String(agg.B.fe)),
+      row("FE / golpes", fmtRatio(agg.A.fe, agg.A.strokes), fmtRatio(agg.B.fe, agg.B.strokes)),
+      row("Errores forzados provocados", String(agg.A.feDrawn), String(agg.B.feDrawn)),
+    ].join("");
+
+    const serveRows = [
+      row("Puntos al saque", fmtRatio(agg.A.servePointsWon, agg.A.servePoints), fmtRatio(agg.B.servePointsWon, agg.B.servePoints)),
+      row("1º saque IN %", fmtPct(agg.A.firstIn, agg.A.servePoints), fmtPct(agg.B.firstIn, agg.B.servePoints)),
+      row("% pts ganados con 1º", fmtPct(agg.A.firstInWon, agg.A.firstIn), fmtPct(agg.B.firstInWon, agg.B.firstIn)),
+      row("% pts ganados con 2º", fmtPct(agg.A.secondInWon, agg.A.secondIn), fmtPct(agg.B.secondInWon, agg.B.secondIn)),
+      row("Saque a T %", fmtPct(agg.A.serveTargets.T, serveTotA), fmtPct(agg.B.serveTargets.T, serveTotB)),
+      row("Saque al cuerpo %", fmtPct(agg.A.serveTargets.C, serveTotA), fmtPct(agg.B.serveTargets.C, serveTotB)),
+      row("Saque a abierto %", fmtPct(agg.A.serveTargets.A, serveTotA), fmtPct(agg.B.serveTargets.A, serveTotB)),
+    ].join("");
+
+    const retRows = [
+      row("Puntos al resto", fmtRatio(agg.A.returnPointsWon, agg.A.returnPoints), fmtRatio(agg.B.returnPointsWon, agg.B.returnPoints)),
+      row("Break points (ganados)", fmtRatio(agg.A.bpConv, agg.A.bpOpp), fmtRatio(agg.B.bpConv, agg.B.bpOpp)),
+      row("Break points (salvados)", fmtRatio(agg.A.bpSaved, agg.A.bpFaced), fmtRatio(agg.B.bpSaved, agg.B.bpFaced)),
+      row("Dirección resto cruzado %", fmtPct(agg.A.returnDir.C, retDirTotA), fmtPct(agg.B.returnDir.C, retDirTotB)),
+      row("Dirección resto paralelo %", fmtPct(agg.A.returnDir.P, retDirTotA), fmtPct(agg.B.returnDir.P, retDirTotB)),
+      row("Profundidad resto profundo %", fmtPct(agg.A.returnDepth.P, retDepTotA), fmtPct(agg.B.returnDepth.P, retDepTotB)),
+      row("Profundidad resto corto %", fmtPct(agg.A.returnDepth.C, retDepTotA), fmtPct(agg.B.returnDepth.C, retDepTotB)),
+    ].join("");
+
+    const shotRows = [
+      row("Golpes totales", String(agg.A.strokes), String(agg.B.strokes)),
+      row("Cruzados %", fmtPct(agg.A.strokeDir.C, dirTotA), fmtPct(agg.B.strokeDir.C, dirTotB)),
+      row("Medio %", fmtPct(agg.A.strokeDir.M, dirTotA), fmtPct(agg.B.strokeDir.M, dirTotB)),
+      row("Paralelos %", fmtPct(agg.A.strokeDir.P, dirTotA), fmtPct(agg.B.strokeDir.P, dirTotB)),
+      row("Profundos %", fmtPct(agg.A.strokeDepth.P, depTotA), fmtPct(agg.B.strokeDepth.P, depTotB)),
+      row("Medios %", fmtPct(agg.A.strokeDepth.M, depTotA), fmtPct(agg.B.strokeDepth.M, depTotB)),
+      row("Cortos %", fmtPct(agg.A.strokeDepth.C, depTotA), fmtPct(agg.B.strokeDepth.C, depTotB)),
+    ].join("");
+
+    const rallyRows = [
+      row("Media golpes (puntos ganados)", fmtAvg(agg.A.rallyWonTotalLen, agg.A.rallyWonPoints), fmtAvg(agg.B.rallyWonTotalLen, agg.B.rallyWonPoints)),
+      row("0-2 golpes", fmtRatio(agg.A.rallyWonBuckets.b02, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b02, agg.B.rallyWonPoints)),
+      row("3-5 golpes", fmtRatio(agg.A.rallyWonBuckets.b35, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b35, agg.B.rallyWonPoints)),
+      row("6-8 golpes", fmtRatio(agg.A.rallyWonBuckets.b68, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b68, agg.B.rallyWonPoints)),
+      row("9+ golpes", fmtRatio(agg.A.rallyWonBuckets.b9p, agg.A.rallyWonPoints), fmtRatio(agg.B.rallyWonBuckets.b9p, agg.B.rallyWonPoints)),
+    ].join("");
+
+    const keyRows = [
+      row("Puntos en Deuce/Adv ganados", fmtRatio(agg.A.pressureDeuceWon, agg.A.pressureDeucePlayed), fmtRatio(agg.B.pressureDeuceWon, agg.B.pressureDeucePlayed)),
+      row("Puntos 30-30+ ganados", fmtRatio(agg.A.pressure3030Won, agg.A.pressure3030Played), fmtRatio(agg.B.pressure3030Won, agg.B.pressure3030Played)),
+    ].join("");
+
+    const advWinRows = [
+      row("Ace", String(agg.A.advWinners.ACE||0), String(agg.B.advWinners.ACE||0)),
+      row("Winner derecha", String(agg.A.advWinners.FH||0), String(agg.B.advWinners.FH||0)),
+      row("Winner revés", String(agg.A.advWinners.BH||0), String(agg.B.advWinners.BH||0)),
+      row("Volea derecha", String(agg.A.advWinners.VOL_FH||0), String(agg.B.advWinners.VOL_FH||0)),
+      row("Volea revés", String(agg.A.advWinners.VOL_BH||0), String(agg.B.advWinners.VOL_BH||0)),
+      row("Passing", String(agg.A.advWinners.PASS||0), String(agg.B.advWinners.PASS||0)),
+      row("Dejada", String(agg.A.advWinners.DROP||0), String(agg.B.advWinners.DROP||0)),
+    ].join("");
+
+    const advUERows = [
+      row("UE Derecha", String(agg.A.advUE.FH), String(agg.B.advUE.FH)),
+      row("UE Revés", String(agg.A.advUE.BH), String(agg.B.advUE.BH)),
+      row("UE Volea", String(agg.A.advUE.VOL), String(agg.B.advUE.VOL)),
+      row("UE Smash", String(agg.A.advUE.SM), String(agg.B.advUE.SM)),
+      row("UE Otro", String(agg.A.advUE.OTHER), String(agg.B.advUE.OTHER)),
+    ].join("");
+
+    const advFERows = [
+      row("FE Derecha", String(agg.A.advFE.FH), String(agg.B.advFE.FH)),
+      row("FE Revés", String(agg.A.advFE.BH), String(agg.B.advFE.BH)),
+      row("FE Volea", String(agg.A.advFE.VOL), String(agg.B.advFE.VOL)),
+      row("FE Smash", String(agg.A.advFE.SM), String(agg.B.advFE.SM)),
+      row("FE Otro", String(agg.A.advFE.OTHER), String(agg.B.advFE.OTHER)),
+    ].join("");
+
+    return `
+      <div class="group">
+        <h2>${escapeHtml(title)}</h2>
+        ${section("Resumen", sumRows)}
+        ${section("Saque", serveRows)}
+        ${section("Resto y break points", retRows)}
+        ${section("Dirección y profundidad (golpes)", shotRows)}
+        ${section("Rally", rallyRows)}
+        ${section("Puntos de presión", keyRows)}
+        ${section("Desglose winners", advWinRows)}
+        ${section("Desglose errores no forzados", advUERows)}
+        ${section("Desglose errores forzados", advFERows)}
+      </div>
+    `;
+  };
+
+  const groupsHtml = groups.map((g, idx)=>{
+    const title = (subMode==="none") ? "Estadísticas" : g.title;
+    const agg = computeStats(g.points);
+    const pageBreak = (idx>0) ? "pageBreak" : "";
+    return `<div class="printGroup ${pageBreak}">${printTable(title, agg)}</div>`;
+  }).join("");
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>Estadísticas · ${escapeHtml(nameA)} vs ${escapeHtml(nameB)}</title>
+  <style>
+    @page { size: A4; margin: 10mm; }
+    body{ font-family: Arial, sans-serif; margin: 0; color:#0f172a; }
+    .wrap{ padding: 14px; }
+    h1{ font-size: 18px; margin: 0 0 4px; }
+    .meta{ font-size: 11px; color:#475569; margin: 0 0 12px; }
+    .meta .line{ margin-top: 2px; }
+    h2{ font-size: 14px; margin: 0 0 8px; padding: 6px 10px; background:#0b1220; color:#fff; border-radius: 8px; }
+    .section{ margin: 10px 0 12px; border: 1px solid #cbd5e1; border-radius: 10px; overflow: hidden; break-inside: avoid; }
+    .sectionTitle{ background:#f1f5f9; font-weight: 800; font-size: 12px; padding: 8px 10px; border-bottom:1px solid #cbd5e1; }
+    table.t{ width: 100%; border-collapse: collapse; }
+    td{ padding: 7px 10px; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
+    tr:last-child td{ border-bottom: none; }
+    td.lab{ text-align: center; font-weight: 800; background:#fff7cc; }
+    td.num{ width: 28%; font-variant-numeric: tabular-nums; }
+    td.num.a{ text-align: left; }
+    td.num.b{ text-align: right; }
+    .printGroup.pageBreak{ break-before: page; }
+    .group{ break-inside: avoid; }
+    tr{ break-inside: avoid; }
+  </style>
+  </head><body>
+    <div class="wrap">
+      <h1>Estadísticas del partido: ${escapeHtml(nameA)} vs ${escapeHtml(nameB)}</h1>
+      <div class="meta">
+        <div class="line">Exportado: ${escapeHtml(stamp)}</div>
+        <div class="line">${filterLine}</div>
+      </div>
+      ${groupsHtml}
+      <div class="meta" style="margin-top:14px;">© ${new Date().getFullYear()} Tennis Direction Tracker · Export estadísticas</div>
+    </div>
+  </body></html>`;
+
+  const w = window.open("", "_blank");
+  if (!w){
+    toast("No se pudo abrir la ventana de impresión. Revisa bloqueador de pop-ups.");
+    return;
+  }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  // asegurar render
+  setTimeout(()=>{ try{ w.focus(); w.print(); }catch(_){ } }, 350);
+}
+
 function applyTheme(){
   document.body.classList.toggle("light", state.ui.theme==="light");
   $("#btnTheme").textContent = (state.ui.theme==="light") ? "Modo oscuro" : "Modo claro";
@@ -2579,6 +2873,8 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   bindMenu("mFeB", ()=> finishAction("FE","B"));
   bindMenu("mWinA", ()=> finishAction("WINNER","A"));
   bindMenu("mWinB", ()=> finishAction("WINNER","B"));
+  bindMenu("mVolA", ()=> finishVolley("A"));
+  bindMenu("mVolB", ()=> finishVolley("B"));
 
   // quick actions
   on("btnUndo","click", undo);
@@ -2599,7 +2895,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   });
 
   // stats filters
-  ["sRange","sSet","sServer","sContext"].forEach(id=>{
+  ["sRange","sSet","sServer","sContext","sMode","sSub"].forEach(id=>{
     on(id,"input", renderStats);
     on(id,"change", renderStats);
   });
@@ -2608,6 +2904,8 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCSV","click", exportCSV);
   on("btnWord","click", exportWord);
   on("btnPDF","click", exportPDF);
+  on("btnStatsPDF","click", exportStatsPDF);
+  on("btnPDFStats","click", exportStatsPDF);
 
   // close modals clicking outside
   ["historyModal","pointViewerModal","analyticsModal","statsModal","exportModal"].forEach(mid=>{

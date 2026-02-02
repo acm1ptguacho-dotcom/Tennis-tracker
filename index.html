@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Tennis Direction Tracker</title>
-  <link rel="stylesheet" href="style.css?v=2462" />
+  <link rel="stylesheet" href="style.css?v=2510" />
 </head>
 <body>
 
@@ -179,6 +179,8 @@
         <button class="finishBtn warn" id="mFeB" type="button">Error forzado (B)</button>
         <button class="finishBtn good" id="mWinA" type="button">Winner (A)</button>
         <button class="finishBtn good" id="mWinB" type="button">Winner (B)</button>
+              <button class="finishBtn good" id="mVolA" type="button">Volea (A)</button>
+        <button class="finishBtn good" id="mVolB" type="button">Volea (B)</button>
       </div>
     </div>
   </div>
@@ -286,7 +288,10 @@
         <div class="modalTitle">Estadísticas del partido</div>
         <div class="muted" id="statsSub">—</div>
       </div>
-      <button class="chip" id="btnCloseStats" type="button">Cerrar</button>
+      <div class="modalActions">
+        <button class="chip" id="btnStatsPDF" type="button">PDF</button>
+        <button class="chip" id="btnCloseStats" type="button">Cerrar</button>
+      </div>
     </div>
 
     <div class="filters statsFilters">
@@ -321,6 +326,22 @@
           <option value="3030">30-30+</option>
         </select>
       </label>
+
+      <label>Vista
+        <select id="sMode">
+          <option value="table" selected>Tabla</option>
+          <option value="broadcast">Broadcast</option>
+        </select>
+      </label>
+
+      <label>Substats
+        <select id="sSub">
+          <option value="none" selected>—</option>
+          <option value="set">Por set</option>
+          <option value="game">Por juego</option>
+          <option value="side">Por lado (SD/SV)</option>
+        </select>
+      </label>
     </div>
 
     <div class="statsBody" id="statsBody"></div>
@@ -341,6 +362,7 @@
       <button class="btn" id="btnCSV" type="button">Exportar CSV</button>
       <button class="btn" id="btnWord" type="button">Tabla Word (HTML)</button>
       <button class="btn primary" id="btnPDF" type="button">PDF premium (imprimir)</button>
+      <button class="btn" id="btnPDFStats" type="button">PDF estadísticas</button>
     </div>
     <div class="muted">Tip: en PDF premium usa “Imprimir → Guardar como PDF”.</div>
   </div>
@@ -360,7 +382,7 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2462"></script>
+<script src="app.js?v=2510"></script>
 
 <div class="modal hidden" id="boardModal">
   <div class="modalCard boardCard">
