@@ -252,7 +252,7 @@ function flashTap(el, evt){
   el.classList.remove("tapFlash");
   void el.offsetWidth;
   el.classList.add("tapFlash");
-  setTimeout(()=>el.classList.remove("tapFlash"), 650);
+  setTimeout(()=>el.classList.remove("tapFlash"), 850);
 
   if (__lastTapHoldEl && __lastTapHoldEl!==el){
     __lastTapHoldEl.classList.remove("tapHold");
@@ -265,7 +265,7 @@ function flashTap(el, evt){
       __lastTapHoldEl.classList.remove("tapHold");
       __lastTapHoldEl = null;
     }
-  }, 1000);
+  }, 1600);
 }
 
 /** ZONE LAYER **/
@@ -387,11 +387,11 @@ function svgPt(pt){
 function arrowDefs(){
   return `
     <defs>
-      <marker id="ahA" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="#FFF200"></path>
+      <marker id="ahA" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"></path>
       </marker>
-      <marker id="ahB" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="#FF2A2A"></path>
+      <marker id="ahB" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--bad)"></path>
       </marker>
     </defs>`;
 }
@@ -456,7 +456,7 @@ function renderArrows(svgEl, arrows, opts={}){
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", `M ${A.x.toFixed(1)} ${A.y.toFixed(1)} L ${P.x.toFixed(1)} ${P.y.toFixed(1)} L ${E.x.toFixed(1)} ${E.y.toFixed(1)}`);
     path.classList.add("arrowLine", (a.hitter==="A"?"a":"b"), "subtle");
-    path.setAttribute("stroke-width", "3");
+    path.setAttribute("stroke-width", "3.5");
     path.setAttribute("marker-end", `url(#${a.hitter==="A"?"ahA":"ahB"})`);
 
     if (fadeOld && idx < arrows.length-6){
@@ -464,7 +464,7 @@ function renderArrows(svgEl, arrows, opts={}){
     }
 
     if (highlightIndex!==null && idx===highlightIndex){
-      path.setAttribute("stroke-width","4");
+      path.setAttribute("stroke-width","4.5");
       path.style.opacity="1";
     }
 
@@ -2337,11 +2337,11 @@ function exportPDF(){
 const miniSvg = (arrows, idx)=>{
     const defs = `
       <defs>
-        <marker id="ahA_${idx}" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#FFF200"></path>
+        <marker id="ahA_${idx}" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"></path>
         </marker>
-        <marker id="ahB_${idx}" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#FF2A2A"></path>
+        <marker id="ahB_${idx}" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--bad)"></path>
         </marker>
       </defs>`;
     const segs = (arrows||[]).map(a=>{

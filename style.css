@@ -1,27 +1,36 @@
 
+
 :root{
-  --bg0:#0f172a;
-  --bg1:#111c33;
-  --card:#182544;
-  --card2:#1b2a4c;
+  /* Deportivo Pro */
+  --bg0:#070B16;
+  --bg1:#0B1631;
+  --card:#0F2348;
+  --card2:#132B57;
   --stroke:rgba(255,255,255,.10);
-  --stroke2:rgba(255,255,255,.16);
-  --text:#eaf0ff;
-  --muted:rgba(234,240,255,.70);
-  --accent:#4da3ff;
-  --good:#2ecc71;
-  --warn:#ff8a00;
-  --bad:#ff4d4d;
+  --stroke2:rgba(255,255,255,.18);
+  --text:#EAF2FF;
+  --muted:rgba(234,242,255,.72);
 
-  --yellow:#ffff00;
-  --red:#ff0000;
+  /* Brand / Accents */
+  --accent:#FFD400;   /* tenis / energía */
+  --accent2:#39D5FF;  /* info / secondary */
 
-  --radius:18px;
-  --shadow: 0 18px 50px rgba(0,0,0,.28);
-  --shadow2: 0 10px 26px rgba(0,0,0,.22);
-  --inset: inset 0 1px 0 rgba(255,255,255,.10);
-  --blur: blur(10px);
-  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  --good:#2EE59D;
+  --warn:#FF9F2E;
+  --bad:#FF3B5C;
+
+  /* Legacy helpers (used in some effects) */
+  --yellow:#FFD400;
+  --red:#FF3B5C;
+
+  --radius:16px;
+  --shadow: 0 18px 45px rgba(0,0,0,.45);
+  --shadow2: 0 10px 26px rgba(0,0,0,.28);
+  --inset: inset 0 1px 0 rgba(255,255,255,.08);
+
+  --ease: cubic-bezier(.2,.8,.2,1);
+  --fast: 140ms;
+  --med: 210ms;
 }
 
 html,body{height:100%; overflow-y:auto; overflow-x:hidden;}
@@ -108,10 +117,10 @@ display:flex;
 }
 .chip:hover,.btn:hover{transform: translateY(-1px); border-color: var(--stroke2); box-shadow: var(--inset), 0 12px 26px rgba(0,0,0,.18);}
 .chip:active,.btn:active{transform: translateY(0px) scale(.98); box-shadow: var(--inset), 0 6px 14px rgba(0,0,0,.16);}
-.chip.primary{border-color: rgba(77,163,255,.35); background: linear-gradient(180deg, rgba(77,163,255,.28), rgba(77,163,255,.12));}
-.chip.warn{border-color: rgba(255,138,0,.35); background: linear-gradient(180deg, rgba(255,138,0,.22), rgba(255,138,0,.10));}
-.chip.good{border-color: rgba(46,204,113,.35); background: linear-gradient(180deg, rgba(46,204,113,.22), rgba(46,204,113,.10));}
-.chip.bad{border-color: rgba(255,77,77,.35); background: linear-gradient(180deg, rgba(255,77,77,.22), rgba(255,77,77,.10));}
+.chip.primary{border-color: color-mix(in srgb, var(--accent2) 55%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--accent2) 28%, transparent), color-mix(in srgb, var(--accent2) 14%, transparent));}
+.chip.warn{border-color: color-mix(in srgb, var(--warn) 55%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--warn) 26%, transparent), color-mix(in srgb, var(--warn) 12%, transparent));}
+.chip.good{border-color: color-mix(in srgb, var(--good) 55%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--good) 26%, transparent), color-mix(in srgb, var(--good) 12%, transparent));}
+.chip.bad{border-color: color-mix(in srgb, var(--bad) 55%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--bad) 22%, transparent), color-mix(in srgb, var(--bad) 10%, transparent));}
 .chip.ghost{opacity:.85}
 .chip:disabled,.btn:disabled{opacity:.45; cursor:not-allowed; transform:none;}
 .pillToggle{display:flex; gap:8px; align-items:center; padding:10px 12px;}
@@ -274,7 +283,7 @@ body.light .court{border:1px solid rgba(10,22,55,.18);}
   gap: 0px;
   pointer-events:none;
 }
-.zoneCell, .serveCell{
+.zoneCell, .serveCell{position:relative; will-change:transform, box-shadow;
   pointer-events:auto;
   display:flex;
   align-items:flex-start;
@@ -286,7 +295,7 @@ body.light .court{border:1px solid rgba(10,22,55,.18);}
   background: rgba(0,0,0,.10);
   user-select:none;
   cursor:pointer;
-  transition: transform .08s ease, background .12s ease, border-color .12s ease;
+  transition: transform var(--fast) var(--ease), background var(--fast) var(--ease), border-color var(--fast) var(--ease), box-shadow var(--med) var(--ease);
 }
 body.light .zoneCell, body.light .serveCell{
   color: rgba(10,22,55,.88);
@@ -455,28 +464,28 @@ body.coach .kpi .t{font-size:13px}
 body.coach .kpi .v{font-size:24px}
 
 /* Tap highlight vivid yellow + red outline (matches sample) */
-.zoneCell, .serveCell{position:relative; overflow:hidden; transform: translateZ(0);}
+.zoneCell, .serveCell{position:relative; will-change:transform, box-shadow;position:relative; overflow:hidden; transform: translateZ(0);}
 .zoneCell::before, .serveCell::before{
   content:""; position:absolute; inset:0; pointer-events:none; opacity:0; z-index:1;
-  background: rgba(255,255,0,.92);
-  border:8px solid rgba(255,0,0,.99);
+  background: color-mix(in srgb, var(--accent) 92%, transparent);
+  border:8px solid color-mix(in srgb, var(--bad) 92%, transparent);
   border-radius: 8px;
   box-sizing:border-box;
-  box-shadow: 0 0 28px rgba(255,255,0,.55), 0 0 18px rgba(255,0,0,.35), 0 0 60px rgba(255,255,0,.22);
+  box-shadow: 0 0 34px color-mix(in srgb, var(--accent) 55%, transparent), 0 0 20px color-mix(in srgb, var(--bad) 35%, transparent), 0 0 70px color-mix(in srgb, var(--accent) 22%, transparent);
   transition: opacity 140ms ease;
 }
 .zoneCell.tapHold::before, .serveCell.tapHold::before{opacity:1;}
 .zoneCell::after, .serveCell::after{
   content:""; position:absolute; inset:0; pointer-events:none; opacity:0; z-index:2;
-  background: rgba(255,255,0,1);
+  background: var(--accent);
   border-radius:8px;
   clip-path: circle(0% at var(--tap-x,50%) var(--tap-y,50%));
-  filter: drop-shadow(0 0 22px rgba(255,255,0,.85)) drop-shadow(0 0 10px rgba(255,0,0,.40));
+  filter: drop-shadow(0 0 26px color-mix(in srgb, var(--accent) 80%, transparent)) drop-shadow(0 0 12px color-mix(in srgb, var(--bad) 40%, transparent));
 }
 .zoneCell.tapFlash::after, .serveCell.tapFlash::after{animation: tapFillPro 520ms cubic-bezier(.12,.92,.18,1) forwards;}
 .zoneCell.tapFlash, .serveCell.tapFlash{
   animation: tapPopPro 520ms cubic-bezier(.14,.88,.2,1) forwards;
-  box-shadow: 0 0 0 10px rgba(255,0,0,.98) inset, 0 0 70px rgba(255,255,0,.35), 0 0 30px rgba(255,0,0,.25), 0 0 14px rgba(255,255,255,.10);
+  box-shadow: 0 0 0 10px color-mix(in srgb, var(--bad) 95%, transparent) inset, 0 0 78px color-mix(in srgb, var(--accent) 36%, transparent), 0 0 36px color-mix(in srgb, var(--bad) 26%, transparent), 0 0 16px rgba(255,255,255,.12);
 }
 @keyframes tapFillPro{
   0%{opacity:1; clip-path: circle(0% at var(--tap-x,50%) var(--tap-y,50%));}
@@ -1825,16 +1834,16 @@ body.printing .app{ display:none; }
   stroke-linecap:round;
   stroke-linejoin:round;
 }
-.arrowSvg .arrowLine.a{ stroke: #FFF200; }
-.arrowSvg .arrowLine.b{ stroke: #FF2A2A; }
+.arrowSvg .arrowLine.a{ stroke: var(--accent); filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 55%, transparent)); }
+.arrowSvg .arrowLine.b{ stroke: var(--bad); filter: drop-shadow(0 0 10px color-mix(in srgb, var(--bad) 50%, transparent)); }
 .arrowSvg .arrowLine.subtle{ opacity:.86; }
 .arrowSvg .arrowLine.old{ opacity:.55; }
 .arrowSvg .arrowNumCircle{
   fill: rgba(0,0,0,.55);
   stroke-width: 2;
 }
-.arrowSvg .arrowNumCircle.a{ stroke:#FFF200; }
-.arrowSvg .arrowNumCircle.b{ stroke:#FF2A2A; }
+.arrowSvg .arrowNumCircle.a{ stroke:var(--accent); }
+.arrowSvg .arrowNumCircle.b{ stroke:var(--bad); }
 .arrowSvg .arrowNumText{
   font-weight: 900;
   font-size: 18px;
@@ -1845,9 +1854,9 @@ body.printing .app{ display:none; }
 .arrowSvg .draw{
   stroke-dasharray: var(--dash, 1000);
   stroke-dashoffset: var(--dash, 1000);
-  animation: dashDraw .28s ease-out forwards;
+  animation: dashDraw .34s var(--ease) forwards;
 }
-@keyframes dashDraw{ to{ stroke-dashoffset: 0; } }
+@keyframes dashDraw{ 0%{stroke-dashoffset: var(--dash,1000); opacity:.35;} 100%{ stroke-dashoffset: 0; opacity:1; } }
 
 
 /* Historial: mini pista con flechas */
@@ -2115,265 +2124,7 @@ body.printing .app{ display:none; }
   }
 }
 
-@media screen {
-/* =====================================================================
-   PREMIUM REFRESH (v2.53)
-   Objetivo:
-   - Menos “oscuro plano” → fondo con auroras + superficies más claras
-   - Botones y tarjetas con acabado premium (bisel suave + enfoque claro)
-   - Consistencia visual en toda la app (menú, marcador, modales, panels)
-   ===================================================================== */
 
-:root{
-  /* Fondo y superficies (un poco más luminosas sin llegar a “modo claro”) */
-  --bg0:#0a1124;
-  --bg1:#0b1a36;
-  --card:#101f3d;
-  --card2:#122951;
-  --stroke:rgba(255,255,255,.12);
-  --stroke2:rgba(255,255,255,.22);
-  --text:#f2f6ff;
-  --muted:rgba(242,246,255,.72);
-
-  /* Acentos */
-  --accent:#4db5ff;
-  --accent2:#8f6bff;
-
-  /* Colores de jugadores (coherentes con flechas) */
-  --yellow:#FFF200;
-  --red:#FF2A2A;
-
-  /* Estados */
-  --good:#35f08a;
-  --warn:#ffc700;
-  --bad:#ff2e2e;
-
-  /* Profundidad */
-  --radius:20px;
-  --shadow: 0 26px 80px rgba(0,0,0,.55);
-  --shadow2: 0 14px 34px rgba(0,0,0,.34);
-  --inset: inset 0 1px 0 rgba(255,255,255,.12);
-  --blur: blur(14px);
-}
-
-html,body{ background-color: var(--bg0); }
-
-body{
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-
-  /* Aurora + profundidad (más llamativo sin ser claro) */
-  background:
-    radial-gradient(1200px 700px at 18% 8%, rgba(77,181,255,.22), transparent 58%),
-    radial-gradient(900px 620px at 86% 22%, rgba(143,107,255,.14), transparent 62%),
-    radial-gradient(900px 620px at 78% 92%, rgba(255,242,0,.08), transparent 56%),
-    radial-gradient(900px 620px at 10% 88%, rgba(255,42,42,.08), transparent 56%),
-    linear-gradient(180deg, var(--bg0), var(--bg1));
-}
-
-/* Sutil textura (evita banding en pantallas grandes) */
-body::after{
-  content:"";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    repeating-linear-gradient(
-      45deg,
-      rgba(255,255,255,.035) 0px,
-      rgba(255,255,255,.035) 1px,
-      rgba(255,255,255,0) 6px,
-      rgba(255,255,255,0) 10px
-    );
-  opacity: .20;
-  mix-blend-mode: overlay;
-}
-
-/* Scrollbar “premium” (desktop) */
-@media (hover:hover){
-  *::-webkit-scrollbar{ width: 10px; height: 10px; }
-  *::-webkit-scrollbar-thumb{
-    background: rgba(255,255,255,.14);
-    border: 2px solid rgba(0,0,0,0);
-    background-clip: padding-box;
-    border-radius: 999px;
-  }
-  *::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,.20); background-clip: padding-box; }
-  *::-webkit-scrollbar-track{ background: rgba(0,0,0,.10); border-radius: 999px; }
-}
-
-/* =====================================================================
-   CONTENEDORES / TARJETAS
-   ===================================================================== */
-
-.mainLeft, .mainRight, .section, .timelineCard, .scoreTv{
-  border-color: rgba(255,255,255,.14);
-}
-
-.mainLeft, .mainRight{
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
-  box-shadow: var(--shadow);
-}
-
-.section{
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.045));
-  box-shadow: var(--shadow2), var(--inset);
-}
-
-/* Tarjetas con “accent strip” discreto */
-.section, .timelineCard, .scoreTv, .modalCard.solid, .drawer{
-  position: relative;
-}
-.section::before, .timelineCard::before, .scoreTv::before, .modalCard.solid::before, .drawer::before{
-  content:"";
-  position:absolute;
-  left: 14px;
-  right: 14px;
-  top: 0;
-  height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(77,181,255,.65), rgba(143,107,255,.45), rgba(255,242,0,.35), rgba(255,42,42,.32));
-  opacity: .65;
-}
-
-/* Modales más premium (menos “bloque negro”) */
-.modalCard.solid{
-  background:
-    radial-gradient(900px 500px at 20% 0%, rgba(77,181,255,.12), transparent 60%),
-    linear-gradient(180deg, rgba(16,26,40,.98), rgba(10,16,26,.98));
-  border-color: rgba(255,255,255,.14);
-}
-
-/* Drawer: coherencia con el resto */
-.drawer{
-  background:
-    radial-gradient(800px 420px at 20% 0%, rgba(77,181,255,.12), transparent 62%),
-    linear-gradient(180deg, rgba(16,26,40,.98), rgba(10,16,26,.98));
-  border-color: rgba(255,255,255,.16);
-}
-
-/* =====================================================================
-   BOTONES
-   ===================================================================== */
-
-.chip, .btn{
-  font-weight: 900;
-  letter-spacing: .02em;
-  border-color: rgba(255,255,255,.14);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
-  box-shadow:
-    0 10px 26px rgba(0,0,0,.26),
-    inset 0 1px 0 rgba(255,255,255,.16),
-    inset 0 -1px 0 rgba(255,255,255,.06);
-}
-.chip:hover,.btn:hover{ border-color: rgba(255,255,255,.22); box-shadow: 0 14px 34px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.16); }
-
-.chip:focus-visible,.btn:focus-visible,
-.finishBtn:focus-visible,
-.quickBtn:focus-visible,
-select:focus-visible,input:focus-visible{
-  outline: 3px solid rgba(77,181,255,.28);
-  outline-offset: 2px;
-}
-
-/* Variantes: más “marca” */
-.chip.primary, .btn.primary{
-  border-color: rgba(77,181,255,.40);
-  background:
-    linear-gradient(180deg, rgba(77,181,255,.32), rgba(77,181,255,.14));
-}
-.chip.warn, .btn.warn{
-  border-color: rgba(255,199,0,.42);
-  background:
-    linear-gradient(180deg, rgba(255,199,0,.30), rgba(255,199,0,.12));
-}
-.chip.good, .btn.good{
-  border-color: rgba(53,240,138,.40);
-  background:
-    linear-gradient(180deg, rgba(53,240,138,.28), rgba(53,240,138,.12));
-}
-.chip.bad, .btn.bad{
-  border-color: rgba(255,46,46,.42);
-  background:
-    linear-gradient(180deg, rgba(255,46,46,.26), rgba(255,46,46,.12));
-}
-
-/* Botón menú (☰) con toque “toolbar” */
-.iconChip{
-  border-radius: 16px;
-  width: 46px;
-  height: 46px;
-  padding: 0;
-  display:grid;
-  place-items:center;
-}
-
-/* Quick buttons del rail: más “hardware” */
-.quickBtn{
-  width: 52px;
-  height: 52px;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
-  color: rgba(255,255,255,.92);
-  box-shadow: 0 12px 28px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
-}
-
-/* =====================================================================
-   MARCADOR (TV)
-   ===================================================================== */
-
-.scoreTv{
-  background:
-    radial-gradient(800px 420px at 18% 0%, rgba(77,181,255,.12), transparent 60%),
-    linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.035));
-  border-color: rgba(255,255,255,.16);
-}
-
-/* Identidad visual A/B */
-#tvRowA{ border-left: 4px solid rgba(255,242,0,.85); }
-#tvRowB{ border-left: 4px solid rgba(255,42,42,.80); }
-#tvRowA .tvTag{ border-color: rgba(255,242,0,.45); }
-#tvRowB .tvTag{ border-color: rgba(255,42,42,.40); }
-
-.tvPts{
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.26), rgba(0,0,0,.12));
-}
-
-/* =====================================================================
-   INPUTS / SELECTS
-   ===================================================================== */
-
-input, select{
-  font-weight: 900;
-}
-.filters select,.filters input{
-  background: rgba(0,0,0,.16);
-  border-color: rgba(255,255,255,.12);
-}
-.filters select:focus,.filters input:focus{
-  border-color: rgba(77,181,255,.35);
-  box-shadow: 0 0 0 4px rgba(77,181,255,.10);
-}
-
-/* =====================================================================
-   ESTADÍSTICAS: devuelve identidad A/B (amarillo/rojo)
-   - Si tus celdas usan clases .a / .b o data-player, esto las “pinta”.
-   ===================================================================== */
-
-.statsA, .aVal, .cellA{ color: rgba(255,242,0,.96) !important; }
-.statsB, .bVal, .cellB{ color: rgba(255,42,42,.92) !important; }
-
-/* Si la tabla usa el formato “A | Métrica | B” */
-.statsTable td:nth-child(1){ color: rgba(255,242,0,.96); font-variant-numeric: tabular-nums; }
-.statsTable td:nth-child(3){ color: rgba(255,42,42,.92); font-variant-numeric: tabular-nums; }
-
-
-
-
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
 }
