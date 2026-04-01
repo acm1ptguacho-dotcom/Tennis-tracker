@@ -982,21 +982,34 @@ body.coach .kpi .v{font-size:24px}
   top: auto;
   bottom: 16px;
   right: 16px;
-  width: 56px;
-  height: 56px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.12);
-  box-shadow: 0 14px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
-  backdrop-filter: var(--blur);
+  width: 62px;
+  height: 62px;
+  border: none;
+
+  /* Tennis ball (high quality) */
+  background:
+    radial-gradient(120% 120% at 30% 30%,
+      rgba(255,255,255,.60) 0%,
+      rgba(255,255,255,.14) 20%,
+      rgba(255,212,0,1) 45%,
+      rgba(230,205,0,1) 72%,
+      rgba(170,150,0,1) 100%);
+  box-shadow:
+    0 18px 34px rgba(0,0,0,.42),
+    0 0 0 2px rgba(255,255,255,.16) inset,
+    0 0 18px rgba(255,212,0,.18);
+
   display:grid;
   place-items:center;
-  font-size: 24px;
-  font-weight: 1100;
-  color: rgba(255,255,255,.96);
+  font-size: 0; /* hide ✓ */
+  color: transparent;
 }
 .tennisBall.inCourt.fab::before,
 .tennisBall.inCourt.fab::after{
-  display:none;
+  display:block;
+  inset: 11px;
+  border: 3px solid rgba(255,255,255,.76);
+  opacity: .68;
 }
 
 /* Ensure diagram column uses space better */
@@ -2566,4 +2579,21 @@ body.light .modalCard.solid::after{
   position: fixed !important;
   left: 12px !important;
   top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+}
+
+
+/* === Drawer: más sólido (v2532) === */
+.menuOverlay{
+  background: rgba(0,0,0,.62) !important;
+  backdrop-filter: blur(10px) saturate(140%) !important;
+}
+.drawer{
+  background: linear-gradient(180deg, rgba(10,16,26,.96), rgba(7,10,16,.96)) !important;
+}
+.drawer::before{ opacity: .35 !important; }
+.drawer::after{ opacity: .75 !important; }
+
+.drawerBody .menuItem{
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03)) !important;
+  border-color: rgba(255,255,255,.18) !important;
 }
