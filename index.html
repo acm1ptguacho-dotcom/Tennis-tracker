@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2529" />
+  <link rel="stylesheet" href="style.css?v=2524" />
 </head>
 <body>
 
@@ -43,9 +43,7 @@
     <button class="chip menuItem" id="btnHistory" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Historial</span></button>
     <button class="chip menuItem" id="btnAnalytics" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span>Analíticas</span></button>
     <button class="chip menuItem" id="btnStats" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Estadísticas</span></button>
-    
-    <button class="chip menuItem" id="btnCharts" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 14 9 9 13 13 20 6"/><polyline points="20 6 20 12 14 12"/></svg><span>Gráficos</span></button>
-<button class="chip menuItem" id="btnExport" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Exportar</span></button>
+    <button class="chip menuItem" id="btnExport" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Exportar</span></button>
 
     <!-- Eliminado: Ocultar/Mostrar marcador (ahora es icono en la barra superior) -->
     <!-- Eliminado: Modo normal / Modo claro. Se mantiene un único modo estable -->
@@ -389,47 +387,6 @@
   </div>
 </div>
 
-
-<div class="modal hidden" id="chartsModal">
-  <div class="modalCard solid chartsCard">
-    <div class="modalHead">
-      <div>
-        <div class="modalTitle">Gráficos</div>
-        <div class="muted" id="chartsSub">Momentum / balance acumulado</div>
-      </div>
-      <button class="chip" id="btnCloseCharts" type="button">Cerrar</button>
-    </div>
-
-    <div class="filters chartsFilters">
-      <label>Perspectiva
-        <select id="chartsPlayer">
-          <option value="A">Jugador A</option>
-          <option value="B">Jugador B</option>
-        </select>
-      </label>
-
-      <div class="chartsLegend">
-        <span class="legendItem"><span class="legendSwatch win"></span> Punto ganado (+1)</span>
-        <span class="legendItem"><span class="legendSwatch lose"></span> Punto perdido (-1)</span>
-        <span class="legendItem"><span class="legendSwatch important"></span> Punto importante</span>
-        <span class="legendItem"><span class="legendSwatch serve"></span> Saque</span>
-        <span class="legendItem"><span class="legendSwatch ret"></span> Resto</span>
-      </div>
-    </div>
-
-    <div class="chartsBody">
-      <div class="chartWrap">
-        <canvas id="chartsCanvas" class="chartCanvas" width="800" height="320"></canvas>
-      </div>
-      <div class="stripWrap">
-        <div class="stripTitle">Timeline de puntos</div>
-        <div class="pointStrip" id="pointStrip"></div>
-        <div class="muted stripHint">Tip: círculo = saque · cuadrado = resto · borde dorado = punto importante</div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="modal hidden" id="exportModal">
   <div class="modalCard solid">
     <div class="modalHead">
@@ -464,7 +421,7 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2529"></script>
+<script src="app.js?v=2524"></script>
 
 <div class="modal hidden" id="boardModal">
   <div class="modalCard boardCard">
