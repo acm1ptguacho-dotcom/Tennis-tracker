@@ -974,6 +974,7 @@ function undo(){
   renderPoint();
   applyTapConstraints();
   persist();
+  toast("Último golpe deshecho");
 }
 
 function resetPoint(){
@@ -992,7 +993,7 @@ function redoLastPoint(){
   initPoint();
   persist();
   renderAll();
-  toast("Último punto rehecho");
+  toast("Último punto deshecho");
 }
 
 function fault(){
@@ -2753,7 +2754,14 @@ function applyRotation(){
   const c = $("#court");
   if (c) c.classList.toggle("rotated", !!state.ui.rotated);
   const b = $("#btnRotateCourt");
-  if (b) b.textContent = state.ui.rotated ? "Restaurar pista" : "Rotar pista";
+  if (b){
+    const label = state.ui.rotated ? "Restaurar pista" : "Rotar pista";
+    b.setAttribute("aria-label", label);
+    b.title = label;
+    b.classList.toggle("isActive", !!state.ui.rotated);
+  }
+  const lbl = $("#lblRotateCourt");
+  if (lbl) lbl.textContent = state.ui.rotated ? "Restaurar" : "Rotar";
   // ensure arrows reflect the current orientation
   renderLiveArrows(false);
 }
@@ -2818,8 +2826,8 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
 
   // (Eliminado) Tema y modo normal
 
-// cerrar menú al elegir una opción
-["btnRotateCourt","btnBoard","btnHistory","btnAnalytics","btnStats","btnExport"].forEach(id=>{
+// cerrar menú al elegir una opción (las acciones que viven dentro del menú)
+["btnBoard","btnHistory","btnAnalytics","btnStats","btnExport"].forEach(id=>{
   const el = $("#"+id);
   if (el) el.addEventListener("click", ()=>setMenuOpen(false));
 });
@@ -3645,7 +3653,7 @@ function wireBoard(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2520").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2523").catch(console.error);
 }
 
 function init(){

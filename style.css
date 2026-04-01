@@ -1227,26 +1227,50 @@ body.light .drawerDivider{ background: rgba(10,22,55,.12); }
 /* --- v2.44 UI: rail lateral fuera de la pista (estilo broadcast) --- */
 .courtWrap.courtRow{
   display: grid;
-  grid-template-columns: 1fr 64px;
+  grid-template-columns: 1fr 82px;
   gap: 10px;
   align-items: stretch;
   justify-items: center;
 }
 .courtRail{
-  width: 64px;
+  width: 82px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   gap: 12px;
 }
+
+.quickItem{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap: 6px;
+}
+.quickLbl{
+  width: 78px;
+  text-align:center;
+  font-size: 10px;
+  line-height: 1.05;
+  letter-spacing: .02em;
+  font-weight: 800;
+  color: var(--muted);
+  user-select:none;
+}
+
+.quickBtn.isActive{
+  border-color: rgba(57,213,255,.45);
+  box-shadow: 0 0 0 2px rgba(57,213,255,.16), 0 10px 24px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.10);
+  color: var(--accent2);
+}
 .courtWrap.courtRow .court{
   width: 100%;
   max-width: 720px;
 }
 @media (max-width: 520px){
-  .courtWrap.courtRow{ grid-template-columns: 1fr 56px; gap: 8px; }
-  .courtRail{ width: 56px; }
+  .courtWrap.courtRow{ grid-template-columns: 1fr 70px; gap: 8px; }
+  .courtRail{ width: 70px; }
+  .quickLbl{ width: 66px; font-size: 9px; }
 }
 .timelineSide{
   width: 100%;
