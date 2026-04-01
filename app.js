@@ -21,6 +21,33 @@ const state = {
   ui: { theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false }
 };
 
+const playerName = (id)=> (state.names && state.names[id]) ? state.names[id] : (id==="A" ? "Jugador A" : "Jugador B");
+const playerNameSafe = (id)=> escapeHtml(playerName(id));
+
+
+function refreshABOptionLabels(){
+  const nameA = playerName("A");
+  const nameB = playerName("B");
+  const setOptText = (selId, val, txt)=>{
+    const opt = document.querySelector(`#${selId} option[value="${val}"]`);
+    if (opt) opt.textContent = txt;
+  };
+  ["fServer","fWinner","sServer"].forEach(id=>{
+    setOptText(id,"A", nameA);
+    setOptText(id,"B", nameB);
+  });
+}
+
+function formatSnapshot(s){
+  const nameA = playerName("A");
+  const nameB = playerName("B");
+  return String(s||"")
+    .replace(/\bSrv A\b/g, `Srv ${nameA}`)
+    .replace(/\bSrv B\b/g, `Srv ${nameB}`);
+}
+
+
+
 function persist(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -252,7 +279,7 @@ function flashTap(el, evt){
   el.classList.remove("tapFlash");
   void el.offsetWidth;
   el.classList.add("tapFlash");
-  setTimeout(()=>el.classList.remove("tapFlash"), 850);
+  setTimeout(()=>el.classList.remove("tapFlash"), 1350);
 
   if (__lastTapHoldEl && __lastTapHoldEl!==el){
     __lastTapHoldEl.classList.remove("tapHold");
@@ -387,10 +414,10 @@ function svgPt(pt){
 function arrowDefs(){
   return `
     <defs>
-      <marker id="ahA" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <marker id="ahA" viewBox="0 0 10 10" refX="9.0" refY="5" markerWidth="8.2" markerHeight="8.2" orient="auto-start-reverse">
         <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"></path>
       </marker>
-      <marker id="ahB" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <marker id="ahB" viewBox="0 0 10 10" refX="9.0" refY="5" markerWidth="8.2" markerHeight="8.2" orient="auto-start-reverse">
         <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--bad)"></path>
       </marker>
     </defs>`;
@@ -456,7 +483,7 @@ function renderArrows(svgEl, arrows, opts={}){
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", `M ${A.x.toFixed(1)} ${A.y.toFixed(1)} L ${P.x.toFixed(1)} ${P.y.toFixed(1)} L ${E.x.toFixed(1)} ${E.y.toFixed(1)}`);
     path.classList.add("arrowLine", (a.hitter==="A"?"a":"b"), "subtle");
-    path.setAttribute("stroke-width", "3.5");
+    path.setAttribute("stroke-width", "4.2");
     path.setAttribute("marker-end", `url(#${a.hitter==="A"?"ahA":"ahB"})`);
 
     if (fadeOld && idx < arrows.length-6){
@@ -464,7 +491,7 @@ function renderArrows(svgEl, arrows, opts={}){
     }
 
     if (highlightIndex!==null && idx===highlightIndex){
-      path.setAttribute("stroke-width","4.5");
+      path.setAttribute("stroke-width","5.2");
       path.style.opacity="1";
     }
 
@@ -519,15 +546,19 @@ function clearLiveArrows(){
   __liveArrowCountRendered = 0;
 }
 
-function replayArrowsIn(svgEl, arrows){
+function replayArrowsIn(svgEl, arrows, opts={}){
   if (!svgEl || !arrows || arrows.length===0) return;
+  const speed = Math.max(0.05, Number(opts.speed ?? 1)); // 1 = normal
+  const baseDelay = Number(opts.baseDelay ?? 520);        // ms @ 1x
+  const delay = Math.round(baseDelay / speed);
+
   svgEl.innerHTML = arrowDefs();
   let i = 0;
   const step = ()=>{
     renderArrows(svgEl, arrows.slice(0, i+1), { animateFromIndex:i, fadeOld:false, highlightIndex:i });
     i++;
     if (i < arrows.length){
-      setTimeout(step, 320);
+      setTimeout(step, delay);
     }
   };
   step();
@@ -844,6 +875,7 @@ function pointText(player){
 function renderScore(){
   $("#nameA").value = state.names.A;
   $("#nameB").value = state.names.B;
+  refreshABOptionLabels();
 
   // Serve indicator
   $("#serveA").classList.toggle("on", state.currentServer==="A");
@@ -933,7 +965,7 @@ function resumeMatch(){
 function savePoint(winner, reason){
   const p=state.point;
   const n = state.matchPoints.length + 1;
-  const snapshot = `S ${state.sets.A}-${state.sets.B} · G ${state.games.A}-${state.games.B} · P ${scoreLabel()} · Srv ${p.server} ${p.side}`;
+  const snapshot = `S ${state.sets.A}-${state.sets.B} · G ${state.games.A}-${state.games.B} · P ${scoreLabel()} · Srv ${playerName(p.server)} ${p.side}`;
   const finishDetail = p.finishDetail ? JSON.parse(JSON.stringify(p.finishDetail)) : null;
   state.matchPoints.push({
     n,
@@ -1104,7 +1136,7 @@ function openPointViewer(point){
   if (!point) return;
   state.ui = state.ui || {};
   state.ui.pointViewerSelN = point.n;
-  if (typeof state.ui.showPointViewerArrows === "undefined") state.ui.showPointViewerArrows = true;
+  if (typeof state.ui.pvSpeed === "undefined") state.ui.pvSpeed = 0.75;
   openModal("#pointViewerModal");
   renderPointViewer(point);
 }
@@ -1118,17 +1150,25 @@ function renderPointViewer(point){
 
   // defaults
   if (!state.ui) state.ui = { theme:"dark", coach:true };
-  if (typeof state.ui.showPointViewerArrows === "undefined") state.ui.showPointViewerArrows = true;
-
+  
   const nameA=state.names.A, nameB=state.names.B;
+  // actualizar etiquetas A/B en filtros
+  const setOptText = (selId, val, txt)=>{
+    const opt = document.querySelector(`#${selId} option[value="${val}"]`);
+    if (opt) opt.textContent = txt;
+  };
+  setOptText("fServer","A", nameA);
+  setOptText("fServer","B", nameB);
+  setOptText("fWinner","A", nameA);
+  setOptText("fWinner","B", nameB);
   const winName = p.winner==="A" ? nameA : nameB;
 
   const title = $("#pvTitle");
   const sub = $("#pvSub");
-  if (title) title.textContent = `Punto ${p.n} · Gana ${p.winner}`;
+  if (title) title.textContent = `Punto ${p.n} · Gana ${winName}`;
 
   const reasonLine = (p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : "");
-  if (sub) sub.textContent = `${p.snapshot}${reasonLine ? " · " + reasonLine : ""}`;
+  if (sub) sub.textContent = `${formatSnapshot(p.snapshot)}${reasonLine ? " · " + reasonLine : ""}`;
 
   const topName = $("#pvTopName");
   const botName = $("#pvBottomName");
@@ -1144,22 +1184,28 @@ function renderPointViewer(point){
     } else {
       pvEvents.innerHTML = evs.map((e,i)=>`
         <div class="mono" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,.08);">
-          <b>${i+1}.</b> ${escapeHtml(e.player)} - ${escapeHtml(e.code)}
+          <b>${i+1}.</b> ${playerNameSafe(e.player)} - ${escapeHtml(e.code)}
         </div>
       `).join("");
     }
   }
 
   // tools
-  const showArrows = !!state.ui.showPointViewerArrows;
   const hasArrows = !!(p.arrows && p.arrows.length);
+  if (typeof state.ui.pvSpeed === "undefined") state.ui.pvSpeed = 0.75;
+  const speeds = [0.75, 0.50, 0.25];
+  const fmtSpeed = (v)=> (v===0.5 ? "0.50" : v===0.25 ? "0.25" : "0.75");
 
-  const btnT = $("#btnPvToggleArrows");
+  const btnS = $("#btnPvSpeed");
   const btnR = $("#btnPvReplay");
-  if (btnT){
-    btnT.textContent = showArrows ? "Flechas: ON" : "Flechas: OFF";
-    btnT.onclick = ()=>{
-      state.ui.showPointViewerArrows = !state.ui.showPointViewerArrows;
+
+  if (btnS){
+    btnS.textContent = `Velocidad: x${fmtSpeed(Number(state.ui.pvSpeed) || 0.75)}`;
+    btnS.disabled = !hasArrows;
+    btnS.onclick = ()=>{
+      const cur = Number(state.ui.pvSpeed) || 0.75;
+      const i = speeds.indexOf(cur);
+      state.ui.pvSpeed = speeds[(i+1+speeds.length)%speeds.length];
       persist();
       renderPointViewer(p);
     };
@@ -1168,26 +1214,18 @@ function renderPointViewer(point){
     btnR.disabled = !hasArrows;
     btnR.onclick = ()=>{
       if (!hasArrows) return;
-      if (!state.ui.showPointViewerArrows){
-        state.ui.showPointViewerArrows = true;
-        persist();
-        renderPointViewer(p);
-        setTimeout(()=>{
-          const svg2 = $("#pvArrowSvg");
-          if (svg2) replayArrowsIn(svg2, (p.arrows||[]));
-        }, 0);
-        return;
-      }
       const svg = $("#pvArrowSvg");
-      if (svg) replayArrowsIn(svg, (p.arrows||[]));
+      if (svg) replayArrowsIn(svg, (p.arrows||[]), { speed: Number(state.ui.pvSpeed) || 0.75 });
     };
   }
+
+  // render arrows (static)
 
   // render arrows (static)
   const svg = $("#pvArrowSvg");
   if (svg){
     svg.innerHTML = arrowDefs();
-    if (showArrows && hasArrows){
+    if (hasArrows){
       // esperar a que el modal tenga tamaño real (iPhone)
       requestAnimationFrame(()=>{
         setTimeout(()=>{
@@ -1196,7 +1234,7 @@ function renderPointViewer(point){
         }, 0);
       });
     }
-    svg.style.display = showArrows ? "block" : "none";
+    svg.style.display = "block";
   }
 }
 
@@ -1458,9 +1496,9 @@ function renderHistory(){
       <div class="historyItemTop">
         <div>
           <div class="historyItemTitle">Punto ${p.n}</div>
-          <div class="historyItemMeta">${escapeHtml(p.snapshot)}<br/>${escapeHtml((p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : ""))}</div>
+          <div class="historyItemMeta">${escapeHtml(formatSnapshot(p.snapshot))}<br/>${escapeHtml((p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : ""))}</div>
         </div>
-        <span class="pill ${p.winner==="A"?"pillGood":"pillWarn"}">Gana ${escapeHtml(p.winner)}</span>
+        <span class="pill ${p.winner==="A"?"pillGood":"pillWarn"}">Gana ${escapeHtml(winName)}</span>
       </div>
       <div class="historyItemMeta mono" style="margin-top:8px;">${escapeHtml(pat)}</div>
     `;
@@ -1493,9 +1531,9 @@ function renderHistoryDetail(p){
   const header = `
     <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
       <div style="min-width:0;">
-        <div class="modalTitle" style="margin:0;">Punto ${p.n} · Gana ${escapeHtml(p.winner)}</div>
+        <div class="modalTitle" style="margin:0;">Punto ${p.n} · Gana ${escapeHtml(winName)}</div>
         <div class="modalSub" style="margin-top:4px;">
-          ${escapeHtml(p.snapshot)}<br/>
+          ${escapeHtml(formatSnapshot(p.snapshot))}<br/>
           ${escapeHtml((p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : ""))}
         </div>
       </div>
@@ -1521,7 +1559,7 @@ function renderHistoryDetail(p){
 
   const evs = (p.events||[]);
   const lines = evs.map((e,i)=>`<div class="mono" style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,.08);">
-    <b>${i+1}.</b> ${escapeHtml(e.player)} - ${escapeHtml(e.code)}
+    <b>${i+1}.</b> ${playerNameSafe(e.player)} - ${escapeHtml(e.code)}
   </div>`).join("");
 
   detail.innerHTML = header + courtBlock + `<div>${lines || "<div class='muted'>Sin eventos</div>"}</div>`;
@@ -2338,10 +2376,10 @@ function exportPDF(){
 const miniSvg = (arrows, idx)=>{
     const defs = `
       <defs>
-        <marker id="ahA_${idx}" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <marker id="ahA_${idx}" viewBox="0 0 10 10" refX="9.0" refY="5" markerWidth="8.2" markerHeight="8.2" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"></path>
         </marker>
-        <marker id="ahB_${idx}" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <marker id="ahB_${idx}" viewBox="0 0 10 10" refX="9.0" refY="5" markerWidth="8.2" markerHeight="8.2" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--bad)"></path>
         </marker>
       </defs>`;
@@ -2680,9 +2718,40 @@ function exportStatsPDF(){
     .printGroup.pageBreak{ break-before: page; }
     .group{ break-inside: avoid; }
     tr{ break-inside: avoid; }
+  .topbar{
+      position: sticky; top: 0; z-index: 5;
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      padding: 10px 12px;
+      margin: -14px 0 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(0,0,0,.10);
+      background: linear-gradient(180deg, rgba(11,22,49,.98), rgba(7,11,22,.98));
+      box-shadow: 0 14px 30px rgba(0,0,0,.25);
+    }
+    .topbar .btn{
+      appearance:none; border: 1px solid rgba(255,255,255,.18);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      color: #0A1022;
+      font-weight: 900;
+      padding: 9px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .topbar .btn.back{ color: #EAF2FF; }
+    .topbar .btn.print{
+      color: #0A1022;
+      background: linear-gradient(180deg, rgba(255,212,0,.98), rgba(255,168,0,.92));
+      border-color: rgba(255,255,255,.22);
+      box-shadow: 0 10px 22px rgba(255,212,0,.15);
+    }
+    @media print{ .topbar{ display:none; } }
   </style>
   </head><body>
     <div class="wrap">
+      <div class="topbar">
+        <button class="btn back" onclick="try{ if (window.opener){ window.close(); } else { history.back(); } }catch(e){ history.back(); }">← Volver</button>
+        <button class="btn print" onclick="window.print()">Imprimir</button>
+      </div>
       <h1>Estadísticas del partido: ${escapeHtml(nameA)} vs ${escapeHtml(nameB)}</h1>
       <div class="meta">
         <div class="line">Exportado: ${escapeHtml(stamp)}</div>
