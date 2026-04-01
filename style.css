@@ -954,13 +954,34 @@ body.coach .kpi .v{font-size:24px}
   flex-wrap:wrap;
   justify-content:flex-end;
 }
+.svgIcon{
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .iconChip{
   width: 44px;
   padding: 10px 0;
   display:grid;
   place-items:center;
-  font-size: 18px;
+  font-size: 0; /* usamos SVG */
 }
+.iconChip .svgIcon{
+  width: 22px;
+  height: 22px;
+}
+
+/* Toggle marcador (ojo) */
+.eyeToggle .eyeClosed{ display:none; }
+.eyeToggle.isOff .eyeOpen{ display:none; }
+.eyeToggle.isOff .eyeClosed{ display:block; }
+.eyeToggle.isOff{ color: var(--muted); }
+
 
 /* Drawer */
 .menuOverlay{
@@ -1029,6 +1050,29 @@ body.light .drawer{
 }
 body.light .drawerDivider{ background: rgba(10,22,55,.12); }
 
+/* Drawer: items con icono (Deportivo Pro) */
+.drawerGroupLabel{
+  margin: 10px 6px 6px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  opacity: .65;
+}
+.drawerBody .menuItem{
+  width: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+}
+.drawerBody .menuItem span{
+  flex: 1;
+  text-align: center;
+}
+.drawerBody .menuItem .svgIcon{ opacity: .95; }
 
 .chipsScroll{
   overflow-x:auto;
@@ -2127,4 +2171,16 @@ body.printing .app{ display:none; }
 
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+
+
+/* Iconos en rail lateral */
+.quickBtn{
+  font-size: 0; /* usamos SVG */
+  display:grid;
+  place-items:center;
+}
+.quickBtn .svgIcon{
+  width: 22px;
+  height: 22px;
 }

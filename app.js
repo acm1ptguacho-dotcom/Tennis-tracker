@@ -2734,8 +2734,14 @@ function toggleMenu(){
 function applyScoreVisibility(){
   const s = $("#scoreSection");
   if (s) s.classList.toggle("hidden", !!state.ui.hideScore);
-  const b = $("#btnToggleScore");
-  if (b) b.textContent = state.ui.hideScore ? "Mostrar marcador" : "Ocultar marcador";
+
+  const eye = $("#btnEyeScore");
+  if (eye){
+    eye.classList.toggle("isOff", !!state.ui.hideScore);
+    eye.setAttribute("aria-pressed", state.ui.hideScore ? "true" : "false");
+    eye.setAttribute("aria-label", state.ui.hideScore ? "Mostrar marcador" : "Ocultar marcador");
+    eye.title = state.ui.hideScore ? "Mostrar marcador" : "Ocultar marcador";
+  }
 }
 function toggleScoreVisibility(){
   state.ui.hideScore = !state.ui.hideScore;
@@ -2801,7 +2807,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnStats","click", openStats);
   on("btnExport","click", openExport);
 
-  on("btnToggleScore","click", toggleScoreVisibility);
+  on("btnEyeScore","click", toggleScoreVisibility);
   on("btnRotateCourt","click", toggleRotation);
 
   on("btnCloseHistory","click", closeHistory);
@@ -2813,7 +2819,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // (Eliminado) Tema y modo normal
 
 // cerrar menú al elegir una opción
-["btnToggleScore","btnRotateCourt","btnBoard","btnHistory","btnAnalytics","btnStats","btnExport"].forEach(id=>{
+["btnRotateCourt","btnBoard","btnHistory","btnAnalytics","btnStats","btnExport"].forEach(id=>{
   const el = $("#"+id);
   if (el) el.addEventListener("click", ()=>setMenuOpen(false));
 });

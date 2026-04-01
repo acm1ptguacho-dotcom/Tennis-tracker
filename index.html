@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2521" />
+  <link rel="stylesheet" href="style.css?v=2522" />
 </head>
 <body>
 
@@ -16,12 +16,16 @@
   <!-- TOP: menú + nombres + marcador (todo en la misma vista) -->
   <header class="topbar topbarInline">
   <div class="topbarRow">
-    <button class="chip iconChip" id="btnMenu" type="button" aria-label="Abrir menú">☰</button>
+    <button class="chip iconChip" id="btnMenu" type="button" aria-label="Abrir menú"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
 
     <div class="topbarRight">
       <button class="chip warn" id="btnFinish" type="button">Finalizar partido</button>
       <button class="chip good hidden" id="btnResume" type="button">Reanudar partido</button>
       <button class="chip primary" id="btnNew" type="button">Nuevo partido</button>
+      <button class="chip iconChip eyeToggle" id="btnEyeScore" type="button" aria-label="Ocultar marcador" aria-pressed="false" title="Ocultar/mostrar marcador">
+        <svg class="svgIcon eyeOpen" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg class="svgIcon eyeClosed" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.81 21.81 0 0 1 5.06-6.94"/><path d="M1 1l22 22"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.81 21.81 0 0 1-2.56 4.19"/><path d="M14.12 14.12a3 3 0 0 1-4.24-4.24"/></svg>
+      </button>
     </div>
   </div>
 </header>
@@ -30,21 +34,23 @@
 <nav class="drawer" id="drawerMenu" aria-label="Menú">
   <div class="drawerHead">
     <div class="drawerTitle">Menú</div>
-    <button class="chip iconChip" id="btnCloseMenu" type="button" aria-label="Cerrar menú">✕</button>
+    <button class="chip iconChip" id="btnCloseMenu" type="button" aria-label="Cerrar menú"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
 
   <div class="drawerBody">
-    <button class="chip" id="btnToggleScore" type="button">Ocultar marcador</button>
-    <button class="chip" id="btnRotateCourt" type="button">Rotar pista</button>
-    <button class="chip" id="btnBoard" type="button">Modo pizarra</button>
+    <div class="drawerGroupLabel">Acciones</div>
+    <button class="chip menuItem" id="btnRotateCourt" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><span>Rotar pista</span></button>
+    <button class="chip menuItem" id="btnBoard" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg><span>Modo pizarra</span></button>
 
     <div class="drawerDivider"></div>
 
-    <button class="chip" id="btnHistory" type="button">Historial</button>
-    <button class="chip" id="btnAnalytics" type="button">Analíticas</button>
-    <button class="chip" id="btnStats" type="button">Estadísticas</button>
-    <button class="chip" id="btnExport" type="button">Exportar</button>
+    <div class="drawerGroupLabel">Reportes</div>
+    <button class="chip menuItem" id="btnHistory" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Historial</span></button>
+    <button class="chip menuItem" id="btnAnalytics" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span>Analíticas</span></button>
+    <button class="chip menuItem" id="btnStats" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Estadísticas</span></button>
+    <button class="chip menuItem" id="btnExport" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Exportar</span></button>
 
+    <!-- Eliminado: Ocultar/Mostrar marcador (ahora es icono en la barra superior) -->
     <!-- Eliminado: Modo normal / Modo claro. Se mantiene un único modo estable -->
   </div>
 </nav>
@@ -103,9 +109,9 @@
 
       <!-- rail lateral: evita tapar zonas clicables en móvil -->
       <div class="courtRail" aria-label="Acciones rápidas">
-        <button class="quickBtn" id="btnUndo" type="button" title="Deshacer último golpe">↶</button>
-        <button class="quickBtn" id="btnRedoPoint" type="button" title="Rehacer último punto">↷</button>
-        <button class="quickBtn" id="btnResetPoint" type="button" title="Reiniciar punto">⟲</button>
+        <button class="quickBtn" id="btnUndo" type="button" title="Deshacer último golpe"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>
+        <button class="quickBtn" id="btnRedoPoint" type="button" title="Rehacer último punto"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"/></svg></button>
+        <button class="quickBtn" id="btnResetPoint" type="button" title="Reiniciar punto"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.13 3.36L1 14"/></svg></button>
       </div>
     
       </div>
@@ -144,7 +150,7 @@
 <!-- Menú de acciones (bola) -->
 <div class="finishMenu hidden" id="finishMenu" role="dialog" aria-modal="true" aria-label="Acciones del punto">
   <div class="finishMenuCard">
-    <button class="finishMenuClose" id="finishMenuClose" type="button" aria-label="Cerrar">✕</button>
+    <button class="finishMenuClose" id="finishMenuClose" type="button" aria-label="Cerrar"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
 
     
     <div class="finishMenuTabs" role="tablist" aria-label="Modo de registro">
@@ -382,7 +388,7 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2521"></script>
+<script src="app.js?v=2522"></script>
 
 <div class="modal hidden" id="boardModal">
   <div class="modalCard boardCard">
@@ -399,10 +405,10 @@
     <div class="boardTopBar">
       <div class="boardLeft">
         <button class="boardIcon" id="btnBoardMy" type="button" title="Mis patrones">
-          <span class="i">📚</span><span>Mis patrones</span>
+          <span class="i"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/></svg></span><span>Mis patrones</span>
         </button>
         <button class="boardIcon" id="btnBoardNew" type="button" title="Nuevo patrón">
-          <span class="i">✏️</span><span>Nuevo</span>
+          <span class="i"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span><span>Nuevo</span>
         </button>
 
         <div class="boardToggle">
