@@ -32,7 +32,7 @@ function refreshABOptionLabels(){
     const opt = document.querySelector(`#${selId} option[value="${val}"]`);
     if (opt) opt.textContent = txt;
   };
-  ["fServer","fWinner","sServer"].forEach(id=>{
+  ["fServer","fWinner","sServer","chartsPlayer"].forEach(id=>{
     setOptText(id,"A", nameA);
     setOptText(id,"B", nameB);
   });
@@ -1257,6 +1257,329 @@ function openExport(){
   openModal("#exportModal");
 }
 function closeExport(){ closeModal("#exportModal"); }
+
+/** CHARTS (Momentum / Balance acumulado) **/
+
+function openCharts(){
+  renderCharts();
+  openModal("#chartsModal");
+}
+function closeCharts(){ closeModal("#chartsModal"); }
+
+function parseSnapshotParts(snapshot){
+  const s = String(snapshot||"");
+  const parts = s.split("·").map(p=>p.trim());
+  const out = { setsA:0, setsB:0, gamesA:0, gamesB:0, score:"0-0" };
+  for (const p of parts){
+    if (p.startsWith("S ")){
+      const m = p.match(/S\s+(\d+)-(\d+)/);
+      if (m){ out.setsA=+m[1]; out.setsB=+m[2]; }
+    } else if (p.startsWith("G ")){
+      const m = p.match(/G\s+(\d+)-(\d+)/);
+      if (m){ out.gamesA=+m[1]; out.gamesB=+m[2]; }
+    } else if (p.startsWith("P ")){
+      out.score = p.replace(/^P\s+/,"").trim();
+    }
+  }
+  return out;
+}
+
+function parseScoreLabel(lbl){
+  const t = String(lbl||"").trim();
+  // Tie-break
+  if (t.startsWith("TB ")){
+    const m = t.match(/TB\s+(\d+)-(\d+)/);
+    if (m) return { type:"tb", a:+m[1], b:+m[2] };
+    return { type:"tb", a:0, b:0 };
+  }
+  if (t === "DEUCE") return { type:"game", a:3, b:3, raw:"DEUCE" };
+  if (t.startsWith("AD ")){
+    const who = t.replace("AD ","").trim();
+    return { type:"game", a: who==="A" ? 4 : 3, b: who==="B" ? 4 : 3, raw:t };
+  }
+  // Normal: 0-15 etc
+  const m = t.match(/^(\w+)-(\w+)$/);
+  if (!m) return { type:"game", a:0, b:0, raw:t };
+  const map = { "0":0, "15":1, "30":2, "40":3 };
+  return { type:"game", a: map[m[1]] ?? 0, b: map[m[2]] ?? 0, raw:t };
+}
+
+function isGamePoint(score, player){
+  if (!score || score.type!=="game") return false;
+  const a = score.a, b = score.b;
+  if (player==="A"){
+    if (a===3 && b<=2) return true; // 40-0/15/30
+    if (a===4 && b===3) return true; // AD A
+    return false;
+  } else {
+    if (b===3 && a<=2) return true;
+    if (b===4 && a===3) return true;
+    return false;
+  }
+}
+
+function wouldWinSetAfterGame(setsA, setsB, gamesA, gamesB, gameWinner){
+  // calcula si ganar ESTE juego cerraría el set (regla estándar: >=6 y diferencia >=2)
+  let ga = gamesA + (gameWinner==="A" ? 1 : 0);
+  let gb = gamesB + (gameWinner==="B" ? 1 : 0);
+  if (Math.max(ga, gb) >= 6 && Math.abs(ga-gb) >= 2) return true;
+  return false;
+}
+
+function isTBSetPoint(tbA, tbB, player){
+  const p = player==="A" ? tbA : tbB;
+  const o = player==="A" ? tbB : tbA;
+  // si p >=6 y ventaja >=1, ganando el siguiente hace >=7 y ventaja >=2
+  return (p>=6 && (p-o)>=1);
+}
+
+function isPointWonBy(p, player){
+  if (p && (p.winner==="A" || p.winner==="B")) return p.winner===player;
+  // fallback por reason si alguna vez faltara "winner"
+  const r = String(p?.reason||"");
+  if (r.includes("(A)")) return player==="B"; // error de A -> gana B
+  if (r.includes("(B)")) return player==="A";
+  return false;
+}
+
+function pointContextFlags(p, perspective){
+  const snap = parseSnapshotParts(p?.snapshot);
+  const score = parseScoreLabel(snap.score);
+  const isTB = score.type==="tb";
+  const isServe = (p?.server===perspective);
+
+  const gamePointForA = !isTB && isGamePoint(score, "A");
+  const gamePointForB = !isTB && isGamePoint(score, "B");
+
+  const gamePointForPersp = !isTB && isGamePoint(score, perspective);
+  const breakPointForPersp = gamePointForPersp && (p?.server !== perspective);
+
+  const setPointForPersp = (!isTB && gamePointForPersp && wouldWinSetAfterGame(snap.setsA, snap.setsB, snap.gamesA, snap.gamesB, perspective))
+    || (isTB && isTBSetPoint(score.a, score.b, perspective));
+
+  const clutch3030 = (!isTB && score.type==="game" && score.a>=2 && score.b>=2); // 30-30 o más
+  const deuceAdv = (!isTB && (snap.score==="DEUCE" || String(snap.score).startsWith("AD ")));
+
+  const important = breakPointForPersp || gamePointForPersp || setPointForPersp || (isTB) || deuceAdv || clutch3030;
+
+  return {
+    snap, score, isTB,
+    isServe,
+    gamePointForA, gamePointForB,
+    gamePointForPersp, breakPointForPersp, setPointForPersp,
+    clutch3030, deuceAdv,
+    important
+  };
+}
+
+function computeBoundaries(points){
+  const bounds = []; // indices where a game or set boundary occurs after point i (i is 0-based)
+  for (let i=0;i<points.length-1;i++){
+    const s1 = parseSnapshotParts(points[i].snapshot);
+    const s2 = parseSnapshotParts(points[i+1].snapshot);
+    if (s1.setsA!==s2.setsA || s1.setsB!==s2.setsB){
+      bounds.push({i, kind:"set"});
+    } else if (s1.gamesA!==s2.gamesA || s1.gamesB!==s2.gamesB){
+      bounds.push({i, kind:"game"});
+    }
+  }
+  return bounds;
+}
+
+function renderCharts(){
+  const modal = $("#chartsModal");
+  if (!modal) return;
+
+  // Persisted selection
+  state.ui = state.ui || {};
+  if (!state.ui.chartPlayer) state.ui.chartPlayer = "A";
+
+  const sel = $("#chartsPlayer");
+  if (sel){
+    sel.value = state.ui.chartPlayer;
+  }
+  const persp = sel ? sel.value : state.ui.chartPlayer;
+  state.ui.chartPlayer = persp;
+
+  const name = playerName(persp);
+  const sub = $("#chartsSub");
+  if (sub) sub.textContent = `Balance acumulado · Perspectiva: ${name}`;
+
+  const points = Array.isArray(state.matchPoints) ? state.matchPoints.slice() : [];
+
+  // canvas
+  const canvas = $("#chartsCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  // Resize to CSS size (retina)
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.max(320, rect.width);
+  const H = Math.max(200, rect.height);
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  // Colors from CSS variables
+  const cs = getComputedStyle(document.documentElement);
+  const cAccent2 = (cs.getPropertyValue("--accent2") || "#39D5FF").trim();
+  const cGood = (cs.getPropertyValue("--good") || "#2EE59D").trim();
+  const cBad = (cs.getPropertyValue("--bad") || "#FF3B5C").trim();
+  const cGold = (cs.getPropertyValue("--accent") || "#FFD400").trim();
+
+  // Background clear
+  ctx.clearRect(0,0,W,H);
+
+  // Empty state
+  if (!points.length){
+    ctx.fillStyle = "rgba(255,255,255,.75)";
+    ctx.font = "700 14px Inter, system-ui, sans-serif";
+    ctx.fillText("No hay puntos todavía. Registra puntos para ver el gráfico.", 16, 42);
+    const strip=$("#pointStrip"); if (strip) strip.innerHTML = "";
+    persist();
+    return;
+  }
+
+  // Build momentum series
+  let y=0;
+  const ys=[];
+  const xs=[];
+  const wonFlags=[];
+  const flagsArr=[];
+  for (let i=0;i<points.length;i++){
+    const p=points[i];
+    const won = isPointWonBy(p, persp);
+    wonFlags.push(won);
+    y += won ? 1 : -1;
+    xs.push(i+1);
+    ys.push(y);
+    flagsArr.push(pointContextFlags(p, persp));
+  }
+
+  const minY = Math.min(0, ...ys);
+  const maxY = Math.max(0, ...ys);
+  const yPad = (maxY-minY) < 6 ? 3 : 2;
+  const yMin = minY - yPad;
+  const yMax = maxY + yPad;
+
+  const padL=44, padR=14, padT=14, padB=26;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  const xAt = (i)=> padL + (points.length===1?0: (i/(points.length-1))*plotW);
+  const yAt = (val)=> padT + (1 - ((val - yMin)/(yMax - yMin))) * plotH;
+
+  // Grid + axis labels
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "rgba(255,255,255,.10)";
+  ctx.fillStyle = "rgba(255,255,255,.55)";
+  ctx.font = "600 11px Inter, system-ui, sans-serif";
+
+  const gridLines = 5;
+  for (let g=0; g<=gridLines; g++){
+    const t = g / gridLines;
+    const yy = padT + t*plotH;
+    ctx.beginPath();
+    ctx.moveTo(padL, yy);
+    ctx.lineTo(padL+plotW, yy);
+    ctx.stroke();
+    const val = Math.round(yMax - t*(yMax-yMin));
+    ctx.fillText(String(val), 10, yy+4);
+  }
+
+  // Baseline y=0
+  const y0 = yAt(0);
+  ctx.strokeStyle = "rgba(255,255,255,.22)";
+  ctx.beginPath();
+  ctx.moveTo(padL, y0);
+  ctx.lineTo(padL+plotW, y0);
+  ctx.stroke();
+
+  // Boundaries (games/sets)
+  const bounds = computeBoundaries(points);
+  for (const b of bounds){
+    const xx = xAt(b.i + 0.5);
+    ctx.strokeStyle = b.kind==="set" ? "rgba(255,212,0,.30)" : "rgba(57,213,255,.16)";
+    ctx.beginPath();
+    ctx.moveTo(xx, padT);
+    ctx.lineTo(xx, padT+plotH);
+    ctx.stroke();
+  }
+
+  // Line
+  ctx.save();
+  ctx.lineWidth = 2.8;
+  ctx.strokeStyle = cAccent2;
+  ctx.shadowColor = cAccent2;
+  ctx.shadowBlur = 10;
+
+  ctx.beginPath();
+  for (let i=0;i<ys.length;i++){
+    const xx=xAt(i);
+    const yy=yAt(ys[i]);
+    if (i===0) ctx.moveTo(xx,yy);
+    else ctx.lineTo(xx,yy);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  // Points markers
+  for (let i=0;i<ys.length;i++){
+    const xx=xAt(i);
+    const yy=yAt(ys[i]);
+    const won = wonFlags[i];
+    ctx.beginPath();
+    ctx.fillStyle = won ? cGood : cBad;
+    ctx.shadowColor = won ? cGood : cBad;
+    ctx.shadowBlur = 8;
+    ctx.arc(xx,yy,3.6,0,Math.PI*2);
+    ctx.fill();
+
+    // important ring
+    if (flagsArr[i].important){
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "rgba(255,212,0,.75)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(xx,yy,6.2,0,Math.PI*2);
+      ctx.stroke();
+    }
+  }
+
+  // Axis labels
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "rgba(255,255,255,.62)";
+  ctx.fillText("Puntos →", padL + plotW - 54, H - 8);
+
+  // Strip
+  const strip = $("#pointStrip");
+  if (strip){
+    strip.innerHTML = "";
+    points.forEach((p, i)=>{
+      const won = wonFlags[i];
+      const f = flagsArr[i];
+      const dot = document.createElement("div");
+      dot.className = "stripDot " + (won ? "win" : "lose") + " " + (f.isServe ? "serve" : "ret") + (f.important ? " important" : "");
+      const tags=[];
+      tags.push(f.isServe ? "Saque" : "Resto");
+      if (f.breakPointForPersp) tags.push("Break point");
+      if (f.gamePointForPersp) tags.push("Game point");
+      if (f.setPointForPersp) tags.push("Set point");
+      if (f.isTB) tags.push("Tie-break");
+      if (f.deuceAdv) tags.push("Deuce/Adv");
+      if (f.clutch3030 && !f.deuceAdv) tags.push("30-30+");
+      const winnerName = playerName(p.winner);
+      dot.title = `Punto ${p.n} · ${won?"+1":"-1"} · Gana ${winnerName}\n${formatSnapshot(p.snapshot)}\n${p.reason||""}${tags.length?("\n["+tags.join(" · ")+"]"):""}`;
+      dot.addEventListener("click", ()=> openPointViewer(p));
+      strip.appendChild(dot);
+    });
+  }
+
+  persist();
+}
+
 
 
 /** FINISH MENU (tennis ball) **/
@@ -2848,7 +3171,24 @@ function renderCourtNames(){
 }
 
 /** WIRING **/
+
+function syncTopbarHeight(){
+  // iOS Safari: ajusta el marcador flotante justo debajo del header
+  const tb = document.querySelector('header.topbarInline');
+  if (!tb) return;
+  const h = Math.ceil(tb.getBoundingClientRect().height);
+  document.documentElement.style.setProperty('--topbarH', h + 'px');
+}
+
+window.addEventListener('resize', ()=>{
+  syncTopbarHeight();
+});
+window.addEventListener('orientationchange', ()=>{
+  setTimeout(syncTopbarHeight, 80);
+});
+
 function renderAll(){
+  syncTopbarHeight();
   applyScoreVisibility();
   applyRotation();
   renderCourtNames();
@@ -2882,6 +3222,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnHistory","click", openHistory);
   on("btnAnalytics","click", openAnalytics);
   on("btnStats","click", openStats);
+  on("btnCharts","click", openCharts);
   on("btnExport","click", openExport);
 
   on("btnEyeScore","click", toggleScoreVisibility);
@@ -2891,6 +3232,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnClosePointViewer","click", closePointViewer);
   on("btnCloseAnalytics","click", closeAnalytics);
   on("btnCloseStats","click", closeStats);
+  on("btnCloseCharts","click", closeCharts);
   on("btnCloseExport","click", closeExport);
 
   // (Eliminado) Tema y modo normal
@@ -2929,6 +3271,9 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // finish ball menu
   on("finishBall","click", toggleFinishMenu);
   on("finishMenuClose","click", ()=>{ closeFinishMenu(); closeAdvStep2(); });
+  // cerrar al tocar fuera (backdrop)
+  const fm = $("#finishMenu");
+  if (fm) fm.addEventListener("click", (e)=>{ if (e.target === fm) closeFinishMenu(); });
   on("tabNormal","click", ()=> setFinishMode("normal"));
   on("tabAdvanced","click", ()=> setFinishMode("advanced"));
   on("advBack","click", closeAdvStep2);
@@ -2981,6 +3326,12 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   ["sRange","sSet","sServer","sContext","sMode","sSub"].forEach(id=>{
     on(id,"input", renderStats);
     on(id,"change", renderStats);
+  });
+
+  // charts filters
+  ["chartsPlayer"].forEach(id=>{
+    on(id,"input", ()=>{ state.ui = state.ui || {}; state.ui.chartPlayer = $("#chartsPlayer").value || "A"; renderCharts(); });
+    on(id,"change", ()=>{ state.ui = state.ui || {}; state.ui.chartPlayer = $("#chartsPlayer").value || "A"; renderCharts(); });
   });
 
   // export
@@ -3722,7 +4073,7 @@ function wireBoard(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2523").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2528").catch(console.error);
 }
 
 function init(){
