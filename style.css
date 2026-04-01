@@ -2554,3 +2554,16 @@ body.light .modalCard.solid::after{
 }
 
 .stripHint{ margin-top: 8px; font-size: 12px; }
+
+
+
+/* === FIX iOS/Layout: el Drawer NO debe ocupar espacio en el flujo ===
+   El tema global aplicaba `position: relative` a `.drawer`, lo cual hace que el menú (aunque esté oculto)
+   empuje el contenido hacia abajo (hueco grande antes de la pista).
+   Mantenerlo como `position: fixed` evita el "scroll fantasma".
+*/
+.drawer{
+  position: fixed !important;
+  left: 12px !important;
+  top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+}
