@@ -927,8 +927,10 @@ if (bScore) bScore.textContent = scoreLabel();
 if (bSide)  bSide.textContent  = serveSideLabel();
 if (bPhase) bPhase.textContent = (state.point?.phase==="serve") ? "SAQUE" : "RALLY";
 
-$("#btnFinish").classList.toggle("hidden", state.matchFinished);
-  $("#btnResume").classList.toggle("hidden", !state.matchFinished);
+const qiF = $("#qiFinish");
+  const qiR = $("#qiResume");
+  (qiF ? qiF : $("#btnFinish")).classList.toggle("hidden", state.matchFinished);
+  (qiR ? qiR : $("#btnResume")).classList.toggle("hidden", !state.matchFinished);
   $("#btnRedoPoint").disabled = state.matchPoints.length===0;
 }
 

@@ -1038,12 +1038,40 @@ body.coach .kpi .v{font-size:24px}
 /* Menú hamburguesa */
 .topbarRow{
   width:100%;
+  display:grid;
+  grid-template-columns: 52px 1fr 52px;
+  align-items:center;
+  gap:10px;
+  padding: 8px 10px 10px;
+}
+
+.topbarBrand{
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  justify-content:center;
   gap:10px;
-  padding: 8px 2px 10px;
+  min-width: 0;
 }
+.brandLogo{
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.35));
+}
+.brandTitle{
+  font-weight: 1100;
+  letter-spacing: .2px;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbarSpacer{ width: 44px; height: 44px; }
+
+@media (max-width: 420px){
+  .brandTitle{ font-size: 13px; }
+  .brandLogo{ width: 26px; height: 26px; }
+}
+
 .topbarRight{
   display:flex;
   align-items:center;
@@ -1292,6 +1320,19 @@ body.light .drawerDivider{ background: rgba(10,22,55,.12); }
   transform: translateY(1px) scale(.98);
 }
 
+/* Quick buttons: subtle status variants (Deportivo Pro) */
+.quickBtn.primary{
+  border-color: color-mix(in srgb, var(--accent2) 55%, rgba(255,255,255,.14));
+  box-shadow: 0 10px 26px rgba(57,213,255,.16), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.quickBtn.warn{
+  border-color: color-mix(in srgb, var(--warn) 55%, rgba(255,255,255,.14));
+  box-shadow: 0 10px 26px rgba(255,159,46,.14), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.quickBtn.good{
+  border-color: color-mix(in srgb, var(--good) 55%, rgba(255,255,255,.14));
+  box-shadow: 0 10px 26px rgba(46,229,157,.12), inset 0 1px 0 rgba(255,255,255,.12);
+}
 .tennisBall.inCourt{
   position:absolute;
   top: 12px;
