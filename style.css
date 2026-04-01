@@ -1772,20 +1772,20 @@ body.printing .app{ display:none; }
   backdrop-filter: var(--blur);
 }
 
-/* v2529: Marcador en flujo (sticky) para que NO tape la pista ni obligue a hacer scroll */
+/* Marcador SIEMPRE en flujo (NO sticky/fixed).
+   En iOS Safari, un bloque intermedio con position: sticky puede dejar
+   "huecos" (el elemento se pega arriba pero conserva su espacio original),
+   obligando a hacer scroll extra y pudiendo solaparse con la pista.
+*/
 @media (max-width: 900px){
-  :root{ --topbarH: 64px; }
   .scoreTv{
-    position: sticky;
-    top: calc(var(--topbarH, 64px) + 6px);
+    position: relative;
+    top: auto;
     left: auto;
     right: auto;
-    width: auto;
+    z-index: auto;
     margin: 10px 12px 8px;
-    z-index: 32;
   }
-  /* Evitar que el marcador tape el menú cuando está abierto */
-  .drawer.open ~ .scoreTv{ z-index: 20; }
 }
 
 
