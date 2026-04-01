@@ -1772,16 +1772,16 @@ body.printing .app{ display:none; }
   backdrop-filter: var(--blur);
 }
 
-/* v2526: Marcador flotante en móvil para que el diagrama quede arriba (sin hueco bajo el header) */
+/* v2529: Marcador en flujo (sticky) para que NO tape la pista ni obligue a hacer scroll */
 @media (max-width: 900px){
   :root{ --topbarH: 64px; }
   .scoreTv{
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    top: calc(var(--topbarH, 64px) + 8px);
+    position: sticky;
+    top: calc(var(--topbarH, 64px) + 6px);
+    left: auto;
+    right: auto;
     width: auto;
-    margin: 0;
+    margin: 10px 12px 8px;
     z-index: 32;
   }
   /* Evitar que el marcador tape el menú cuando está abierto */
