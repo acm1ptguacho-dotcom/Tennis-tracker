@@ -3722,7 +3722,7 @@ function wireBoard(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2523").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2525").catch(console.error);
 }
 
 function init(){
