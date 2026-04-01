@@ -623,23 +623,51 @@ body.coach .kpi .v{font-size:24px}
 
 .finishMenu{
   position: fixed;
-  right: 16px;
-  top: auto;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
-  z-index: 65;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 18px)
+    16px
+    calc(env(safe-area-inset-bottom, 0px) + 18px);
+  background: radial-gradient(1200px 900px at 50% 30%, rgba(18,35,70,.35), rgba(0,0,0,.72));
+  backdrop-filter: blur(12px);
 }
 .finishMenu.hidden{ display:none; }
 
 .finishMenuCard{
-  width: min(360px, calc(100vw - 28px));
-  border-radius: 18px;
-  background: rgba(18, 26, 40, 0.98);
-  border: 1px solid rgba(255,255,255,.10);
-  box-shadow: 0 22px 48px rgba(0,0,0,.45);
-  padding: 14px;
-  transform-origin: 90% 0%;
-  animation: finishOpen .28s cubic-bezier(.18,.9,.22,1) both;
+  width: min(560px, calc(100vw - 28px));
+  max-height: 88vh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(22,34,64,.96), rgba(10,16,32,.98));
+  border: 1px solid rgba(255,255,255,.14);
+
+  box-shadow:
+    0 35px 90px rgba(0,0,0,.62),
+    0 0 0 1px rgba(255,212,0,.12);
+
+  padding: 16px;
+  position: relative;
+  transform-origin: 50% 60%;
+  animation: finishOpen .22s cubic-bezier(.18,.9,.22,1) both;
 }
+.finishMenuCard::before{
+  content:"";
+  position:absolute;
+  left: 14px;
+  right: 14px;
+  top: 10px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  opacity: .9;
+}
+
 @keyframes finishOpen{
   0%{ opacity:0; transform: translateY(-8px) scale(.92); }
   70%{ opacity:1; transform: translateY(0) scale(1.02); }
@@ -703,7 +731,6 @@ body.coach .kpi .v{font-size:24px}
     height: 58px;
     top: calc(env(safe-area-inset-top, 0px) + 70px);
   }
-  .finishMenu{ top: calc(env(safe-area-inset-top, 0px) + 140px); }
 }
 
 /* History: two columns (list + detail) with independent scroll */
@@ -1745,6 +1772,23 @@ body.printing .app{ display:none; }
   backdrop-filter: var(--blur);
 }
 
+/* v2526: Marcador flotante en móvil para que el diagrama quede arriba (sin hueco bajo el header) */
+@media (max-width: 900px){
+  :root{ --topbarH: 64px; }
+  .scoreTv{
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    top: calc(var(--topbarH, 64px) + 8px);
+    width: auto;
+    margin: 0;
+    z-index: 32;
+  }
+  /* Evitar que el marcador tape el menú cuando está abierto */
+  .drawer.open ~ .scoreTv{ z-index: 20; }
+}
+
+
 .tvHeader{
   display:grid;
   grid-template-columns: 1fr auto 44px 62px;
@@ -2373,4 +2417,3 @@ body.light .modalCard.solid::after{
   border-color: rgba(255,255,255,.14);
   background: linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.04));
 }
-

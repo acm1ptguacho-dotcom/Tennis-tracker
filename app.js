@@ -2848,7 +2848,24 @@ function renderCourtNames(){
 }
 
 /** WIRING **/
+
+function syncTopbarHeight(){
+  // iOS Safari: ajusta el marcador flotante justo debajo del header
+  const tb = document.querySelector('header.topbarInline');
+  if (!tb) return;
+  const h = Math.ceil(tb.getBoundingClientRect().height);
+  document.documentElement.style.setProperty('--topbarH', h + 'px');
+}
+
+window.addEventListener('resize', ()=>{
+  syncTopbarHeight();
+});
+window.addEventListener('orientationchange', ()=>{
+  setTimeout(syncTopbarHeight, 80);
+});
+
 function renderAll(){
+  syncTopbarHeight();
   applyScoreVisibility();
   applyRotation();
   renderCourtNames();
@@ -2929,6 +2946,9 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // finish ball menu
   on("finishBall","click", toggleFinishMenu);
   on("finishMenuClose","click", ()=>{ closeFinishMenu(); closeAdvStep2(); });
+  // cerrar al tocar fuera (backdrop)
+  const fm = $("#finishMenu");
+  if (fm) fm.addEventListener("click", (e)=>{ if (e.target === fm) closeFinishMenu(); });
   on("tabNormal","click", ()=> setFinishMode("normal"));
   on("tabAdvanced","click", ()=> setFinishMode("advanced"));
   on("advBack","click", closeAdvStep2);
@@ -3722,7 +3742,7 @@ function wireBoard(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2525").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2526").catch(console.error);
 }
 
 function init(){
