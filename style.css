@@ -1045,6 +1045,12 @@ body.coach .kpi .v{font-size:24px}
   padding: 8px 10px 10px;
 }
 
+/* Botón de herramientas (columna derecha) */
+#btnToolsRail{ justify-self: end; }
+#btnToolsRail .toolsOff{ display:none; }
+body.railHidden #btnToolsRail .toolsOn{ display:none; }
+body.railHidden #btnToolsRail .toolsOff{ display:block; }
+
 .topbarBrand{
   display:flex;
   align-items:center;
@@ -1365,10 +1371,11 @@ body.light .drawerDivider{ background: rgba(10,22,55,.12); }
 /* --- v2.44 UI: rail lateral fuera de la pista (estilo broadcast) --- */
 .courtWrap.courtRow{
   display: grid;
-  grid-template-columns: 1fr 82px;
+  grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: stretch;
   justify-items: center;
+  transition: gap 260ms var(--ease);
 }
 .courtRail{
   width: 82px;
@@ -1377,6 +1384,9 @@ body.light .drawerDivider{ background: rgba(10,22,55,.12); }
   align-items:center;
   justify-content:center;
   gap: 12px;
+  overflow:hidden;
+  will-change: width, transform, opacity;
+  transition: width 260ms var(--ease), transform 260ms var(--ease), opacity 220ms var(--ease);
 }
 
 .quickItem{
@@ -1404,11 +1414,22 @@ body.light .drawerDivider{ background: rgba(10,22,55,.12); }
 .courtWrap.courtRow .court{
   width: 100%;
   max-width: 720px;
+  transition: max-width 260ms var(--ease);
 }
 @media (max-width: 520px){
-  .courtWrap.courtRow{ grid-template-columns: 1fr 70px; gap: 8px; }
+  .courtWrap.courtRow{ grid-template-columns: 1fr auto; gap: 8px; }
   .courtRail{ width: 70px; }
   .quickLbl{ width: 66px; font-size: 9px; }
+}
+
+/* --- Modo full-screen: ocultar barra lateral de acciones --- */
+body.railHidden .courtWrap.courtRow{ gap: 0; }
+body.railHidden .courtRail{ width: 0 !important; opacity: 0; transform: translateX(18px); pointer-events: none; }
+body.railHidden .courtWrap.courtRow .court{ max-width: 860px; }
+@media (max-width: 520px){
+  body.railHidden .diagramArea{ padding: 0 8px 14px; }
+  body.railHidden .diagramGrid{ gap: 10px; }
+  body.railHidden .courtWrap.courtRow .court{ max-width: none; width: 100%; }
 }
 .timelineSide{
   width: 100%;

@@ -18,7 +18,7 @@ const state = {
   matchPoints: [], // completed points
   undoStack: [],
 
-  ui: { theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false }
+  ui: { theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false }
 };
 
 const playerName = (id)=> (state.names && state.names[id]) ? state.names[id] : (id==="A" ? "Jugador A" : "Jugador B");
@@ -72,10 +72,11 @@ function load(){
     state.matchPoints = state.matchPoints || [];
     state.setHistory = state.setHistory || [];
     // UI flags (bloqueamos tema en oscuro y modo entrenador activado)
-    state.ui = state.ui || {theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false};
+    state.ui = state.ui || {theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false};
     if (typeof state.ui.showHistoryArrows === "undefined") state.ui.showHistoryArrows = true;
     if (typeof state.ui.hideScore === "undefined") state.ui.hideScore = false;
     if (typeof state.ui.rotated === "undefined") state.ui.rotated = false;
+    if (typeof state.ui.hideRail === "undefined") state.ui.hideRail = false;
   }catch(e){ console.error(e); }
 }
 
@@ -3144,6 +3145,22 @@ function toggleScoreVisibility(){
   persist();
 }
 
+function applyRailVisibility(){
+  document.body.classList.toggle("railHidden", !!state.ui.hideRail);
+  const b = $("#btnToolsRail");
+  if (b){
+    const isHidden = !!state.ui.hideRail;
+    b.setAttribute("aria-pressed", isHidden ? "true" : "false");
+    b.setAttribute("aria-label", isHidden ? "Mostrar herramientas" : "Ocultar herramientas");
+    b.title = isHidden ? "Mostrar herramientas" : "Ocultar herramientas";
+  }
+}
+function toggleRailVisibility(){
+  state.ui.hideRail = !state.ui.hideRail;
+  applyRailVisibility();
+  persist();
+}
+
 function applyRotation(){
   const c = $("#court");
   if (c) c.classList.toggle("rotated", !!state.ui.rotated);
@@ -3192,6 +3209,7 @@ window.addEventListener('orientationchange', ()=>{
 function renderAll(){
   syncTopbarHeight();
   applyScoreVisibility();
+  applyRailVisibility();
   applyRotation();
   renderCourtNames();
   renderScore();
@@ -3228,6 +3246,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnExport","click", openExport);
 
   on("btnEyeScore","click", toggleScoreVisibility);
+  on("btnToolsRail","click", toggleRailVisibility);
   on("btnRotateCourt","click", toggleRotation);
 
   on("btnCloseHistory","click", closeHistory);

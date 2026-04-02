@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2533" />
+  <link rel="stylesheet" href="style.css?v=2534" />
 </head>
 <body>
 
@@ -29,7 +29,26 @@
 </svg>
       <div class="brandTitle">Tennis Direction Tracker</div>
     </div>
-    <div class="topbarSpacer" aria-hidden="true"></div>
+    <!-- Botón para mostrar/ocultar la barra lateral de acciones (modo full-screen) -->
+    <button class="chip iconChip" id="btnToolsRail" type="button" aria-label="Ocultar herramientas" title="Ocultar/mostrar herramientas">
+      <svg class="svgIcon toolsOn" viewBox="0 0 24 24" aria-hidden="true">
+        <line x1="4" y1="6" x2="20" y2="6"/>
+        <circle cx="9" cy="6" r="2" fill="currentColor"/>
+        <line x1="4" y1="12" x2="20" y2="12"/>
+        <circle cx="15" cy="12" r="2" fill="currentColor"/>
+        <line x1="4" y1="18" x2="20" y2="18"/>
+        <circle cx="11" cy="18" r="2" fill="currentColor"/>
+      </svg>
+      <svg class="svgIcon toolsOff" viewBox="0 0 24 24" aria-hidden="true">
+        <line x1="4" y1="6" x2="20" y2="6"/>
+        <circle cx="9" cy="6" r="2" fill="currentColor"/>
+        <line x1="4" y1="12" x2="20" y2="12"/>
+        <circle cx="15" cy="12" r="2" fill="currentColor"/>
+        <line x1="4" y1="18" x2="20" y2="18"/>
+        <circle cx="11" cy="18" r="2" fill="currentColor"/>
+        <line x1="5" y1="19" x2="19" y2="5"/>
+      </svg>
+    </button>
   </div>
 </header>
 
@@ -514,7 +533,7 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2533"></script>
+<script src="app.js?v=2534"></script>
 
 <div class="modal hidden" id="boardModal">
   <div class="modalCard boardCard">
