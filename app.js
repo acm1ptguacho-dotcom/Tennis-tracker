@@ -87,6 +87,138 @@ function toast(msg){
   t.classList.add("show");
   setTimeout(()=>t.classList.remove("show"), 1400);
 }
+// --- Guardar / Cargar partido (local) ---
+const SAVED_MATCHES_KEY = "tdt_saved_matches_v1";
+
+function getSavedMatches(){
+  try{
+    const raw = localStorage.getItem(SAVED_MATCHES_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){
+    console.error(e);
+    return [];
+  }
+}
+function setSavedMatches(arr){
+  try{ localStorage.setItem(SAVED_MATCHES_KEY, JSON.stringify(arr||[])); }
+  catch(e){ console.error(e); toast("⚠️ No se pudo guardar la lista de partidos"); }
+}
+
+function openSaveLoad(mode){
+  state.ui = state.ui || {};
+  state.ui.saveLoadMode = mode || state.ui.saveLoadMode || "save";
+  const m = state.ui.saveLoadMode;
+
+  // tabs
+  const tSave = $("#tabSaveMatch");
+  const tLoad = $("#tabLoadMatch");
+  const pSave = $("#saveMatchPane");
+  const pLoad = $("#loadMatchPane");
+  if (tSave) tSave.classList.toggle("active", m==="save");
+  if (tLoad) tLoad.classList.toggle("active", m==="load");
+  if (pSave) pSave.classList.toggle("hidden", m!=="save");
+  if (pLoad) pLoad.classList.toggle("hidden", m!=="load");
+
+  if (m==="load") renderSavedMatchesList();
+  const nm = $("#saveMatchName");
+  if (nm && !nm.value) nm.value = `${playerName("A")} vs ${playerName("B")} · ${new Date().toLocaleDateString()}`;
+  openModal("#saveLoadModal");
+}
+
+function closeSaveLoad(){ closeModal("#saveLoadModal"); }
+
+function renderSavedMatchesList(){
+  const list = $("#savedMatchesList");
+  if (!list) return;
+  const saved = getSavedMatches();
+  list.innerHTML = "";
+  if (!saved.length){
+    list.innerHTML = `<div class="muted" style="padding:10px;">No hay partidos guardados.</div>`;
+    return;
+  }
+
+  saved.sort((a,b)=> (b.when||0) - (a.when||0));
+  saved.forEach(item=>{
+    const row = document.createElement("div");
+    row.className = "savedItem";
+    const when = item.when ? new Date(item.when).toLocaleString() : "";
+    row.innerHTML = `
+      <div style="min-width:0;">
+        <div class="savedItemTitle">${escapeHtml(item.name || "Partido")}</div>
+        <div class="savedItemMeta">${escapeHtml(when)} · ${item.pointsCount ?? (item.state?.matchPoints?.length ?? 0)} puntos</div>
+      </div>
+      <div class="savedItemActions">
+        <button class="chip good" type="button" data-act="load">Cargar</button>
+        <button class="chip warn" type="button" data-act="del">Borrar</button>
+      </div>
+    `;
+    row.querySelector('[data-act="load"]').addEventListener("click", ()=>{
+      loadSavedMatch(item.id);
+    });
+    row.querySelector('[data-act="del"]').addEventListener("click", ()=>{
+      deleteSavedMatch(item.id);
+    });
+    list.appendChild(row);
+  });
+}
+
+function saveCurrentMatch(){
+  const name = ($("#saveMatchName")?.value || "").trim() || `Partido ${new Date().toLocaleString()}`;
+  const saved = getSavedMatches();
+  const id = "m_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,7);
+
+  // store full state snapshot (including current point) for exact resume
+  const snapshot = JSON.parse(JSON.stringify(state));
+  saved.push({
+    id,
+    name,
+    when: Date.now(),
+    pointsCount: snapshot.matchPoints ? snapshot.matchPoints.length : 0,
+    state: snapshot
+  });
+  setSavedMatches(saved);
+  toast("✅ Partido guardado");
+  renderSavedMatchesList();
+}
+
+function loadSavedMatch(id){
+  const saved = getSavedMatches();
+  const item = saved.find(x=>x.id===id);
+  if (!item || !item.state){ toast("No se pudo cargar"); return; }
+  // replace state
+  const snap = item.state;
+  Object.keys(state).forEach(k=>{ delete state[k]; });
+  Object.assign(state, snap);
+
+  // safety defaults (similar a load())
+  state.names = state.names || {A:"Jugador A",B:"Jugador B"};
+  state.sets = state.sets || {A:0,B:0};
+  state.games = state.games || {A:0,B:0};
+  state.points = state.points || {A:0,B:0};
+  state.tb = state.tb || {A:0,B:0};
+  state.ui = state.ui || { theme:"dark", coach:true, hideScore:false, rotated:false, hideRail:false };
+  state.matchPoints = Array.isArray(state.matchPoints) ? state.matchPoints : [];
+  state.undoStack = Array.isArray(state.undoStack) ? state.undoStack : [];
+
+  // ensure point exists
+  if (!state.point) initPoint();
+  persist();
+  renderAll();
+  closeSaveLoad();
+  toast("✅ Partido cargado");
+}
+
+function deleteSavedMatch(id){
+  let saved = getSavedMatches();
+  const before = saved.length;
+  saved = saved.filter(x=>x.id!==id);
+  if (saved.length===before) return;
+  setSavedMatches(saved);
+  renderSavedMatchesList();
+  toast("🗑️ Eliminado");
+}
+
 
 function escapeHtml(str){
   return String(str ?? "")
@@ -342,8 +474,6 @@ function serveOriginNorm(server, sideLabel){
 }
 
 function serveOrigin(server, sideLabel, scale=1){
-  // Compatibility helper for board mode (pizarra)
-  // (scale kept for backward compatibility)
   return serveOriginNorm(server, sideLabel);
 }
 
@@ -1307,6 +1437,93 @@ function parseScoreLabel(lbl){
   return { type:"game", a: map[m[1]] ?? 0, b: map[m[2]] ?? 0, raw:t };
 }
 
+function simScoreLabel(sim){
+  if (sim.isTiebreak) return `TB ${sim.tb.A}-${sim.tb.B}`;
+  const pA = sim.points.A, pB = sim.points.B;
+  const map = ["0","15","30","40"];
+  if (pA>=3 && pB>=3){
+    if (pA===pB) return "DEUCE";
+    return (pA>pB) ? "AD A" : "AD B";
+  }
+  return `${map[pA] ?? pA}-${map[pB] ?? pB}`;
+}
+
+function simUpdateScoring(sim, winner){
+  if (sim.isTiebreak){
+    sim.tb[winner] += 1;
+    const a=sim.tb.A, b=sim.tb.B;
+    if ((a>=7 || b>=7) && Math.abs(a-b)>=2){
+      const setWinner = a>b ? "A":"B";
+      sim.sets[setWinner]+=1;
+      sim.games={A:0,B:0};
+      sim.points={A:0,B:0};
+      sim.isTiebreak=false;
+      sim.tb={A:0,B:0};
+    }
+    return;
+  }
+
+  let a=sim.points.A, b=sim.points.B;
+  if (a>=3 && b>=3){
+    if (winner==="A") a+=1; else b+=1;
+    if (Math.abs(a-b)>=2 && (a>=4 || b>=4)){
+      const gameWinner = a>b ? "A":"B";
+      sim.games[gameWinner]+=1;
+      sim.points={A:0,B:0};
+      if (sim.games.A===6 && sim.games.B===6){
+        sim.isTiebreak=true;
+        sim.tb={A:0,B:0};
+      }
+      if ((sim.games.A>=6 || sim.games.B>=6) && Math.abs(sim.games.A-sim.games.B)>=2){
+        const setWinner = sim.games.A>sim.games.B ? "A":"B";
+        sim.sets[setWinner]+=1;
+        sim.games={A:0,B:0};
+        sim.points={A:0,B:0};
+      }
+      return;
+    }
+    sim.points={A:a,B:b};
+    return;
+  }
+
+  sim.points[winner]+=1;
+  if (sim.points[winner]>=4){
+    const gameWinner=winner;
+    sim.games[gameWinner]+=1;
+    sim.points={A:0,B:0};
+
+    if (sim.games.A===6 && sim.games.B===6){
+      sim.isTiebreak=true;
+      sim.tb={A:0,B:0};
+    }
+    if ((sim.games.A>=6 || sim.games.B>=6) && Math.abs(sim.games.A-sim.games.B)>=2){
+      const setWinner = sim.games.A>sim.games.B ? "A":"B";
+      sim.sets[setWinner]+=1;
+      sim.games={A:0,B:0};
+      sim.points={A:0,B:0};
+    }
+  }
+}
+
+function simulateScoreProgress(points){
+  const sim = {
+    sets:{A:0,B:0},
+    games:{A:0,B:0},
+    points:{A:0,B:0},
+    isTiebreak:false,
+    tb:{A:0,B:0}
+  };
+  const out = []; // {before, after, setsA, setsB, gamesA, gamesB}
+  for (let i=0;i<points.length;i++){
+    const before = simScoreLabel(sim);
+    simUpdateScoring(sim, points[i].winner);
+    const after = simScoreLabel(sim);
+    out.push({ before, after, setsA:sim.sets.A, setsB:sim.sets.B, gamesA:sim.games.A, gamesB:sim.games.B, isTB:sim.isTiebreak });
+  }
+  return out;
+}
+
+
 function isGamePoint(score, player){
   if (!score || score.type!=="game") return false;
   const a = score.a, b = score.b;
@@ -1409,6 +1626,8 @@ function renderCharts(){
   if (sub) sub.textContent = `Balance acumulado · Perspectiva: ${name}`;
 
   const points = Array.isArray(state.matchPoints) ? state.matchPoints.slice() : [];
+
+  const scoreProg = simulateScoreProgress(points);
 
   // canvas
   const canvas = $("#chartsCanvas");
@@ -1574,9 +1793,32 @@ function renderCharts(){
       if (f.deuceAdv) tags.push("Deuce/Adv");
       if (f.clutch3030 && !f.deuceAdv) tags.push("30-30+");
       const winnerName = playerName(p.winner);
-      dot.title = `Punto ${p.n} · ${won?"+1":"-1"} · Gana ${winnerName}\n${formatSnapshot(p.snapshot)}\n${p.reason||""}${tags.length?("\n["+tags.join(" · ")+"]"):""}`;
+      const afterScore = scoreProg[i]?.after || "";
+      dot.title = `Punto ${p.n} · ${won?"+1":"-1"} · Gana ${winnerName}\nMarcador: ${afterScore}\n${formatSnapshot(p.snapshot)}\n${p.reason||""}${tags.length?("\n["+tags.join(" · ")+"]"):""}`;
       dot.addEventListener("click", ()=> openPointViewer(p));
       strip.appendChild(dot);
+    });
+  }
+
+
+  const scoresEl = $("#chartsScores");
+  if (scoresEl){
+    scoresEl.innerHTML = "";
+    // start pill
+    const startPill = document.createElement("div");
+    startPill.className = "scorePill";
+    startPill.innerHTML = `<span class="miniDot" style="background:rgba(255,255,255,.55)"></span><b>Inicio</b> <span>0-0</span>`;
+    scoresEl.appendChild(startPill);
+
+    points.forEach((p,i)=>{
+      const won = wonFlags[i];
+      const after = scoreProg[i]?.after || "";
+      const pill = document.createElement("div");
+      pill.className = "scorePill " + (won ? "win" : "lose");
+      pill.innerHTML = `<span class="miniDot"></span><b>P${p.n}</b> <span>${escapeHtml(after)}</span>`;
+      pill.title = `Punto ${p.n} · ${after} · Gana ${playerName(p.winner)}`;
+      pill.addEventListener("click", ()=> openPointViewer(p));
+      scoresEl.appendChild(pill);
     });
   }
 
@@ -1787,16 +2029,47 @@ function renderHistory(){
   const winner=$("#fWinner").value;
   const end=$("#fEnd").value;
   const search=$("#fSearch").value.trim().toLowerCase();
+  const scoreSearch=($("#fScoreSearch")?.value || "").trim();
 
   const list=$("#historyList");
   if (!list) return;
 
   const nameA=state.names.A, nameB=state.names.B;
-  const rows = state.matchPoints.filter(p=>{
+
+  const norm = (s)=> String(s||"").replace(/\s+/g,"").toUpperCase();
+  const scoreNeed = norm(scoreSearch);
+
+  // Build game numbering map based on all points (so filters keep numbering)
+  const gameMap = {};
+  let gameNo = 0;
+  let lastKey = null;
+  (state.matchPoints||[]).forEach(p=>{
+    const snap = parseSnapshotParts(p.snapshot);
+    const isTB = String(snap.score||"").startsWith("TB ");
+    const key = `${snap.setsA}-${snap.setsB}|${snap.gamesA}-${snap.gamesB}|${isTB?"TB":"G"}`;
+    if (key !== lastKey){
+      gameNo += 1;
+      gameMap[key] = { num: gameNo, snap, isTB };
+      lastKey = key;
+    }
+  });
+
+  // Apply filters
+  const rows = (state.matchPoints||[]).filter(p=>{
     if (server && p.server!==server) return false;
     if (side && p.side!==side) return false;
     if (winner && p.winner!==winner) return false;
     if (end && !String(p.reason||"").startsWith(end)) return false;
+
+    const snap = parseSnapshotParts(p.snapshot);
+    if (scoreNeed){
+      const s = norm(snap.score);
+      // allow "AD A" typed as "ADA"
+      const s2 = s.replace(/^AD([AB])$/,"AD$1");
+      const need2 = scoreNeed.replace(/^AD([AB])$/,"AD$1");
+      if (s2 !== need2) return false;
+    }
+
     const pattern = pointPattern(p, true).toLowerCase();
     if (search && !pattern.includes(search)) return false;
     return true;
@@ -1808,34 +2081,79 @@ function renderHistory(){
     return;
   }
 
-  // keep current selection if exists (solo para resaltar)
+  // selection highlight
   const selN = state.ui?.historySelN || rows[0].n;
   state.ui = state.ui || {};
   state.ui.historySelN = selN;
+  state.ui.historyCollapsedGames = state.ui.historyCollapsedGames || {};
 
+  // Group by game key (sets+games+TB)
+  const groupOrder = [];
+  const groups = {};
   rows.forEach(p=>{
-    const item=document.createElement("div");
-    item.className="historyItem" + (p.n===selN ? " active" : "");
-    const pat=pointPattern(p, true);
-    const winName = p.winner==="A"?nameA:nameB;
-    item.innerHTML = `
-      <div class="historyItemTop">
-        <div>
-          <div class="historyItemTitle">Punto ${p.n}</div>
-          <div class="historyItemMeta">${escapeHtml(formatSnapshot(p.snapshot))}<br/>${escapeHtml((p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : ""))}</div>
+    const snap = parseSnapshotParts(p.snapshot);
+    const isTB = String(snap.score||"").startsWith("TB ");
+    const key = `${snap.setsA}-${snap.setsB}|${snap.gamesA}-${snap.gamesB}|${isTB?"TB":"G"}`;
+    if (!groups[key]){ groups[key]=[]; groupOrder.push(key); }
+    groups[key].push(p);
+  });
+
+  // Sort groups by global game number
+  groupOrder.sort((a,b)=> (gameMap[a]?.num||9999) - (gameMap[b]?.num||9999));
+
+  groupOrder.forEach(key=>{
+    const pts = groups[key];
+    const info = gameMap[key] || { num: 0, snap: parseSnapshotParts(pts[0].snapshot), isTB: false };
+    const g = document.createElement("div");
+    const collapsed = !!state.ui.historyCollapsedGames[key];
+    g.className = "historyGame" + (collapsed ? " collapsed" : "");
+    const setNo = (info.snap.setsA + info.snap.setsB + 1);
+    const meta = `Set ${setNo} · Games ${info.snap.gamesA}-${info.snap.gamesB}` + (info.isTB ? " · Tie-break" : "");
+    g.innerHTML = `
+      <div class="historyGameHead">
+        <div style="min-width:0;">
+          <div class="historyGameTitle">Juego ${info.num || "—"}</div>
+          <div class="historyGameMeta">${escapeHtml(meta)} · ${pts.length} punto(s)</div>
         </div>
-        <span class="pill ${p.winner==="A"?"pillGood":"pillWarn"}">Gana ${escapeHtml(winName)}</span>
+        <div class="historyGameChevron"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></div>
       </div>
-      <div class="historyItemMeta mono" style="margin-top:8px;">${escapeHtml(pat)}</div>
+      <div class="historyGameBody"></div>
     `;
-    item.addEventListener("click", ()=>{
-      state.ui.historySelN = p.n;
-      // update active class
-      [...list.querySelectorAll(".historyItem")].forEach(el=>el.classList.remove("active"));
-      item.classList.add("active");
-      openPointViewer(p);
+    const body = g.querySelector(".historyGameBody");
+    const head = g.querySelector(".historyGameHead");
+    head.addEventListener("click", ()=>{
+      const now = g.classList.toggle("collapsed");
+      state.ui.historyCollapsedGames[key] = now;
+      persist();
     });
-    list.appendChild(item);
+
+    pts.forEach(p=>{
+      const item=document.createElement("div");
+      item.className="historyItem" + (p.n===selN ? " active" : "");
+      const pat=pointPattern(p, true);
+      const winName = p.winner==="A"?nameA:nameB;
+      item.innerHTML = `
+        <div class="historyItemTop">
+          <div>
+            <div class="historyItemTitle">Punto ${p.n}</div>
+            <div class="historyItemMeta">${escapeHtml(formatSnapshot(p.snapshot))}<br/>${escapeHtml((p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : ""))}</div>
+          </div>
+          <span class="pill ${p.winner==="A"?"pillGood":"pillWarn"}">Gana ${escapeHtml(winName)}</span>
+        </div>
+        <div class="historyItemMeta mono" style="margin-top:8px;">${escapeHtml(pat)}</div>
+      `;
+      item.addEventListener("click", (ev)=>{
+        ev.stopPropagation();
+        state.ui.historySelN = p.n;
+        [...list.querySelectorAll(".historyItem")].forEach(el=>el.classList.remove("active"));
+        item.classList.add("active");
+        openPointViewer(p);
+        persist();
+      });
+      body.appendChild(item);
+    });
+
+    list.appendChild(g);
   });
 }
 
@@ -1923,13 +2241,94 @@ function pointPattern(p, includeServe){
   const evs = p.events || [];
   const filtered = evs.filter(e=> includeServe ? true : e.type!=="serve");
   return filtered.map(compactEv).join(" - ");
+
+function extractDirToken(ev){
+  const t = String(ev?.code||"").trim().toUpperCase();
+  if (!t) return null;
+  // Serve: "S SD T/C/A"
+  if (t.startsWith("S ")){
+    const parts = t.split(/\s+/);
+    const trg = parts[2] || parts[parts.length-1] || "";
+    return trg ? ("S"+trg) : null;
+  }
+  // Rally: may start with "R "
+  const r = t.replace(/^R\s+/,"").trim();
+  const m = r.match(/(CC|CP|CM|MC|MM|MP|PC|PM|PP)$/);
+  return m ? m[1] : null;
+}
+
+function patternTokens(p, includeServe){
+  const evs = (p?.events||[]).filter(e=> includeServe ? true : e.type!=="serve");
+  const toks = [];
+  evs.forEach(ev=>{
+    const tok = extractDirToken(ev);
+    if (tok) toks.push(tok);
+  });
+  return toks;
+}
+
+function momentMatch(p, moment){
+  if (!moment) return true;
+  const fA = pointContextFlags(p, "A");
+  const fB = pointContextFlags(p, "B");
+  const snap = fA.snap; // same for both
+  const scoreStr = String(snap.score||"").toUpperCase();
+
+  if (moment==="break") return !!(fA.breakPointForPersp || fB.breakPointForPersp);
+  if (moment==="game") return !!(fA.gamePointForPersp || fB.gamePointForPersp);
+  if (moment==="set") return !!(fA.setPointForPersp || fB.setPointForPersp);
+  if (moment==="tb") return !!fA.isTB;
+  if (moment==="deuce") return !!fA.deuceAdv;
+  if (moment==="3030") return !!fA.clutch3030;
+
+  // explicit score filters like "0-40"
+  if (/^\d+-\d+$/.test(moment)){
+    return scoreStr.replace(/\s+/g,"") === moment.replace(/\s+/g,"");
+  }
+  return true;
+}
+
+function computeSimilarPatternStats(points, includeServe){
+  const map = {};
+  const pts = Array.isArray(points) ? points : [];
+  pts.forEach(p=>{
+    const toks = patternTokens(p, includeServe);
+    if (toks.length < 3) return;
+    // all trigrams
+    const seen = new Set();
+    for (let i=0;i<=toks.length-3;i++){
+      const key = toks.slice(i,i+3).join(" - ");
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (!map[key]){
+        map[key] = { key, len:3, count:0, winA:0, winB:0, points:[], bestRate:0, dominant:"—" };
+      }
+      const it = map[key];
+      it.count++;
+      if (p.winner==="A") it.winA++; else it.winB++;
+      it.points.push(p.n);
+    }
+  });
+
+  Object.values(map).forEach(it=>{
+    const rateA = it.winA/it.count;
+    const rateB = it.winB/it.count;
+    it.bestRate = Math.max(rateA, rateB);
+    it.dominant = rateA===rateB ? "Igual" : (rateA>rateB ? "A" : "B");
+  });
+
+  return map;
+}
+
+
 }
 
 /** ANALYTICS **/
 function renderAnalytics(){
   const view=$("#aView")?.value || "freq";
-  const min = parseInt($("#aMin")?.value,10) || 5;
+  const min = parseInt($("#aMin")?.value,10) || 3;
   const includeServe=$("#aIncludeServe")?.checked ?? true;
+  const moment = $("#aMoment")?.value || "";
 
   const list=$("#analyticsList");
   const detail=$("#analyticsDetail");
@@ -1938,32 +2337,41 @@ function renderAnalytics(){
   list.innerHTML="";
   detail.innerHTML="Selecciona un patrón.";
 
-  const stats = computePatternStats(includeServe);
-  let items = Object.values(stats).filter(x=>x.count>=min);
+  const basePoints = Array.isArray(state.matchPoints) ? state.matchPoints.slice() : [];
+  const points = basePoints.filter(p=>momentMatch(p, moment));
 
-  if (view==="freq"){
-    items.sort((a,b)=>b.count-a.count);
-    items = items.slice(0,5);
-  } else if (view==="effective"){
-    items.sort((a,b)=>b.bestRate-a.bestRate);
-    items = items.slice(0,5);
-  } else if (view==="deucead"){
-    // más repetidos por lado (SD/SV)
-    items.sort((a,b)=> (b.sdCount+b.svCount) - (a.sdCount+a.svCount));
-    items = items.slice(0,5);
-  } else if (view==="server"){
-    items.sort((a,b)=> (b.srvA+b.srvB) - (a.srvA+a.srvB));
-    items = items.slice(0,5);
+  let items = [];
+  if (view==="sim"){
+    const stats = computeSimilarPatternStats(points, includeServe);
+    items = Object.values(stats).filter(x=>x.count>=min);
+    items.sort((a,b)=> (b.count*b.len) - (a.count*a.len));
+    items = items.slice(0,8);
+  } else {
+    const stats = computePatternStats(includeServe, points);
+    items = Object.values(stats).filter(x=>x.count>=min);
+
+    if (view==="freq"){
+      items.sort((a,b)=>b.count-a.count);
+      items = items.slice(0,8);
+    } else if (view==="effective"){
+      items.sort((a,b)=>b.bestRate-a.bestRate);
+      items = items.slice(0,8);
+    } else if (view==="deucead"){
+      items.sort((a,b)=> (b.sdCount+b.svCount) - (a.sdCount+a.svCount));
+      items = items.slice(0,8);
+    } else if (view==="server"){
+      items.sort((a,b)=> (b.srvA+b.srvB) - (a.srvA+a.srvB));
+      items = items.slice(0,8);
+    }
   }
 
   if (!items.length){
-    list.innerHTML = `<div class="analyticsItem"><div class="analyticsItemTitle">Sin datos suficientes</div><div class="analyticsItemMeta">Baja el mínimo de ocurrencias o registra más puntos.</div></div>`;
+    list.innerHTML = `<div class="analyticsItem"><div class="analyticsItemTitle">Sin datos suficientes</div><div class="analyticsItemMeta">Ajusta filtros o registra más puntos.</div></div>`;
     return;
   }
 
   const nameA=state.names.A, nameB=state.names.B;
 
-  // mantener selección si existe
   const selKey = state.ui?.analyticsSelKey || items[0].key;
   const chosen = items.find(x=>x.key===selKey) || items[0];
   state.ui = state.ui || {};
@@ -1974,22 +2382,23 @@ function renderAnalytics(){
     div.className="analyticsItem" + (it.key===chosen.key ? " active" : "");
     const rateA = Math.round((it.winA/it.count)*100);
     const rateB = Math.round((it.winB/it.count)*100);
+    const extra = (view==="sim") ? ` · Long: <b>${it.len}</b>` : "";
     div.innerHTML = `
       <div class="analyticsItemTitle mono">${escapeHtml(it.key)}</div>
       <div class="analyticsItemMeta">
-        Veces: <b>${it.count}</b> · ${escapeHtml(nameA)}: <b>${it.winA}</b> (${rateA}%) · ${escapeHtml(nameB)}: <b>${it.winB}</b> (${rateB}%) · Dominante: <b>${escapeHtml(it.dominant)}</b>
+        Veces: <b>${it.count}</b>${extra} · ${escapeHtml(nameA)}: <b>${it.winA}</b> (${rateA}%) · ${escapeHtml(nameB)}: <b>${it.winB}</b> (${rateB}%) · Dominante: <b>${escapeHtml(it.dominant)}</b>
       </div>
     `;
     div.addEventListener("click", ()=>{
       state.ui.analyticsSelKey = it.key;
       [...list.querySelectorAll(".analyticsItem")].forEach(el=>el.classList.remove("active"));
       div.classList.add("active");
-      showPatternDetail(it, includeServe);
+      showPatternDetail(it);
     });
     list.appendChild(div);
   });
 
-  showPatternDetail(chosen, includeServe);
+  showPatternDetail(chosen);
 }
 
 function computePatternStats(includeServe){
@@ -3245,6 +3654,13 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCharts","click", openCharts);
   on("btnExport","click", openExport);
 
+  on("btnSaveMatch","click", ()=>openSaveLoad("save"));
+  on("btnLoadMatch","click", ()=>openSaveLoad("load"));
+  on("btnCloseSaveLoad","click", closeSaveLoad);
+  on("tabSaveMatch","click", ()=>openSaveLoad("save"));
+  on("tabLoadMatch","click", ()=>openSaveLoad("load"));
+  on("btnDoSaveMatch","click", saveCurrentMatch);
+
   on("btnEyeScore","click", toggleScoreVisibility);
   on("btnToolsRail","click", toggleRailVisibility);
   on("btnRotateCourt","click", toggleRotation);
@@ -3259,7 +3675,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // (Eliminado) Tema y modo normal
 
 // cerrar menú al elegir una opción (las acciones que viven dentro del menú)
-["btnBoard","btnHistory","btnAnalytics","btnStats","btnExport"].forEach(id=>{
+["btnSaveMatch","btnLoadMatch","btnHistory","btnAnalytics","btnStats","btnCharts","btnExport"].forEach(id=>{
   const el = $("#"+id);
   if (el) el.addEventListener("click", ()=>setMenuOpen(false));
 });
@@ -3332,13 +3748,13 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnReplay","click", replayCurrentPoint);
 
   // history filters
-  ["fServer","fSide","fWinner","fEnd","fSearch"].forEach(id=>{
+  ["fServer","fSide","fWinner","fEnd","fSearch","fScoreSearch"].forEach(id=>{
     on(id,"input", renderHistory);
     on(id,"change", renderHistory);
   });
 
   // analytics filters
-  ["aView","aMin","aIncludeServe"].forEach(id=>{
+  ["aView","aMin","aIncludeServe","aMoment"].forEach(id=>{
     on(id,"input", renderAnalytics);
     on(id,"change", renderAnalytics);
   });
@@ -3448,653 +3864,9 @@ function initBottomSheet(){
 }
 
 
-// -------------------- Modo Pizarra (coach board) --------------------
-const BOARD_KEY = "tdt_board_patterns_v1";
-
-let boardPatterns = [];
-let boardSelectedId = null;
-
-const board = {
-  open:false,
-  startMode:"SAQUE", // "SAQUE" | "RALLY"
-  server:"A",
-  serveSide:"SD", // SD=deuce, SV=ad
-  starter:"A",    // only for startMode=RALLY
-  events:[],       // {type:"serve"|"rally", hitter:"A"|"B", code:string}
-  arrows:[],       // {from:{x,y},through:{x,y},to:{x,y},label:number,color:string}
-  playing:false,
-  loop:false,
-  playIdx:0,       // next arrow index to play
-  timer:null,
-  editing:false
-};
-
-function normalizeBoardPattern(p){
-  if(!p) return p;
-  // Backward compatibility: arrow objects may use {label} instead of {n}, or omit hitter
-  if(Array.isArray(p.arrows)){
-    p.arrows = p.arrows.map((a,idx)=>{
-      const hitter = a.hitter || a.player || (a.color && a.color.toLowerCase().includes("fff") ? "A" : undefined) || "A";
-      return {
-        from: a.from, through: a.through || a.to, to: a.to || a.through,
-        hitter,
-        n: a.n ?? a.label ?? (idx+1)
-      };
-    });
-  }
-  return p;
-}
-
-function loadBoardPatterns(){
-  try{
-    const raw = localStorage.getItem(BOARD_KEY);
-    boardPatterns = raw ? JSON.parse(raw) : [];
-    boardPatterns = boardPatterns.map(normalizeBoardPattern);
-    if(!Array.isArray(boardPatterns)) boardPatterns = [];
-  }catch(e){ boardPatterns = []; }
-}
-function saveBoardPatterns(){
-  try{ localStorage.setItem(BOARD_KEY, JSON.stringify(boardPatterns)); }catch(e){}
-}
-
-function openBoard(){
-  board.open = true;
-  $("#boardModal")?.classList.remove("hidden");
-  boardBuildZones();
-  boardRefreshControls();
-  boardRenderAll();
-}
-function closeBoard(){
-  board.open = false;
-  $("#boardModal")?.classList.add("hidden");
-  boardStop();
-}
-
-function boardResetSequence(){
-  board.events = [];
-  board.arrows = [];
-  board.playIdx = 0;
-  boardStop();
-  boardApplyConstraints();
-  boardRenderAll();
-}
-
-function boardRefreshControls(){
-  // toggles
-  $("#btnBoardStartServe")?.classList.toggle("active", board.startMode==="SAQUE");
-  $("#btnBoardStartRally")?.classList.toggle("active", board.startMode==="RALLY");
-  $("#boardServeControls")?.classList.toggle("hidden", board.startMode!=="SAQUE");
-  $("#boardRallyControls")?.classList.toggle("hidden", board.startMode!=="RALLY");
-
-  $("#btnBoardSrvA")?.classList.toggle("active", board.server==="A");
-  $("#btnBoardSrvB")?.classList.toggle("active", board.server==="B");
-  $("#btnBoardSideD")?.classList.toggle("active", board.serveSide==="SD");
-  $("#btnBoardSideA")?.classList.toggle("active", board.serveSide==="SV");
-
-  $("#btnBoardStartA")?.classList.toggle("active", board.starter==="A");
-  $("#btnBoardStartB")?.classList.toggle("active", board.starter==="B");
-
-  $("#btnBoardLoop")?.classList.toggle("active", board.loop);
-
-  // edit mode buttons
-  $("#btnBoardSave")?.classList.toggle("hidden", !board.editing);
-  $("#btnBoardCancel")?.classList.toggle("hidden", !board.editing);
-  $("#btnBoardUndo")?.classList.toggle("hidden", !board.editing);
-
-  // names
-  $("#boardNameBottom").textContent = state.names?.A || "Jugador A";
-  $("#boardNameTop").textContent = state.names?.B || "Jugador B";
-}
-
-function boardCourtRect(){
-  return $("#boardCourt").getBoundingClientRect();
-}
-function boardCenterNormFromEl(el){
-  const c = boardCourtRect();
-  const r = el.getBoundingClientRect();
-  const x = ((r.left + r.right)/2 - c.left) / c.width;
-  const y = ((r.top + r.bottom)/2 - c.top) / c.height;
-  return { x: clamp01(x), y: clamp01(y) };
-}
-
-function boardArrowColorFor(hitter){
-  // por jugador: A amarillo, B rojo
-  return hitter==="A" ? "#FFE600" : "#FF3B30";
-}
-
-function boardRecordArrow(isServe, hitSide, throughEl, hitter){
-  const through = boardCenterNormFromEl(throughEl);
-  let from;
-  if(isServe){
-    from = serveOrigin(board.server, board.serveSide, 0.25);
-  }else{
-    const last = board.arrows[board.arrows.length-1];
-    from = last ? last.to : { x: 0.25, y: baselineY(hitter) };
-  }
-  let to = through;
-  if(isServe){
-    // solo el saque se extiende hasta el fondo contrario
-    const y = hitSide==="top" ? baselineY("B") : baselineY("A");
-    const b = singlesBounds();
-    const dir = {x: through.x - from.x, y: through.y - from.y};
-    const t = rayIntersectY(from, dir, y);
-    to = { x: clamp01(clamp(t.x, b.x1, b.x2)), y: clamp01(y) };
-  }
-  board.arrows.push({
-    from, through, to,
-    hitter,
-    n: board.arrows.length+1
-  });
-}
-
-function boardGetInsertIndex(){
-  // if playing paused and editing, we edit from the current playIdx (next shot)
-  if(board.editing) return board.playIdx;
-  return board.events.length;
-}
-function boardPrefixEvents(n){
-  return board.events.slice(0, n);
-}
-function boardRallyCountInPrefix(n){
-  return boardPrefixEvents(n).filter(e=>e.type==="rally").length;
-}
-
-function boardNextHitterForInsert(insertIndex){
-  // Determine hitter for the *next* event at insertIndex
-  if(board.startMode==="SAQUE" && insertIndex===0) return board.server; // serve hitter
-  const server = board.server;
-  const receiver = server==="A" ? "B" : "A";
-
-  const rallyCount = boardRallyCountInPrefix(insertIndex);
-
-  if(board.startMode==="SAQUE"){
-    // first rally = receiver, then alternate
-    return (rallyCount % 2 === 0) ? receiver : server;
-  }
-  // startMode=RALLY
-  const other = board.starter==="A" ? "B" : "A";
-  return (rallyCount % 2 === 0) ? board.starter : other;
-}
-
-function boardExpectedTapSideForHitter(hitter){
-  // tap side = where ball lands (opposite hitter side)
-  return hitter==="A" ? "top" : "bottom";
-}
-
-function boardApplyConstraints(){
-  // enable/disable board zones based on next expected input
-  const insertIndex = boardGetInsertIndex();
-  const serveTop = $("#boardServeGridTop");
-  const serveBottom = $("#boardServeGridBottom");
-  const rallyTop = $("#boardRallyGridTop");
-  const rallyBottom = $("#boardRallyGridBottom");
-
-  const enable = (el,on)=>{ if(!el) return; el.classList.toggle("disabled", !on); };
-  const enableBoxes = (grid, requiredBox)=>{
-    if(!grid) return;
-    [...grid.querySelectorAll(".serveCell")].forEach(z=>{
-      const box = Number(z.dataset.box);
-      z.classList.toggle("disabled", box!==requiredBox);
-    });
-  };
-
-  if(board.startMode==="SAQUE" && insertIndex===0){
-    const expectedSide = (board.server==="A") ? "top" : "bottom";
-    enable(serveTop, expectedSide==="top");
-    enable(serveBottom, expectedSide==="bottom");
-    enable(rallyTop,false); enable(rallyBottom,false);
-    const requiredBox = (board.serveSide==="SD") ? 0 : 1;
-    enableBoxes(expectedSide==="top"?serveTop:serveBottom, requiredBox);
-    return;
-  }
-
-  // rally phase
-  // disable all serve cells
-  if (serveTop) [...serveTop.querySelectorAll(".serveCell")].forEach(z=>z.classList.add("disabled"));
-  if (serveBottom) [...serveBottom.querySelectorAll(".serveCell")].forEach(z=>z.classList.add("disabled"));
-
-  const hitter = boardNextHitterForInsert(insertIndex);
-  const expectedSide = boardExpectedTapSideForHitter(hitter);
-
-  // enable only the expected rally grid cells
-  const activeGrid = expectedSide==="top" ? rallyTop : rallyBottom;
-  const otherGrid  = expectedSide==="top" ? rallyBottom : rallyTop;
-
-  if (activeGrid){
-    [...activeGrid.querySelectorAll(".zoneCell")].forEach(z=>z.classList.remove("disabled"));
-  }
-  if (otherGrid){
-    [...otherGrid.querySelectorAll(".zoneCell")].forEach(z=>z.classList.add("disabled"));
-  }
-}
-
-function boardAddEvent(event){
-  const insertIndex = boardGetInsertIndex();
-  // truncate if editing from mid-sequence
-  if(insertIndex < board.events.length){
-    board.events = board.events.slice(0, insertIndex);
-    board.arrows = board.arrows.slice(0, insertIndex);
-  }
-  board.events.push(event);
-}
-
-function boardOnServeTap(side, el){
-  // side is expected landing side (top if server A)
-  const insertIndex = boardGetInsertIndex();
-  if(!(board.startMode==="SAQUE" && insertIndex===0)) return;
-
-  // validate correct side
-  const expectedSide = (board.server==="A") ? "top" : "bottom";
-  if(side !== expectedSide) return;
-
-  const requiredBox = (board.serveSide==="SD") ? 0 : 1;
-  const box = Number(el.dataset.box);
-  if(box !== requiredBox) return;
-
-  const target = el.dataset.target; // T/C/A
-  const hitter = board.server;
-  boardAddEvent({type:"serve", hitter, code:`S ${board.serveSide} ${target}`});
-  try { boardRecordArrow(true, side, el, hitter); } catch(e){ console.error(e); }
-
-  // after serve -> rally
-  boardApplyConstraints();
-  boardRenderAll();
-}
-
-function boardOnRallyTap(side, el){
-  const insertIndex = boardGetInsertIndex();
-  if(board.startMode==="SAQUE" && insertIndex===0) return; // still need serve
-
-  const hitter = boardNextHitterForInsert(insertIndex);
-  const expectedSide = boardExpectedTapSideForHitter(hitter);
-  if(side !== expectedSide) return;
-
-  const row = Number(el.dataset.row);
-  const col = Number(el.dataset.col);
-  const code = zoneCodeFromTap(side, row, col);
-  // add "R " only if startMode=SAQUE and this is the first rally (the return)
-  const rallyCount = boardRallyCountInPrefix(insertIndex);
-  const prefix = (board.startMode==="SAQUE" && rallyCount===0) ? "R " : "";
-  boardAddEvent({type:"rally", hitter, code: `${prefix}${code}`});
-  try { boardRecordArrow(false, side, el, hitter); } catch(e){ console.error(e); }
-
-  boardApplyConstraints();
-  boardRenderAll();
-}
-
-
-function boardMakeGridOnLayer(layer, id, rect, rows, cols, cellRenderer){
-  const grid = document.createElement("div");
-  grid.className = "zoneGrid "+id;
-  grid.id = id;
-  grid.dataset.grid = id;
-
-  // position
-  grid.style.left = (rect.x*100)+"%";
-  grid.style.top = (rect.y*100)+"%";
-  grid.style.width = (rect.w*100)+"%";
-  grid.style.height = (rect.h*100)+"%";
-  grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
-  for(let r=0;r<rows;r++){
-    for(let c=0;c<cols;c++){
-      const cell = cellRenderer(r,c);
-      grid.appendChild(cell);
-    }
-  }
-  layer.appendChild(grid);
-  return grid;
-}
-
-function boardServeCell(side, box, target){
-  const el = document.createElement("div");
-  el.className = "serveCell";
-  el.dataset.side = side;
-  el.dataset.box = String(box);
-  el.dataset.target = target;
-
-  const label = document.createElement("div");
-  label.className = "serveLabel";
-  label.textContent = "SAQUE";
-  el.appendChild(label);
-
-  const _tap=(e)=>{
-    e.stopPropagation();
-    if(el.classList.contains("disabled")) return;
-    flashTap(el, e);
-    boardOnServeTap(side, el);
-  };
-  el.addEventListener("click", _tap);
-  el.addEventListener("touchstart", (evt)=>{
-    if(el.classList.contains("disabled")) return;
-    evt.stopPropagation();
-    const t = (evt.touches && evt.touches[0]) ? evt.touches[0] : evt;
-    flashTap(el, t);
-    boardOnServeTap(side, el);
-  }, {passive:true});
-  return el;
-}
-
-function boardRallyCell(side, row, col, dir, deep){
-  const el = document.createElement("div");
-  el.className = "zoneCell";
-  el.dataset.side = side;
-  el.dataset.dir = dir;
-  el.dataset.deep = deep;
-  el.dataset.row = String(row);
-  el.dataset.col = String(col);
-
-  const label = document.createElement("div");
-  label.className = "zoneLabel";
-  label.textContent = dir;
-  el.appendChild(label);
-
-  const _tap=(e)=>{
-    e.stopPropagation();
-    if(el.classList.contains("disabled")) return;
-    flashTap(el, e);
-    boardOnRallyTap(side, el);
-  };
-  el.addEventListener("click", _tap);
-  el.addEventListener("touchstart", (evt)=>{
-    if(el.classList.contains("disabled")) return;
-    evt.stopPropagation();
-    const t = (evt.touches && evt.touches[0]) ? evt.touches[0] : evt;
-    flashTap(el, t);
-    boardOnRallyTap(side, el);
-  }, {passive:true});
-  return el;
-}
-
-function boardBuildZones(){
-  const layer = $("#boardZoneLayer");
-  if(!layer) return;
-  layer.innerHTML = "";
-
-  // Rally (3x3) top/bottom
-  const map = [
-    ["P","P"],["M","P"],["C","P"],
-    ["P","M"],["M","M"],["C","M"],
-    ["P","C"],["M","C"],["C","C"],
-  ];
-  boardMakeGridOnLayer(layer, "boardRallyGridTop", Z.rallyTop, 3, 3, (r,c)=>{
-    const idx = r*3 + c;
-    const [dir,deep] = map[idx];
-    return boardRallyCell("top", r, c, dir, deep);
-  });
-  boardMakeGridOnLayer(layer, "boardRallyGridBottom", Z.rallyBottom, 3, 3, (r,c)=>{
-    const idx = r*3 + c;
-    const [dir,deep] = map[idx];
-    return boardRallyCell("bottom", r, c, dir, deep);
-  });
-
-  // Serve (1x6) top/bottom
-  boardMakeGridOnLayer(layer, "boardServeGridTop", Z.serveTop, 1, 6, (r,c)=>{
-    const box = c<3 ? 0 : 1;
-    const idx = c%3;
-    const target = idx===0 ? "T" : (idx===1 ? "C" : "A");
-    return boardServeCell("top", box, target);
-  });
-  boardMakeGridOnLayer(layer, "boardServeGridBottom", Z.serveBottom, 1, 6, (r,c)=>{
-    const box = c<3 ? 0 : 1;
-    const idx = c%3;
-    const target = idx===0 ? "T" : (idx===1 ? "C" : "A");
-    return boardServeCell("bottom", box, target);
-  });
-
-  boardApplyConstraints();
-}
-
-
-function boardRenderSeq(){
-  const list = $("#boardSeqList");
-  if(!list) return;
-  list.innerHTML = "";
-  if(board.events.length===0){
-    $("#boardSeqHint").textContent = "Toca zonas para crear el patrón.";
-    return;
-  }
-  $("#boardSeqHint").textContent = "Puedes reproducir, pausar o editar desde cualquier golpe.";
-  board.events.forEach((ev,i)=>{
-    const item = document.createElement("div");
-    item.className="seqItem"+(i===board.playIdx ? " active":"");
-    item.innerHTML = `<div class="n">${i+1}.</div><div class="code">${ev.hitter} · ${ev.code}</div>`;
-    list.appendChild(item);
-  });
-}
-
-function boardRenderArrowsFull(){
-  const svg = $("#boardArrowSvg");
-  if(!svg) return;
-  renderArrows(svg, board.arrows, { fadeOld:true });
-}
-
-function boardRenderAll(){
-  boardRefreshControls();
-  boardRenderSeq();
-  boardRenderArrowsFull();
-}
-
-function boardStep(){
-  if(!board.playing) return;
-  const svg = $("#boardArrowSvg");
-  if(!svg) return;
-
-  // render up to current index with animation for the last one
-  const i = board.playIdx;
-  if(i >= board.arrows.length){
-    board.playing = false;
-    if(board.loop && board.arrows.length){
-      board.playIdx = 0;
-      board.playing = true;
-      board.timer = setTimeout(boardStep, 250);
-    }
-    boardRenderSeq();
-    return;
-  }
-  renderArrows(svg, board.arrows.slice(0,i+1), { animateFromIndex:i, fadeOld:false });
-  board.playIdx = i+1;
-  boardRenderSeq();
-  board.timer = setTimeout(boardStep, 1000);
-}
-
-function boardPlay(){
-  if(board.arrows.length===0) return;
-  boardStop(false);
-  board.playing = true;
-  board.timer = setTimeout(boardStep, 50);
-}
-
-function boardStop(resetTimerOnly=true){
-  if(board.timer){ clearTimeout(board.timer); board.timer = null; }
-  board.playing = false;
-  if(resetTimerOnly===true){
-    // keep playIdx
-  }
-}
-
-function boardPause(){
-  boardStop();
-  boardRenderSeq();
-}
-
-function boardToggleEdit(on){
-  board.editing = on;
-  if(on){
-    boardPause();
-  }else{
-    // ensure playIdx doesn't exceed length
-    board.playIdx = clamp(board.playIdx, 0, board.events.length);
-  }
-  boardApplyConstraints();
-  boardRenderAll();
-}
-
-function boardUndo(){
-  const insertIndex = boardGetInsertIndex();
-  if(insertIndex<=0) return;
-  // undo previous event before insertIndex
-  const newLen = insertIndex-1;
-  board.events = board.events.slice(0,newLen);
-  board.arrows = board.arrows.slice(0,newLen);
-  board.playIdx = newLen;
-  boardApplyConstraints();
-  boardRenderAll();
-}
-
-function boardQuickSave(){
-  const name = ($("#boardPatternName")?.value || "").trim() || `Patrón ${boardPatterns.length+1}`;
-  const p = {
-    id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random().toString(16).slice(2),
-    name,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    config: {startMode: board.startMode, server: board.server, serveSide: board.serveSide, starter: board.starter},
-    events: board.events,
-    arrows: board.arrows
-  };
-  // upsert by name if exact match (simple)
-  const idx = boardPatterns.findIndex(x=>x.name===name);
-  if(idx>=0){
-    p.id = boardPatterns[idx].id;
-    p.createdAt = boardPatterns[idx].createdAt;
-    boardPatterns[idx]=p;
-  }else{
-    boardPatterns.unshift(p);
-  }
-  saveBoardPatterns();
-  $("#boardPatternName").value = "";
-}
-
-function openBoardPatterns(){
-  $("#boardPatternsModal")?.classList.remove("hidden");
-  boardRenderPatternsList();
-}
-function closeBoardPatterns(){
-  $("#boardPatternsModal")?.classList.add("hidden");
-  boardSelectedId = null;
-}
-
-function boardRenderPatternsList(){
-  const list = $("#boardPatternsList");
-  const sub = $("#boardPatternsSub");
-  if(sub) sub.textContent = `${boardPatterns.length} patrones`;
-  if(!list) return;
-  list.innerHTML = "";
-  if(boardPatterns.length===0){
-    list.innerHTML = `<div class="muted">Aún no hay patrones guardados.</div>`;
-    return;
-  }
-  boardPatterns.forEach(p=>{
-    const row = document.createElement("div");
-    row.className="patternRow"+(p.id===boardSelectedId?" active":"");
-    row.innerHTML = `<div style="font-weight:800">${escapeHtml(p.name)}</div><div class="muted small">${new Date(p.updatedAt||p.createdAt).toLocaleString()}</div>`;
-    row.addEventListener("click", ()=>{
-      boardSelectedId = p.id;
-      boardRenderPatternsList();
-      boardPreviewPattern(p);
-    });
-    list.appendChild(row);
-  });
-}
-
-function boardPreviewPattern(p){
-  const svg = $("#boardPreviewArrowSvg");
-  if(svg) renderArrows(svg, p.arrows||[], { fadeOld:false });
-  const seq = $("#boardPatternsSeq");
-  if(seq){
-    seq.innerHTML = "";
-    (p.events||[]).forEach((ev,i)=>{
-      const it = document.createElement("div");
-      it.className="seqItem";
-      it.innerHTML = `<div class="n">${i+1}.</div><div class="code">${ev.hitter} · ${ev.code}</div>`;
-      seq.appendChild(it);
-    });
-  }
-}
-
-function boardLoadSelected(){
-  const p = boardPatterns.find(x=>x.id===boardSelectedId);
-  if(!p) return;
-  board.startMode = p.config?.startMode || "SAQUE";
-  board.server = p.config?.server || "A";
-  board.serveSide = p.config?.serveSide || "SD";
-  board.starter = p.config?.starter || "A";
-  board.events = JSON.parse(JSON.stringify(p.events||[]));
-  board.arrows = JSON.parse(JSON.stringify(p.arrows||[]));
-  board.playIdx = 0;
-  board.editing = false;
-  boardApplyConstraints();
-  boardRenderAll();
-  closeBoardPatterns();
-}
-
-function boardDeleteSelected(){
-  if(!boardSelectedId) return;
-  boardPatterns = boardPatterns.filter(x=>x.id!==boardSelectedId);
-  saveBoardPatterns();
-  boardSelectedId = null;
-  boardRenderPatternsList();
-  const svg = $("#boardPreviewArrowSvg");
-  if(svg) renderArrows(svg, [], { fadeOld:false });
-  const seq = $("#boardPatternsSeq");
-  if(seq) seq.innerHTML = "";
-}
-
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-}
-
-function wireBoard(){
-  $("#btnBoard")?.addEventListener("click", ()=>openBoard());
-  $("#btnBoardClose")?.addEventListener("click", ()=>closeBoard());
-  $("#btnBoardNew")?.addEventListener("click", ()=>{
-    boardResetSequence();
-  });
-  $("#btnBoardMy")?.addEventListener("click", ()=>openBoardPatterns());
-  $("#btnCloseBoardPatterns")?.addEventListener("click", ()=>closeBoardPatterns());
-  $("#btnBoardLoadSelected")?.addEventListener("click", ()=>boardLoadSelected());
-  $("#btnBoardDeleteSelected")?.addEventListener("click", ()=>boardDeleteSelected());
-
-  $("#btnBoardStartServe")?.addEventListener("click", ()=>{
-    board.startMode="SAQUE";
-    boardResetSequence();
-    boardRefreshControls();
-  });
-  $("#btnBoardStartRally")?.addEventListener("click", ()=>{
-    board.startMode="RALLY";
-    boardResetSequence();
-    boardRefreshControls();
-  });
-
-  $("#btnBoardSrvA")?.addEventListener("click", ()=>{ board.server="A"; boardResetSequence(); });
-  $("#btnBoardSrvB")?.addEventListener("click", ()=>{ board.server="B"; boardResetSequence(); });
-  $("#btnBoardSideD")?.addEventListener("click", ()=>{ board.serveSide="SD"; boardResetSequence(); });
-  $("#btnBoardSideA")?.addEventListener("click", ()=>{ board.serveSide="SV"; boardResetSequence(); });
-
-  $("#btnBoardStartA")?.addEventListener("click", ()=>{ board.starter="A"; boardResetSequence(); });
-  $("#btnBoardStartB")?.addEventListener("click", ()=>{ board.starter="B"; boardResetSequence(); });
-
-  $("#btnBoardPlay")?.addEventListener("click", ()=>boardPlay());
-  $("#btnBoardPause")?.addEventListener("click", ()=>boardPause());
-  $("#btnBoardLoop")?.addEventListener("click", ()=>{
-    board.loop = !board.loop; boardRefreshControls();
-  });
-  $("#btnBoardEdit")?.addEventListener("click", ()=>boardToggleEdit(!board.editing));
-  $("#btnBoardSave")?.addEventListener("click", ()=>{ boardQuickSave(); boardToggleEdit(false); });
-  $("#btnBoardCancel")?.addEventListener("click", ()=>{ boardToggleEdit(false); });
-  $("#btnBoardUndo")?.addEventListener("click", ()=>boardUndo());
-
-  $("#btnBoardQuickSave")?.addEventListener("click", ()=>boardQuickSave());
-
-  // click outside patterns modal to close? keep simple
-}
-
-
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2530").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2536").catch(console.error);
 }
 
 function init(){
@@ -4104,10 +3876,6 @@ function init(){
   initPoint();
   wire();
   renderAll();
-  
-  loadBoardPatterns();
-  boardBuildZones();
-  wireBoard();
 registerSW();
 }
 
