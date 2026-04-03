@@ -7,43 +7,52 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2536" />
+  <link rel="stylesheet" href="style.css?v=2538" />
 </head>
 <body>
+
+<div class="splash" id="splash" aria-label="Tennis Direction Tracker">
+  <div class="splashInner">
+    <img class="splashLogo" src="assets/logo.jpg" alt="Tennis Direction Tracker">
+    <button class="btn primary splashStart hidden" id="btnStartApp" type="button">Iniciar</button>
+  </div>
+</div>
 
 <div class="app single" id="appRoot">
 
   <!-- TOP: menú + nombres + marcador (todo en la misma vista) -->
   <header class="topbar topbarInline">
-  <div class="topbarRow">
-    <button class="chip iconChip" id="btnMenu" type="button" aria-label="Abrir menú"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="topbarRow">
+      <button class="chip iconChip" id="btnMenu" type="button" aria-label="Abrir menú">
+        <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
 
-    <div class="topbarBrand" aria-label="Tennis Direction Tracker">
-      <img class="brandLogoImg" src="assets/logo.jpg" alt="Tennis Direction Tracker"/>
+      <div class="topbarBrand" aria-label="Tennis Direction Tracker">
+        <img class="brandLogoImg" src="assets/logo.jpg" alt="Tennis Direction Tracker"/>
+      </div>
+
+      <!-- Botón para mostrar/ocultar la barra lateral de acciones (modo full-screen) -->
+      <button class="chip iconChip" id="btnToolsRail" type="button" aria-label="Ocultar herramientas" title="Ocultar/mostrar herramientas">
+        <svg class="svgIcon toolsOn" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <circle cx="9" cy="6" r="2" fill="currentColor"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <circle cx="15" cy="12" r="2" fill="currentColor"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+          <circle cx="11" cy="18" r="2" fill="currentColor"/>
+        </svg>
+        <svg class="svgIcon toolsOff" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <circle cx="9" cy="6" r="2" fill="currentColor"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <circle cx="15" cy="12" r="2" fill="currentColor"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+          <circle cx="11" cy="18" r="2" fill="currentColor"/>
+          <line x1="5" y1="19" x2="19" y2="5"/>
+        </svg>
+      </button>
     </div>
-    </div>
-    <!-- Botón para mostrar/ocultar la barra lateral de acciones (modo full-screen) -->
-    <button class="chip iconChip" id="btnToolsRail" type="button" aria-label="Ocultar herramientas" title="Ocultar/mostrar herramientas">
-      <svg class="svgIcon toolsOn" viewBox="0 0 24 24" aria-hidden="true">
-        <line x1="4" y1="6" x2="20" y2="6"/>
-        <circle cx="9" cy="6" r="2" fill="currentColor"/>
-        <line x1="4" y1="12" x2="20" y2="12"/>
-        <circle cx="15" cy="12" r="2" fill="currentColor"/>
-        <line x1="4" y1="18" x2="20" y2="18"/>
-        <circle cx="11" cy="18" r="2" fill="currentColor"/>
-      </svg>
-      <svg class="svgIcon toolsOff" viewBox="0 0 24 24" aria-hidden="true">
-        <line x1="4" y1="6" x2="20" y2="6"/>
-        <circle cx="9" cy="6" r="2" fill="currentColor"/>
-        <line x1="4" y1="12" x2="20" y2="12"/>
-        <circle cx="15" cy="12" r="2" fill="currentColor"/>
-        <line x1="4" y1="18" x2="20" y2="18"/>
-        <circle cx="11" cy="18" r="2" fill="currentColor"/>
-        <line x1="5" y1="19" x2="19" y2="5"/>
-      </svg>
-    </button>
-  </div>
-</header>
+  </header>
 
 <div class="menuOverlay" id="menuOverlay" aria-hidden="true"></div>
 <nav class="drawer" id="drawerMenu" aria-label="Menú">
@@ -57,7 +66,14 @@
     <button class="chip menuItem" id="btnSaveMatch" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span>Guardar partido</span></button>
     <button class="chip menuItem" id="btnLoadMatch" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6l2 2h8a2 2 0 0 1 2 2z"/></svg><span>Cargar partido</span></button>
 
-    <div class="drawerDivider"></div>
+    
+    <button class="chip menuItem" id="btnGameMode" type="button">
+      <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 21h10"/><path d="M12 17v4"/><path d="M7 4h10"/><path d="M17 4v3a5 5 0 0 1-10 0V4"/>
+      </svg>
+      <span>Modo de juego</span>
+    </button>
+<div class="drawerDivider"></div>
 
     <div class="drawerGroupLabel">Reportes</div>
     <button class="chip menuItem" id="btnHistory" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Historial</span></button>
@@ -321,6 +337,48 @@
       <div class="muted" style="margin-top:10px;">Nota: esto usa almacenamiento local del navegador.</div>
     </div>
   </div>
+<div class="modal hidden" id="gameModeModal">
+  <div class="modalCard solid">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Modo de juego</div>
+        <div class="muted">Elige cómo se contabilizan los puntos</div>
+      </div>
+      <button class="chip" id="btnCloseGameMode" type="button">Cerrar</button>
+    </div>
+
+    <div class="panelLike" style="display:flex; flex-direction:column; gap:10px;">
+      <label class="radioRow">
+        <input type="radio" name="gameMode" value="standard">
+        <div class="radioBody">
+          <div class="radioTitle">Normal</div>
+          <div class="muted">15/30/40, juegos y sets (tie-break a 6-6)</div>
+        </div>
+      </label>
+
+      <label class="radioRow">
+        <input type="radio" name="gameMode" value="tiebreak">
+        <div class="radioBody">
+          <div class="radioTitle">Tie-break</div>
+          <div class="muted">Puntuación 0,1,2… · a 7 por 2</div>
+        </div>
+      </label>
+
+      <label class="radioRow">
+        <input type="radio" name="gameMode" value="super">
+        <div class="radioBody">
+          <div class="radioTitle">Super tie-break</div>
+          <div class="muted">Puntuación 0,1,2… · a 10 por 2</div>
+        </div>
+      </label>
+    </div>
+
+    <div class="modalFoot">
+      <button class="btn primary" id="btnApplyGameMode" type="button">Aplicar</button>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <div class="modal hidden" id="historyModal">
@@ -361,6 +419,13 @@
     <div class="pointViewerBody">
       <div class="pointViewerTools">
         <button class="chip" id="btnPvSpeed" type="button">Velocidad: x0.75</button>
+        <button class="chip" id="btnPvRotate" type="button" aria-label="Rotar pista">
+          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+          </svg>
+          <span>Rotar</span>
+        </button>
         <button class="chip primary" id="btnPvReplay" type="button">Reproducir</button>
       </div>
 
@@ -578,7 +643,7 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2536"></script>
+<script src="app.js?v=2538"></script>
 
 </body>
 </html>

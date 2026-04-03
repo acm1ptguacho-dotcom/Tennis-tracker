@@ -8,6 +8,7 @@ const state = {
   sets: { A:0, B:0 },
   games: { A:0, B:0 },
   points: { A:0, B:0 },
+  matchMode: "standard", // standard | tiebreak | super
   isTiebreak: false,
   tb: { A:0, B:0 },
   tbStartingServer: "A",
@@ -67,6 +68,7 @@ function load(){
     state.sets = state.sets || {A:0,B:0};
     state.games = state.games || {A:0,B:0};
     state.points = state.points || {A:0,B:0};
+    state.matchMode = state.matchMode || "standard";
     state.tb = state.tb || {A:0,B:0};
     state.undoStack = state.undoStack || [];
     state.matchPoints = state.matchPoints || [];
@@ -103,6 +105,27 @@ function getSavedMatches(){
 function setSavedMatches(arr){
   try{ localStorage.setItem(SAVED_MATCHES_KEY, JSON.stringify(arr||[])); }
   catch(e){ console.error(e); toast("⚠️ No se pudo guardar la lista de partidos"); }
+}
+
+function openGameMode(){
+  // sync radio to current mode
+  const mode = state.matchMode || "standard";
+  document.querySelectorAll('input[name="gameMode"]').forEach(r=>{
+    r.checked = (r.value === mode);
+  });
+  openModal("#gameModeModal");
+}
+function closeGameMode(){ closeModal("#gameModeModal"); }
+
+function applyGameMode(){
+  const sel = document.querySelector('input[name="gameMode"]:checked');
+  const mode = sel ? sel.value : "standard";
+  if (mode === (state.matchMode || "standard")){ closeGameMode(); return; }
+  state.matchMode = mode;
+  toast("✅ Modo de juego: " + (mode==="standard" ? "Normal" : mode==="tiebreak" ? "Tie-break" : "Super tie-break"));
+  // reiniciar marcador e historial para evitar inconsistencias
+  newMatch();
+  closeGameMode();
 }
 
 function openSaveLoad(mode){
@@ -286,7 +309,36 @@ function restoreMatchState(snap){
 }
 
 function updateScoring(winner){
+  const mode = state.matchMode || "standard";
+  // Match en modo tie-break / super tie-break (sin juegos/sets)
+  if (mode !== "standard"){
+    // aseguramos modo TB
+    state.isTiebreak = true;
+    state.tb = state.tb || {A:0,B:0};
+    if (!state.tbStartingServer) state.tbStartingServer = state.currentServer || "A";
+    state.tb[winner] = (state.tb[winner]||0) + 1;
+    // switch server based on tiebreak rules: 1 then every 2
+    const total = (state.tb.A||0) + (state.tb.B||0);
+    const start = state.tbStartingServer;
+    let server = start;
+    if (total === 0) server = start;
+    else if (total === 1) server = other(start);
+    else {
+      const block = Math.floor((total-2)/2);
+      server = (block % 2 === 0) ? start : other(start);
+    }
+    state.currentServer = server;
+
+    const a = state.tb.A||0, b = state.tb.B||0;
+    const target = (mode === "super") ? 10 : 7;
+    if ((a>=target || b>=target) && Math.abs(a-b)>=2){
+      state.matchFinished = true;
+    }
+    return;
+  }
+
   if (state.isTiebreak){
+
     state.tb[winner] += 1;
     // switch server based on tiebreak rules: 1 then every 2
     const total = state.tb.A + state.tb.B;
@@ -320,7 +372,7 @@ function updateScoring(winner){
     return;
   }
 
-  // normal game
+// normal game
   let a=state.points.A, b=state.points.B;
   if (a>=3 && b>=3){
     if (winner==="A") a+=1; else b+=1;
@@ -1066,17 +1118,25 @@ const qiF = $("#qiFinish");
 }
 
 function newMatch(){
+  const mode = state.matchMode || "standard";
   state.sets={A:0,B:0};
   state.games={A:0,B:0};
   state.points={A:0,B:0};
-  state.isTiebreak=false;
   state.tb={A:0,B:0};
+  state.isTiebreak = false;
   state.tbStartingServer="A";
   state.currentServer="A";
   state.matchFinished=false;
   state.matchPoints=[];
   state.setHistory=[];
   state.undoStack=[];
+  state.matchMode = mode;
+
+  if (mode !== "standard"){
+    state.isTiebreak = true;
+    state.tbStartingServer = state.currentServer;
+  }
+
   initPoint();
   persist();
   renderAll();
@@ -1303,10 +1363,13 @@ function renderPointViewer(point){
   const reasonLine = (p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : "");
   if (sub) sub.textContent = `${formatSnapshot(p.snapshot)}${reasonLine ? " · " + reasonLine : ""}`;
 
+  const rotated = !!(state.ui && state.ui.pvRotated);
   const topName = $("#pvTopName");
   const botName = $("#pvBottomName");
-  if (topName) topName.textContent = nameB || "Jugador B";
-  if (botName) botName.textContent = nameA || "Jugador A";
+  if (topName) topName.textContent = rotated ? (nameA || "Jugador A") : (nameB || "Jugador B");
+  if (botName) botName.textContent = rotated ? (nameB || "Jugador B") : (nameA || "Jugador A");
+  const pvCourt = $("#pvCourt");
+  if (pvCourt) pvCourt.classList.toggle("rotated", rotated);
 
   // events
   const evs = (p.events||[]);
@@ -1330,7 +1393,13 @@ function renderPointViewer(point){
   const fmtSpeed = (v)=> (v===0.5 ? "0.50" : v===0.25 ? "0.25" : "0.75");
 
   const btnS = $("#btnPvSpeed");
+  const btnRot = $("#btnPvRotate");
   const btnR = $("#btnPvReplay");
+
+  if (btnRot){
+    btnRot.disabled = false;
+    btnRot.onclick = ()=>{ state.ui.pvRotated = !state.ui.pvRotated; persist(); renderPointViewer(p); };
+  }
 
   if (btnS){
     btnS.textContent = `Velocidad: x${fmtSpeed(Number(state.ui.pvSpeed) || 0.75)}`;
@@ -3656,7 +3725,10 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
 
   on("btnSaveMatch","click", ()=>openSaveLoad("save"));
   on("btnLoadMatch","click", ()=>openSaveLoad("load"));
+  on("btnGameMode","click", openGameMode);
   on("btnCloseSaveLoad","click", closeSaveLoad);
+  on("btnCloseGameMode","click", closeGameMode);
+  on("btnApplyGameMode","click", applyGameMode);
   on("tabSaveMatch","click", ()=>openSaveLoad("save"));
   on("tabLoadMatch","click", ()=>openSaveLoad("load"));
   on("btnDoSaveMatch","click", saveCurrentMatch);
@@ -3864,9 +3936,40 @@ function initBottomSheet(){
 }
 
 
+function initSplash(){
+  const splash = document.getElementById("splash");
+  const btn = document.getElementById("btnStartApp");
+  if (!splash || !btn) return;
+
+  document.body.classList.add("splashLock");
+  requestAnimationFrame(()=> splash.classList.add("is-play"));
+
+  let shown = false;
+  const showBtn = ()=>{
+    if (shown) return;
+    shown = true;
+    splash.classList.add("showStart");
+    btn.classList.remove("hidden");
+  };
+
+  const t = setTimeout(showBtn, 2150);
+
+  splash.addEventListener("click", (e)=>{
+    if (e.target === btn) return;
+    clearTimeout(t);
+    showBtn();
+  });
+
+  btn.addEventListener("click", ()=>{
+    splash.classList.add("is-out");
+    document.body.classList.remove("splashLock");
+    setTimeout(()=>{ splash.style.display="none"; window.dispatchEvent(new Event("resize")); }, 420);
+  }, { once:true });
+}
+
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2536").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2538").catch(console.error);
 }
 
 function init(){
@@ -3876,7 +3979,8 @@ function init(){
   initPoint();
   wire();
   renderAll();
-registerSW();
+  initSplash();
+  registerSW();
 }
 
 window.addEventListener("load", init);
