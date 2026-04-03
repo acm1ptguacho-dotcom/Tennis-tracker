@@ -2100,6 +2100,12 @@ function setFinishMode(mode){
     tn.setAttribute("aria-selected", mode==="normal" ? "true" : "false");
     ta.setAttribute("aria-selected", mode==="advanced" ? "true" : "false");
   }
+  // toggle UI blocks
+  const fm = $("#finishMenu");
+  if (fm){
+    fm.classList.toggle("modeNormal", mode==="normal");
+    fm.classList.toggle("modeAdvanced", mode==="advanced");
+  }
   closeAdvStep2();
 }
 
@@ -2187,6 +2193,34 @@ function finishAction(kind, offender){
   return true;
 }
 
+function finishGain(winner){
+  // generic point won (no winner/volea), used for "Gana"
+  const offender = winner;
+  const reason = `Gana (${offender})`;
+
+  if (finishMode==="advanced"){
+    // ask FH/BH in advanced
+    openAdvStep2({
+      kind: "GAIN",
+      offender,
+      winner,
+      reason,
+      customTitle: "Gana con...",
+      customOpts: [
+        { key:"FH", label:"Derecha" },
+        { key:"BH", label:"Revés" },
+      ]
+    });
+    return false;
+  }
+
+  if (!state.point) initPoint();
+  state.point.finishDetail = { mode:"normal", kind:"GAIN", offender };
+  endPoint(winner, reason);
+  return true;
+}
+
+
 
 function finishVolley(offender){
   // winner by volley, quick button in finish menu
@@ -2224,7 +2258,7 @@ function finishDetailLabel(fd){
   const strokeMap = { FH:"Derecha", BH:"Revés", VOL:"Volea", SM:"Smash", OTHER:"Otro" };
   const winMap = { ACE:"Ace", FH:"Derecha", BH:"Revés", VOL_FH:"Volea derecha", VOL_BH:"Volea revés", PASS:"Passing", DROP:"Dejada", VOL:"Volea", WIN:"Winner", OTHER:"Otro" };
   if (fd.kind==="WINNER" && fd.winnerType) return winMap[fd.winnerType] || fd.winnerType;
-  if ((fd.kind==="UE" || fd.kind==="FE") && fd.strokeType) return strokeMap[fd.strokeType] || fd.strokeType;
+  if ((fd.kind==="UE" || fd.kind==="FE" || fd.kind==="GAIN") && fd.strokeType) return strokeMap[fd.strokeType] || fd.strokeType;
   return "";
 }
 
@@ -3862,8 +3896,16 @@ function closeSurface(){ closeModal('#surfaceModal'); }
 function renderCourtNames(){
   const t = $("#baselineTop");
   const b = $("#baselineBottom");
-  if (t) t.textContent = (state.names && state.names.B) ? state.names.B : "Jugador B";
-  if (b) b.textContent = (state.names && state.names.A) ? state.names.A : "Jugador A";
+  const nameB = (state.names && state.names.B) ? state.names.B : "Jugador B";
+  const nameA = (state.names && state.names.A) ? state.names.A : "Jugador A";
+  if (t) t.textContent = nameB;
+  if (b) b.textContent = nameA;
+
+  // Finish menu headers
+  const fA = $("#finishNameA");
+  const fB = $("#finishNameB");
+  if (fA) fA.textContent = nameA;
+  if (fB) fB.textContent = nameB;
 }
 
 function renderMeta(){
@@ -4026,7 +4068,11 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("finishMenuClose","click", ()=>{ closeFinishMenu(); closeAdvStep2(); });
   // cerrar al tocar fuera (backdrop)
   const fm = $("#finishMenu");
-  if (fm) fm.addEventListener("click", (e)=>{ if (e.target === fm) closeFinishMenu(); });
+  if (fm) fm.addEventListener("click", (e)=>{
+    try{ e.preventDefault(); }catch(_){}
+    try{ e.stopPropagation(); }catch(_){}
+    if (e.target === fm) closeFinishMenu();
+  }, {passive:false});
   on("tabNormal","click", ()=> setFinishMode("normal"));
   on("tabAdvanced","click", ()=> setFinishMode("advanced"));
   on("advBack","click", closeAdvStep2);
@@ -4047,15 +4093,28 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   bindMenu("mFault", ()=> fault());
   bindMenu("mDoubleFault", ()=> doubleFault());
 
-  // End point actions inside menu
-  bindMenu("mUeA", ()=> finishAction("UE","A"));
-  bindMenu("mUeB", ()=> finishAction("UE","B"));
-  bindMenu("mFeA", ()=> finishAction("FE","A"));
-  bindMenu("mFeB", ()=> finishAction("FE","B"));
-  bindMenu("mWinA", ()=> finishAction("WINNER","A"));
-  bindMenu("mWinB", ()=> finishAction("WINNER","B"));
-  bindMenu("mVolA", ()=> finishVolley("A"));
-  bindMenu("mVolB", ()=> finishVolley("B"));
+  // End point actions inside menu (re-designed)
+  // NORMAL
+  bindMenu("mUeA_n", ()=> finishAction("UE","A"));
+  bindMenu("mGainA_n", ()=> finishGain("A"));
+  bindMenu("mWinA_n", ()=> finishAction("WINNER","A"));
+
+  bindMenu("mUeB_n", ()=> finishAction("UE","B"));
+  bindMenu("mGainB_n", ()=> finishGain("B"));
+  bindMenu("mWinB_n", ()=> finishAction("WINNER","B"));
+
+  // ADVANCED
+  bindMenu("mUeA_a", ()=> finishAction("UE","A"));
+  bindMenu("mFeA_a", ()=> finishAction("FE","A"));
+  bindMenu("mGainA_a", ()=> finishGain("A"));
+  bindMenu("mWinA_a", ()=> finishAction("WINNER","A"));
+  bindMenu("mVolA_a", ()=> finishVolley("A"));
+
+  bindMenu("mUeB_a", ()=> finishAction("UE","B"));
+  bindMenu("mFeB_a", ()=> finishAction("FE","B"));
+  bindMenu("mGainB_a", ()=> finishGain("B"));
+  bindMenu("mWinB_a", ()=> finishAction("WINNER","B"));
+  bindMenu("mVolB_a", ()=> finishVolley("B"));
 
   // quick actions
   on("btnUndo","click", undo);
@@ -4235,7 +4294,7 @@ function showSplashAgain(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2540").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2541").catch(console.error);
 }
 
 function init(){
