@@ -7,14 +7,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2539" />
+  <link rel="stylesheet" href="style.css?v=2540" />
 </head>
 <body>
 
 <div class="splash" id="splash" aria-label="Tennis Direction Tracker">
   <div class="splashInner">
-    <img class="splashLogo" src="assets/logo.jpg" alt="Tennis Direction Tracker">
-    <button class="btn primary splashStart hidden" id="btnStartApp" type="button">Iniciar</button>
+    <img class="splashLogo" src="assets/logo.png" alt="Tennis Direction Tracker">
+    <button class="btn primary splashStart hidden" id="btnStartApp" type="button" data-i18n="start">Iniciar</button>
   </div>
 </div>
 
@@ -28,7 +28,7 @@
       </button>
 
       <div class="topbarBrand" aria-label="Tennis Direction Tracker">
-        <img class="brandLogoImg" src="assets/logo.jpg" alt="Tennis Direction Tracker"/>
+        <img class="brandLogoImg" src="assets/logo.png" alt="Tennis Direction Tracker"/>
       </div>
 
       <!-- Botón para mostrar/ocultar la barra lateral de acciones (modo full-screen) -->
@@ -57,31 +57,67 @@
 <div class="menuOverlay" id="menuOverlay" aria-hidden="true"></div>
 <nav class="drawer" id="drawerMenu" aria-label="Menú">
   <div class="drawerHead">
-    <div class="drawerTitle">Menú</div>
+    <div class="drawerTitle" data-i18n="menu">Menú</div>
     <button class="chip iconChip" id="btnCloseMenu" type="button" aria-label="Cerrar menú"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
 
   <div class="drawerBody">
-    <div class="drawerGroupLabel">Acciones</div>
-    <button class="chip menuItem" id="btnSaveMatch" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span>Guardar partido</span></button>
-    <button class="chip menuItem" id="btnLoadMatch" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6l2 2h8a2 2 0 0 1 2 2z"/></svg><span>Cargar partido</span></button>
+    <div class="drawerGroupLabel" data-i18n="actions">Acciones</div>
+    <button class="chip menuItem" id="btnSaveMatch" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span data-i18n="saveMatch">Guardar partido</span></button>
+    <button class="chip menuItem" id="btnLoadMatch" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6l2 2h8a2 2 0 0 1 2 2z"/></svg><span data-i18n="loadMatch">Cargar partido</span></button>
 
     
     <button class="chip menuItem" id="btnGameMode" type="button">
       <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M7 21h10"/><path d="M12 17v4"/><path d="M7 4h10"/><path d="M17 4v3a5 5 0 0 1-10 0V4"/>
       </svg>
-      <span>Modo de juego</span>
+      <span data-i18n="gameMode">Modo de juego</span>
     </button>
-<div class="drawerDivider"></div>
 
-    <div class="drawerGroupLabel">Reportes</div>
-    <button class="chip menuItem" id="btnHistory" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Historial</span></button>
-    <button class="chip menuItem" id="btnAnalytics" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span>Analíticas</span></button>
-    <button class="chip menuItem" id="btnStats" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Estadísticas</span></button>
+    <button class="chip menuItem" id="btnSurface" type="button">
+      <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="16" rx="3"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="12" y1="4" x2="12" y2="20"/>
+      </svg>
+      <span data-i18n="surface">Cambiar pista</span>
+    </button>
+
+    <div class="drawerDivider"></div>
+
+    <div class="drawerGroupLabel" data-i18n="settings">Configuración</div>
+
+    <button class="chip menuItem" id="btnLanguage" type="button">
+      <span class="flag" id="langFlag" aria-hidden="true">🇪🇸</span>
+      <span data-i18n="language">Idioma</span>
+    </button>
+
+    <button class="chip menuItem" id="btnInfo" type="button">
+      <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="10" x2="12" y2="16"/>
+        <circle cx="12" cy="7" r="1" fill="currentColor"/>
+      </svg>
+      <span data-i18n="info">Info</span>
+    </button>
+
+    <button class="chip menuItem" id="btnBackHome" type="button">
+      <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 11l9-8 9 8"/>
+        <path d="M5 10v10h14V10"/>
+      </svg>
+      <span data-i18n="back">Volver</span>
+    </button>
+
+    <div class="drawerDivider"></div>
+
+    <div class="drawerGroupLabel" data-i18n="reports">Reportes</div>
+    <button class="chip menuItem" id="btnHistory" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span data-i18n="history">Historial</span></button>
+    <button class="chip menuItem" id="btnAnalytics" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span data-i18n="analytics">Analíticas</span></button>
+    <button class="chip menuItem" id="btnStats" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span data-i18n="stats">Estadísticas</span></button>
     
-    <button class="chip menuItem" id="btnCharts" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 14 9 9 13 13 20 6"/><polyline points="20 6 20 12 14 12"/></svg><span>Gráficos</span></button>
-<button class="chip menuItem" id="btnExport" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Exportar</span></button>
+    <button class="chip menuItem" id="btnCharts" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 14 9 9 13 13 20 6"/><polyline points="20 6 20 12 14 12"/></svg><span data-i18n="charts">Gráficos</span></button>
+<button class="chip menuItem" id="btnExport" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span data-i18n="export">Exportar</span></button>
 
     <!-- Eliminado: Ocultar/Mostrar marcador (ahora es icono en la barra superior) -->
     <!-- Eliminado: Modo normal / Modo claro. Se mantiene un único modo estable -->
@@ -231,10 +267,25 @@
       </div>
 
       <aside class="timelineSide" id="timelineSide" aria-label="Timeline del rally">
+        <div class="metaCard" id="matchMetaCard">
+          <details class="metaDetails">
+            <summary data-i18n="matchData">Datos del partido</summary>
+            <div class="metaGrid">
+              <label>Evento / Torneo<input class="input" id="metaEvent" placeholder="Ej: Entrenamiento / Torneo" /></label>
+              <label>Lugar<input class="input" id="metaVenue" placeholder="Ciudad / Club" /></label>
+              <label>Fecha<input class="input" id="metaDate" type="date" /></label>
+              <label>Hora<input class="input" id="metaTime" type="time" /></label>
+              <label>Condiciones<input class="input" id="metaConditions" placeholder="Ej: viento / indoor" /></label>
+              <label>Notas<textarea class="input" id="metaNotes" rows="3" placeholder="Notas rápidas del partido"></textarea></label>
+            </div>
+            <div class="muted" style="margin-top:8px;">Si lo dejas vacío, no se guardará información extra.</div>
+          </details>
+        </div>
+
         <div class="timelineCard">
           <div class="timelineHeader">
             <div class="timelineHeaderText">
-              <div class="timelineTitle">Secuencia del punto</div>
+              <div class="timelineTitle" data-i18n="seqTitle">Secuencia del punto</div>
               <div class="timelineSub" id="lastTouch">Último: —</div>
             </div>
           </div>
@@ -314,7 +365,7 @@
         <div class="modalTitle">Guardar / Cargar partido</div>
         <div class="muted" id="saveLoadSub">Gestiona partidas guardadas en este dispositivo</div>
       </div>
-      <button class="chip" id="btnCloseSaveLoad" type="button">Cerrar</button>
+      <button class="chip" id="btnCloseSaveLoad" type="button" data-i18n="close">Cerrar</button>
     </div>
 
     <div class="segTabs">
@@ -337,6 +388,8 @@
       <div class="muted" style="margin-top:10px;">Nota: esto usa almacenamiento local del navegador.</div>
     </div>
   </div>
+</div>
+
 <div class="modal hidden" id="gameModeModal">
   <div class="modalCard solid">
     <div class="modalHead">
@@ -344,7 +397,7 @@
         <div class="modalTitle">Modo de juego</div>
         <div class="muted">Elige cómo se contabilizan los puntos</div>
       </div>
-      <button class="chip" id="btnCloseGameMode" type="button">Cerrar</button>
+      <button class="chip" id="btnCloseGameMode" type="button" data-i18n="close">Cerrar</button>
     </div>
 
     <div class="panelLike" style="display:flex; flex-direction:column; gap:10px;">
@@ -374,11 +427,66 @@
     </div>
 
     <div class="modalFoot">
-      <button class="btn primary" id="btnApplyGameMode" type="button">Aplicar</button>
+      <button class="btn primary" id="btnApplyGameMode" type="button" data-i18n="apply">Aplicar</button>
     </div>
   </div>
 </div>
 
+<div class="modal hidden" id="surfaceModal">
+  <div class="modalCard solid">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Cambiar pista</div>
+        <div class="muted">Selecciona la superficie del diagrama</div>
+      </div>
+      <button class="chip" id="btnCloseSurface" type="button" data-i18n="close">Cerrar</button>
+    </div>
+
+    <div class="surfaceGrid" id="surfaceGrid">
+      <!-- se rellena por JS con previews -->
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="languageModal">
+  <div class="modalCard solid">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Idioma</div>
+        <div class="muted">Elige Español o English</div>
+      </div>
+      <button class="chip" id="btnCloseLanguage" type="button" data-i18n="close">Cerrar</button>
+    </div>
+
+    <div class="panelLike" style="display:flex; flex-direction:column; gap:10px;">
+      <button class="btn" id="btnLangES" type="button">🇪🇸 Español</button>
+      <button class="btn" id="btnLangEN" type="button">🇬🇧 English</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="infoModal">
+  <div class="modalCard solid">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Información</div>
+        <div class="muted">Sobre Tennis Direction Tracker</div>
+      </div>
+      <button class="chip" id="btnCloseInfo" type="button" data-i18n="close">Cerrar</button>
+    </div>
+
+    <div class="panelLike" id="infoBody">
+      <p><b>Tennis Direction Tracker</b> es una herramienta para registrar puntos y patrones de dirección en tenis punto a punto.</p>
+      <ul>
+        <li>Registra direcciones de saque, resto y rally con un diagrama de pista.</li>
+        <li>Guarda y carga partidos en el dispositivo.</li>
+        <li>Revisa historial punto a punto, reproduce secuencias con flechas y filtra por marcador o contexto.</li>
+        <li>Analiza patrones repetidos y consulta estadísticas y gráficos de momentum.</li>
+        <li>Exporta datos para informes (CSV/PDF).</li>
+      </ul>
+      <p class="muted">Sugerencia: usa “Ocultar herramientas” para ver el diagrama en pantalla completa durante el entrenamiento.</p>
+    </div>
+  </div>
 </div>
 
 <div class="modal hidden" id="historyModal">
@@ -388,7 +496,7 @@
         <div class="modalTitle">Historial del partido</div>
         <div class="muted" id="historySub">0 puntos</div>
       </div>
-      <button class="chip" id="btnCloseHistory" type="button">Cerrar</button>
+      <button class="chip" id="btnCloseHistory" type="button" data-i18n="close">Cerrar</button>
     </div>
 
     <div class="filters">
@@ -413,7 +521,7 @@
         <div class="modalTitle" id="pvTitle">Punto</div>
         <div class="muted" id="pvSub">—</div>
       </div>
-      <button class="chip" id="btnClosePointViewer" type="button">Cerrar</button>
+      <button class="chip" id="btnClosePointViewer" type="button" data-i18n="close">Cerrar</button>
     </div>
 
     <div class="pointViewerBody">
@@ -431,7 +539,7 @@
 
       <div class="pointViewerCourtWrap">
         <div class="pointViewerCourt" id="pvCourt" aria-label="Diagrama del punto">
-          <img src="assets/court_top_view.png" alt="pista">
+          <img src="assets/court_top_view.png" alt="pista" id="pvCourtImg">
           <svg id="pvArrowSvg" class="arrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
           <div class="baselineName baselineTop" id="pvTopName">Jugador B</div>
           <div class="baselineName baselineBottom" id="pvBottomName">Jugador A</div>
@@ -453,7 +561,7 @@
         <div class="modalTitle">Analíticas del partido</div>
         <div class="muted">Top patrones</div>
       </div>
-      <button class="chip" id="btnCloseAnalytics" type="button">Cerrar</button>
+      <button class="chip" id="btnCloseAnalytics" type="button" data-i18n="close">Cerrar</button>
     </div>
 
     <div class="filters">
@@ -509,7 +617,7 @@
       </div>
       <div class="modalActions">
         <button class="chip" id="btnStatsPDF" type="button">PDF</button>
-        <button class="chip" id="btnCloseStats" type="button">Cerrar</button>
+        <button class="chip" id="btnCloseStats" type="button" data-i18n="close">Cerrar</button>
       </div>
     </div>
 
@@ -575,7 +683,7 @@
         <div class="modalTitle">Gráficos</div>
         <div class="muted" id="chartsSub">Momentum / balance acumulado</div>
       </div>
-      <button class="chip" id="btnCloseCharts" type="button">Cerrar</button>
+      <button class="chip" id="btnCloseCharts" type="button" data-i18n="close">Cerrar</button>
     </div>
 
     <div class="filters chartsFilters">
@@ -616,7 +724,7 @@
         <div class="modalTitle">Exportar</div>
         <div class="muted" id="exportSub">Puntos y patrones</div>
       </div>
-      <button class="chip" id="btnCloseExport" type="button">Cerrar</button>
+      <button class="chip" id="btnCloseExport" type="button" data-i18n="close">Cerrar</button>
     </div>
 
     <div class="exportGrid">
@@ -643,7 +751,7 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2539"></script>
+<script src="app.js?v=2540"></script>
 
 </body>
 </html>

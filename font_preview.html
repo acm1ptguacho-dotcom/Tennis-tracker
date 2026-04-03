@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TDT – Font preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Option A: Exo 2 (sporty/tech, italic weights) -->
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,600;0,800;1,600;1,800&display=swap" rel="stylesheet">
+  <!-- Option B: Saira Semi Condensed (sport/condensed) -->
+  <link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#07101a; --card:rgba(255,255,255,.05); --stroke:rgba(255,255,255,.14); --muted:rgba(255,255,255,.72); }
+    body{ margin:0; background:radial-gradient(120% 120% at 30% 0%, rgba(57,213,255,.10), rgba(0,0,0,.12) 55%, rgba(0,0,0,.22)), var(--bg);
+          color:#fff; font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial; }
+    .wrap{ max-width:980px; margin:0 auto; padding:24px; }
+    .tabs{ display:flex; gap:10px; flex-wrap:wrap; }
+    .tab{ border:1px solid var(--stroke); background:rgba(255,255,255,.06); color:#fff; padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:800; }
+    .tab.active{ box-shadow:0 0 0 2px rgba(57,213,255,.18); border-color:rgba(57,213,255,.45); }
+
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:16px; }
+    .card{ background:var(--card); border:1px solid var(--stroke); border-radius:18px; padding:16px; box-shadow:0 18px 45px rgba(0,0,0,.35); }
+    .muted{ color:var(--muted); }
+
+    /* Brand-ish heading style (uses selected font) */
+    .brandH{
+      font-size:44px;
+      font-weight:900;
+      font-style:italic;
+      letter-spacing:-.02em;
+      line-height:1.02;
+      background: linear-gradient(90deg, #ffffff 0%, #d9ff2f 65%, #9cff00 100%);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      text-shadow: 0 12px 28px rgba(0,0,0,.40);
+      margin: 0 0 6px;
+    }
+    .brandSub{
+      font-size:18px;
+      letter-spacing:.24em;
+      font-weight:900;
+      color:#7fe2ff;
+      text-transform:uppercase;
+      margin:0;
+      opacity:.95;
+    }
+    .h2{ font-size:22px; font-weight:900; margin:0 0 8px; }
+    .btn{ display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:12px 16px; border:1px solid rgba(255,255,255,.16);
+          background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); color:#fff; font-weight:900; }
+
+    .fontA .useFont{ font-family:"Exo 2", system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial; }
+    .fontB .useFont{ font-family:"Saira Semi Condensed", system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial; }
+
+    @media (max-width:740px){
+      .grid{ grid-template-columns:1fr; }
+      .brandH{ font-size:36px; }
+    }
+  </style>
+</head>
+<body class="fontA">
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab active" id="a">Option A – Exo 2</button>
+      <button class="tab" id="b">Option B – Saira Semi Condensed</button>
+      <span class="muted" style="align-self:center;">(This file is only for preview – it does not change the app yet.)</span>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="useFont">
+          <h1 class="brandH">Tennis Direction</h1>
+          <p class="brandSub">TRACKER</p>
+        </div>
+        <p class="muted" style="margin-top:12px;">Heading sample (logo-like).</p>
+      </div>
+
+      <div class="card useFont">
+        <div class="h2">Historial del partido</div>
+        <div class="muted">2 puntos · Filtra por marcador: 40-30</div>
+        <div style="height:12px"></div>
+        <button class="btn">Iniciar</button>
+        <button class="btn" style="margin-left:10px">Cerrar</button>
+        <p class="muted" style="margin-top:12px;">UI sample (buttons + headings).</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const a=document.getElementById('a');
+  const b=document.getElementById('b');
+  function set(which){
+    document.body.classList.toggle('fontA', which==='A');
+    document.body.classList.toggle('fontB', which==='B');
+    a.classList.toggle('active', which==='A');
+    b.classList.toggle('active', which==='B');
+  }
+  a.onclick=()=>set('A');
+  b.onclick=()=>set('B');
+</script>
+</body>
+</html>

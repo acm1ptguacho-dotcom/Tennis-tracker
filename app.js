@@ -4,6 +4,7 @@ const $ = (s) => document.querySelector(s);
 const STORAGE_KEY = "tdt_v23_state";
 
 const state = {
+  lang: "es",
   names: { A:"Jugador A", B:"Jugador B" },
   sets: { A:0, B:0 },
   games: { A:0, B:0 },
@@ -19,11 +20,128 @@ const state = {
   matchPoints: [], // completed points
   undoStack: [],
 
-  ui: { theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false }
+  meta: { event:"", venue:"", date:"", time:"", conditions:"", notes:"" },
+
+  ui: { theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false, surface:"hard" }
 };
 
 const playerName = (id)=> (state.names && state.names[id]) ? state.names[id] : (id==="A" ? "Jugador A" : "Jugador B");
 const playerNameSafe = (id)=> escapeHtml(playerName(id));
+
+// --- I18N (ES/EN) ---
+const I18N = {
+  es: {
+    menu: "Menú",
+    actions: "Acciones",
+    reports: "Reportes",
+    settings: "Configuración",
+    saveMatch: "Guardar partido",
+    loadMatch: "Cargar partido",
+    gameMode: "Modo de juego",
+    surface: "Cambiar pista",
+    language: "Idioma",
+    info: "Info",
+    back: "Volver",
+    close: "Cerrar",
+    apply: "Aplicar",
+    start: "Iniciar",
+    matchData: "Datos del partido",
+    seqTitle: "Secuencia del punto",
+    last: "Último:",
+    charts: "Gráficos",
+    history: "Historial",
+    analytics: "Analíticas",
+    stats: "Estadísticas",
+    export: "Exportar",
+    hard: "Dura",
+    clay: "Tierra batida",
+    grass: "Césped",
+    ao: "Australia (azul)",
+  },
+  en: {
+    menu: "Menu",
+    actions: "Actions",
+    reports: "Reports",
+    settings: "Settings",
+    saveMatch: "Save match",
+    loadMatch: "Load match",
+    gameMode: "Game mode",
+    surface: "Court surface",
+    language: "Language",
+    info: "Info",
+    back: "Back",
+    close: "Close",
+    apply: "Apply",
+    start: "Start",
+    matchData: "Match details",
+    seqTitle: "Point sequence",
+    last: "Last:",
+    charts: "Charts",
+    history: "History",
+    analytics: "Analytics",
+    stats: "Stats",
+    export: "Export",
+    hard: "Hard",
+    clay: "Clay",
+    grass: "Grass",
+    ao: "Australian (blue)",
+  }
+};
+function t(key){
+  const lang = (state.lang || "es");
+  return (I18N[lang] && I18N[lang][key]) || I18N.es[key] || key;
+}
+function setLanguage(lang){
+  state.lang = (lang === "en") ? "en" : "es";
+  persist();
+  applyI18n();
+  renderAll();
+}
+function applyI18n(){
+  document.documentElement.lang = state.lang || "es";
+  document.title = "Tennis Direction Tracker";
+  const flag = document.getElementById('langFlag');
+  if (flag) flag.textContent = (state.lang === 'en') ? '🇬🇧' : '🇪🇸';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k = el.getAttribute('data-i18n');
+    if (!k) return;
+    el.textContent = t(k);
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const k = el.getAttribute('data-i18n-ph');
+    if (!k) return;
+    el.setAttribute('placeholder', t(k));
+  });
+  // Info content
+  const infoBody = document.getElementById('infoBody');
+  if (infoBody){
+    if ((state.lang||'es') === 'en'){
+      infoBody.innerHTML = `
+        <p><b>Tennis Direction Tracker</b> is a point-by-point tennis tracking tool focused on directional patterns.</p>
+        <ul>
+          <li>Tap the court grid to record serve/return/rally directions.</li>
+          <li>Save and load matches locally on the device.</li>
+          <li>Review point history, replay arrow sequences and filter by score or context.</li>
+          <li>Explore repeated patterns, stats and momentum charts.</li>
+          <li>Export data for reports (CSV/PDF).</li>
+        </ul>
+        <p class="muted">Tip: use “Hide tools” for a full-screen court view during training.</p>
+      `;
+    } else {
+      infoBody.innerHTML = `
+        <p><b>Tennis Direction Tracker</b> es una herramienta para registrar puntos y patrones de dirección en tenis punto a punto.</p>
+        <ul>
+          <li>Toca la cuadrícula de la pista para registrar saque/resto/rally.</li>
+          <li>Guarda y carga partidos en el dispositivo.</li>
+          <li>Revisa historial, reproduce secuencias con flechas y filtra por marcador o contexto.</li>
+          <li>Analiza patrones repetidos, estadísticas y gráficos de momentum.</li>
+          <li>Exporta datos para informes (CSV/PDF).</li>
+        </ul>
+        <p class="muted">Sugerencia: usa “Ocultar herramientas” para ver el diagrama en pantalla completa.</p>
+      `;
+    }
+  }
+}
 
 
 function refreshABOptionLabels(){
@@ -64,6 +182,7 @@ function load(){
     const s = JSON.parse(raw);
     Object.assign(state, s);
     // safety defaults
+    state.lang = state.lang || "es";
     state.names = state.names || {A:"Jugador A",B:"Jugador B"};
     state.sets = state.sets || {A:0,B:0};
     state.games = state.games || {A:0,B:0};
@@ -73,12 +192,14 @@ function load(){
     state.undoStack = state.undoStack || [];
     state.matchPoints = state.matchPoints || [];
     state.setHistory = state.setHistory || [];
+    state.meta = state.meta || { event:"", venue:"", date:"", time:"", conditions:"", notes:"" };
     // UI flags (bloqueamos tema en oscuro y modo entrenador activado)
-    state.ui = state.ui || {theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false};
+    state.ui = state.ui || {theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false, surface:"hard"};
     if (typeof state.ui.showHistoryArrows === "undefined") state.ui.showHistoryArrows = true;
     if (typeof state.ui.hideScore === "undefined") state.ui.hideScore = false;
     if (typeof state.ui.rotated === "undefined") state.ui.rotated = false;
     if (typeof state.ui.hideRail === "undefined") state.ui.hideRail = false;
+    if (!state.ui.surface) state.ui.surface = "hard";
   }catch(e){ console.error(e); }
 }
 
@@ -1312,11 +1433,16 @@ function modalSel(id){
 }
 function openModal(id){
   const el = $(modalSel(id));
-  if (el) el.classList.remove("hidden");
+  if (el){
+    el.classList.remove("hidden");
+    document.body.classList.add("modalOpen");
+  }
 }
 function closeModal(id){
   const el = $(modalSel(id));
   if (el) el.classList.add("hidden");
+  if (!document.querySelector(".modal:not(.hidden)") && document.getElementById("finishMenu")?.classList.contains("hidden"))
+    document.body.classList.remove("modalOpen");
 }
 
 function openHistory(){
@@ -1370,6 +1496,9 @@ function renderPointViewer(point){
   if (botName) botName.textContent = rotated ? (nameB || "Jugador B") : (nameA || "Jugador A");
   const pvCourt = $("#pvCourt");
   if (pvCourt) pvCourt.classList.toggle("rotated", rotated);
+
+  // surface
+  applySurface();
 
   // events
   const evs = (p.events||[]);
@@ -1692,51 +1821,54 @@ function renderCharts(){
 
   const name = playerName(persp);
   const sub = $("#chartsSub");
-  if (sub) sub.textContent = `Balance acumulado · Perspectiva: ${name}`;
+  if (sub) sub.textContent = (state.lang==="en") ? `Cumulative balance · Perspective: ${name}` : `Balance acumulado · Perspectiva: ${name}`;
 
   const points = Array.isArray(state.matchPoints) ? state.matchPoints.slice() : [];
-
   const scoreProg = simulateScoreProgress(points);
 
-  // canvas
   const canvas = $("#chartsCanvas");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  // Resize to CSS size (retina)
-  const rect = canvas.getBoundingClientRect();
+  // Scrollable width (match sample): one tick per point
+  const wrap = canvas.parentElement;
+  const viewW = Math.max(320, wrap ? wrap.getBoundingClientRect().width : 320);
   const dpr = window.devicePixelRatio || 1;
-  const W = Math.max(320, rect.width);
-  const H = Math.max(200, rect.height);
+
+  const padL=54, padR=18, padT=14, padB=60;
+  const step = 78;
+  const plotW = step * Math.max(1, (points.length-1));
+  const W = Math.max(viewW, padL + padR + plotW);
+  const H = 320;
+
+  canvas.style.width = W + "px";
+  canvas.style.height = H + "px";
   canvas.width = Math.round(W * dpr);
   canvas.height = Math.round(H * dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
 
-  // Colors from CSS variables
   const cs = getComputedStyle(document.documentElement);
   const cAccent2 = (cs.getPropertyValue("--accent2") || "#39D5FF").trim();
   const cGood = (cs.getPropertyValue("--good") || "#2EE59D").trim();
   const cBad = (cs.getPropertyValue("--bad") || "#FF3B5C").trim();
   const cGold = (cs.getPropertyValue("--accent") || "#FFD400").trim();
 
-  // Background clear
   ctx.clearRect(0,0,W,H);
 
-  // Empty state
   if (!points.length){
     ctx.fillStyle = "rgba(255,255,255,.75)";
     ctx.font = "700 14px Inter, system-ui, sans-serif";
-    ctx.fillText("No hay puntos todavía. Registra puntos para ver el gráfico.", 16, 42);
+    ctx.fillText(state.lang==="en" ? "No points yet. Track points to see the chart." : "No hay puntos todavía. Registra puntos para ver el gráfico.", 16, 42);
     const strip=$("#pointStrip"); if (strip) strip.innerHTML = "";
+    const scoresEl=$("#chartsScores"); if (scoresEl) scoresEl.innerHTML = "";
     persist();
     return;
   }
 
-  // Build momentum series
+  // Series: cumulative balance (+1/-1)
   let y=0;
   const ys=[];
-  const xs=[];
   const wonFlags=[];
   const flagsArr=[];
   for (let i=0;i<points.length;i++){
@@ -1744,7 +1876,6 @@ function renderCharts(){
     const won = isPointWonBy(p, persp);
     wonFlags.push(won);
     y += won ? 1 : -1;
-    xs.push(i+1);
     ys.push(y);
     flagsArr.push(pointContextFlags(p, persp));
   }
@@ -1755,18 +1886,15 @@ function renderCharts(){
   const yMin = minY - yPad;
   const yMax = maxY + yPad;
 
-  const padL=44, padR=14, padT=14, padB=26;
-  const plotW = W - padL - padR;
   const plotH = H - padT - padB;
-
-  const xAt = (i)=> padL + (points.length===1?0: (i/(points.length-1))*plotW);
+  const xAt = (i)=> padL + i*step;
   const yAt = (val)=> padT + (1 - ((val - yMin)/(yMax - yMin))) * plotH;
 
-  // Grid + axis labels
+  // Grid
   ctx.lineWidth = 1;
   ctx.strokeStyle = "rgba(255,255,255,.10)";
   ctx.fillStyle = "rgba(255,255,255,.55)";
-  ctx.font = "600 11px Inter, system-ui, sans-serif";
+  ctx.font = "700 11px Inter, system-ui, sans-serif";
 
   const gridLines = 5;
   for (let g=0; g<=gridLines; g++){
@@ -1774,10 +1902,10 @@ function renderCharts(){
     const yy = padT + t*plotH;
     ctx.beginPath();
     ctx.moveTo(padL, yy);
-    ctx.lineTo(padL+plotW, yy);
+    ctx.lineTo(W-padR, yy);
     ctx.stroke();
     const val = Math.round(yMax - t*(yMax-yMin));
-    ctx.fillText(String(val), 10, yy+4);
+    ctx.fillText(String(val), 12, yy+4);
   }
 
   // Baseline y=0
@@ -1785,27 +1913,31 @@ function renderCharts(){
   ctx.strokeStyle = "rgba(255,255,255,.22)";
   ctx.beginPath();
   ctx.moveTo(padL, y0);
-  ctx.lineTo(padL+plotW, y0);
+  ctx.lineTo(W-padR, y0);
   ctx.stroke();
 
-  // Boundaries (games/sets)
+  // Game/set boundaries
   const bounds = computeBoundaries(points);
   for (const b of bounds){
-    const xx = xAt(b.i + 0.5);
+    const xx = xAt(b.i) + step/2;
     ctx.strokeStyle = b.kind==="set" ? "rgba(255,212,0,.30)" : "rgba(57,213,255,.16)";
     ctx.beginPath();
     ctx.moveTo(xx, padT);
     ctx.lineTo(xx, padT+plotH);
     ctx.stroke();
+
+    // Small label at bottom
+    ctx.fillStyle = b.kind==="set" ? "rgba(255,212,0,.85)" : "rgba(57,213,255,.70)";
+    ctx.font = "900 10px Inter, system-ui, sans-serif";
+    ctx.fillText(b.kind==="set" ? "SET" : "G", xx-8, H-18);
   }
 
-  // Line
+  // Trend line
   ctx.save();
   ctx.lineWidth = 2.8;
   ctx.strokeStyle = cAccent2;
   ctx.shadowColor = cAccent2;
   ctx.shadowBlur = 10;
-
   ctx.beginPath();
   for (let i=0;i<ys.length;i++){
     const xx=xAt(i);
@@ -1816,7 +1948,7 @@ function renderCharts(){
   ctx.stroke();
   ctx.restore();
 
-  // Points markers
+  // Dots + rings
   for (let i=0;i<ys.length;i++){
     const xx=xAt(i);
     const yy=yAt(ys[i]);
@@ -1825,26 +1957,35 @@ function renderCharts(){
     ctx.fillStyle = won ? cGood : cBad;
     ctx.shadowColor = won ? cGood : cBad;
     ctx.shadowBlur = 8;
-    ctx.arc(xx,yy,3.6,0,Math.PI*2);
+    ctx.arc(xx,yy,4.2,0,Math.PI*2);
     ctx.fill();
 
-    // important ring
     if (flagsArr[i].important){
       ctx.shadowBlur = 0;
       ctx.strokeStyle = "rgba(255,212,0,.75)";
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
-      ctx.arc(xx,yy,6.2,0,Math.PI*2);
+      ctx.arc(xx,yy,7.4,0,Math.PI*2);
       ctx.stroke();
     }
   }
 
-  // Axis labels
+  // X-axis labels: score after each point (as in the sample)
   ctx.shadowBlur = 0;
-  ctx.fillStyle = "rgba(255,255,255,.62)";
-  ctx.fillText("Puntos →", padL + plotW - 54, H - 8);
+  ctx.fillStyle = "rgba(255,255,255,.70)";
+  ctx.font = "800 11px Inter, system-ui, sans-serif";
 
-  // Strip
+  // start label
+  ctx.fillText("0-0", padL-28, H-8);
+  for (let i=0;i<points.length;i++){
+    const lab = (scoreProg[i]?.after || "");
+    const xx = xAt(i);
+    // keep short
+    const s = String(lab).replace(/^TB\s+/,'TB ');
+    ctx.fillText(s, xx-18, H-8);
+  }
+
+  // Strip dots (premium timeline)
   const strip = $("#pointStrip");
   if (strip){
     strip.innerHTML = "";
@@ -1853,46 +1994,42 @@ function renderCharts(){
       const f = flagsArr[i];
       const dot = document.createElement("div");
       dot.className = "stripDot " + (won ? "win" : "lose") + " " + (f.isServe ? "serve" : "ret") + (f.important ? " important" : "");
-      const tags=[];
-      tags.push(f.isServe ? "Saque" : "Resto");
-      if (f.breakPointForPersp) tags.push("Break point");
-      if (f.gamePointForPersp) tags.push("Game point");
-      if (f.setPointForPersp) tags.push("Set point");
-      if (f.isTB) tags.push("Tie-break");
-      if (f.deuceAdv) tags.push("Deuce/Adv");
-      if (f.clutch3030 && !f.deuceAdv) tags.push("30-30+");
       const winnerName = playerName(p.winner);
       const afterScore = scoreProg[i]?.after || "";
-      dot.title = `Punto ${p.n} · ${won?"+1":"-1"} · Gana ${winnerName}\nMarcador: ${afterScore}\n${formatSnapshot(p.snapshot)}\n${p.reason||""}${tags.length?("\n["+tags.join(" · ")+"]"):""}`;
+      dot.title = `Punto ${p.n} · ${won?"+1":"-1"} · ${winnerName} · ${afterScore}`;
       dot.addEventListener("click", ()=> openPointViewer(p));
       strip.appendChild(dot);
     });
   }
 
-
+  // Score timeline row (0-0, 0-15...) horizontally scrollable
   const scoresEl = $("#chartsScores");
   if (scoresEl){
     scoresEl.innerHTML = "";
-    // start pill
-    const startPill = document.createElement("div");
-    startPill.className = "scorePill";
-    startPill.innerHTML = `<span class="miniDot" style="background:rgba(255,255,255,.55)"></span><b>Inicio</b> <span>0-0</span>`;
-    scoresEl.appendChild(startPill);
+    const makePill = (label, wonClass, title)=>{
+      const pill = document.createElement("div");
+      pill.className = "scorePill " + (wonClass||"");
+      pill.innerHTML = `<span class="miniDot"></span><b>${escapeHtml(label)}</b>`;
+      pill.title = title || label;
+      return pill;
+    };
+
+    const startP = makePill("0-0", "", state.lang==="en"?"Start 0-0":"Inicio 0-0");
+    startP.querySelector('.miniDot').style.background = 'rgba(255,255,255,.55)';
+    scoresEl.appendChild(startP);
 
     points.forEach((p,i)=>{
       const won = wonFlags[i];
       const after = scoreProg[i]?.after || "";
-      const pill = document.createElement("div");
-      pill.className = "scorePill " + (won ? "win" : "lose");
-      pill.innerHTML = `<span class="miniDot"></span><b>P${p.n}</b> <span>${escapeHtml(after)}</span>`;
-      pill.title = `Punto ${p.n} · ${after} · Gana ${playerName(p.winner)}`;
-      pill.addEventListener("click", ()=> openPointViewer(p));
+      const pill = makePill(after, won?"win":"lose", `P${p.n} · ${after}`);
+      pill.addEventListener('click', ()=> openPointViewer(p));
       scoresEl.appendChild(pill);
     });
   }
 
   persist();
 }
+
 
 
 
@@ -1912,12 +2049,14 @@ function openFinishMenu(){
   const m=$("#finishMenu");
   if (!m) return;
   m.classList.remove("hidden");
+  document.body.classList.add("modalOpen");
 }
 function closeFinishMenu(){
   closeAdvStep2();
   const m=$("#finishMenu");
   if (!m) return;
   m.classList.add("hidden");
+  if (!document.querySelector(".modal:not(.hidden)")) document.body.classList.remove("modalOpen");
 }
 function toggleFinishMenu(){
   const m=$("#finishMenu");
@@ -3607,6 +3746,7 @@ function toggleMenu(){
 let __menuModalTimer = null;
 function closeAllModals(){
   document.querySelectorAll(".modal:not(.hidden)").forEach(m=>m.classList.add("hidden"));
+  document.body.classList.remove("modalOpen");
 }
 function openFromMenu(fn){
   // close drawer first for iOS Safari reliability
@@ -3675,12 +3815,88 @@ function toggleRotation(){
   persist();
 }
 
+// --- Court surface ---
+const SURFACES = [
+  { id:'hard', img:'assets/court_top_view.png', labelKey:'hard' },
+  { id:'clay', img:'assets/court_clay.png', labelKey:'clay' },
+  { id:'grass', img:'assets/court_grass.png', labelKey:'grass' },
+  { id:'ao', img:'assets/court_ao.png', labelKey:'ao' },
+];
+function surfaceById(id){ return SURFACES.find(s=>s.id===id) || SURFACES[0]; }
+function applySurface(){
+  state.ui = state.ui || {};
+  if (!state.ui.surface) state.ui.surface = 'hard';
+  const s = surfaceById(state.ui.surface);
+  const img = document.getElementById('courtImg');
+  if (img) img.src = s.img;
+  const pvImg = document.getElementById('pvCourtImg');
+  if (pvImg) pvImg.src = s.img;
+}
+function openSurface(){
+  const grid = document.getElementById('surfaceGrid');
+  if (grid){
+    grid.innerHTML = '';
+    SURFACES.forEach(s=>{
+      const b = document.createElement('button');
+      b.type='button';
+      b.className = 'surfaceOpt' + ((state.ui.surface||'hard')===s.id ? ' active' : '');
+      b.innerHTML = `
+        <div class="surfaceThumb"><img src="${s.img}" alt="${t(s.labelKey)}"></div>
+        <div class="surfaceName">${t(s.labelKey)}</div>
+      `;
+      b.addEventListener('click', ()=>{
+        state.ui.surface = s.id;
+        state.meta = state.meta || {};
+        state.meta.surface = s.id;
+        persist();
+        applySurface();
+        openSurface();
+      });
+      grid.appendChild(b);
+    });
+  }
+  openModal('#surfaceModal');
+}
+function closeSurface(){ closeModal('#surfaceModal'); }
+
 function renderCourtNames(){
   const t = $("#baselineTop");
   const b = $("#baselineBottom");
   if (t) t.textContent = (state.names && state.names.B) ? state.names.B : "Jugador B";
   if (b) b.textContent = (state.names && state.names.A) ? state.names.A : "Jugador A";
 }
+
+function renderMeta(){
+  state.meta = state.meta || { event:"", venue:"", date:"", time:"", conditions:"", notes:"" };
+  const m = state.meta;
+  const setVal = (id, v)=>{ const el=document.getElementById(id); if (el && el.value !== (v||"")) el.value = v||""; };
+  setVal('metaEvent', m.event);
+  setVal('metaVenue', m.venue);
+  setVal('metaDate', m.date);
+  setVal('metaTime', m.time);
+  setVal('metaConditions', m.conditions);
+  const notes = document.getElementById('metaNotes');
+  if (notes && notes.value !== (m.notes||"")) notes.value = m.notes||"";
+}
+
+function wireMeta(){
+  const bind=(id,key)=>{
+    const el=document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', ()=>{
+      state.meta = state.meta || {};
+      state.meta[key] = el.value || "";
+      persist();
+    });
+  };
+  bind('metaEvent','event');
+  bind('metaVenue','venue');
+  bind('metaDate','date');
+  bind('metaTime','time');
+  bind('metaConditions','conditions');
+  bind('metaNotes','notes');
+}
+
 
 /** WIRING **/
 
@@ -3701,6 +3917,9 @@ window.addEventListener('orientationchange', ()=>{
 
 function renderAll(){
   syncTopbarHeight();
+  applyI18n();
+  applySurface();
+  renderMeta();
   applyScoreVisibility();
   applyRailVisibility();
   applyRotation();
@@ -3741,6 +3960,16 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnSaveMatch","click", ()=>openFromMenu(()=>openSaveLoad("save")));
   on("btnLoadMatch","click", ()=>openFromMenu(()=>openSaveLoad("load")));
   on("btnGameMode","click", ()=>openFromMenu(openGameMode));
+  on("btnSurface","click", ()=>openFromMenu(openSurface));
+  on("btnLanguage","click", ()=>openFromMenu(()=>openModal("#languageModal")));
+  on("btnInfo","click", ()=>openFromMenu(()=>openModal("#infoModal")));
+  on("btnBackHome","click", ()=>openFromMenu(()=>{ showSplashAgain(); }));
+  on("btnCloseSurface","click", closeSurface);
+  on("btnCloseLanguage","click", ()=>closeModal("#languageModal"));
+  on("btnCloseInfo","click", ()=>closeModal("#infoModal"));
+  on("btnLangES","click", ()=>{ closeModal("#languageModal"); setLanguage("es"); });
+  on("btnLangEN","click", ()=>{ closeModal("#languageModal"); setLanguage("en"); });
+
   on("btnCloseSaveLoad","click", closeSaveLoad);
   on("btnCloseGameMode","click", closeGameMode);
   on("btnApplyGameMode","click", applyGameMode);
@@ -3762,7 +3991,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // (Eliminado) Tema y modo normal
 
 // cerrar menú al elegir una opción (las acciones que viven dentro del menú)
-["btnSaveMatch","btnLoadMatch","btnHistory","btnAnalytics","btnStats","btnCharts","btnExport"].forEach(id=>{
+["btnSaveMatch","btnLoadMatch","btnGameMode","btnSurface","btnLanguage","btnInfo","btnBackHome","btnHistory","btnAnalytics","btnStats","btnCharts","btnExport"].forEach(id=>{
   const el = $("#"+id);
   if (el) el.addEventListener("click", ()=>setMenuOpen(false));
 });
@@ -3866,26 +4095,30 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnPDFStats","click", exportStatsPDF);
 
   // close modals clicking outside
-  ["historyModal","pointViewerModal","analyticsModal","statsModal","exportModal"].forEach(mid=>{
+  ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal"].forEach(mid=>{
     const m = $("#"+mid);
     if (!m) return;
     m.addEventListener("click", (e)=>{
+      // prevent click-through on iOS
+      try{ e.preventDefault(); }catch(_){}
+      try{ e.stopPropagation(); }catch(_){}
       if (e.target === m){
-        try{ closeModal(mid); }catch(_){}
+        try{ closeModal(mid); }catch(_){ }
       }
-    });
+    }, {passive:false});
   });
 
   // keyboard shortcuts
   window.addEventListener("keydown", (e)=>{
     if (e.key==="Escape"){
-      ["historyModal","pointViewerModal","analyticsModal","statsModal","exportModal","finishMenu"].forEach(id=>{
+      ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","finishMenu"].forEach(id=>{
         const el=$("#"+id);
         if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
       });
       setMenuOpen(false);
       clearReplay();
       setSheetOpen(false);
+      document.body.classList.remove("modalOpen");
     }
   });
 
@@ -3975,16 +4208,34 @@ function initSplash(){
     showBtn();
   });
 
-  btn.addEventListener("click", ()=>{
+  btn.onclick = ()=>{
     splash.classList.add("is-out");
     document.body.classList.remove("splashLock");
-    setTimeout(()=>{ splash.style.display="none"; window.dispatchEvent(new Event("resize")); }, 420);
-  }, { once:true });
+    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); }, 420);
+  };
+}
+
+function showSplashAgain(){
+  const splash = document.getElementById("splash");
+  const btn = document.getElementById("btnStartApp");
+  if (!splash || !btn) return;
+  splash.classList.remove("hidden","is-out","showStart");
+  splash.classList.remove("is-play");
+  void splash.offsetWidth;
+  document.body.classList.add("splashLock");
+  requestAnimationFrame(()=> splash.classList.add("is-play"));
+  btn.classList.add("hidden");
+  setTimeout(()=>{ splash.classList.add("showStart"); btn.classList.remove("hidden"); }, 2150);
+  btn.onclick = ()=>{
+    splash.classList.add("is-out");
+    document.body.classList.remove("splashLock");
+    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); }, 420);
+  };
 }
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2539").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2540").catch(console.error);
 }
 
 function init(){
@@ -3993,6 +4244,7 @@ function init(){
   buildZones();
   initPoint();
   wire();
+  wireMeta();
   renderAll();
   initSplash();
   registerSW();

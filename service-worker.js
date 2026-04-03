@@ -4,15 +4,17 @@
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
 
-const const CACHE = "tennis-tracker-web-v2.52-deportivo-pro-2539";
+const CACHE = "tennis-tracker-web-v2.52-deportivo-pro-2540";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=2539",
-  "./app.js?v=2539",
+  "./style.css?v=2540",
+  "./app.js?v=2540",
+  "./assets/logo.png",
   "./assets/court_top_view.png",
-  "./assets/logo.jpg",
-  "./assets/board_court.png",
+  "./assets/court_clay.png",
+  "./assets/court_grass.png",
+  "./assets/court_ao.png",
 ];
 
 self.addEventListener("install", (event) => {
