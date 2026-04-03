@@ -3604,6 +3604,21 @@ function toggleMenu(){
   setMenuOpen(!__menuOpen);
 }
 
+let __menuModalTimer = null;
+function closeAllModals(){
+  document.querySelectorAll(".modal:not(.hidden)").forEach(m=>m.classList.add("hidden"));
+}
+function openFromMenu(fn){
+  // close drawer first for iOS Safari reliability
+  setMenuOpen(false);
+  if (__menuModalTimer) { clearTimeout(__menuModalTimer); __menuModalTimer = null; }
+  __menuModalTimer = setTimeout(()=>{
+    closeAllModals();
+    try{ fn && fn(); }catch(e){ console.error(e); }
+  }, 140);
+}
+
+
 
 function applyScoreVisibility(){
   const s = $("#scoreSection");
@@ -3723,9 +3738,9 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCharts","click", openCharts);
   on("btnExport","click", openExport);
 
-  on("btnSaveMatch","click", ()=>openSaveLoad("save"));
-  on("btnLoadMatch","click", ()=>openSaveLoad("load"));
-  on("btnGameMode","click", openGameMode);
+  on("btnSaveMatch","click", ()=>openFromMenu(()=>openSaveLoad("save")));
+  on("btnLoadMatch","click", ()=>openFromMenu(()=>openSaveLoad("load")));
+  on("btnGameMode","click", ()=>openFromMenu(openGameMode));
   on("btnCloseSaveLoad","click", closeSaveLoad);
   on("btnCloseGameMode","click", closeGameMode);
   on("btnApplyGameMode","click", applyGameMode);
@@ -3969,7 +3984,7 @@ function initSplash(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2538").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2539").catch(console.error);
 }
 
 function init(){
