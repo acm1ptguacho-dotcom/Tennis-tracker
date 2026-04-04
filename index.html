@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2544" />
+<link rel="stylesheet" href="style.css?v=2545" />
 </head>
 <body>
 
@@ -772,6 +772,45 @@
   </div>
 </div>
 
+
+<div class="modal hidden" id="confirmModal">
+  <div class="modalCard solid confirmCard">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle" id="confirmTitle">CONFIRMAR</div>
+        <div class="muted" id="confirmMsg">—</div>
+      </div>
+      <button class="chip" id="btnCloseConfirm" type="button">CERRAR</button>
+    </div>
+    <div class="modalFoot" style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn" id="btnConfirmCancel" type="button">CANCELAR</button>
+      <button class="btn primary" id="btnConfirmOk" type="button">CONFIRMAR</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="playerModal">
+  <div class="modalCard solid" style="max-width:520px;">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle" id="playerModalTitle">JUGADOR</div>
+        <div class="muted" id="playerModalSub">CONFIGURA SAQUE Y MANO</div>
+      </div>
+      <button class="chip" id="btnClosePlayerModal" type="button">CERRAR</button>
+    </div>
+
+    <div class="panelLike" style="display:flex; flex-direction:column; gap:10px;">
+      <button class="btn primary" id="optServe" type="button">SAQUE</button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn" id="optRight" type="button" style="flex:1;">DIESTRO</button>
+        <button class="btn" id="optLeft" type="button" style="flex:1;">ZURDO</button>
+      </div>
+      <div class="muted" style="font-size:12px;">TIP: “SAQUE” ASIGNA AL JUGADOR COMO SERVIDOR ACTUAL. DIESTRO/ZURDO SE USA EN INFORMES Y ESTADÍSTICAS.</div>
+    </div>
+  </div>
+</div>
+
+
 <div class="toast" id="toast"></div>
 
 <!-- placeholders (compatibilidad) -->
@@ -786,7 +825,7 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2544"></script>
+<script src="app.js?v=2545"></script>
 
 </body>
 </html>

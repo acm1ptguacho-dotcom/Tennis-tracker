@@ -21,6 +21,7 @@ const state = {
   undoStack: [],
 
   meta: { event:"", venue:"", date:"", time:"", conditions:"", notes:"" },
+  handed: { A:"R", B:"R" },
 
   ui: { theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false, surface:"hard" }
 };
@@ -193,6 +194,7 @@ function load(){
     state.matchPoints = state.matchPoints || [];
     state.setHistory = state.setHistory || [];
     state.meta = state.meta || { event:"", venue:"", date:"", time:"", conditions:"", notes:"" };
+    state.handed = state.handed || { A:"R", B:"R" };
     // UI flags (bloqueamos tema en oscuro y modo entrenador activado)
     state.ui = state.ui || {theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false, surface:"hard"};
     if (typeof state.ui.showHistoryArrows === "undefined") state.ui.showHistoryArrows = true;
@@ -389,6 +391,22 @@ function serveSideLabel(){
   // SD when sum points is even (including TB points)
   const sum = state.isTiebreak ? (state.tb.A + state.tb.B) : (state.points.A + state.points.B);
   return (sum % 2 === 0) ? "SD" : "SV";
+}
+
+function setCurrentServer(p){
+  if (!p || (p!=="A" && p!=="B")) return;
+  if (state.point && state.point.events && state.point.events.length>0){
+    toast("No puedes cambiar el servidor durante el punto");
+    return;
+  }
+  state.currentServer = p;
+  if (state.point && state.point.phase==="serve"){
+    state.point.server = state.currentServer;
+    state.point.side = serveSideLabel();
+  }
+  updateZoneHint();
+  renderAll();
+  persist();
 }
 
 function initPoint(){
@@ -1444,6 +1462,49 @@ function closeModal(id){
   if (!document.querySelector(".modal:not(.hidden)") && document.getElementById("finishMenu")?.classList.contains("hidden"))
     document.body.classList.remove("modalOpen");
 }
+
+// --- Confirm dialog ---
+let __confirmCb = null;
+function openConfirm(title, msg, cb){
+  __confirmCb = (typeof cb === "function") ? cb : null;
+  const t = $("#confirmTitle"); if (t) t.textContent = (title || "CONFIRMAR").toUpperCase();
+  const mm = $("#confirmMsg"); if (mm) mm.textContent = (msg || "");
+  openModal("#confirmModal");
+}
+function closeConfirm(){
+  closeModal("#confirmModal");
+  __confirmCb = null;
+}
+
+// --- Player options (serve + handedness) ---
+function ensureHanded(){ state.handed = state.handed || { A:"R", B:"R" }; }
+
+function openPlayerModal(pid){
+  ensureHanded();
+  state.ui = state.ui || {};
+  state.ui.playerModalTarget = (pid==="B") ? "B" : "A";
+  renderPlayerModal();
+  openModal("#playerModal");
+}
+function closePlayerModal(){ closeModal("#playerModal"); }
+
+function renderPlayerModal(){
+  ensureHanded();
+  const pid = (state.ui && state.ui.playerModalTarget) ? state.ui.playerModalTarget : "A";
+  const title = $("#playerModalTitle");
+  const sub = $("#playerModalSub");
+  if (title) title.textContent = playerName(pid).toUpperCase();
+  if (sub){
+    const hand = state.handed[pid] === "L" ? "ZURDO" : "DIESTRO";
+    const isSrv = (state.currentServer === pid);
+    sub.textContent = (isSrv ? "SERVIDOR ACTUAL · " : "") + hand;
+  }
+  const bR = $("#optRight"), bL = $("#optLeft"), bS = $("#optServe");
+  if (bR) bR.classList.toggle("primary", state.handed[pid] !== "L");
+  if (bL) bL.classList.toggle("primary", state.handed[pid] === "L");
+  if (bS) bS.classList.toggle("primary", state.currentServer === pid);
+}
+
 
 function openHistory(){
   renderHistory();
@@ -3026,8 +3087,9 @@ function renderStats(){
   const mode = $("#sMode")?.value || "table";           // table | broadcast
   const subMode = $("#sSub")?.value || "none";          // none | set | game | side
 
-  const nameA = state.names.A;
-  const nameB = state.names.B;
+  ensureHanded();
+  const nameA = state.names.A + (state.handed.A==="L" ? " (Z)" : "");
+  const nameB = state.names.B + (state.handed.B==="L" ? " (Z)" : "");
 
   const labelSubMode = (m)=>({
     none: "Global",
@@ -3922,6 +3984,7 @@ function renderCourtNames(){
 
 function renderMeta(){
   state.meta = state.meta || { event:"", venue:"", date:"", time:"", conditions:"", notes:"" };
+    state.handed = state.handed || { A:"R", B:"R" };
   const m = state.meta;
   const setVal = (id, v)=>{ const el=document.getElementById(id); if (el && el.value !== (v||"")) el.value = v||""; };
   setVal('metaEvent', m.event);
@@ -3994,9 +4057,9 @@ function wire(){
   on("nameB","change", ()=>{ state.names.B=$("#nameB").value||"Jugador B"; persist(); renderAll(); });
 
   // controls
-  on("btnNew","click", newMatch);
-  on("btnFinish","click", finishMatch);
-  on("btnResume","click", resumeMatch);
+  on("btnNew","click", ()=> openConfirm("Nuevo partido", "Se reiniciará el marcador y el historial del partido actual.", ()=>{ newMatch(); toast("✅ Nuevo partido"); }));
+  on("btnFinish","click", ()=> openConfirm("Finalizar partido", "¿Quieres finalizar el partido? Podrás reanudarlo desde el botón Reanudar.", ()=>{ finishMatch(); }));
+  on("btnResume","click", ()=> openConfirm("Reanudar partido", "¿Quieres reanudar el partido?", ()=>{ resumeMatch(); }));
 
 // menú (hamburguesa)
 on("btnMenu","click", toggleMenu);
@@ -4042,6 +4105,19 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCloseCharts","click", closeCharts);
   on("btnCloseExport","click", closeExport);
 
+  // confirm modal
+  on("btnCloseConfirm","click", closeConfirm);
+  on("btnConfirmCancel","click", closeConfirm);
+  on("btnConfirmOk","click", ()=>{ const cb = __confirmCb; closeConfirm(); try{ cb && cb(); }catch(e){ console.error(e); } });
+
+  // player modal
+  on("btnClosePlayerModal","click", closePlayerModal);
+  on("optServe","click", ()=>{ const pid=(state.ui&&state.ui.playerModalTarget)||"A"; setCurrentServer(pid); closePlayerModal(); });
+  on("optRight","click", ()=>{ const pid=(state.ui&&state.ui.playerModalTarget)||"A"; ensureHanded(); state.handed[pid]="R"; persist(); renderPlayerModal(); toast("✅ " + playerName(pid) + " · Diestro"); });
+  on("optLeft","click", ()=>{ const pid=(state.ui&&state.ui.playerModalTarget)||"A"; ensureHanded(); state.handed[pid]="L"; persist(); renderPlayerModal(); toast("✅ " + playerName(pid) + " · Zurdo"); });
+
+
+
   // (Eliminado) Tema y modo normal
 
 // cerrar menú al elegir una opción (las acciones que viven dentro del menú)
@@ -4052,27 +4128,25 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
 
 
   // cambiar servidor manualmente (solo antes de iniciar el punto)
-  const setServer = (p)=>{
-    if (state.point && state.point.events && state.point.events.length>0){
-      toast("No puedes cambiar el servidor durante el punto");
-      return;
-    }
-    state.currentServer = p;
-    if (state.point && state.point.phase==="serve"){
-      state.point.server = state.currentServer;
-      state.point.side = serveSideLabel();
-    }
-    updateZoneHint();
-    renderAll();
-    persist();
-  };
-
   const rowA = $("#tvRowA"), rowB = $("#tvRowB");
   const sA = $("#serveA"), sB = $("#serveB");
-  if (rowA) { rowA.style.cursor="pointer"; rowA.title="Toca para poner servidor A"; rowA.addEventListener("click", ()=>setServer("A")); }
-  if (rowB) { rowB.style.cursor="pointer"; rowB.title="Toca para poner servidor B"; rowB.addEventListener("click", ()=>setServer("B")); }
-  if (sA) { sA.style.pointerEvents="none"; }
-  if (sB) { sB.style.pointerEvents="none"; }
+  if (rowA) { rowA.style.cursor="pointer"; rowA.title="Toca para poner servidor A"; rowA.addEventListener("click", ()=>setCurrentServer("A")); }
+  if (rowB) { rowB.style.cursor="pointer"; rowB.title="Toca para poner servidor B"; rowB.addEventListener("click", ()=>setCurrentServer("B")); }
+
+  // Player options (serve + handedness)
+  const bindPlayerBall = (el, pid)=>{
+    if (!el) return;
+    el.style.pointerEvents="auto";
+    el.style.cursor="pointer";
+    el.title="Opciones de jugador";
+    el.addEventListener("click", (e)=>{
+      try{ e.preventDefault(); }catch(_){}
+      try{ e.stopPropagation(); }catch(_){}
+      openPlayerModal(pid);
+    }, {passive:false});
+  };
+  bindPlayerBall(sA, "A");
+  bindPlayerBall(sB, "B");
 
 
   // finish ball menu
@@ -4170,10 +4244,10 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
     const m = $("#"+mid);
     if (!m) return;
     m.addEventListener("click", (e)=>{
-      // prevent click-through on iOS
-      try{ e.preventDefault(); }catch(_){}
-      try{ e.stopPropagation(); }catch(_){}
       if (e.target === m){
+        // backdrop click only
+        try{ e.preventDefault(); }catch(_){}
+        try{ e.stopPropagation(); }catch(_){}
         try{ closeModal(mid); }catch(_){ }
       }
     }, {passive:false});
@@ -4306,7 +4380,7 @@ function showSplashAgain(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2544").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2545").catch(console.error);
 }
 
 function init(){
