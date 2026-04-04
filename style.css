@@ -315,6 +315,38 @@ body.light .court{border:1px solid rgba(10,22,55,.18);}
   cursor:pointer;
   transition: transform var(--fast) var(--ease), background var(--fast) var(--ease), border-color var(--fast) var(--ease), box-shadow var(--med) var(--ease);
 }
+
+/* === Zone grid v2 (4 columns A-D, 3 rows P/M/C, each macro split into 2x2) === */
+.zoneCell{
+  border-radius: 8px;
+}
+.zoneCell .zoneTxt{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-top: 6px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 1100;
+  letter-spacing: .08em;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.14);
+}
+body.light .zoneCell .zoneTxt{
+  background: rgba(255,255,255,.70);
+  border: 1px solid rgba(10,22,55,.14);
+}
+
+.zoneCell.macroL{ border-left-width:2px; border-left-color: rgba(255,255,255,.18); }
+.zoneCell.macroR{ border-right-width:2px; border-right-color: rgba(255,255,255,.18); }
+.zoneCell.macroT{ border-top-width:2px; border-top-color: rgba(255,255,255,.18); }
+.zoneCell.macroB{ border-bottom-width:2px; border-bottom-color: rgba(255,255,255,.18); }
+
+/* Subdivision lines slightly lighter */
+.zoneCell{
+  border-color: rgba(255,255,255,.08);
+}
 body.light .zoneCell, body.light .serveCell{
   color: rgba(10,22,55,.88);
   background: rgba(255,255,255,.22);
