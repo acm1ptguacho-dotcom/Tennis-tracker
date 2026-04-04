@@ -3763,10 +3763,22 @@ function applyModes(){
 }
 
 let __menuOpen = false;
+let __menuScrollY = 0;
 function setMenuOpen(open){
   __menuOpen = !!open;
   const drawer = $("#drawerMenu");
   const overlay = $("#menuOverlay");
+
+  if (__menuOpen){
+    __menuScrollY = window.scrollY || 0;
+    document.body.classList.add("menuOpen");
+    document.body.style.top = `-${__menuScrollY}px`;
+  } else {
+    document.body.classList.remove("menuOpen");
+    document.body.style.top = "";
+    try{ window.scrollTo(0, __menuScrollY); }catch(_){}
+  }
+
   if (drawer) drawer.classList.toggle("open", __menuOpen);
   if (overlay){
     overlay.classList.toggle("open", __menuOpen);
@@ -4294,7 +4306,7 @@ function showSplashAgain(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2543").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2544").catch(console.error);
 }
 
 function init(){
