@@ -4294,7 +4294,7 @@ function showSplashAgain(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2542").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2543").catch(console.error);
 }
 
 function init(){
