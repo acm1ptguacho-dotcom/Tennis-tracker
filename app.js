@@ -577,7 +577,7 @@ function updateZoneHint(){
   if (!p) return;
 
   if (p.phase==="serve"){
-    if (hint) hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca W/C/T`;
+    if (hint) hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca T/C/A`;
     if (phase) phase.textContent = "SAQUE";
   } else {
     if (hint) hint.textContent = `RALLY · toca dirección (P/M/C)`;
@@ -902,22 +902,6 @@ function makeGrid(id, rect, rows, cols, cellRenderer){
   g.style.height = (rect.height*100)+"%";
   g.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
   g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
-  // Macro overlays to visually group 2x2 sub-zones into one zone (e.g., AP = 4 sub-cells)
-  if (rows===6 && cols===8 && (id==="rallyTop" || id==="rallyBottom")){
-    const side = (id==="rallyTop") ? "top" : "bottom";
-    for (let mr=0; mr<3; mr++){
-      for (let mc=0; mc<4; mc++){
-        const o=document.createElement("div");
-        o.className = "macroOverlay" + (((mr+mc)%2===0) ? " macroOverlayA" : " macroOverlayB");
-        o.dataset.side = side;
-        o.dataset.macro = ((side==="bottom") ? ["D","C","B","A"] : ["A","B","C","D"])[mc] + ((side==="top") ? ["P","M","C"][mr] : ["C","M","P"][mr]);
-        o.style.gridRow = `${mr*2+1} / span 2`;
-        o.style.gridColumn = `${mc*2+1} / span 2`;
-        g.appendChild(o);
-      }
-    }
-  }
   for (let r=0;r<rows;r++){
     for (let c=0;c<cols;c++){
       g.appendChild(cellRenderer(r,c));
@@ -939,11 +923,6 @@ function buildZones(){
     btn.dataset.side=side;
     btn.dataset.row=r;
     btn.dataset.col=c;
-
-    const macroRow = Math.floor(r/2);
-    const macroCol = Math.floor(c/2);
-    btn.classList.add(((macroRow+macroCol)%2===0) ? "macroShadeA" : "macroShadeB");
-    btn.dataset.macro = zoneCodeFromTap(side, r, c);
 
     // Macro boundaries (thicker lines) for readability
     if (c % 2 === 0) btn.classList.add("macroL");
@@ -976,7 +955,7 @@ function buildZones(){
     btn.dataset.side=side;
     btn.dataset.box=box;       // 0 left, 1 right
     btn.dataset.target=target; // W/C/T
-    btn.innerHTML=`<span class="zoneTxt">${target}</span>`;
+    btn.innerHTML=`<span class="zoneTxt">SAQUE</span>`;
     btn.style.fontSize="11px";
     btn.style.fontWeight="1100";
     btn.addEventListener("click",(e)=>{ flashTap(btn,e); onServeTap(side, box, target, btn); });
@@ -1026,9 +1005,6 @@ function applyTapConstraints(){
     el.classList.remove("disabled","hidden");
   });
 
-  // Ensure only the correct 48-zone half is visible during rally (and correct serve side)
-  renderZonesVisibility();
-
   if (!p) return;
 
   if (p.phase==="serve"){
@@ -1067,53 +1043,15 @@ function applyTapConstraints(){
   }
 }
 
-
-function expectedRallySide(p){
-  if (!p || p.phase!=="rally") return null;
-  const server = p.server;
-  const receiver = other(server);
-  const rallyCount = (p.events||[]).filter(e=>e.type==="rally").length;
-  const hitter = (rallyCount % 2 === 0) ? receiver : server; // first rally hit is receiver
-  // tap = lado donde cae la bola (opuesto al hitter)
-  return (hitter==="A") ? "top" : "bottom";
-}
-function serveGridSide(p){
-  if (!p || p.phase!=="serve") return null;
-  // serve grid is shown on the side where the serve lands (opponent side)
-  return (p.server==="A") ? "top" : "bottom";
-}
-
 function renderZonesVisibility(){
   const p = state.point;
+  const showServe = p && p.phase==="serve";
   const serveTop=$("#serveTop"), serveBottom=$("#serveBottom");
   const rallyTop=$("#rallyTop"), rallyBottom=$("#rallyBottom");
-
-  if (!p){
-    // idle: show both rally grids (48+48), no serve grids
-    if (serveTop) serveTop.classList.add("hidden");
-    if (serveBottom) serveBottom.classList.add("hidden");
-    if (rallyTop) rallyTop.classList.remove("hidden");
-    if (rallyBottom) rallyBottom.classList.remove("hidden");
-    return;
-  }
-
-  if (p.phase==="serve"){
-    const needed = serveGridSide(p) || "top";
-    if (serveTop) serveTop.classList.toggle("hidden", needed!=="top");
-    if (serveBottom) serveBottom.classList.toggle("hidden", needed!=="bottom");
-    if (rallyTop) rallyTop.classList.add("hidden");
-    if (rallyBottom) rallyBottom.classList.add("hidden");
-    return;
-  }
-
-  if (p.phase==="rally"){
-    const expected = expectedRallySide(p) || "top";
-    if (rallyTop) rallyTop.classList.toggle("hidden", expected!=="top");
-    if (rallyBottom) rallyBottom.classList.toggle("hidden", expected!=="bottom");
-    if (serveTop) serveTop.classList.add("hidden");
-    if (serveBottom) serveBottom.classList.add("hidden");
-    return;
-  }
+  if (serveTop) serveTop.classList.toggle("hidden", !showServe);
+  if (serveBottom) serveBottom.classList.toggle("hidden", !showServe);
+  if (rallyTop) rallyTop.classList.toggle("hidden", showServe);
+  if (rallyBottom) rallyBottom.classList.toggle("hidden", showServe);
 }
 
 function zoneCodeFromTap(side, row, col){
@@ -1121,7 +1059,7 @@ function zoneCodeFromTap(side, row, col){
   // Columns A-D (left->right), Rows P/M/C (depth->mid->short).
   const macroRow = Math.floor(row / 2); // 0..2
   const macroCol = Math.floor(col / 2); // 0..3
-  const colLetter = ((side==="bottom") ? ["D","C","B","A"] : ["A","B","C","D"])[macroCol] || "A";
+  const colLetter = ["A","B","C","D"][macroCol] || "A";
 
   const depthTop = ["P","M","C"];     // upper half: top is deep (P), bottom is short (C)
   const depthBottom = ["C","M","P"];  // lower half: top is short (C), bottom is deep (P)
@@ -4490,7 +4428,7 @@ function showSplashAgain(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2548").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2546").catch(console.error);
 }
 
 function init(){
