@@ -305,13 +305,13 @@ body.light .court{border:1px solid rgba(10,22,55,.18);}
 .macroOverlay{
   pointer-events:none;
   border-radius: 10px;
-  border: 1px solid rgba(57,213,255,.12);
-  background: rgba(57,213,255,.05);
+  border: 1px solid rgba(57,213,255,.16);
+  background: rgba(57,213,255,.07);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
   z-index:0;
 }
-.macroOverlay.macroOverlayA{ background: rgba(57,213,255,.055); }
-.macroOverlay.macroOverlayB{ background: rgba(57,213,255,.035); }
+.macroOverlay.macroOverlayA{ background: rgba(57,213,255,.085); }
+.macroOverlay.macroOverlayB{ background: rgba(57,213,255,.060); }
 .zoneCell, .serveCell{position:relative; will-change:transform, box-shadow;
   pointer-events:auto;
   display:flex;
@@ -377,7 +377,7 @@ body.light .serveCell .zoneTxt{
 
 /* Subdivision lines slightly lighter */
 .zoneCell{
-  border-color: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.06);
 }
 body.light .zoneCell, body.light .serveCell{
   color: rgba(10,22,55,.88);

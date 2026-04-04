@@ -577,7 +577,7 @@ function updateZoneHint(){
   if (!p) return;
 
   if (p.phase==="serve"){
-    if (hint) hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca T/C/A`;
+    if (hint) hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca W/C/T`;
     if (phase) phase.textContent = "SAQUE";
   } else {
     if (hint) hint.textContent = `RALLY · toca dirección (P/M/C)`;
@@ -1026,6 +1026,9 @@ function applyTapConstraints(){
     el.classList.remove("disabled","hidden");
   });
 
+  // Ensure only the correct 48-zone half is visible during rally (and correct serve side)
+  renderZonesVisibility();
+
   if (!p) return;
 
   if (p.phase==="serve"){
@@ -1064,15 +1067,53 @@ function applyTapConstraints(){
   }
 }
 
+
+function expectedRallySide(p){
+  if (!p || p.phase!=="rally") return null;
+  const server = p.server;
+  const receiver = other(server);
+  const rallyCount = (p.events||[]).filter(e=>e.type==="rally").length;
+  const hitter = (rallyCount % 2 === 0) ? receiver : server; // first rally hit is receiver
+  // tap = lado donde cae la bola (opuesto al hitter)
+  return (hitter==="A") ? "top" : "bottom";
+}
+function serveGridSide(p){
+  if (!p || p.phase!=="serve") return null;
+  // serve grid is shown on the side where the serve lands (opponent side)
+  return (p.server==="A") ? "top" : "bottom";
+}
+
 function renderZonesVisibility(){
   const p = state.point;
-  const showServe = p && p.phase==="serve";
   const serveTop=$("#serveTop"), serveBottom=$("#serveBottom");
   const rallyTop=$("#rallyTop"), rallyBottom=$("#rallyBottom");
-  if (serveTop) serveTop.classList.toggle("hidden", !showServe);
-  if (serveBottom) serveBottom.classList.toggle("hidden", !showServe);
-  if (rallyTop) rallyTop.classList.toggle("hidden", showServe);
-  if (rallyBottom) rallyBottom.classList.toggle("hidden", showServe);
+
+  if (!p){
+    // idle: show both rally grids (48+48), no serve grids
+    if (serveTop) serveTop.classList.add("hidden");
+    if (serveBottom) serveBottom.classList.add("hidden");
+    if (rallyTop) rallyTop.classList.remove("hidden");
+    if (rallyBottom) rallyBottom.classList.remove("hidden");
+    return;
+  }
+
+  if (p.phase==="serve"){
+    const needed = serveGridSide(p) || "top";
+    if (serveTop) serveTop.classList.toggle("hidden", needed!=="top");
+    if (serveBottom) serveBottom.classList.toggle("hidden", needed!=="bottom");
+    if (rallyTop) rallyTop.classList.add("hidden");
+    if (rallyBottom) rallyBottom.classList.add("hidden");
+    return;
+  }
+
+  if (p.phase==="rally"){
+    const expected = expectedRallySide(p) || "top";
+    if (rallyTop) rallyTop.classList.toggle("hidden", expected!=="top");
+    if (rallyBottom) rallyBottom.classList.toggle("hidden", expected!=="bottom");
+    if (serveTop) serveTop.classList.add("hidden");
+    if (serveBottom) serveBottom.classList.add("hidden");
+    return;
+  }
 }
 
 function zoneCodeFromTap(side, row, col){
@@ -4449,7 +4490,7 @@ function showSplashAgain(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2547").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2548").catch(console.error);
 }
 
 function init(){
