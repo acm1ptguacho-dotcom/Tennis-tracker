@@ -4,12 +4,12 @@
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
 
-const CACHE = "tennis-tracker-web-v2.52-deportivo-pro-2550";
+const CACHE = "tennis-tracker-web-v2.52-deportivo-pro-2551";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=2550",
-  "./app.js?v=2550",
+  "./style.css?v=2551",
+  "./app.js?v=2551",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",
