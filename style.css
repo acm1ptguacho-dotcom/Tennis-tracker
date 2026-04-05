@@ -2965,3 +2965,13 @@ body.modalOpen #finishMenu:not(.hidden){
 .timelineCard, .modalCard, .panelLike{
   border-color: rgba(57,213,255,.14);
 }
+
+
+.pulse{
+  animation: pulseGlow 1.05s ease-in-out infinite;
+}
+@keyframes pulseGlow{
+  0%{ box-shadow: 0 0 0 rgba(57,213,255,.0); }
+  50%{ box-shadow: 0 0 0 6px rgba(57,213,255,.12); }
+  100%{ box-shadow: 0 0 0 rgba(57,213,255,.0); }
+}

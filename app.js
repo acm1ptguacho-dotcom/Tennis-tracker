@@ -1,6 +1,41 @@
 
 const $ = (s) => document.querySelector(s);
 
+// Expose boot state for index.html guard
+window.__TDT_READY = false;
+window.__TDT_BOOTED = false;
+
+function __tdtStartApp(){
+  const splash = document.getElementById("splash");
+  const btn = document.getElementById("btnStartApp");
+  if (!splash) return;
+  // Ensure app is initialized before leaving splash
+  try{ safeInit(); }catch(e){ console.error(e); }
+  // Only leave splash if app is ready
+  if (!window.__TDT_READY){
+    // Keep splash and try a soft reload
+    const btn = document.getElementById("btnStartApp");
+    if (btn){ btn.textContent = (document.documentElement.lang==="en") ? "Loading…" : "Cargando…"; btn.classList.add("pulse"); }
+    try{
+      const u = new URL(location.href);
+      u.searchParams.set("r", Date.now().toString(36));
+      location.replace(u.toString());
+    }catch(_){ try{ location.reload(); }catch(__){} }
+    return;
+  }
+
+  // Hide splash
+  splash.classList.add("is-out");
+  document.body.classList.remove("splashLock");
+  setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); }, 420);
+  // restore button text (in case it was showing Loading…)
+  if (btn) btn.classList.remove("pulse");
+}
+
+// index.html calls this
+window.__TDT_START = __tdtStartApp;
+
+
 const STORAGE_KEY = "tdt_v23_state";
 
 const state = {
@@ -4430,11 +4465,7 @@ function initSplash(){
     showBtn();
   });
 
-  btn.onclick = ()=>{
-    splash.classList.add("is-out");
-    document.body.classList.remove("splashLock");
-    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); }, 420);
-  };
+  btn.onclick = ()=>{ __tdtStartApp(); };
 }
 
 function showSplashAgain(){
@@ -4448,16 +4479,12 @@ function showSplashAgain(){
   requestAnimationFrame(()=> splash.classList.add("is-play"));
   btn.classList.add("hidden");
   setTimeout(()=>{ splash.classList.add("showStart"); btn.classList.remove("hidden"); }, 2150);
-  btn.onclick = ()=>{
-    splash.classList.add("is-out");
-    document.body.classList.remove("splashLock");
-    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); }, 420);
-  };
+  btn.onclick = ()=>{ __tdtStartApp(); };
 }
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2552").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2553").catch(console.error);
 }
 
 function init(){
@@ -4473,7 +4500,13 @@ function init(){
 }
 
 function safeInit(){
-  try{ init(); }catch(e){
+  if (window.__TDT_BOOTED) return;
+  window.__TDT_BOOTED = true;
+  try{ init();
+    window.__TDT_READY = true;
+  }catch(e){
+    window.__TDT_BOOTED = false;
+
     console.error(e);
     // fail-safe: show start button so the UI is not stuck on an empty splash
     const splash=document.getElementById("splash");
