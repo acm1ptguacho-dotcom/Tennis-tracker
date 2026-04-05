@@ -4457,7 +4457,7 @@ function showSplashAgain(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2551").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2552").catch(console.error);
 }
 
 function init(){
@@ -4472,4 +4472,15 @@ function init(){
   registerSW();
 }
 
-window.addEventListener("load", init);
+function safeInit(){
+  try{ init(); }catch(e){
+    console.error(e);
+    // fail-safe: show start button so the UI is not stuck on an empty splash
+    const splash=document.getElementById("splash");
+    const btn=document.getElementById("btnStartApp");
+    if (splash) splash.classList.add("showStart");
+    if (btn) btn.classList.remove("hidden");
+  }
+}
+
+window.addEventListener("load", safeInit);
