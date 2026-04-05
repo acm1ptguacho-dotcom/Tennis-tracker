@@ -7,52 +7,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2553" />
+<link rel="stylesheet" href="style.css?v=2554" />
 </head>
 <body>
-<script>
-// Boot-guard for Safari/iOS cache issues: never enter the app unless app.js is ready.
-window.__TDT_READY = false;
-window.__TDT_START = function(){
-  // app.js will replace this with the real starter.
-  // If user taps too early, we soft-reload with a cache-bust parameter.
-  try{
-    const u = new URL(location.href);
-    u.searchParams.set('r', Date.now().toString(36));
-    location.replace(u.toString());
-  }catch(e){
-    location.reload();
-  }
-};
-
-(function(){
-  function bind(){
-    const btn = document.getElementById('btnStartApp');
-    if(!btn) return;
-    btn.addEventListener('click', function(e){
-      if(!window.__TDT_READY){
-        try{ e.preventDefault(); }catch(_){ }
-        try{ e.stopImmediatePropagation(); }catch(_){ }
-        try{ e.stopPropagation(); }catch(_){ }
-        btn.textContent = (document.documentElement.lang==='en') ? 'Loading…' : 'Cargando…';
-        btn.classList.add('pulse');
-        // give the browser a moment, then reload with a cache-bust
-        setTimeout(function(){
-          window.__TDT_START();
-        }, 420);
-      }
-    }, {passive:false});
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bind);
-  else bind();
-})();
-</script>
-
-
 <div class="splash" id="splash" aria-label="Tennis Direction Tracker">
   <div class="splashInner">
     <img class="splashLogo" src="assets/logo.png" alt="Tennis Direction Tracker">
-    <button class="btn primary splashStart" id="btnStartApp" type="button" data-i18n="start">Iniciar</button>
+    <button class="btn primary splashStart" id="btnStartApp" type="button" data-i18n="start" onclick="(window.__TDT_START?window.__TDT_START():document.getElementById('splash')?.classList.add('hidden'))">Iniciar</button>
   </div>
 </div>
 
@@ -863,7 +824,7 @@ window.__TDT_START = function(){
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2553"></script>
+<script src="app.js?v=2554"></script>
 
 </body>
 </html>

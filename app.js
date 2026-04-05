@@ -9,18 +9,17 @@ function __tdtStartApp(){
   const splash = document.getElementById("splash");
   const btn = document.getElementById("btnStartApp");
   if (!splash) return;
-  // Ensure app is initialized before leaving splash
+
+  // Ensure init is attempted
   try{ safeInit(); }catch(e){ console.error(e); }
-  // Only leave splash if app is ready
+
+  // If still not ready, stay on splash and show a message (no reload loops)
   if (!window.__TDT_READY){
-    // Keep splash and try a soft reload
-    const btn = document.getElementById("btnStartApp");
-    if (btn){ btn.textContent = (document.documentElement.lang==="en") ? "Loading…" : "Cargando…"; btn.classList.add("pulse"); }
-    try{
-      const u = new URL(location.href);
-      u.searchParams.set("r", Date.now().toString(36));
-      location.replace(u.toString());
-    }catch(_){ try{ location.reload(); }catch(__){} }
+    if (btn){
+      btn.textContent = (document.documentElement.lang==="en") ? "Error – Retry" : "Error – Reintentar";
+      btn.classList.remove("pulse");
+    }
+    try{ toast((document.documentElement.lang==="en") ? "Startup error. Please refresh." : "Error al iniciar. Refresca la página."); }catch(_){ }
     return;
   }
 
@@ -28,9 +27,9 @@ function __tdtStartApp(){
   splash.classList.add("is-out");
   document.body.classList.remove("splashLock");
   setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); }, 420);
-  // restore button text (in case it was showing Loading…)
   if (btn) btn.classList.remove("pulse");
 }
+
 
 // index.html calls this
 window.__TDT_START = __tdtStartApp;
@@ -4483,8 +4482,8 @@ function showSplashAgain(){
 }
 
 function registerSW(){
-  if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2553").catch(console.error);
+  // Disabled for stability on iOS Safari (prevents cache-mismatch issues).
+  return;
 }
 
 function init(){
@@ -4496,7 +4495,7 @@ function init(){
   wireMeta();
   renderAll();
   initSplash();
-  registerSW();
+  // registerSW();
 }
 
 function safeInit(){
@@ -4516,4 +4515,6 @@ function safeInit(){
   }
 }
 
+document.addEventListener("DOMContentLoaded", safeInit, {once:true});
 window.addEventListener("load", safeInit);
+try{ safeInit(); }catch(_){ }
