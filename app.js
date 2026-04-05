@@ -577,7 +577,7 @@ function updateZoneHint(){
   if (!p) return;
 
   if (p.phase==="serve"){
-    if (hint) hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca T/C/A`;
+    if (hint) hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca E/C/T`;
     if (phase) phase.textContent = "SAQUE";
   } else {
     if (hint) hint.textContent = `RALLY · toca dirección (P/M/C)`;
@@ -902,6 +902,22 @@ function makeGrid(id, rect, rows, cols, cellRenderer){
   g.style.height = (rect.height*100)+"%";
   g.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
   g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+  // Macro overlays to visually group 2x2 sub-zones into one zone (e.g., AP = 4 sub-cells)
+  if (rows===6 && cols===8 && (id==="rallyTop" || id==="rallyBottom")){
+    const side = (id==="rallyTop") ? "top" : "bottom";
+    for (let mr=0; mr<3; mr++){
+      for (let mc=0; mc<4; mc++){
+        const o=document.createElement("div");
+        o.className = "macroOverlay" + (((mr+mc)%2===0) ? " macroOverlayA" : " macroOverlayB");
+        o.dataset.side = side;
+        o.dataset.macro = ((side==="bottom") ? ["D","C","B","A"] : ["A","B","C","D"])[mc] + ((side==="top") ? ["P","M","C"][mr] : ["C","M","P"][mr]);
+        o.style.gridRow = `${mr*2+1} / span 2`;
+        o.style.gridColumn = `${mc*2+1} / span 2`;
+        g.appendChild(o);
+      }
+    }
+  }
   for (let r=0;r<rows;r++){
     for (let c=0;c<cols;c++){
       g.appendChild(cellRenderer(r,c));
@@ -923,6 +939,11 @@ function buildZones(){
     btn.dataset.side=side;
     btn.dataset.row=r;
     btn.dataset.col=c;
+
+    const macroRow = Math.floor(r/2);
+    const macroCol = Math.floor(c/2);
+    btn.classList.add(((macroRow+macroCol)%2===0) ? "macroShadeA" : "macroShadeB");
+    btn.dataset.macro = zoneCodeFromTap(side, r, c);
 
     // Macro boundaries (thicker lines) for readability
     if (c % 2 === 0) btn.classList.add("macroL");
@@ -948,14 +969,14 @@ function buildZones(){
   // Lower half (bottom)
   makeGrid("rallyBottom", Z.rallyBottom, 6, 8, (r,c)=> rallyCell("bottom", r, c));
 
-  // Serve: two boxes split into W/C/T horizontally (3 cols each) => total 6 columns, 1 row
+  // Serve: two boxes split into E/C/T horizontally (3 cols each) => total 6 columns, 1 row
   const serveCell = (side, box, target)=>{
     const btn=document.createElement("div");
     btn.className="serveCell";
     btn.dataset.side=side;
     btn.dataset.box=box;       // 0 left, 1 right
-    btn.dataset.target=target; // W/C/T
-    btn.innerHTML=`<span class="zoneTxt">SAQUE</span>`;
+    btn.dataset.target=target; // E/C/T
+    btn.innerHTML=`<span class="zoneTxt">${target}</span>`;
     btn.style.fontSize="11px";
     btn.style.fontWeight="1100";
     btn.addEventListener("click",(e)=>{ flashTap(btn,e); onServeTap(side, box, target, btn); });
@@ -967,8 +988,8 @@ function buildZones(){
     // For each service box, labels should be from outside -> inside: W, C, T.
     // Left box (0): outside is left => [W,C,T]
     // Right box (1): outside is right => [T,C,W]
-    if (box===0) return (idx===0 ? "W" : (idx===1 ? "C" : "T"));
-    return (idx===0 ? "T" : (idx===1 ? "C" : "W"));
+    if (box===0) return (idx===0 ? "E" : (idx===1 ? "C" : "T"));
+    return (idx===0 ? "T" : (idx===1 ? "C" : "E"));
   };
 
   makeGrid("serveTop", Z.serveTop, 1, 6, (r,c)=>{
@@ -1004,6 +1025,9 @@ function applyTapConstraints(){
   document.querySelectorAll(".zoneCell, .serveCell").forEach(el=>{
     el.classList.remove("disabled","hidden");
   });
+
+  // Ensure only the correct 48-zone half is visible during rally (and correct serve side)
+  renderZonesVisibility();
 
   if (!p) return;
 
@@ -1043,15 +1067,53 @@ function applyTapConstraints(){
   }
 }
 
+
+function expectedRallySide(p){
+  if (!p || p.phase!=="rally") return null;
+  const server = p.server;
+  const receiver = other(server);
+  const rallyCount = (p.events||[]).filter(e=>e.type==="rally").length;
+  const hitter = (rallyCount % 2 === 0) ? receiver : server; // first rally hit is receiver
+  // tap = lado donde cae la bola (opuesto al hitter)
+  return (hitter==="A") ? "top" : "bottom";
+}
+function serveGridSide(p){
+  if (!p || p.phase!=="serve") return null;
+  // serve grid is shown on the side where the serve lands (opponent side)
+  return (p.server==="A") ? "top" : "bottom";
+}
+
 function renderZonesVisibility(){
   const p = state.point;
-  const showServe = p && p.phase==="serve";
   const serveTop=$("#serveTop"), serveBottom=$("#serveBottom");
   const rallyTop=$("#rallyTop"), rallyBottom=$("#rallyBottom");
-  if (serveTop) serveTop.classList.toggle("hidden", !showServe);
-  if (serveBottom) serveBottom.classList.toggle("hidden", !showServe);
-  if (rallyTop) rallyTop.classList.toggle("hidden", showServe);
-  if (rallyBottom) rallyBottom.classList.toggle("hidden", showServe);
+
+  if (!p){
+    // idle: show both rally grids (48+48), no serve grids
+    if (serveTop) serveTop.classList.add("hidden");
+    if (serveBottom) serveBottom.classList.add("hidden");
+    if (rallyTop) rallyTop.classList.remove("hidden");
+    if (rallyBottom) rallyBottom.classList.remove("hidden");
+    return;
+  }
+
+  if (p.phase==="serve"){
+    const needed = serveGridSide(p) || "top";
+    if (serveTop) serveTop.classList.toggle("hidden", needed!=="top");
+    if (serveBottom) serveBottom.classList.toggle("hidden", needed!=="bottom");
+    if (rallyTop) rallyTop.classList.add("hidden");
+    if (rallyBottom) rallyBottom.classList.add("hidden");
+    return;
+  }
+
+  if (p.phase==="rally"){
+    const expected = expectedRallySide(p) || "top";
+    if (rallyTop) rallyTop.classList.toggle("hidden", expected!=="top");
+    if (rallyBottom) rallyBottom.classList.toggle("hidden", expected!=="bottom");
+    if (serveTop) serveTop.classList.add("hidden");
+    if (serveBottom) serveBottom.classList.add("hidden");
+    return;
+  }
 }
 
 function zoneCodeFromTap(side, row, col){
@@ -1059,7 +1121,7 @@ function zoneCodeFromTap(side, row, col){
   // Columns A-D (left->right), Rows P/M/C (depth->mid->short).
   const macroRow = Math.floor(row / 2); // 0..2
   const macroCol = Math.floor(col / 2); // 0..3
-  const colLetter = ["A","B","C","D"][macroCol] || "A";
+  const colLetter = ((side==="top") ? ["D","C","B","A"] : ["D","C","B","A"])[macroCol] || "A";
 
   const depthTop = ["P","M","C"];     // upper half: top is deep (P), bottom is short (C)
   const depthBottom = ["C","M","P"];  // lower half: top is short (C), bottom is deep (P)
@@ -2566,11 +2628,11 @@ function extractDirToken(ev){
   const t = String(ev?.code||"").trim().toUpperCase();
   if (!t) return null;
 
-  // Serve: "S SD W/C/T" (legacy may contain A -> treat as W)
+  // Serve: "S SD E/C/T" (legacy may contain A -> treat as W)
   if (t.startsWith("S ")){
     const parts = t.split(/\s+/);
     const trg = (parts[2] || parts[parts.length-1] || "").toUpperCase();
-    const target = (trg==="A") ? "W" : trg;
+    const target = (trg==="A" || trg==="W") ? "E" : trg;
     return target ? ("S"+target) : null;
   }
 
@@ -2871,7 +2933,7 @@ function emptyPlayerStats(){
     firstIn:0, firstInWon:0,
     secondPlayed:0, secondIn:0, secondInWon:0,
     doubleFaults:0, aces:0,
-    serveTargets:{W:0,C:0,T:0},
+    serveTargets:{E:0,C:0,T:0,W:0},
 
     returnPoints:0, returnPointsWon:0,
     returnsIn:0,
@@ -2944,7 +3006,7 @@ function computeStats(points){
     const serveEvs = evs.filter(e=>e && e.type==="serve" && e.player===server);
     const hasDF = serveEvs.some(e=>e?.meta?.df || /\sDF$/.test(String(e.code||"")));
     const hasFault = serveEvs.some(e=>e?.meta?.fault || /\sF$/.test(String(e.code||"")));
-    const targetEvs = serveEvs.filter(e=>e?.meta?.target && ["W","C","T","A"].includes(String(e.meta.target).toUpperCase()));
+    const targetEvs = serveEvs.filter(e=>e?.meta?.target && ["E","C","T","W","A"].includes(String(e.meta.target).toUpperCase()));
     const serveIn = targetEvs.length>0 && !hasDF;
     const firstFaulted = hasFault || hasDF; // DF implica 1º fallado aunque no lo registre
 
@@ -2963,7 +3025,7 @@ function computeStats(points){
 
     if (serveIn){
       const lastT0 = String(targetEvs[targetEvs.length-1]?.meta?.target||"").toUpperCase();
-      const lastT = (lastT0==="A") ? "W" : lastT0;
+      const lastT = (lastT0==="A" || lastT0==="W") ? "E" : lastT0;
       if (lastT && agg[server].serveTargets[lastT]!==undefined) agg[server].serveTargets[lastT]++;
     }
 
@@ -3665,8 +3727,8 @@ function exportStatsPDF(){
     const depTotA = agg.A.strokeDepth.P + agg.A.strokeDepth.M + agg.A.strokeDepth.C;
     const depTotB = agg.B.strokeDepth.P + agg.B.strokeDepth.M + agg.B.strokeDepth.C;
 
-    const serveTotA = agg.A.serveTargets.T + agg.A.serveTargets.C + agg.A.serveTargets.W;
-    const serveTotB = agg.B.serveTargets.T + agg.B.serveTargets.C + agg.B.serveTargets.W;
+    const serveTotA = agg.A.serveTargets.T + agg.A.serveTargets.C + (agg.A.serveTargets.E||0) + (agg.A.serveTargets.W||0);
+    const serveTotB = agg.B.serveTargets.T + agg.B.serveTargets.C + (agg.B.serveTargets.E||0) + (agg.B.serveTargets.W||0);
 
     const retDirTotA = agg.A.returnZone.A + agg.A.returnZone.B + agg.A.returnZone.C + agg.A.returnZone.D;
     const retDirTotB = agg.B.returnZone.A + agg.B.returnZone.B + agg.B.returnZone.C + agg.B.returnZone.D;
@@ -3693,7 +3755,7 @@ function exportStatsPDF(){
       row("% pts ganados con 2º", fmtPct(agg.A.secondInWon, agg.A.secondIn), fmtPct(agg.B.secondInWon, agg.B.secondIn)),
       row("Saque a T %", fmtPct(agg.A.serveTargets.T, serveTotA), fmtPct(agg.B.serveTargets.T, serveTotB)),
       row("Saque al cuerpo %", fmtPct(agg.A.serveTargets.C, serveTotA), fmtPct(agg.B.serveTargets.C, serveTotB)),
-      row("Saque abierto (W) %", fmtPct(agg.A.serveTargets.W, serveTotA), fmtPct(agg.B.serveTargets.W, serveTotB)),
+      row("Saque exterior (E) %", fmtPct((agg.A.serveTargets.E||0)+(agg.A.serveTargets.W||0), serveTotA), fmtPct((agg.B.serveTargets.E||0)+(agg.B.serveTargets.W||0), serveTotB)),
     ].join("");
 
     const retRows = [
@@ -4428,7 +4490,7 @@ function showSplashAgain(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2546").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2549").catch(console.error);
 }
 
 function init(){
