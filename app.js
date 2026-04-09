@@ -4456,10 +4456,8 @@ function showSplashAgain(){
 }
 
 function registerSW(){
-  // Disabled in this stabilization build to avoid boot failures caused by stale SW/cache state.
-  if (window.__TDT_DISABLE_SW__) return;
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2552", { updateViaCache: "none" }).catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2550").catch(console.error);
 }
 
 function init(){
@@ -4474,15 +4472,4 @@ function init(){
   registerSW();
 }
 
-function safeInit(){
-  try{ init(); }catch(e){
-    console.error(e);
-    // fail-safe: show start button so the UI is not stuck on an empty splash
-    const splash=document.getElementById("splash");
-    const btn=document.getElementById("btnStartApp");
-    if (splash) splash.classList.add("showStart");
-    if (btn) btn.classList.remove("hidden");
-  }
-}
-
-window.addEventListener("load", safeInit);
+window.addEventListener("load", init);

@@ -2,50 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-<script>
-// Boot recovery: remove old service workers/caches once and reload clean.
-// Prioritizes a reliable start over offline caching.
-(function(){
-  const TARGET='2552';
-  try{
-    window.__TDT_DISABLE_SW__ = true;
-    const key='tdt_boot_recovery_done';
-    if (sessionStorage.getItem(key)===TARGET) return;
-    sessionStorage.setItem(key,TARGET);
-
-    const cleanup = async ()=>{
-      try{
-        if ('serviceWorker' in navigator){
-          const regs = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(regs.map(r=>r.unregister().catch(()=>{})));
-        }
-      }catch(e){}
-      try{
-        if (window.caches && caches.keys){
-          const keys = await caches.keys();
-          await Promise.all(keys.map(k=>caches.delete(k).catch(()=>false)));
-        }
-      }catch(e){}
-    };
-
-    Promise.resolve(cleanup()).finally(()=>{
-      try{
-        const u = new URL(location.href);
-        if (u.searchParams.get('bootfix') !== TARGET){
-          u.searchParams.set('bootfix', TARGET);
-          location.replace(u.toString());
-        }
-      }catch(e){}
-    });
-  }catch(e){}
-})();
-</script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Tennis Direction Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2552" />
+<link rel="stylesheet" href="style.css?v=2550" />
 </head>
 <body>
 
@@ -863,7 +825,7 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2552"></script>
+<script src="app.js?v=2550"></script>
 
 </body>
 </html>
