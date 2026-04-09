@@ -236,7 +236,7 @@ body.light .courtWrap{
   border-radius: 22px;
   box-shadow: 0 30px 70px rgba(0,0,0,.28);
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.07);
 }
 body.light .court{border:1px solid rgba(10,22,55,.18);}
 
@@ -299,7 +299,16 @@ body.light .court{border:1px solid rgba(10,22,55,.18);}
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: 0px;
+  pointer-events:auto;
+  overflow:hidden;
+}
+
+.macroOverlayLayer{
+  position:absolute;
+  inset:0;
+  display:grid;
   pointer-events:none;
+  z-index:0;
 }
 
 .macroOverlay{
@@ -320,7 +329,7 @@ body.light .court{border:1px solid rgba(10,22,55,.18);}
   color: rgba(255,255,255,.88);
   font-weight:1000;
   border-radius: 10px;
-  border:1px solid rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.07);
   background: rgba(0,0,0,.10);
   user-select:none;
   cursor:pointer;
@@ -332,8 +341,8 @@ body.light .court{border:1px solid rgba(10,22,55,.18);}
   border-radius: 8px;
   z-index: 1;
 }
-.zoneCell.macroShadeA{ background: rgba(0,0,0,.06); }
-.zoneCell.macroShadeB{ background: rgba(0,0,0,.03); }
+.zoneCell.macroShadeA{ background: rgba(57,213,255,.07); }
+.zoneCell.macroShadeB{ background: rgba(57,213,255,.045); }
 .zoneCell .zoneTxt{
   display:inline-flex;
   align-items:center;
@@ -965,7 +974,7 @@ body.coach .kpi .v{font-size:24px}
   max-width: min(760px, 100%);
   border-radius: 22px;
   overflow: hidden;
-  border:1px solid rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.07);
   background: rgba(0,0,0,.14);
   box-shadow: 0 20px 60px rgba(0,0,0,.22);
 }
@@ -1886,7 +1895,7 @@ body.railHidden .courtWrap.courtRow .court{ max-width: 860px; }
 
 /* === Stats Broadcast Mode (TennisTV style) === */
 .broadcastWrap{ padding: 0 2px 18px; display:flex; flex-direction:column; gap:12px; }
-.broadcastCard{ border:1px solid rgba(255,255,255,.10); border-radius:16px; overflow:hidden; background: rgba(0,0,0,.10); }
+.broadcastCard{ border:1px solid rgba(255,255,255,.07); border-radius:16px; overflow:hidden; background: rgba(0,0,0,.10); }
 .broadcastHead{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.04); }
 .broadcastHead .t{ font-weight:1100; }
 .broadcastTable{ width:100%; display:flex; flex-direction:column; }
@@ -2706,7 +2715,7 @@ body.modalOpen #finishMenu:not(.hidden){
 .surfaceThumb{
   border-radius: 14px;
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.07);
   background: rgba(0,0,0,.14);
 }
 .surfaceThumb img{

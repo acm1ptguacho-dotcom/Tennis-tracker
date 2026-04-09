@@ -903,24 +903,35 @@ function makeGrid(id, rect, rows, cols, cellRenderer){
   g.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
   g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
-  // Macro overlays to visually group 2x2 sub-zones into one zone (e.g., AP = 4 sub-cells)
+  // Visual grouping layer for the 12 macro-zones (3 rows x 4 cols), without
+  // interfering with the 48 tappable sub-zones.
   if (rows===6 && cols===8 && (id==="rallyTop" || id==="rallyBottom")){
     const side = (id==="rallyTop") ? "top" : "bottom";
+    const overlayLayer=document.createElement("div");
+    overlayLayer.className="macroOverlayLayer";
+    overlayLayer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    overlayLayer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
     for (let mr=0; mr<3; mr++){
       for (let mc=0; mc<4; mc++){
         const o=document.createElement("div");
         o.className = "macroOverlay" + (((mr+mc)%2===0) ? " macroOverlayA" : " macroOverlayB");
         o.dataset.side = side;
-        o.dataset.macro = ((side==="bottom") ? ["D","C","B","A"] : ["A","B","C","D"])[mc] + ((side==="top") ? ["P","M","C"][mr] : ["C","M","P"][mr]);
+        o.dataset.macro = ["D","C","B","A"][mc] + ((side==="top") ? ["P","M","C"][mr] : ["C","M","P"][mr]);
         o.style.gridRow = `${mr*2+1} / span 2`;
         o.style.gridColumn = `${mc*2+1} / span 2`;
-        g.appendChild(o);
+        overlayLayer.appendChild(o);
       }
     }
+    g.appendChild(overlayLayer);
   }
+
   for (let r=0;r<rows;r++){
     for (let c=0;c<cols;c++){
-      g.appendChild(cellRenderer(r,c));
+      const cell = cellRenderer(r,c);
+      cell.style.gridRow = `${r+1}`;
+      cell.style.gridColumn = `${c+1}`;
+      g.appendChild(cell);
     }
   }
   layer.appendChild(g);
@@ -1026,8 +1037,6 @@ function applyTapConstraints(){
     el.classList.remove("disabled","hidden");
   });
 
-  // Ensure only the correct 48-zone half is visible during rally (and correct serve side)
-  renderZonesVisibility();
 
   if (!p) return;
 
@@ -1068,21 +1077,6 @@ function applyTapConstraints(){
 }
 
 
-function expectedRallySide(p){
-  if (!p || p.phase!=="rally") return null;
-  const server = p.server;
-  const receiver = other(server);
-  const rallyCount = (p.events||[]).filter(e=>e.type==="rally").length;
-  const hitter = (rallyCount % 2 === 0) ? receiver : server; // first rally hit is receiver
-  // tap = lado donde cae la bola (opuesto al hitter)
-  return (hitter==="A") ? "top" : "bottom";
-}
-function serveGridSide(p){
-  if (!p || p.phase!=="serve") return null;
-  // serve grid is shown on the side where the serve lands (opponent side)
-  return (p.server==="A") ? "top" : "bottom";
-}
-
 function renderZonesVisibility(){
   const p = state.point;
   const serveTop=$("#serveTop"), serveBottom=$("#serveBottom");
@@ -1121,7 +1115,7 @@ function zoneCodeFromTap(side, row, col){
   // Columns A-D (left->right), Rows P/M/C (depth->mid->short).
   const macroRow = Math.floor(row / 2); // 0..2
   const macroCol = Math.floor(col / 2); // 0..3
-  const colLetter = ((side==="top") ? ["D","C","B","A"] : ["D","C","B","A"])[macroCol] || "A";
+  const colLetter = ((side==="top") ? ["A","B","C","D"] : ["D","C","B","A"])[macroCol] || "A";
 
   const depthTop = ["P","M","C"];     // upper half: top is deep (P), bottom is short (C)
   const depthBottom = ["C","M","P"];  // lower half: top is short (C), bottom is deep (P)
@@ -4489,8 +4483,10 @@ function showSplashAgain(){
 }
 
 function registerSW(){
+  // Disabled in this stabilization build to avoid boot failures caused by stale SW/cache state.
+  if (window.__TDT_DISABLE_SW__) return;
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2549").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2552", { updateViaCache: "none" }).catch(console.error);
 }
 
 function init(){
@@ -4505,4 +4501,15 @@ function init(){
   registerSW();
 }
 
-window.addEventListener("load", init);
+function safeInit(){
+  try{ init(); }catch(e){
+    console.error(e);
+    // fail-safe: show start button so the UI is not stuck on an empty splash
+    const splash=document.getElementById("splash");
+    const btn=document.getElementById("btnStartApp");
+    if (splash) splash.classList.add("showStart");
+    if (btn) btn.classList.remove("hidden");
+  }
+}
+
+window.addEventListener("load", safeInit);
