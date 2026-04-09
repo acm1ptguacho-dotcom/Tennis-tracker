@@ -4456,10 +4456,8 @@ function showSplashAgain(){
 }
 
 function registerSW(){
-  // Disabled in this stabilization build to avoid boot failures caused by stale SW/cache state.
-  if (window.__TDT_DISABLE_SW__) return;
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2552", { updateViaCache: "none" }).catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2551").catch(console.error);
 }
 
 function init(){

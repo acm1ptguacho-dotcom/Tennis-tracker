@@ -2487,24 +2487,6 @@ body.splashLock{ overflow:hidden; touch-action:none; }
   pointer-events:none;
 }
 
-
-/* Fallback autoplay (in case JS fails): animate logo + show start */
-.splashLogo{
-  animation: splashLogoAuto 1.45s var(--ease) forwards;
-  animation-delay: 120ms;
-}
-@keyframes splashLogoAuto{
-  0%{ opacity:0; transform: translateY(18px) scale(.92); }
-  60%{ opacity:1; transform: translateY(0) scale(1.00); }
-  100%{ opacity:1; transform: translateY(0) scale(1.00); }
-}
-.splashStart{
-  animation: splashBtnAuto 0.32s var(--ease) forwards;
-  animation-delay: 2.15s;
-}
-@keyframes splashBtnAuto{
-  to{ opacity:1; transform: translateY(0); }
-}
 /* ===== Modal radio rows ===== */
 .radioRow{
   display:flex;
@@ -2964,14 +2946,4 @@ body.modalOpen #finishMenu:not(.hidden){
 /* Slightly more “blue” panels across the app */
 .timelineCard, .modalCard, .panelLike{
   border-color: rgba(57,213,255,.14);
-}
-
-
-.pulse{
-  animation: pulseGlow 1.05s ease-in-out infinite;
-}
-@keyframes pulseGlow{
-  0%{ box-shadow: 0 0 0 rgba(57,213,255,.0); }
-  50%{ box-shadow: 0 0 0 6px rgba(57,213,255,.12); }
-  100%{ box-shadow: 0 0 0 rgba(57,213,255,.0); }
 }
