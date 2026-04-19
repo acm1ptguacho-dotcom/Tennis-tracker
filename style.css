@@ -236,7 +236,7 @@ body.light .courtWrap{
   border-radius: 22px;
   box-shadow: 0 30px 70px rgba(0,0,0,.28);
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.10);
 }
 body.light .court{border:1px solid rgba(10,22,55,.18);}
 
@@ -299,28 +299,8 @@ body.light .court{border:1px solid rgba(10,22,55,.18);}
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: 0px;
-  pointer-events:auto;
-  overflow:hidden;
-}
-
-.macroOverlayLayer{
-  position:absolute;
-  inset:0;
-  display:grid;
   pointer-events:none;
-  z-index:0;
 }
-
-.macroOverlay{
-  pointer-events:none;
-  border-radius: 10px;
-  border: 1px solid rgba(57,213,255,.16);
-  background: rgba(57,213,255,.07);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
-  z-index:0;
-}
-.macroOverlay.macroOverlayA{ background: rgba(57,213,255,.085); }
-.macroOverlay.macroOverlayB{ background: rgba(57,213,255,.060); }
 .zoneCell, .serveCell{position:relative; will-change:transform, box-shadow;
   pointer-events:auto;
   display:flex;
@@ -329,64 +309,11 @@ body.light .court{border:1px solid rgba(10,22,55,.18);}
   color: rgba(255,255,255,.88);
   font-weight:1000;
   border-radius: 10px;
-  border:1px solid rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.10);
   user-select:none;
   cursor:pointer;
   transition: transform var(--fast) var(--ease), background var(--fast) var(--ease), border-color var(--fast) var(--ease), box-shadow var(--med) var(--ease);
-}
-
-/* === Zone grid v2 (4 columns A-D, 3 rows P/M/C, each macro split into 2x2) === */
-.zoneCell{
-  border-radius: 8px;
-  z-index: 1;
-}
-.zoneCell.macroShadeA{ background: rgba(57,213,255,.07); }
-.zoneCell.macroShadeB{ background: rgba(57,213,255,.045); }
-.zoneCell .zoneTxt{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  margin-top: 6px;
-  padding: 3px 7px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 1100;
-  letter-spacing: .08em;
-  background: rgba(0,0,0,.22);
-  border: 1px solid rgba(255,255,255,.14);
-}
-body.light .zoneCell .zoneTxt{
-  background: rgba(255,255,255,.70);
-  border: 1px solid rgba(10,22,55,.14);
-}
-
-.serveCell .zoneTxt{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  margin-top: 6px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 1200;
-  letter-spacing: .10em;
-  background: rgba(0,0,0,.22);
-  border: 1px solid rgba(255,255,255,.14);
-}
-body.light .serveCell .zoneTxt{
-  background: rgba(255,255,255,.70);
-  border: 1px solid rgba(10,22,55,.14);
-}
-
-.zoneCell.macroL{ border-left-width:2px; border-left-color: rgba(57,213,255,.22); }
-.zoneCell.macroR{ border-right-width:2px; border-right-color: rgba(57,213,255,.22); }
-.zoneCell.macroT{ border-top-width:2px; border-top-color: rgba(57,213,255,.22); }
-.zoneCell.macroB{ border-bottom-width:2px; border-bottom-color: rgba(57,213,255,.22); }
-
-/* Subdivision lines slightly lighter */
-.zoneCell{
-  border-color: rgba(255,255,255,.06);
 }
 body.light .zoneCell, body.light .serveCell{
   color: rgba(10,22,55,.88);
@@ -974,7 +901,7 @@ body.coach .kpi .v{font-size:24px}
   max-width: min(760px, 100%);
   border-radius: 22px;
   overflow: hidden;
-  border:1px solid rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.14);
   box-shadow: 0 20px 60px rgba(0,0,0,.22);
 }
@@ -1895,7 +1822,7 @@ body.railHidden .courtWrap.courtRow .court{ max-width: 860px; }
 
 /* === Stats Broadcast Mode (TennisTV style) === */
 .broadcastWrap{ padding: 0 2px 18px; display:flex; flex-direction:column; gap:12px; }
-.broadcastCard{ border:1px solid rgba(255,255,255,.07); border-radius:16px; overflow:hidden; background: rgba(0,0,0,.10); }
+.broadcastCard{ border:1px solid rgba(255,255,255,.10); border-radius:16px; overflow:hidden; background: rgba(0,0,0,.10); }
 .broadcastHead{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.04); }
 .broadcastHead .t{ font-weight:1100; }
 .broadcastTable{ width:100%; display:flex; flex-direction:column; }
@@ -2715,7 +2642,7 @@ body.modalOpen #finishMenu:not(.hidden){
 .surfaceThumb{
   border-radius: 14px;
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.14);
 }
 .surfaceThumb img{

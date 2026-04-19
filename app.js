@@ -577,7 +577,7 @@ function updateZoneHint(){
   if (!p) return;
 
   if (p.phase==="serve"){
-    if (hint) hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca E/C/T`;
+    if (hint) hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca T/C/A`;
     if (phase) phase.textContent = "SAQUE";
   } else {
     if (hint) hint.textContent = `RALLY · toca dirección (P/M/C)`;
@@ -621,14 +621,12 @@ function flashTap(el, evt){
 
 /** ZONE LAYER **/
 const Z = {
-  // Rally grids (SINGLES AREA): now 6x8 (each macro cell 2x2) for higher precision.
-  // Computed from the court image (300x600): singles lines at x≈68..231 and baselines at y≈64 and y≈534.
-  rallyTop:    { left:.227, top:.107, width:.543, height:.392 }, // upper half (between baseline and net)
-  rallyBottom: { left:.227, top:.500, width:.543, height:.390 }, // lower half (between net and baseline)
-
-  // Serve boxes region (between service line and net), within singles lines.
-  serveTop:    { left:.227, top:.288, width:.543, height:.210 },
-  serveBottom: { left:.227, top:.500, width:.543, height:.210 },
+  // Rally grids: 3x3 for top half (B side) and bottom half (A side)
+  rallyTop: { left:.16, top:.08, width:.68, height:.40 },    // B side (upper half)
+  rallyBottom: { left:.16, top:.52, width:.68, height:.40 }, // A side (lower half)
+  // Serve boxes region (two boxes), each split into T/C/A horizontally.
+  serveTop: { left:.22, top:.285, width:.56, height:.18 },     // B receiving service boxes (upper service line area)
+  serveBottom: { left:.22, top:.535, width:.56, height:.18 },  // A receiving boxes (lower service line area)
 };
 
 
@@ -902,36 +900,9 @@ function makeGrid(id, rect, rows, cols, cellRenderer){
   g.style.height = (rect.height*100)+"%";
   g.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
   g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
-  // Visual grouping layer for the 12 macro-zones (3 rows x 4 cols), without
-  // interfering with the 48 tappable sub-zones.
-  if (rows===6 && cols===8 && (id==="rallyTop" || id==="rallyBottom")){
-    const side = (id==="rallyTop") ? "top" : "bottom";
-    const overlayLayer=document.createElement("div");
-    overlayLayer.className="macroOverlayLayer";
-    overlayLayer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-    overlayLayer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
-    for (let mr=0; mr<3; mr++){
-      for (let mc=0; mc<4; mc++){
-        const o=document.createElement("div");
-        o.className = "macroOverlay" + (((mr+mc)%2===0) ? " macroOverlayA" : " macroOverlayB");
-        o.dataset.side = side;
-        o.dataset.macro = ["D","C","B","A"][mc] + ((side==="top") ? ["P","M","C"][mr] : ["C","M","P"][mr]);
-        o.style.gridRow = `${mr*2+1} / span 2`;
-        o.style.gridColumn = `${mc*2+1} / span 2`;
-        overlayLayer.appendChild(o);
-      }
-    }
-    g.appendChild(overlayLayer);
-  }
-
   for (let r=0;r<rows;r++){
     for (let c=0;c<cols;c++){
-      const cell = cellRenderer(r,c);
-      cell.style.gridRow = `${r+1}`;
-      cell.style.gridColumn = `${c+1}`;
-      g.appendChild(cell);
+      g.appendChild(cellRenderer(r,c));
     }
   }
   layer.appendChild(g);
@@ -940,78 +911,56 @@ function makeGrid(id, rect, rows, cols, cellRenderer){
 function buildZones(){
   clearZoneLayer();
 
-  // Rally grids: 6 rows x 8 cols (each macro zone is 2x2) => 48 sub-zones.
-  // Columns: A B C D (left->right for the viewer). Rows: P/M/C (depth->mid->short).
-  const COLS = ["A","B","C","D"];
-
-  const rallyCell = (side, r, c)=>{
+  // Rally top (player B hitting to A half) — labels P/M/C from top to bottom
+  makeGrid("rallyTop", Z.rallyTop, 3, 3, (r,c)=>{
     const btn=document.createElement("div");
     btn.className="zoneCell";
-    btn.dataset.side=side;
+    btn.dataset.side="top";
     btn.dataset.row=r;
     btn.dataset.col=c;
-
-    const macroRow = Math.floor(r/2);
-    const macroCol = Math.floor(c/2);
-    btn.classList.add(((macroRow+macroCol)%2===0) ? "macroShadeA" : "macroShadeB");
-    btn.dataset.macro = zoneCodeFromTap(side, r, c);
-
-    // Macro boundaries (thicker lines) for readability
-    if (c % 2 === 0) btn.classList.add("macroL");
-    if (c === 7) btn.classList.add("macroR");
-    if (r % 2 === 0) btn.classList.add("macroT");
-    if (r === 5) btn.classList.add("macroB");
-
-    // Label only once per macro cell (top-left of the 2x2 block)
-    if (r % 2 === 0 && c % 2 === 0){
-      const macro = zoneCodeFromTap(side, r, c);
-      btn.innerHTML = `<span class="zoneTxt">${macro}</span>`;
-    } else {
-      btn.innerHTML = ``;
-    }
-
-    btn.addEventListener("click",(e)=>{ flashTap(btn,e); onRallyTap(side, r, c, btn); });
+    btn.innerHTML = `<span class="zoneTxt">${(r===0?"P":(r===1?"M":"C"))}</span>`;
+    btn.addEventListener("click",(e)=>{ flashTap(btn,e); onRallyTap("top", r, c, btn); });
     return btn;
-  };
+  });
 
-  // Upper half (top)
-  makeGrid("rallyTop", Z.rallyTop, 6, 8, (r,c)=> rallyCell("top", r, c));
+  // Rally bottom (player A hitting to B half) — labels C/M/P from top to bottom (because closer to net is C)
+  makeGrid("rallyBottom", Z.rallyBottom, 3, 3, (r,c)=>{
+    const btn=document.createElement("div");
+    btn.className="zoneCell";
+    btn.dataset.side="bottom";
+    btn.dataset.row=r;
+    btn.dataset.col=c;
+    btn.innerHTML = `<span class="zoneTxt">${(r===0?"C":(r===1?"M":"P"))}</span>`;
+    btn.addEventListener("click",(e)=>{ flashTap(btn,e); onRallyTap("bottom", r, c, btn); });
+    return btn;
+  });
 
-  // Lower half (bottom)
-  makeGrid("rallyBottom", Z.rallyBottom, 6, 8, (r,c)=> rallyCell("bottom", r, c));
-
-  // Serve: two boxes split into E/C/T horizontally (3 cols each) => total 6 columns, 1 row
-  const serveCell = (side, box, target)=>{
+  // Serve: represent two boxes (left/right) split into T/C/A (3 columns each) => total 6 columns, 1 row
+  const serveCell = (side, box, target, label)=>{
     const btn=document.createElement("div");
     btn.className="serveCell";
     btn.dataset.side=side;
-    btn.dataset.box=box;       // 0 left, 1 right
-    btn.dataset.target=target; // E/C/T
-    btn.innerHTML=`<span class="zoneTxt">${target}</span>`;
+    btn.dataset.box=box; // 0 left, 1 right
+    btn.dataset.target=target; // T/C/A
+    btn.innerHTML=`<span class="zoneTxt">SAQUE</span>`;
     btn.style.fontSize="11px";
     btn.style.fontWeight="1100";
     btn.addEventListener("click",(e)=>{ flashTap(btn,e); onServeTap(side, box, target, btn); });
     return btn;
   };
 
-  const serveTarget = (box, idx)=>{
-    // idx is 0..2 left->right inside the box on screen.
-    // For each service box, labels should be from outside -> inside: W, C, T.
-    // Left box (0): outside is left => [W,C,T]
-    // Right box (1): outside is right => [T,C,W]
-    if (box===0) return (idx===0 ? "E" : (idx===1 ? "C" : "T"));
-    return (idx===0 ? "T" : (idx===1 ? "C" : "E"));
-  };
-
+  // top serve area: 1 row, 6 cols
   makeGrid("serveTop", Z.serveTop, 1, 6, (r,c)=>{
     const box = c<3 ? 0 : 1;
     const idx = c%3;
-    return serveCell("top", box, serveTarget(box, idx));
+    const target = idx===0 ? "T" : (idx===1 ? "C" : "A");
+    return serveCell("top", box, target, "SAQUE");
   });
   makeGrid("serveBottom", Z.serveBottom, 1, 6, (r,c)=>{
     const box = c<3 ? 0 : 1;
     const idx = c%3;
-    return serveCell("bottom", box, serveTarget(box, idx));
+    const target = idx===0 ? "T" : (idx===1 ? "C" : "A");
+    return serveCell("bottom", box, target, "SAQUE");
   });
 
   renderZonesVisibility();
@@ -1036,7 +985,6 @@ function applyTapConstraints(){
   document.querySelectorAll(".zoneCell, .serveCell").forEach(el=>{
     el.classList.remove("disabled","hidden");
   });
-
 
   if (!p) return;
 
@@ -1076,55 +1024,36 @@ function applyTapConstraints(){
   }
 }
 
-
 function renderZonesVisibility(){
   const p = state.point;
+  const showServe = p && p.phase==="serve";
   const serveTop=$("#serveTop"), serveBottom=$("#serveBottom");
   const rallyTop=$("#rallyTop"), rallyBottom=$("#rallyBottom");
-
-  if (!p){
-    // idle: show both rally grids (48+48), no serve grids
-    if (serveTop) serveTop.classList.add("hidden");
-    if (serveBottom) serveBottom.classList.add("hidden");
-    if (rallyTop) rallyTop.classList.remove("hidden");
-    if (rallyBottom) rallyBottom.classList.remove("hidden");
-    return;
-  }
-
-  if (p.phase==="serve"){
-    const needed = serveGridSide(p) || "top";
-    if (serveTop) serveTop.classList.toggle("hidden", needed!=="top");
-    if (serveBottom) serveBottom.classList.toggle("hidden", needed!=="bottom");
-    if (rallyTop) rallyTop.classList.add("hidden");
-    if (rallyBottom) rallyBottom.classList.add("hidden");
-    return;
-  }
-
-  if (p.phase==="rally"){
-    const expected = expectedRallySide(p) || "top";
-    if (rallyTop) rallyTop.classList.toggle("hidden", expected!=="top");
-    if (rallyBottom) rallyBottom.classList.toggle("hidden", expected!=="bottom");
-    if (serveTop) serveTop.classList.add("hidden");
-    if (serveBottom) serveBottom.classList.add("hidden");
-    return;
-  }
+  if (serveTop) serveTop.classList.toggle("hidden", !showServe);
+  if (serveBottom) serveBottom.classList.toggle("hidden", !showServe);
+  if (rallyTop) rallyTop.classList.toggle("hidden", showServe);
+  if (rallyBottom) rallyBottom.classList.toggle("hidden", showServe);
 }
 
 function zoneCodeFromTap(side, row, col){
-  // Grid is 6x8 (sub-cells). We map each tap to a macro zone:
-  // Columns A-D (left->right), Rows P/M/C (depth->mid->short).
-  const macroRow = Math.floor(row / 2); // 0..2
-  const macroCol = Math.floor(col / 2); // 0..3
-  const colLetter = ((side==="top") ? ["A","B","C","D"] : ["D","C","B","A"])[macroCol] || "A";
-
-  const depthTop = ["P","M","C"];     // upper half: top is deep (P), bottom is short (C)
-  const depthBottom = ["C","M","P"];  // lower half: top is short (C), bottom is deep (P)
-  const depth = (side==="top") ? (depthTop[macroRow] || "M") : (depthBottom[macroRow] || "M");
-
-  return `${colLetter}${depth}`;
+  // side indicates who is hitting (top => player B is hitting from top half? Actually top grid corresponds to player B hitting direction.)
+  // We'll map direction based on col and shot side (cross/parallel) using previous shot.
+  // We'll keep a simplified: col 0 = CC, col 1 = MV, col 2 = PP (cross/medio/parallel)
+  const depth = (side==="top") ? (row===0?"P":(row===1?"M":"C")) : (row===0?"C":(row===1?"M":"P"));
+  const dir = (col===0 ? "CC" : (col===1 ? "MV" : "PP"));
+  // Combine: e.g. CP / MP / CC
+  // For rally codes we use: CC/CP/MV/PP/MP/MC etc.
+  // We'll output two-letter: first direction letter: C/M/P depth plus dir? user wants CP, MP, CC etc.
+  // We'll use: if dir=CC then code = (depth==="C" ? "CC" : depth+"C") ; if dir=PP then code=depth+"P"; if MV then code="M"+(depth==="P"?"P":(depth==="C"?"C":"M"))?
+  if (col===0){
+    return depth==="C" ? "CC" : (depth==="M" ? "MC" : "PC");
+  }
+  if (col===2){
+    return depth==="P" ? "PP" : (depth==="M" ? "MP" : "CP");
+  }
+  // middle
+  return depth==="M" ? "MM" : (depth==="P" ? "PM" : "CM");
 }
-
-
 
 function onServeTap(side, box, target, el){
   if (state.matchFinished) return;
@@ -2615,28 +2544,21 @@ function pointPattern(p, includeServe){
   const evs = p.events || [];
   const filtered = evs.filter(e=> includeServe ? true : e.type!=="serve");
   return filtered.map(compactEv).join(" - ");
-}
-
 
 function extractDirToken(ev){
   const t = String(ev?.code||"").trim().toUpperCase();
   if (!t) return null;
-
-  // Serve: "S SD E/C/T" (legacy may contain A -> treat as W)
+  // Serve: "S SD T/C/A"
   if (t.startsWith("S ")){
     const parts = t.split(/\s+/);
-    const trg = (parts[2] || parts[parts.length-1] || "").toUpperCase();
-    const target = (trg==="A" || trg==="W") ? "E" : trg;
-    return target ? ("S"+target) : null;
+    const trg = parts[2] || parts[parts.length-1] || "";
+    return trg ? ("S"+trg) : null;
   }
-
   // Rally: may start with "R "
   const r = t.replace(/^R\s+/,"").trim();
-  // Support new grid codes (AP..DC) and legacy codes (CC/CP/..)
-  const m = r.match(/([ABCD][PMC]|CC|CP|CM|MC|MM|MP|PC|PM|PP)$/);
+  const m = r.match(/(CC|CP|CM|MC|MM|MP|PC|PM|PP)$/);
   return m ? m[1] : null;
 }
-
 
 function patternTokens(p, includeServe){
   const evs = (p?.events||[]).filter(e=> includeServe ? true : e.type!=="serve");
@@ -2701,6 +2623,8 @@ function computeSimilarPatternStats(points, includeServe){
   return map;
 }
 
+
+}
 
 /** ANALYTICS **/
 function renderAnalytics(){
@@ -2900,14 +2824,10 @@ function normalizeShotCode(evCode){
 }
 
 function decodeDirDepth(two){
-  const code = String(two||"").trim().toUpperCase();
-  // Legacy: depth first (P/M/C) then dir (C/M/P)
-  if (/^[PMC][CMP]$/.test(code)) return { format:"old", depth: code[0], dir: code[1] };
-  // New grid: zone (A/B/C/D) then depth (P/M/C)
-  if (/^[ABCD][PMC]$/.test(code)) return { format:"grid", zone: code[0], depth: code[1] };
-  return null;
+  const code = String(two||"").trim();
+  if (!/^[PMC][CMP]$/.test(code)) return null;
+  return { depth: code[0], dir: code[1] };
 }
-
 
 function parseReason(reason){
   const r=String(reason||"");
@@ -2927,15 +2847,15 @@ function emptyPlayerStats(){
     firstIn:0, firstInWon:0,
     secondPlayed:0, secondIn:0, secondInWon:0,
     doubleFaults:0, aces:0,
-    serveTargets:{E:0,C:0,T:0,W:0},
+    serveTargets:{T:0,C:0,A:0},
 
     returnPoints:0, returnPointsWon:0,
     returnsIn:0,
-    returnZone:{A:0,B:0,C:0,D:0},
+    returnDir:{C:0,M:0,P:0},
     returnDepth:{P:0,M:0,C:0},
 
     strokes:0,
-    strokeZone:{A:0,B:0,C:0,D:0},
+    strokeDir:{C:0,M:0,P:0},
     strokeDepth:{P:0,M:0,C:0},
 
     winners:0, ue:0, fe:0, feDrawn:0,
@@ -3000,7 +2920,7 @@ function computeStats(points){
     const serveEvs = evs.filter(e=>e && e.type==="serve" && e.player===server);
     const hasDF = serveEvs.some(e=>e?.meta?.df || /\sDF$/.test(String(e.code||"")));
     const hasFault = serveEvs.some(e=>e?.meta?.fault || /\sF$/.test(String(e.code||"")));
-    const targetEvs = serveEvs.filter(e=>e?.meta?.target && ["E","C","T","W","A"].includes(String(e.meta.target).toUpperCase()));
+    const targetEvs = serveEvs.filter(e=>e?.meta?.target && ["T","C","A"].includes(e.meta.target));
     const serveIn = targetEvs.length>0 && !hasDF;
     const firstFaulted = hasFault || hasDF; // DF implica 1º fallado aunque no lo registre
 
@@ -3018,8 +2938,7 @@ function computeStats(points){
     }
 
     if (serveIn){
-      const lastT0 = String(targetEvs[targetEvs.length-1]?.meta?.target||"").toUpperCase();
-      const lastT = (lastT0==="A" || lastT0==="W") ? "E" : lastT0;
+      const lastT = targetEvs[targetEvs.length-1]?.meta?.target;
       if (lastT && agg[server].serveTargets[lastT]!==undefined) agg[server].serveTargets[lastT]++;
     }
 
@@ -3036,16 +2955,8 @@ function computeStats(points){
       const n = normalizeShotCode(returnEv.code);
       const dd = decodeDirDepth(n.code);
       if (dd){
-        if (dd.format==="grid"){
-          if (agg[receiver].returnZone[dd.zone]!==undefined) agg[receiver].returnZone[dd.zone]++;
-          if (agg[receiver].returnDepth[dd.depth]!==undefined) agg[receiver].returnDepth[dd.depth]++;
-        } else if (dd.format==="old"){
-          // Backward-compatible mapping (approx.): C->A, M->B, P->D
-          const map = { C:"A", M:"B", P:"D" };
-          const z = map[dd.dir] || "B";
-          if (agg[receiver].returnZone[z]!==undefined) agg[receiver].returnZone[z]++;
-          if (agg[receiver].returnDepth[dd.depth]!==undefined) agg[receiver].returnDepth[dd.depth]++;
-        }
+        if (agg[receiver].returnDir[dd.dir]!==undefined) agg[receiver].returnDir[dd.dir]++;
+        if (agg[receiver].returnDepth[dd.depth]!==undefined) agg[receiver].returnDepth[dd.depth]++;
       }
     }
 
@@ -3058,15 +2969,8 @@ function computeStats(points){
       const n = normalizeShotCode(ev.code);
       const dd = decodeDirDepth(n.code);
       if (dd){
-        if (dd.format==="grid"){
-          if (agg[pl].strokeZone[dd.zone]!==undefined) agg[pl].strokeZone[dd.zone]++;
-          if (agg[pl].strokeDepth[dd.depth]!==undefined) agg[pl].strokeDepth[dd.depth]++;
-        } else if (dd.format==="old"){
-          const map = { C:"A", M:"B", P:"D" };
-          const z = map[dd.dir] || "B";
-          if (agg[pl].strokeZone[z]!==undefined) agg[pl].strokeZone[z]++;
-          if (agg[pl].strokeDepth[dd.depth]!==undefined) agg[pl].strokeDepth[dd.depth]++;
-        }
+        if (agg[pl].strokeDir[dd.dir]!==undefined) agg[pl].strokeDir[dd.dir]++;
+        if (agg[pl].strokeDepth[dd.depth]!==undefined) agg[pl].strokeDepth[dd.depth]++;
       }
     }
 
@@ -3295,19 +3199,16 @@ function renderStats(){
       row("Break points (salvados)", fmtRatio(agg.A.bpSaved, agg.A.bpFaced), fmtRatio(agg.B.bpSaved, agg.B.bpFaced)),
     ].join("");
 
-    const dirTotA = agg.A.strokeZone.A + agg.A.strokeZone.B + agg.A.strokeZone.C + agg.A.strokeZone.D;
-    const dirTotB = agg.B.strokeZone.A + agg.B.strokeZone.B + agg.B.strokeZone.C + agg.B.strokeZone.D;
+    const dirTotA = agg.A.strokeDir.C + agg.A.strokeDir.M + agg.A.strokeDir.P;
+    const dirTotB = agg.B.strokeDir.C + agg.B.strokeDir.M + agg.B.strokeDir.P;
     const depTotA = agg.A.strokeDepth.P + agg.A.strokeDepth.M + agg.A.strokeDepth.C;
     const depTotB = agg.B.strokeDepth.P + agg.B.strokeDepth.M + agg.B.strokeDepth.C;
 
     const shotRows = [
       row("Golpes totales", String(agg.A.strokes), String(agg.B.strokes)),
-      row("Zona A %", fmtPct(agg.A.strokeZone.A, dirTotA), fmtPct(agg.B.strokeZone.A, dirTotB)),
-      row("Zona B %", fmtPct(agg.A.strokeZone.B, dirTotA), fmtPct(agg.B.strokeZone.B, dirTotB)),
-      row("Zona C %", fmtPct(agg.A.strokeZone.C, dirTotA), fmtPct(agg.B.strokeZone.C, dirTotB)),
-      row("Zona D %", fmtPct(agg.A.strokeZone.D, dirTotA), fmtPct(agg.B.strokeZone.D, dirTotB)),
-      
-      
+      row("Cruzados %", fmtPct(agg.A.strokeDir.C, dirTotA), fmtPct(agg.B.strokeDir.C, dirTotB)),
+      row("Medio %", fmtPct(agg.A.strokeDir.M, dirTotA), fmtPct(agg.B.strokeDir.M, dirTotB)),
+      row("Paralelos %", fmtPct(agg.A.strokeDir.P, dirTotA), fmtPct(agg.B.strokeDir.P, dirTotB)),
       row("Profundos %", fmtPct(agg.A.strokeDepth.P, depTotA), fmtPct(agg.B.strokeDepth.P, depTotB)),
       row("Medios %", fmtPct(agg.A.strokeDepth.M, depTotA), fmtPct(agg.B.strokeDepth.M, depTotB)),
       row("Cortos %", fmtPct(agg.A.strokeDepth.C, depTotA), fmtPct(agg.B.strokeDepth.C, depTotB)),
@@ -3716,16 +3617,16 @@ function exportStatsPDF(){
   const printTable = (title, agg)=>{
     const totalPts = agg.A.pointsWon + agg.B.pointsWon;
 
-    const dirTotA = agg.A.strokeZone.A + agg.A.strokeZone.B + agg.A.strokeZone.C + agg.A.strokeZone.D;
-    const dirTotB = agg.B.strokeZone.A + agg.B.strokeZone.B + agg.B.strokeZone.C + agg.B.strokeZone.D;
+    const dirTotA = agg.A.strokeDir.C + agg.A.strokeDir.M + agg.A.strokeDir.P;
+    const dirTotB = agg.B.strokeDir.C + agg.B.strokeDir.M + agg.B.strokeDir.P;
     const depTotA = agg.A.strokeDepth.P + agg.A.strokeDepth.M + agg.A.strokeDepth.C;
     const depTotB = agg.B.strokeDepth.P + agg.B.strokeDepth.M + agg.B.strokeDepth.C;
 
-    const serveTotA = agg.A.serveTargets.T + agg.A.serveTargets.C + (agg.A.serveTargets.E||0) + (agg.A.serveTargets.W||0);
-    const serveTotB = agg.B.serveTargets.T + agg.B.serveTargets.C + (agg.B.serveTargets.E||0) + (agg.B.serveTargets.W||0);
+    const serveTotA = agg.A.serveTargets.T + agg.A.serveTargets.C + agg.A.serveTargets.A;
+    const serveTotB = agg.B.serveTargets.T + agg.B.serveTargets.C + agg.B.serveTargets.A;
 
-    const retDirTotA = agg.A.returnZone.A + agg.A.returnZone.B + agg.A.returnZone.C + agg.A.returnZone.D;
-    const retDirTotB = agg.B.returnZone.A + agg.B.returnZone.B + agg.B.returnZone.C + agg.B.returnZone.D;
+    const retDirTotA = agg.A.returnDir.C + agg.A.returnDir.M + agg.A.returnDir.P;
+    const retDirTotB = agg.B.returnDir.C + agg.B.returnDir.M + agg.B.returnDir.P;
     const retDepTotA = agg.A.returnDepth.P + agg.A.returnDepth.M + agg.A.returnDepth.C;
     const retDepTotB = agg.B.returnDepth.P + agg.B.returnDepth.M + agg.B.returnDepth.C;
 
@@ -3749,29 +3650,24 @@ function exportStatsPDF(){
       row("% pts ganados con 2º", fmtPct(agg.A.secondInWon, agg.A.secondIn), fmtPct(agg.B.secondInWon, agg.B.secondIn)),
       row("Saque a T %", fmtPct(agg.A.serveTargets.T, serveTotA), fmtPct(agg.B.serveTargets.T, serveTotB)),
       row("Saque al cuerpo %", fmtPct(agg.A.serveTargets.C, serveTotA), fmtPct(agg.B.serveTargets.C, serveTotB)),
-      row("Saque exterior (E) %", fmtPct((agg.A.serveTargets.E||0)+(agg.A.serveTargets.W||0), serveTotA), fmtPct((agg.B.serveTargets.E||0)+(agg.B.serveTargets.W||0), serveTotB)),
+      row("Saque a abierto %", fmtPct(agg.A.serveTargets.A, serveTotA), fmtPct(agg.B.serveTargets.A, serveTotB)),
     ].join("");
 
     const retRows = [
       row("Puntos al resto", fmtRatio(agg.A.returnPointsWon, agg.A.returnPoints), fmtRatio(agg.B.returnPointsWon, agg.B.returnPoints)),
       row("Break points (ganados)", fmtRatio(agg.A.bpConv, agg.A.bpOpp), fmtRatio(agg.B.bpConv, agg.B.bpOpp)),
       row("Break points (salvados)", fmtRatio(agg.A.bpSaved, agg.A.bpFaced), fmtRatio(agg.B.bpSaved, agg.B.bpFaced)),
-      row("Zona resto A %", fmtPct(agg.A.returnZone.A, retDirTotA), fmtPct(agg.B.returnZone.A, retDirTotB)),
-      row("Zona resto B %", fmtPct(agg.A.returnZone.B, retDirTotA), fmtPct(agg.B.returnZone.B, retDirTotB)),
-      row("Zona resto C %", fmtPct(agg.A.returnZone.C, retDirTotA), fmtPct(agg.B.returnZone.C, retDirTotB)),
-      row("Zona resto D %", fmtPct(agg.A.returnZone.D, retDirTotA), fmtPct(agg.B.returnZone.D, retDirTotB)),
+      row("Dirección resto cruzado %", fmtPct(agg.A.returnDir.C, retDirTotA), fmtPct(agg.B.returnDir.C, retDirTotB)),
+      row("Dirección resto paralelo %", fmtPct(agg.A.returnDir.P, retDirTotA), fmtPct(agg.B.returnDir.P, retDirTotB)),
       row("Profundidad resto profundo %", fmtPct(agg.A.returnDepth.P, retDepTotA), fmtPct(agg.B.returnDepth.P, retDepTotB)),
       row("Profundidad resto corto %", fmtPct(agg.A.returnDepth.C, retDepTotA), fmtPct(agg.B.returnDepth.C, retDepTotB)),
     ].join("");
 
     const shotRows = [
       row("Golpes totales", String(agg.A.strokes), String(agg.B.strokes)),
-      row("Zona A %", fmtPct(agg.A.strokeZone.A, dirTotA), fmtPct(agg.B.strokeZone.A, dirTotB)),
-      row("Zona B %", fmtPct(agg.A.strokeZone.B, dirTotA), fmtPct(agg.B.strokeZone.B, dirTotB)),
-      row("Zona C %", fmtPct(agg.A.strokeZone.C, dirTotA), fmtPct(agg.B.strokeZone.C, dirTotB)),
-      row("Zona D %", fmtPct(agg.A.strokeZone.D, dirTotA), fmtPct(agg.B.strokeZone.D, dirTotB)),
-      
-      
+      row("Cruzados %", fmtPct(agg.A.strokeDir.C, dirTotA), fmtPct(agg.B.strokeDir.C, dirTotB)),
+      row("Medio %", fmtPct(agg.A.strokeDir.M, dirTotA), fmtPct(agg.B.strokeDir.M, dirTotB)),
+      row("Paralelos %", fmtPct(agg.A.strokeDir.P, dirTotA), fmtPct(agg.B.strokeDir.P, dirTotB)),
       row("Profundos %", fmtPct(agg.A.strokeDepth.P, depTotA), fmtPct(agg.B.strokeDepth.P, depTotB)),
       row("Medios %", fmtPct(agg.A.strokeDepth.M, depTotA), fmtPct(agg.B.strokeDepth.M, depTotB)),
       row("Cortos %", fmtPct(agg.A.strokeDepth.C, depTotA), fmtPct(agg.B.strokeDepth.C, depTotB)),
@@ -4483,10 +4379,8 @@ function showSplashAgain(){
 }
 
 function registerSW(){
-  // Disabled in this stabilization build to avoid boot failures caused by stale SW/cache state.
-  if (window.__TDT_DISABLE_SW__) return;
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2552", { updateViaCache: "none" }).catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2545").catch(console.error);
 }
 
 function init(){
@@ -4501,15 +4395,4 @@ function init(){
   registerSW();
 }
 
-function safeInit(){
-  try{ init(); }catch(e){
-    console.error(e);
-    // fail-safe: show start button so the UI is not stuck on an empty splash
-    const splash=document.getElementById("splash");
-    const btn=document.getElementById("btnStartApp");
-    if (splash) splash.classList.add("showStart");
-    if (btn) btn.classList.remove("hidden");
-  }
-}
-
-window.addEventListener("load", safeInit);
+window.addEventListener("load", init);
