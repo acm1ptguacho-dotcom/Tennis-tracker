@@ -1,0 +1,20 @@
+Tennis Direction Tracker · v2600 Professional Shell
+
+Cambios principales añadidos en esta versión:
+- Portada más premium con mensaje comercial y mejor jerarquía visual.
+- Portal de acceso con login, registro y modo demo.
+- Cuentas locales por usuario (guardadas en este dispositivo) con separación de datos.
+- Workspace superior con resumen de cuenta, jugadores, partidos y puntos.
+- Panel Pro con resumen ejecutivo y recomendaciones rápidas por jugador.
+- Biblioteca de jugadores con creación, edición, borrado y asignación a A/B.
+- Modal de cuenta con estado del workspace.
+- Centro de ayuda, privacidad y términos visuales.
+- Onboarding inicial para guiar la primera configuración.
+- Persistencia por usuario para estado, perfiles y partidos guardados.
+- Actualización de versiones de CSS, JS y service worker.
+
+Nota importante:
+Esta versión implementa una base profesional dentro de una web estática.
+La autenticación y el almacenamiento son locales al dispositivo. Para una
+comercialización completa con múltiples clientes reales, el siguiente paso
+recomendado es conectar backend, base de datos y autenticación del lado servidor.

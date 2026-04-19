@@ -1,30 +1,51 @@
 
 const $ = (s) => document.querySelector(s);
 
-const STORAGE_KEY = "tdt_v23_state";
+const STORAGE_BASE_STATE = "tdt_v24_state";
+const STORAGE_BASE_MATCHES = "tdt_saved_matches_v2";
+const STORAGE_BASE_PROFILES = "tdt_player_profiles_v1";
+const STORAGE_BASE_FINISH_MODE = "tdt_finish_mode_v2";
+const ACCOUNTS_KEY = "tdt_accounts_v1";
+const SESSION_KEY = "tdt_session_v1";
 
-const state = {
-  lang: "es",
-  names: { A:"Jugador A", B:"Jugador B" },
-  sets: { A:0, B:0 },
-  games: { A:0, B:0 },
-  points: { A:0, B:0 },
-  matchMode: "standard", // standard | tiebreak | super
-  isTiebreak: false,
-  tb: { A:0, B:0 },
-  tbStartingServer: "A",
-  currentServer: "A",
-  matchFinished: false,
+function createDefaultState(){
+  return {
+    lang: "es",
+    names: { A:"Jugador A", B:"Jugador B" },
+    sets: { A:0, B:0 },
+    games: { A:0, B:0 },
+    points: { A:0, B:0 },
+    matchMode: "standard", // standard | tiebreak | super
+    isTiebreak: false,
+    tb: { A:0, B:0 },
+    tbStartingServer: "A",
+    currentServer: "A",
+    matchFinished: false,
 
-  point: null, // current point
-  matchPoints: [], // completed points
-  undoStack: [],
+    point: null,
+    matchPoints: [],
+    undoStack: [],
 
-  meta: { event:"", venue:"", date:"", time:"", conditions:"", notes:"" },
-  handed: { A:"R", B:"R" },
+    meta: { event:"", venue:"", date:"", time:"", conditions:"", notes:"" },
+    handed: { A:"R", B:"R" },
+    playerAssignments: { A:null, B:null },
 
-  ui: { theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false, surface:"hard" }
-};
+    ui: {
+      theme:"dark",
+      coach:true,
+      showHistoryArrows:true,
+      hideScore:false,
+      rotated:false,
+      hideRail:false,
+      surface:"hard",
+      chartPlayer:"A",
+      saveLoadMode:"save"
+    }
+  };
+}
+
+const state = createDefaultState();
+let __sessionCache = null;
 
 const playerName = (id)=> (state.names && state.names[id]) ? state.names[id] : (id==="A" ? "Jugador A" : "Jugador B");
 const playerNameSafe = (id)=> escapeHtml(playerName(id));
@@ -170,7 +191,7 @@ function formatSnapshot(s){
 
 function persist(){
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(getStateStorageKey(), JSON.stringify(state));
   }catch(e){
     console.error(e);
     try{ toast("⚠️ No se pudo guardar (almacenamiento lleno o bloqueado)"); }catch(_){}
@@ -178,7 +199,7 @@ function persist(){
 }
 function load(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(getStateStorageKey());
     if (!raw) return;
     const s = JSON.parse(raw);
     Object.assign(state, s);
@@ -195,13 +216,15 @@ function load(){
     state.setHistory = state.setHistory || [];
     state.meta = state.meta || { event:"", venue:"", date:"", time:"", conditions:"", notes:"" };
     state.handed = state.handed || { A:"R", B:"R" };
-    // UI flags (bloqueamos tema en oscuro y modo entrenador activado)
-    state.ui = state.ui || {theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false, surface:"hard"};
+    state.playerAssignments = state.playerAssignments || { A:null, B:null };
+    state.ui = state.ui || {theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false, surface:"hard", chartPlayer:"A", saveLoadMode:"save"};
     if (typeof state.ui.showHistoryArrows === "undefined") state.ui.showHistoryArrows = true;
     if (typeof state.ui.hideScore === "undefined") state.ui.hideScore = false;
     if (typeof state.ui.rotated === "undefined") state.ui.rotated = false;
     if (typeof state.ui.hideRail === "undefined") state.ui.hideRail = false;
     if (!state.ui.surface) state.ui.surface = "hard";
+    if (!state.ui.chartPlayer) state.ui.chartPlayer = "A";
+    if (!state.ui.saveLoadMode) state.ui.saveLoadMode = "save";
   }catch(e){ console.error(e); }
 }
 
@@ -213,11 +236,10 @@ function toast(msg){
   setTimeout(()=>t.classList.remove("show"), 1400);
 }
 // --- Guardar / Cargar partido (local) ---
-const SAVED_MATCHES_KEY = "tdt_saved_matches_v1";
 
 function getSavedMatches(){
   try{
-    const raw = localStorage.getItem(SAVED_MATCHES_KEY);
+    const raw = localStorage.getItem(getSavedMatchesStorageKey());
     const arr = raw ? JSON.parse(raw) : [];
     return Array.isArray(arr) ? arr : [];
   }catch(e){
@@ -226,7 +248,7 @@ function getSavedMatches(){
   }
 }
 function setSavedMatches(arr){
-  try{ localStorage.setItem(SAVED_MATCHES_KEY, JSON.stringify(arr||[])); }
+  try{ localStorage.setItem(getSavedMatchesStorageKey(), JSON.stringify(arr||[])); }
   catch(e){ console.error(e); toast("⚠️ No se pudo guardar la lista de partidos"); }
 }
 
@@ -2127,7 +2149,7 @@ function toggleFinishMenu(){
 
 // --- Avanzado (menú bola) ---
 let finishMode = (()=>{
-  try { return localStorage.getItem("tdt_finish_mode") || "normal"; }
+  try { return localStorage.getItem(getFinishModeKey()) || "normal"; }
   catch(e){ return "normal"; }
 })();
 
@@ -2153,7 +2175,7 @@ const ADV_WINNERS = [
 
 function setFinishMode(mode){
   finishMode = mode;
-  try { localStorage.setItem("tdt_finish_mode", mode); } catch(e){}
+  try { localStorage.setItem(getFinishModeKey(), mode); } catch(e){}
   const tn=$("#tabNormal"), ta=$("#tabAdvanced");
   if (tn && ta){
     tn.classList.toggle("active", mode==="normal");
@@ -4043,6 +4065,10 @@ function renderAll(){
   renderCourtNames();
   renderScore();
   renderPoint();
+  updateWorkspaceBar();
+  renderDashboard();
+  renderPlayerLibrary();
+  renderAccountModal();
 }
 
 function wire(){
@@ -4121,7 +4147,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // (Eliminado) Tema y modo normal
 
 // cerrar menú al elegir una opción (las acciones que viven dentro del menú)
-["btnSaveMatch","btnLoadMatch","btnGameMode","btnSurface","btnLanguage","btnInfo","btnBackHome","btnHistory","btnAnalytics","btnStats","btnCharts","btnExport"].forEach(id=>{
+["btnSaveMatch","btnLoadMatch","btnGameMode","btnSurface","btnLanguage","btnInfo","btnBackHome","btnHistory","btnAnalytics","btnStats","btnCharts","btnExport","btnDashboardMenu","btnPlayerLibraryMenu","btnAccountMenu","btnHelpCenter","btnLegal"].forEach(id=>{
   const el = $("#"+id);
   if (el) el.addEventListener("click", ()=>setMenuOpen(false));
 });
@@ -4240,7 +4266,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnPDFStats","click", exportStatsPDF);
 
   // close modals clicking outside
-  ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal"].forEach(mid=>{
+  ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal"].forEach(mid=>{
     const m = $("#"+mid);
     if (!m) return;
     m.addEventListener("click", (e)=>{
@@ -4256,7 +4282,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // keyboard shortcuts
   window.addEventListener("keydown", (e)=>{
     if (e.key==="Escape"){
-      ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","finishMenu"].forEach(id=>{
+      ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal","finishMenu"].forEach(id=>{
         const el=$("#"+id);
         if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
       });
@@ -4282,6 +4308,391 @@ function setSheetOpen(open){
 function toggleSheet(){
   setSheetOpen(!__sheetOpen);
 }
+
+
+function hashPassword(text){
+  const source = String(text || "");
+  if (!window.crypto || !window.crypto.subtle){
+    return Promise.resolve(btoa(unescape(encodeURIComponent(source))));
+  }
+  return window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(source)).then(buf =>
+    Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("")
+  );
+}
+function setFeedback(id, msg, tone=""){
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg || "";
+  el.className = "authFeedback" + (tone ? ` ${tone}` : "");
+}
+function switchAuthTab(tab){
+  const login = tab !== "signup";
+  $("#tabAuthLogin")?.classList.toggle("active", login);
+  $("#tabAuthSignup")?.classList.toggle("active", !login);
+  $("#authLoginPane")?.classList.toggle("hidden", !login);
+  $("#authSignupPane")?.classList.toggle("hidden", login);
+}
+function showAuthPortal(){
+  $("#authPortal")?.classList.remove("hidden");
+  document.body.classList.add("unauth");
+  document.body.classList.remove("isAuthenticated");
+  setFeedback("loginFeedback", "");
+  setFeedback("signupFeedback", "");
+}
+function hideAuthPortal(){
+  $("#authPortal")?.classList.add("hidden");
+  document.body.classList.remove("unauth");
+  document.body.classList.add("isAuthenticated");
+}
+function getPlayerProfiles(){ return safeReadJSON(localStorage, getProfilesStorageKey(), []) || []; }
+function setPlayerProfiles(arr){ return safeWriteJSON(localStorage, getProfilesStorageKey(), arr || []); }
+function resetProfileForm(){
+  ["profileId","profileName","profileCategory","profileGoal","profileStrengths","profileWeaknesses","profileNotes"].forEach(id=>{ const el=$("#"+id); if (el) el.value=""; });
+  const hand = $("#profileHand"); if (hand) hand.value = "R";
+}
+function loadProfileIntoForm(id){
+  const p = getPlayerProfiles().find(x => x.id === id);
+  if (!p) return;
+  $("#profileId").value = p.id;
+  $("#profileName").value = p.name || "";
+  $("#profileCategory").value = p.category || "";
+  $("#profileHand").value = p.hand || "R";
+  $("#profileGoal").value = p.goal || "";
+  $("#profileStrengths").value = p.strengths || "";
+  $("#profileWeaknesses").value = p.weaknesses || "";
+  $("#profileNotes").value = p.notes || "";
+}
+function saveProfileFromForm(){
+  const payload = {
+    id: $("#profileId")?.value || `pl_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,6)}`,
+    name: ($("#profileName")?.value || "").trim(),
+    category: ($("#profileCategory")?.value || "").trim(),
+    hand: ($("#profileHand")?.value || "R").trim(),
+    goal: ($("#profileGoal")?.value || "").trim(),
+    strengths: ($("#profileStrengths")?.value || "").trim(),
+    weaknesses: ($("#profileWeaknesses")?.value || "").trim(),
+    notes: ($("#profileNotes")?.value || "").trim(),
+    updatedAt: Date.now()
+  };
+  if (!payload.name){ toast("Escribe el nombre del jugador"); return; }
+  const profiles = getPlayerProfiles();
+  const idx = profiles.findIndex(p => p.id === payload.id);
+  if (idx >= 0) profiles[idx] = { ...profiles[idx], ...payload };
+  else profiles.unshift({ ...payload, createdAt: Date.now() });
+  setPlayerProfiles(profiles);
+  resetProfileForm();
+  renderPlayerLibrary();
+  updateWorkspaceBar();
+  toast("✅ Perfil guardado");
+}
+function deleteProfile(id){
+  const profiles = getPlayerProfiles().filter(p => p.id !== id);
+  setPlayerProfiles(profiles);
+  if (state.playerAssignments?.A === id) state.playerAssignments.A = null;
+  if (state.playerAssignments?.B === id) state.playerAssignments.B = null;
+  persist();
+  renderPlayerLibrary();
+  updateWorkspaceBar();
+  toast("Perfil eliminado");
+}
+function assignProfileToSide(id, side){
+  const profile = getPlayerProfiles().find(p => p.id === id);
+  if (!profile) return;
+  state.playerAssignments = state.playerAssignments || { A:null, B:null };
+  state.playerAssignments[side] = id;
+  state.names[side] = profile.name || state.names[side];
+  state.handed[side] = profile.hand || state.handed[side] || "R";
+  persist();
+  renderAll();
+  renderPlayerLibrary();
+  toast(`✅ ${profile.name} asignado a ${side}`);
+}
+function renderPlayerLibrary(){
+  const list = $("#playerProfileList");
+  const summary = $("#playerLibrarySummary");
+  const profiles = getPlayerProfiles().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  if (summary) summary.textContent = `${profiles.length} perfiles disponibles · Asigna a A o B con un toque`;
+  if (!list) return;
+  if (!profiles.length){
+    list.innerHTML = `<div class="profileCard"><h4>Sin perfiles todavía</h4><p>Crea tu primer jugador para empezar a guardar historial, objetivos y notas del entrenador.</p></div>`;
+    return;
+  }
+  list.innerHTML = profiles.map(profile => {
+    const assigned = [];
+    if (state.playerAssignments?.A === profile.id) assigned.push("A");
+    if (state.playerAssignments?.B === profile.id) assigned.push("B");
+    const meta = [profile.category || "Sin categoría", (profile.hand || "R") === "L" ? "Zurdo" : "Diestro"].concat(assigned.length ? [`Asignado: ${assigned.join(" / ")}`] : []);
+    return `
+      <article class="profileCard">
+        <div>
+          <h4>${escapeHtml(profile.name || "Jugador")}</h4>
+          <div class="profileMeta">${meta.map(x=>`<span>${escapeHtml(x)}</span>`).join("")}</div>
+        </div>
+        <p><strong>Objetivo:</strong> ${escapeHtml(profile.goal || "—")}</p>
+        <p><strong>Fortalezas:</strong> ${escapeHtml(profile.strengths || "—")}</p>
+        <p><strong>Debilidades:</strong> ${escapeHtml(profile.weaknesses || "—")}</p>
+        <div class="profileActions">
+          <button class="chip" type="button" data-profile-action="assignA" data-profile-id="${profile.id}">Asignar A</button>
+          <button class="chip" type="button" data-profile-action="assignB" data-profile-id="${profile.id}">Asignar B</button>
+        </div>
+        <div class="profileActions">
+          <button class="chip good" type="button" data-profile-action="edit" data-profile-id="${profile.id}">Editar</button>
+          <button class="chip warn" type="button" data-profile-action="delete" data-profile-id="${profile.id}">Borrar</button>
+        </div>
+      </article>`;
+  }).join("");
+}
+function getPlayerRecommendations(pid, stats){
+  const s = stats?.[pid];
+  if (!s || !stats?.totalPoints) return ["Todavía no hay suficientes datos para una recomendación útil."];
+  const recs = [];
+  const totalServe = s.servePoints || 0;
+  const totalReturn = s.returnPoints || 0;
+  if (totalServe >= 6 && s.firstIn && (s.firstIn / totalServe) < 0.45){
+    recs.push(`Subir el primer saque: ahora mismo está en ${fmtPct(s.firstIn, totalServe)}.`);
+  }
+  if (totalServe >= 6 && s.secondPlayed >= 3 && s.doubleFaults >= 2){
+    recs.push(`Proteger mejor el segundo saque: ${s.doubleFaults} dobles faltas detectadas.`);
+  }
+  if (totalReturn >= 6 && s.returnsIn && (s.returnsIn / totalReturn) < 0.55){
+    recs.push(`Buscar más seguridad al resto: sólo entran ${fmtPct(s.returnsIn, totalReturn)}.`);
+  }
+  if ((s.ue || 0) > ((s.winners || 0) + 2)){
+    recs.push(`Reducir error no forzado: UE ${s.ue} frente a winners ${s.winners}.`);
+  }
+  const dirEntries = Object.entries(s.strokeDir || {}).sort((a,b)=>b[1]-a[1]);
+  if (dirEntries[0] && dirEntries[0][1] >= 4){
+    const dirName = dirEntries[0][0] === "C" ? "cruzado" : dirEntries[0][0] === "M" ? "al medio" : "paralelo";
+    recs.push(`Patrón dominante en rally: dirección ${dirName}. Conviene reforzar la siguiente jugada desde ahí.`);
+  }
+  if (!recs.length) recs.push("Rendimiento bastante equilibrado. Conviene profundizar con más puntos para detectar una prioridad clara.");
+  return recs.slice(0, 3);
+}
+function renderDashboard(){
+  const intro = $("#dashboardIntro");
+  const grid = $("#dashboardGrid");
+  const recs = $("#dashboardRecommendations");
+  if (!intro || !grid || !recs) return;
+  const stats = computeStats(state.matchPoints || []);
+  const matches = getSavedMatches();
+  const profiles = getPlayerProfiles();
+  const session = getSession();
+  const modeLabel = state.matchMode === "super" ? "Super tie-break" : state.matchMode === "tiebreak" ? "Tie-break" : "Partido estándar";
+  intro.innerHTML = [
+    { label:"Cuenta activa", value: escapeHtml(session?.name || "Invitado"), note: `${escapeHtml(session?.plan || "Local")}` },
+    { label:"Modo actual", value: escapeHtml(modeLabel), note: `${state.matchPoints.length} puntos registrados` },
+    { label:"Activos en workspace", value: `${profiles.length} jugadores`, note: `${matches.length} partidos guardados` }
+  ].map(card => `<div class="dashboardHeroCard"><strong>${card.label}</strong><span>${card.value}</span><small>${card.note}</small></div>`).join("");
+
+  const buildCard = (pid) => {
+    const p = stats[pid] || {};
+    return `
+      <article class="dashboardCard">
+        <h3>${escapeHtml(playerName(pid))}</h3>
+        <div class="dashboardKpis">
+          <div class="dashboardKpi"><strong>${p.pointsWon || 0}</strong><span>Puntos ganados</span></div>
+          <div class="dashboardKpi"><strong>${fmtPct(p.servePointsWon || 0, p.servePoints || 0)}</strong><span>Puntos al saque</span></div>
+          <div class="dashboardKpi"><strong>${fmtPct(p.returnPointsWon || 0, p.returnPoints || 0)}</strong><span>Puntos al resto</span></div>
+          <div class="dashboardKpi"><strong>${p.winners || 0} / ${p.ue || 0}</strong><span>Winners / UE</span></div>
+        </div>
+      </article>`;
+  };
+  grid.innerHTML = buildCard("A") + buildCard("B");
+  const ra = getPlayerRecommendations("A", stats);
+  const rb = getPlayerRecommendations("B", stats);
+  recs.innerHTML = `
+    <article class="recommendCard"><h4>Foco para ${escapeHtml(playerName("A"))}</h4><ul class="recommendList">${ra.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></article>
+    <article class="recommendCard"><h4>Foco para ${escapeHtml(playerName("B"))}</h4><ul class="recommendList">${rb.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></article>`;
+}
+function updateWorkspaceBar(){
+  const session = getSession();
+  const profiles = getPlayerProfiles();
+  const matches = getSavedMatches();
+  const workspaceName = $("#workspaceName");
+  const workspaceSub = $("#workspaceSub");
+  const players = $("#workspacePlayers");
+  const saved = $("#workspaceMatches");
+  const points = $("#workspacePoints");
+  if (workspaceName) workspaceName.textContent = session?.name || "Modo local";
+  if (workspaceSub) workspaceSub.textContent = isAuthenticated() ? `${session?.plan || "Local"} · ${session?.email || "sin email"}` : "Accede para separar jugadores y partidos por cuenta";
+  if (players) players.textContent = String(profiles.length);
+  if (saved) saved.textContent = String(matches.length);
+  if (points) points.textContent = String((state.matchPoints || []).length);
+}
+function renderAccountModal(){
+  const box = $("#accountSummary");
+  if (!box) return;
+  const session = getSession();
+  const profiles = getPlayerProfiles();
+  const matches = getSavedMatches();
+  const current = getCurrentAccount();
+  const mode = session?.isDemo ? "Modo demo" : "Cuenta local";
+  box.innerHTML = `
+    <div class="dashboardKpis">
+      <div class="dashboardKpi"><strong>${escapeHtml(session?.name || "Sin sesión")}</strong><span>Workspace</span></div>
+      <div class="dashboardKpi"><strong>${escapeHtml(session?.plan || mode)}</strong><span>Plan visual</span></div>
+      <div class="dashboardKpi"><strong>${profiles.length}</strong><span>Perfiles guardados</span></div>
+      <div class="dashboardKpi"><strong>${matches.length}</strong><span>Partidos guardados</span></div>
+    </div>
+    <div class="helpNote" style="margin-top:12px;">
+      <strong>Estado actual:</strong> ${escapeHtml(mode)}.<br>
+      <strong>Email:</strong> ${escapeHtml(session?.email || "No disponible")}.<br>
+      <strong>Nota:</strong> Esta implementación separa datos por usuario en el propio dispositivo y deja preparada la lógica para conectar autenticación y base de datos reales más adelante.
+    </div>`;
+}
+function openDashboard(){ renderDashboard(); openModal("#dashboardModal"); }
+function closeDashboard(){ closeModal("#dashboardModal"); }
+function openPlayers(){ renderPlayerLibrary(); openModal("#playersModal"); }
+function closePlayers(){ closeModal("#playersModal"); }
+function openAccount(){ renderAccountModal(); openModal("#accountModal"); }
+function closeAccount(){ closeModal("#accountModal"); }
+function openHelp(){ openModal("#helpModal"); }
+function closeHelp(){ closeModal("#helpModal"); }
+function applyLegalTab(tab){
+  document.querySelectorAll(".legalTab").forEach(btn => btn.classList.toggle("active", btn.dataset.legalTab === tab));
+  $("#legalPrivacyPane")?.classList.toggle("hidden", tab !== "privacy");
+  $("#legalTermsPane")?.classList.toggle("hidden", tab !== "terms");
+}
+function openLegal(){ applyLegalTab("privacy"); openModal("#legalModal"); }
+function closeLegal(){ closeModal("#legalModal"); }
+function openOnboarding(){ openModal("#onboardingModal"); }
+function closeOnboarding(){ closeModal("#onboardingModal"); }
+function markOnboardingSeen(complete=false){
+  updateAccountRecord(acc => ({ ...acc, onboardingSeen:true, onboardingComplete: complete || !!acc.onboardingComplete }));
+}
+function maybeOpenOnboarding(force=false){
+  const account = getCurrentAccount();
+  if (!account || account.isDemo) return;
+  if (force || (!account.onboardingComplete && !account.onboardingSeen)) openOnboarding();
+}
+function activateUserContext(openOnboardingNow=false){
+  resetState();
+  load();
+  applyModes();
+  if (!state.point) initPoint();
+  renderAll();
+  renderPlayerLibrary();
+  renderAccountModal();
+  renderDashboard();
+  updateWorkspaceBar();
+  hideAuthPortal();
+  if (openOnboardingNow) maybeOpenOnboarding(true);
+}
+async function handleSignup(){
+  const name = ($("#signupName")?.value || "").trim();
+  const email = ($("#signupEmail")?.value || "").trim().toLowerCase();
+  const password = ($("#signupPassword")?.value || "");
+  const plan = ($("#signupPlan")?.value || "Coach Pro").trim();
+  if (!name || !email || !password){ setFeedback("signupFeedback", "Completa nombre, email y contraseña.", "error"); return; }
+  if (password.length < 8){ setFeedback("signupFeedback", "La contraseña debe tener al menos 8 caracteres.", "error"); return; }
+  const accounts = getAccounts();
+  if (accounts.some(acc => (acc.email || "").toLowerCase() === email)){
+    setFeedback("signupFeedback", "Ya existe una cuenta con ese email.", "error");
+    return;
+  }
+  const passwordHash = await hashPassword(password);
+  const account = { id:`acc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,6)}`, name, email, plan, passwordHash, createdAt:Date.now(), onboardingSeen:false, onboardingComplete:false };
+  accounts.push(account);
+  setAccounts(accounts);
+  setSession({ uid:account.id, name:account.name, email:account.email, plan:account.plan, remember:true }, true);
+  setFeedback("signupFeedback", "Cuenta creada correctamente.", "success");
+  activateUserContext(true);
+}
+async function handleLogin(){
+  const email = ($("#loginEmail")?.value || "").trim().toLowerCase();
+  const password = ($("#loginPassword")?.value || "");
+  const remember = !!$("#rememberSession")?.checked;
+  if (!email || !password){ setFeedback("loginFeedback", "Introduce email y contraseña.", "error"); return; }
+  const account = getAccounts().find(acc => (acc.email || "").toLowerCase() === email);
+  if (!account){ setFeedback("loginFeedback", "No existe una cuenta con ese email.", "error"); return; }
+  const passwordHash = await hashPassword(password);
+  if (passwordHash !== account.passwordHash){ setFeedback("loginFeedback", "Contraseña incorrecta.", "error"); return; }
+  setSession({ uid:account.id, name:account.name, email:account.email, plan:account.plan, remember }, remember);
+  setFeedback("loginFeedback", "Acceso correcto.", "success");
+  activateUserContext(false);
+  maybeOpenOnboarding(false);
+}
+function handleDemoAccess(){
+  setSession({ uid:"__demo__", name:"Demo Coach", email:"demo@local", plan:"Demo", isDemo:true, remember:false }, false);
+  activateUserContext(false);
+}
+function handleLogout(){
+  openConfirm("Cerrar sesión", "Se cerrará la cuenta actual en este dispositivo.", ()=>{
+    clearSession();
+    resetState();
+    initPoint();
+    renderAll();
+    showAuthPortal();
+    closeAccount();
+  });
+}
+function initProfessionalShell(){
+  switchAuthTab("login");
+  $("#tabAuthLogin")?.addEventListener("click", ()=> switchAuthTab("login"));
+  $("#tabAuthSignup")?.addEventListener("click", ()=> switchAuthTab("signup"));
+  $("#btnLogin")?.addEventListener("click", handleLogin);
+  $("#btnSignup")?.addEventListener("click", handleSignup);
+  $("#btnDemoAccess")?.addEventListener("click", handleDemoAccess);
+  ["loginEmail","loginPassword"].forEach(id=> $("#"+id)?.addEventListener("keydown", (e)=>{ if (e.key === "Enter") handleLogin(); }));
+  ["signupName","signupEmail","signupPassword"].forEach(id=> $("#"+id)?.addEventListener("keydown", (e)=>{ if (e.key === "Enter") handleSignup(); }));
+  $("#btnOpenHelpFromAuth")?.addEventListener("click", openHelp);
+  $("#btnOpenLegalFromAuth")?.addEventListener("click", openLegal);
+  $("#btnDashboard")?.addEventListener("click", openDashboard);
+  $("#btnPlayerLibrary")?.addEventListener("click", openPlayers);
+  $("#btnAccount")?.addEventListener("click", openAccount);
+  $("#btnDashboardMenu")?.addEventListener("click", ()=> openFromMenu(()=>openDashboard()));
+  $("#btnPlayerLibraryMenu")?.addEventListener("click", ()=> openFromMenu(()=>openPlayers()));
+  $("#btnAccountMenu")?.addEventListener("click", ()=> openFromMenu(()=>openAccount()));
+  $("#btnHelpCenter")?.addEventListener("click", ()=> openFromMenu(()=>openHelp()));
+  $("#btnLegal")?.addEventListener("click", ()=> openFromMenu(()=>openLegal()));
+  $("#btnCloseDashboard")?.addEventListener("click", closeDashboard);
+  $("#btnClosePlayers")?.addEventListener("click", closePlayers);
+  $("#btnCloseAccount")?.addEventListener("click", closeAccount);
+  $("#btnCloseHelp")?.addEventListener("click", closeHelp);
+  $("#btnCloseLegal")?.addEventListener("click", closeLegal);
+  $("#btnCloseOnboarding")?.addEventListener("click", ()=>{ markOnboardingSeen(false); closeOnboarding(); });
+  $("#btnOpenOnboarding")?.addEventListener("click", ()=> maybeOpenOnboarding(true));
+  $("#btnLogout")?.addEventListener("click", handleLogout);
+  $("#btnSaveProfile")?.addEventListener("click", saveProfileFromForm);
+  $("#btnResetProfile")?.addEventListener("click", resetProfileForm);
+  $("#btnOnboardingPlayers")?.addEventListener("click", ()=>{ markOnboardingSeen(false); closeOnboarding(); openPlayers(); });
+  $("#btnOnboardingDone")?.addEventListener("click", ()=>{ markOnboardingSeen(true); closeOnboarding(); });
+  document.querySelectorAll(".legalTab").forEach(btn => btn.addEventListener("click", ()=> applyLegalTab(btn.dataset.legalTab || "privacy")));
+  $("#playerProfileList")?.addEventListener("click", (e)=>{
+    const btn = e.target.closest("[data-profile-action]");
+    if (!btn) return;
+    const action = btn.dataset.profileAction;
+    const id = btn.dataset.profileId;
+    if (!id) return;
+    if (action === "assignA") assignProfileToSide(id, "A");
+    if (action === "assignB") assignProfileToSide(id, "B");
+    if (action === "edit") loadProfileIntoForm(id);
+    if (action === "delete") openConfirm("Eliminar perfil", "Se borrará el perfil del jugador seleccionado.", ()=> deleteProfile(id));
+  });
+  ["dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal"].forEach(mid=>{
+    const modal = $("#"+mid);
+    if (!modal) return;
+    modal.addEventListener("click", (e)=>{ if (e.target === modal) closeModal(mid); });
+  });
+  updateWorkspaceBar();
+  renderPlayerLibrary();
+  renderAccountModal();
+  renderDashboard();
+  if (isAuthenticated()) hideAuthPortal();
+  else document.body.classList.add("unauth");
+}
+function afterSplashStart(){
+  if (isAuthenticated()){
+    hideAuthPortal();
+    updateWorkspaceBar();
+    maybeOpenOnboarding(false);
+  } else {
+    showAuthPortal();
+    const input = $("#loginEmail");
+    if (input) setTimeout(()=> input.focus(), 50);
+  }
+}
+
 
 function initBottomSheet(){
   const sheet = $("#bottomSheet");
@@ -4356,7 +4767,7 @@ function initSplash(){
   btn.onclick = ()=>{
     splash.classList.add("is-out");
     document.body.classList.remove("splashLock");
-    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); }, 420);
+    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); afterSplashStart(); }, 420);
   };
 }
 
@@ -4374,22 +4785,24 @@ function showSplashAgain(){
   btn.onclick = ()=>{
     splash.classList.add("is-out");
     document.body.classList.remove("splashLock");
-    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); }, 420);
+    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); afterSplashStart(); }, 420);
   };
 }
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2545").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2600").catch(console.error);
 }
 
 function init(){
+  refreshSessionCache();
   load();
   applyModes();
   buildZones();
-  initPoint();
+  if (!state.point) initPoint();
   wire();
   wireMeta();
+  initProfessionalShell();
   renderAll();
   initSplash();
   registerSW();

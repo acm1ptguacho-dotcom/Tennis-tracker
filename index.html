@@ -4,17 +4,122 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Tennis Direction Tracker</title>
+  <meta name="description" content="Plataforma profesional para registrar partidos, analizar patrones, gestionar jugadores y exportar informes de tenis.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2545" />
+<link rel="stylesheet" href="style.css?v=2600" />
 </head>
 <body>
 
 <div class="splash" id="splash" aria-label="Tennis Direction Tracker">
   <div class="splashInner">
     <img class="splashLogo" src="assets/logo.png" alt="Tennis Direction Tracker">
+    <div class="splashCopy">
+      <span class="splashEyebrow">PLATAFORMA PROFESIONAL DE TRACKING Y ANÁLISIS</span>
+      <h1>Registra. Analiza. Mejora.</h1>
+      <p>Una experiencia premium para entrenadores, academias y jugadores que necesitan datos claros, historial y decisiones de entrenamiento mejor fundamentadas.</p>
+    </div>
+    <div class="splashHighlights" aria-hidden="true">
+      <span>Tracking punto a punto</span>
+      <span>Perfiles de jugador</span>
+      <span>Informes premium</span>
+    </div>
     <button class="btn primary splashStart hidden" id="btnStartApp" type="button" data-i18n="start">Iniciar</button>
+  </div>
+</div>
+
+<div class="authPortal hidden" id="authPortal" aria-label="Acceso profesional">
+  <div class="authShell">
+    <section class="authShowcase">
+      <span class="authEyebrow">TENNIS DIRECTION TRACKER PRO</span>
+      <h1>Convierte el tracking en una plataforma con imagen profesional.</h1>
+      <p class="authLead">Esta versión añade acceso de usuario local, onboarding, biblioteca de jugadores, panel ejecutivo y una presentación comercial más potente dentro de la propia web.</p>
+
+      <div class="showcaseGrid">
+        <article class="showcaseCard">
+          <strong>Operativa clara</strong>
+          <p>Acceso de entrenador, sesiones separadas por usuario y datos organizados por cuenta.</p>
+        </article>
+        <article class="showcaseCard">
+          <strong>Más valor para el cliente</strong>
+          <p>Perfiles de jugador, objetivos, debilidades, fortalezas y recomendaciones rápidas.</p>
+        </article>
+        <article class="showcaseCard">
+          <strong>Imagen premium</strong>
+          <p>Presentación, pricing visual, ayuda, privacidad y una experiencia más sólida y moderna.</p>
+        </article>
+      </div>
+
+      <div class="pricingStack">
+        <article class="planCard">
+          <span class="planTag">Starter</span>
+          <h3>Entrenador individual</h3>
+          <p>Tracking, analíticas, exportación y biblioteca básica de jugadores.</p>
+        </article>
+        <article class="planCard featured">
+          <span class="planTag">Coach Pro</span>
+          <h3>Para academias y staffs</h3>
+          <p>Más contexto, mejor onboarding y una experiencia más preparada para comercializar.</p>
+        </article>
+        <article class="planCard">
+          <span class="planTag">Academy</span>
+          <h3>Escalable</h3>
+          <p>Base ideal para después conectar backend, suscripciones y base de datos real.</p>
+        </article>
+      </div>
+
+      <div class="authMiniActions">
+        <button class="chip" id="btnOpenHelpFromAuth" type="button">Centro de ayuda</button>
+        <button class="chip" id="btnOpenLegalFromAuth" type="button">Privacidad y términos</button>
+      </div>
+    </section>
+
+    <section class="authCard">
+      <div class="authTabs" role="tablist" aria-label="Acceso">
+        <button class="authTab active" id="tabAuthLogin" type="button">Acceder</button>
+        <button class="authTab" id="tabAuthSignup" type="button">Crear cuenta</button>
+      </div>
+
+      <div class="authPane" id="authLoginPane">
+        <label class="authField">Email
+          <input id="loginEmail" type="email" placeholder="entrenador@club.com" autocomplete="email">
+        </label>
+        <label class="authField">Contraseña
+          <input id="loginPassword" type="password" placeholder="Tu contraseña" autocomplete="current-password">
+        </label>
+        <label class="authCheck"><input id="rememberSession" type="checkbox" checked> Recordar sesión en este dispositivo</label>
+        <button class="btn primary authSubmit" id="btnLogin" type="button">Entrar en la plataforma</button>
+        <button class="btn authGhost" id="btnDemoAccess" type="button">Entrar en modo demo</button>
+        <div class="authFeedback" id="loginFeedback"></div>
+      </div>
+
+      <div class="authPane hidden" id="authSignupPane">
+        <label class="authField">Nombre profesional
+          <input id="signupName" type="text" placeholder="Nombre del entrenador o academia" autocomplete="name">
+        </label>
+        <label class="authField">Email
+          <input id="signupEmail" type="email" placeholder="equipo@academia.com" autocomplete="email">
+        </label>
+        <label class="authField">Contraseña
+          <input id="signupPassword" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+        </label>
+        <label class="authField">Plan visual
+          <select id="signupPlan">
+            <option value="Starter">Starter</option>
+            <option value="Coach Pro" selected>Coach Pro</option>
+            <option value="Academy">Academy</option>
+          </select>
+        </label>
+        <button class="btn primary authSubmit" id="btnSignup" type="button">Crear cuenta y entrar</button>
+        <div class="authFeedback" id="signupFeedback"></div>
+      </div>
+
+      <div class="authTrust">
+        <strong>Esta versión funciona sin backend.</strong>
+        <p>Las cuentas, perfiles y partidos quedan guardados en este dispositivo por usuario. Es una base muy útil para demo, validación comercial y preparación del siguiente paso con base de datos real.</p>
+      </div>
+    </section>
   </div>
 </div>
 
@@ -84,6 +189,14 @@
     </button>
 
     <div class="drawerDivider"></div>
+    <div class="drawerGroupLabel">Plataforma</div>
+    <button class="chip menuItem" id="btnDashboardMenu" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3z"/><path d="M13 21h8V11h-8z"/><path d="M13 3h8v6h-8z"/><path d="M3 21h8v-6H3z"/></svg><span>Panel Pro</span></button>
+    <button class="chip menuItem" id="btnPlayerLibraryMenu" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M17 11c1.7 0 3-1.3 3-3s-1.3-3-3-3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M17 14c2.8 0 5 2.2 5 5"/></svg><span>Jugadores</span></button>
+    <button class="chip menuItem" id="btnAccountMenu" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span>Cuenta</span></button>
+    <button class="chip menuItem" id="btnHelpCenter" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12" y2="17"/></svg><span>Centro de ayuda</span></button>
+    <button class="chip menuItem" id="btnLegal" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7z"/><path d="M9 12l2 2 4-4"/></svg><span>Privacidad y términos</span></button>
+
+    <div class="drawerDivider"></div>
     <div class="drawerGroupLabel" data-i18n="reports">Reportes</div>
     <button class="chip menuItem" id="btnHistory" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span data-i18n="history">Historial</span></button>
     <button class="chip menuItem" id="btnAnalytics" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span data-i18n="analytics">Analíticas</span></button>
@@ -124,6 +237,24 @@
     <!-- Eliminado: Modo normal / Modo claro. Se mantiene un único modo estable -->
   </div>
 </nav>
+
+<section class="workspaceBar" id="workspaceBar">
+  <div class="workspaceIdentity">
+    <span class="workspaceEyebrow">WORKSPACE</span>
+    <div class="workspaceName" id="workspaceName">Modo local</div>
+    <div class="workspaceSub" id="workspaceSub">Cuenta sin cargar</div>
+  </div>
+  <div class="workspaceStats">
+    <div class="workspaceStat"><strong id="workspacePlayers">0</strong><span>Jugadores</span></div>
+    <div class="workspaceStat"><strong id="workspaceMatches">0</strong><span>Partidos</span></div>
+    <div class="workspaceStat"><strong id="workspacePoints">0</strong><span>Puntos</span></div>
+  </div>
+  <div class="workspaceActions">
+    <button class="chip" id="btnDashboard" type="button">Panel Pro</button>
+    <button class="chip" id="btnPlayerLibrary" type="button">Jugadores</button>
+    <button class="chip primary" id="btnAccount" type="button">Cuenta</button>
+  </div>
+</section>
 
   <section class="scoreTv" id="scoreSection">
     <div class="tvHeader">
@@ -811,6 +942,163 @@
 </div>
 
 
+
+<div class="modal hidden" id="dashboardModal">
+  <div class="modalCard solid dashboardModalCard">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Panel Pro</div>
+        <div class="muted" id="dashboardSub">Resumen ejecutivo del workspace</div>
+      </div>
+      <button class="chip" id="btnCloseDashboard" type="button">Cerrar</button>
+    </div>
+    <div class="dashboardIntro" id="dashboardIntro"></div>
+    <div class="dashboardGrid" id="dashboardGrid"></div>
+    <div class="dashboardRecommendations" id="dashboardRecommendations"></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="playersModal">
+  <div class="modalCard solid playersModalCard">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Biblioteca de jugadores</div>
+        <div class="muted" id="playerLibrarySummary">Guarda perfiles y asígnalos a A o B</div>
+      </div>
+      <button class="chip" id="btnClosePlayers" type="button">Cerrar</button>
+    </div>
+    <div class="playerLibraryLayout">
+      <div class="profileList" id="playerProfileList"></div>
+      <div class="profileEditor panelLike">
+        <input type="hidden" id="profileId">
+        <div class="formGrid">
+          <label>Nombre
+            <input id="profileName" type="text" placeholder="Nombre del jugador">
+          </label>
+          <label>Edad o categoría
+            <input id="profileCategory" type="text" placeholder="U14, ATP, amateur, etc.">
+          </label>
+          <label>Mano hábil
+            <select id="profileHand">
+              <option value="R">Diestro</option>
+              <option value="L">Zurdo</option>
+            </select>
+          </label>
+          <label>Objetivo principal
+            <input id="profileGoal" type="text" placeholder="Ej: mejorar primer saque">
+          </label>
+        </div>
+        <label>Fortalezas
+          <textarea id="profileStrengths" rows="3" placeholder="Ej: agresivo con derecha, buena devolución..."></textarea>
+        </label>
+        <label>Debilidades
+          <textarea id="profileWeaknesses" rows="3" placeholder="Ej: baja efectividad con segundo saque..."></textarea>
+        </label>
+        <label>Notas del entrenador
+          <textarea id="profileNotes" rows="4" placeholder="Observaciones técnicas, tácticas o mentales"></textarea>
+        </label>
+        <div class="profileEditorActions">
+          <button class="btn primary" id="btnSaveProfile" type="button">Guardar perfil</button>
+          <button class="btn" id="btnResetProfile" type="button">Nuevo perfil</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="accountModal">
+  <div class="modalCard solid accountModalCard">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Cuenta y workspace</div>
+        <div class="muted">Estado del acceso actual</div>
+      </div>
+      <button class="chip" id="btnCloseAccount" type="button">Cerrar</button>
+    </div>
+    <div class="panelLike" id="accountSummary"></div>
+    <div class="accountActionsRow">
+      <button class="btn" id="btnOpenOnboarding" type="button">Ver onboarding</button>
+      <button class="btn warn" id="btnLogout" type="button">Cerrar sesión</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="helpModal">
+  <div class="modalCard solid helpModalCard">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Centro de ayuda</div>
+        <div class="muted">Cómo sacar partido a la plataforma</div>
+      </div>
+      <button class="chip" id="btnCloseHelp" type="button">Cerrar</button>
+    </div>
+    <div class="helpGrid">
+      <article class="helpCard"><h3>1. Crea tu workspace</h3><p>Accede con tu cuenta, crea perfiles de jugador y asigna rápidamente jugadores a A o B.</p></article>
+      <article class="helpCard"><h3>2. Registra el punto</h3><p>Usa la pista, el modo de juego y la superficie para reflejar la realidad del entrenamiento o partido.</p></article>
+      <article class="helpCard"><h3>3. Interpreta los datos</h3><p>Combina historial, analíticas, estadísticas, gráficos y Panel Pro para detectar prioridades de mejora.</p></article>
+      <article class="helpCard"><h3>4. Exporta y presenta</h3><p>Entrega CSV o PDF con una imagen más profesional para jugadores, padres o dirección deportiva.</p></article>
+    </div>
+    <div class="helpNote">Consejo: esta versión guarda datos por usuario en el mismo dispositivo. Para comercialización completa, el siguiente paso natural será conectar backend, autenticación real y base de datos centralizada.</div>
+  </div>
+</div>
+
+<div class="modal hidden" id="legalModal">
+  <div class="modalCard solid legalModalCard">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Privacidad y términos</div>
+        <div class="muted">Base legal visual para una presentación más profesional</div>
+      </div>
+      <button class="chip" id="btnCloseLegal" type="button">Cerrar</button>
+    </div>
+    <div class="legalTabs">
+      <button class="chip legalTab active" data-legal-tab="privacy" type="button">Privacidad</button>
+      <button class="chip legalTab" data-legal-tab="terms" type="button">Términos</button>
+    </div>
+    <div class="legalPane" id="legalPrivacyPane">
+      <h3>Privacidad</h3>
+      <ul>
+        <li>Los datos se guardan localmente en este dispositivo por usuario.</li>
+        <li>Los perfiles de jugador, partidos y preferencias quedan separados por sesión.</li>
+        <li>El usuario decide cuándo exportar, borrar o sobrescribir sus datos.</li>
+        <li>Para una comercialización real con múltiples clientes, se recomienda migrar a backend y almacenamiento cifrado del lado servidor.</li>
+      </ul>
+    </div>
+    <div class="legalPane hidden" id="legalTermsPane">
+      <h3>Términos</h3>
+      <ul>
+        <li>La herramienta está pensada como apoyo al análisis técnico y táctico del tenis.</li>
+        <li>Las recomendaciones automáticas son orientativas y deben revisarse por un entrenador.</li>
+        <li>El usuario es responsable de custodiar el dispositivo donde se almacenan los datos.</li>
+        <li>Las exportaciones y contenidos generados deben verificarse antes de compartirse con terceros.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="onboardingModal">
+  <div class="modalCard solid onboardingModalCard">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Bienvenido al modo profesional</div>
+        <div class="muted">Checklist recomendada para empezar bien</div>
+      </div>
+      <button class="chip" id="btnCloseOnboarding" type="button">Cerrar</button>
+    </div>
+    <div class="onboardingSteps">
+      <div class="onboardingStep"><strong>1.</strong><span>Crea al menos dos perfiles de jugador en la biblioteca.</span></div>
+      <div class="onboardingStep"><strong>2.</strong><span>Asigna esos perfiles a A y B para empezar a registrar puntos con contexto.</span></div>
+      <div class="onboardingStep"><strong>3.</strong><span>Define superficie, modo de juego y datos del partido antes de empezar.</span></div>
+      <div class="onboardingStep"><strong>4.</strong><span>Revisa el Panel Pro después del tracking para detectar prioridades de mejora.</span></div>
+    </div>
+    <div class="accountActionsRow">
+      <button class="btn primary" id="btnOnboardingPlayers" type="button">Ir a jugadores</button>
+      <button class="btn" id="btnOnboardingDone" type="button">Entendido</button>
+    </div>
+  </div>
+</div>
+
+
 <div class="toast" id="toast"></div>
 
 <!-- placeholders (compatibilidad) -->
@@ -825,7 +1113,7 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2545"></script>
+<script src="app.js?v=2600"></script>
 
 </body>
 </html>
