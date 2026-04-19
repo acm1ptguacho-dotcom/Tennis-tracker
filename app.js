@@ -4681,16 +4681,31 @@ function initProfessionalShell(){
   if (isAuthenticated()) hideAuthPortal();
   else document.body.classList.add("unauth");
 }
+let __postSplashAction = null;
+
 function afterSplashStart(){
   if (isAuthenticated()){
     hideAuthPortal();
     updateWorkspaceBar();
     maybeOpenOnboarding(false);
-  } else {
-    showAuthPortal();
-    const input = $("#loginEmail");
-    if (input) setTimeout(()=> input.focus(), 50);
+    return;
   }
+
+  if (__postSplashAction === "demo"){
+    const action = __postSplashAction;
+    __postSplashAction = null;
+    if (action === "demo"){
+      handleDemoAccess();
+      return;
+    }
+  }
+
+  showAuthPortal();
+  const tab = (__postSplashAction === "signup") ? "signup" : "login";
+  switchAuthTab(tab);
+  const input = tab === "signup" ? $("#signupName") : $("#loginEmail");
+  __postSplashAction = null;
+  if (input) setTimeout(()=> input.focus(), 50);
 }
 
 
@@ -4743,32 +4758,33 @@ function initBottomSheet(){
 function initSplash(){
   const splash = document.getElementById("splash");
   const btn = document.getElementById("btnStartApp");
+  const btnLogin = document.getElementById("btnSplashLogin");
+  const btnSignup = document.getElementById("btnSplashSignup");
+  const btnDemo = document.getElementById("btnSplashDemo");
   if (!splash || !btn) return;
 
   document.body.classList.add("splashLock");
   requestAnimationFrame(()=> splash.classList.add("is-play"));
+  splash.classList.add("showStart");
+  btn.classList.remove("hidden");
 
-  let shown = false;
-  const showBtn = ()=>{
-    if (shown) return;
-    shown = true;
-    splash.classList.add("showStart");
-    btn.classList.remove("hidden");
-  };
-
-  const t = setTimeout(showBtn, 2150);
-
-  splash.addEventListener("click", (e)=>{
-    if (e.target === btn) return;
-    clearTimeout(t);
-    showBtn();
-  });
-
-  btn.onclick = ()=>{
+  const leaveSplash = (action = "login")=>{
+    __postSplashAction = action;
     splash.classList.add("is-out");
     document.body.classList.remove("splashLock");
-    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); afterSplashStart(); }, 420);
+    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); afterSplashStart(); }, 320);
   };
+
+  splash.addEventListener("click", (e)=>{
+    const target = e.target;
+    if (target === btn || target === btnLogin || target === btnSignup || target === btnDemo) return;
+    leaveSplash("login");
+  });
+
+  btn.onclick = ()=> leaveSplash("login");
+  btnLogin?.addEventListener("click", ()=> leaveSplash("login"));
+  btnSignup?.addEventListener("click", ()=> leaveSplash("signup"));
+  btnDemo?.addEventListener("click", ()=> leaveSplash("demo"));
 }
 
 function showSplashAgain(){
@@ -4780,12 +4796,13 @@ function showSplashAgain(){
   void splash.offsetWidth;
   document.body.classList.add("splashLock");
   requestAnimationFrame(()=> splash.classList.add("is-play"));
-  btn.classList.add("hidden");
-  setTimeout(()=>{ splash.classList.add("showStart"); btn.classList.remove("hidden"); }, 2150);
+  splash.classList.add("showStart");
+  btn.classList.remove("hidden");
   btn.onclick = ()=>{
+    __postSplashAction = "login";
     splash.classList.add("is-out");
     document.body.classList.remove("splashLock");
-    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); afterSplashStart(); }, 420);
+    setTimeout(()=>{ splash.classList.add("hidden"); window.dispatchEvent(new Event("resize")); afterSplashStart(); }, 320);
   };
 }
 

@@ -2408,9 +2408,9 @@ body.splashLock{ overflow:hidden; touch-action:none; }
 }
 .splashStart{
   min-width: 210px;
-  opacity:0;
-  transform: translateY(10px);
-  transition: opacity 260ms var(--ease), transform 260ms var(--ease);
+  opacity:1;
+  transform: translateY(0);
+  transition: opacity 260ms var(--ease), transform 260ms var(--ease), box-shadow 180ms ease;
 }
 .splash.showStart .splashStart{
   opacity:1;
@@ -2895,7 +2895,10 @@ body.isAuthenticated #workspaceBar{display:grid;}
 .splashCopy h1{margin:0; font-size:clamp(28px, 4vw, 44px); line-height:.95;}
 .splashCopy p{margin:0; color:var(--muted); font-family:"Inter", system-ui, sans-serif; font-size:14px; line-height:1.6;}
 .splashHighlights{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
-.splashHighlights span{padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); font-size:12px; font-weight:800; letter-spacing:.06em;}
+.splashBadge,.splashHighlights span{padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); font-size:12px; font-weight:800; letter-spacing:.06em; cursor:default;}
+.splashQuickAccess{display:flex; flex-wrap:wrap; justify-content:center; gap:10px;}
+.splashQuickAccess .btn{min-width:170px; justify-content:center;}
+.splashHint{font-family:"Inter", system-ui, sans-serif; font-size:12px; color:var(--muted); text-align:center;}
 .splashInner{width:min(94vw, 840px);}
 
 .authPortal{position:fixed; inset:0; z-index:9200; padding:22px; overflow:auto; background:radial-gradient(1200px 700px at 18% 10%, rgba(57,213,255,.18), transparent 55%), radial-gradient(950px 620px at 82% 22%, rgba(255,212,0,.10), transparent 60%), linear-gradient(180deg, rgba(7,11,22,.95), rgba(11,22,49,.96));}
