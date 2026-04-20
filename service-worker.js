@@ -4,12 +4,12 @@
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
 
-const CACHE = "tennis-tracker-web-v2.76-player-profile-sheet";
+const CACHE = "tennis-tracker-web-v2.78-atp-soft-ash";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=2760",
-  "./app.js?v=2760",
+  "./style.css?v=2780",
+  "./app.js?v=2780",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",
