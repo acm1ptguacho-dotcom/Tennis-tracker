@@ -4786,7 +4786,7 @@ function setWorkspaceExpanded(expanded){
   const isExpanded = !!expanded;
   bar.dataset.expanded = isExpanded ? "true" : "false";
   toggle.setAttribute("aria-expanded", isExpanded ? "true" : "false");
-  panel.hidden = false;
+  panel.hidden = !isExpanded;
 }
 function initWorkspaceToggle(){
   const toggle = $("#workspaceToggle");

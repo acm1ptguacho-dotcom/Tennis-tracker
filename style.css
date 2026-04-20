@@ -3636,8 +3636,8 @@ body.isAuthenticated.railHidden #workspaceBar{
   display:grid;
   grid-template-columns:1fr;
   gap:0;
-  padding:10px 12px;
-  border-radius:22px;
+  padding:8px 12px;
+  border-radius:20px;
   max-height:none;
   overflow:visible;
 }
@@ -3645,22 +3645,23 @@ body.isAuthenticated.railHidden #workspaceBar{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
+  gap:10px;
   min-width:0;
+  min-height:44px;
 }
 #workspaceBar.workspaceCompact .workspaceIdentity,
 #workspaceBar.workspaceCompact .workspaceIdentityCompact{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:8px;
   min-width:0;
 }
 #workspaceBar.workspaceCompact .workspaceEyebrow{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-height:26px;
-  padding:0 11px;
+  min-height:24px;
+  padding:0 10px;
   border-radius:999px;
   border:1px solid rgba(57,213,255,.18);
   background:linear-gradient(180deg, rgba(57,213,255,.12), rgba(57,213,255,.04));
@@ -3668,7 +3669,7 @@ body.isAuthenticated.railHidden #workspaceBar{
   white-space:nowrap;
 }
 #workspaceBar.workspaceCompact .workspaceName{
-  font-size:clamp(20px, 2.5vw, 30px);
+  font-size:clamp(18px, 2.2vw, 26px);
   line-height:1;
   white-space:nowrap;
   overflow:hidden;
@@ -3676,9 +3677,9 @@ body.isAuthenticated.railHidden #workspaceBar{
 }
 #workspaceBar.workspaceCompact .workspaceToggle{
   flex:0 0 auto;
-  width:42px;
-  height:42px;
-  border-radius:16px;
+  width:38px;
+  height:38px;
+  border-radius:14px;
   border:1px solid rgba(255,255,255,.12);
   background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 10px 22px rgba(0,0,0,.14);
@@ -3700,23 +3701,19 @@ body.isAuthenticated.railHidden #workspaceBar{
 }
 #workspaceBar.workspaceCompact .workspaceToggle:active{transform:scale(.97);}
 #workspaceBar.workspaceCompact .workspaceExpand{
-  display:grid;
-  grid-template-rows:0fr;
+  display:none;
   overflow:hidden;
   opacity:0;
-  transform:translateY(-4px);
-  transition:grid-template-rows 260ms var(--ease), opacity 220ms var(--ease), transform 260ms var(--ease), margin-top 260ms var(--ease);
+  transform:translateY(-6px);
+  transition:opacity 220ms var(--ease), transform 260ms var(--ease), margin-top 260ms var(--ease);
   min-width:0;
-}
-#workspaceBar.workspaceCompact .workspaceExpandInner,
-#workspaceBar.workspaceCompact .workspaceExpand > *{
-  min-height:0;
+  margin-top:0;
 }
 #workspaceBar.workspaceCompact[data-expanded="true"] .workspaceExpand{
-  grid-template-rows:1fr;
+  display:block;
   opacity:1;
   transform:translateY(0);
-  margin-top:10px;
+  margin-top:8px;
 }
 #workspaceBar.workspaceCompact[data-expanded="true"] .workspaceToggle{
   border-color:rgba(57,213,255,.28);
@@ -3727,7 +3724,7 @@ body.isAuthenticated.railHidden #workspaceBar{
   transform:rotate(180deg);
 }
 #workspaceBar.workspaceCompact .workspaceSub{
-  margin:0 0 10px;
+  margin:0 0 8px;
   font-size:12px;
   white-space:nowrap;
   overflow:hidden;
@@ -3753,38 +3750,39 @@ body.isAuthenticated.railHidden #workspaceBar.workspaceCompact{
 
 @media (max-width: 700px){
   #workspaceBar.workspaceCompact{
-    padding:9px 10px;
-    border-radius:20px;
+    padding:7px 10px;
+    border-radius:18px;
   }
   #workspaceBar.workspaceCompact .workspaceSummaryRow{
     gap:8px;
+    min-height:40px;
   }
   #workspaceBar.workspaceCompact .workspaceIdentity,
   #workspaceBar.workspaceCompact .workspaceIdentityCompact{
-    gap:8px;
+    gap:7px;
   }
   #workspaceBar.workspaceCompact .workspaceEyebrow{
-    min-height:24px;
-    padding:0 9px;
-    font-size:9px;
-    letter-spacing:.18em;
+    min-height:22px;
+    padding:0 8px;
+    font-size:8px;
+    letter-spacing:.16em;
   }
   #workspaceBar.workspaceCompact .workspaceName{
-    font-size:clamp(18px, 7vw, 24px);
+    font-size:clamp(16px, 6.2vw, 22px);
   }
   #workspaceBar.workspaceCompact .workspaceToggle{
-    width:38px;
-    height:38px;
-    border-radius:14px;
+    width:34px;
+    height:34px;
+    border-radius:12px;
   }
   #workspaceBar.workspaceCompact .workspaceSub{
     font-size:11px;
     margin-bottom:8px;
   }
   #workspaceBar.workspaceCompact .workspaceActions{
-    padding:4px;
+    padding:3px;
     gap:6px;
-    border-radius:18px;
+    border-radius:16px;
   }
   #workspaceBar.workspaceCompact .workspaceActions .chip{
     min-height:44px;
@@ -3793,3 +3791,5 @@ body.isAuthenticated.railHidden #workspaceBar.workspaceCompact{
     border-radius:16px;
   }
 }
+
+#workspaceExpand[hidden]{display:none !important;}
