@@ -1,0 +1,10 @@
+Tennis Direction Tracker — v2.72 Fase 2
+
+Mejoras incluidas:
+- pista más refinada visualmente con marco premium, más profundidad y mejor lectura
+- nombres de jugadores integrados como etiquetas premium dentro de la pista
+- zonas de toque más limpias y consistentes con mejor contraste
+- botones laterales de herramientas rediseñados con acabado más premium
+- etiquetas del rail mejoradas
+- microanimaciones suaves en botones laterales, botones principales y bola de acciones
+- caché/versiones actualizadas

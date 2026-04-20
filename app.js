@@ -4982,6 +4982,32 @@ function showSplashAgain(){
   };
 }
 
+
+function pulseUiElement(el, cls="uiPulse"){
+  if (!el) return;
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+  window.setTimeout(()=> el.classList.remove(cls), 520);
+}
+
+function bindPhase2MicroInteractions(){
+  if (document.body.dataset.phase2Bound === "1") return;
+  document.body.dataset.phase2Bound = "1";
+
+  document.addEventListener("click", (event)=>{
+    const target = event.target.closest(".quickBtn, #finishBall, .workspaceToggle");
+    if (!target) return;
+    pulseUiElement(target);
+  }, { passive:true });
+
+  document.addEventListener("click", (event)=>{
+    const target = event.target.closest(".chip, .btn");
+    if (!target || target.classList.contains("quickBtn") || target.id === "finishBall") return;
+    pulseUiElement(target);
+  }, { passive:true });
+}
+
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
   navigator.serviceWorker.getRegistrations()
@@ -5002,6 +5028,7 @@ function init(){
   wire();
   wireMeta();
   initProfessionalShell();
+  bindPhase2MicroInteractions();
   renderAll();
   initSplash();
   registerSW();
