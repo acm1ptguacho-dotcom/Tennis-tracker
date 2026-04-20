@@ -1,0 +1,8 @@
+Tennis Direction Tracker — Fase 1 visual (v2.70.0)
+
+Mejoras aplicadas en esta fase:
+- Cabecera superior rediseñada con acabado glass premium, menos altura útil y mejor integración del logo y botones laterales.
+- Workspace más compacto y limpio, con identidad a la izquierda y acciones encapsuladas a la derecha.
+- Panel Pro, Jugadores, Cuenta, Ayuda, Legal y Onboarding convertidos a modales premium con cabecera sticky y scroll interno más sólido.
+- Ajustes de jerarquía y scroll en móvil para que la información importante quede mejor organizada y accesible.
+- Refinamiento general de radios, sombras, fondos y espaciado en la capa profesional.

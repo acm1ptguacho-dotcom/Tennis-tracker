@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2660" />
+<link rel="stylesheet" href="style.css?v=2700" />
 </head>
 <body>
 
@@ -960,9 +960,11 @@
       </div>
       <button class="chip" id="btnCloseDashboard" type="button">Cerrar</button>
     </div>
-    <div class="dashboardIntro" id="dashboardIntro"></div>
-    <div class="dashboardGrid" id="dashboardGrid"></div>
-    <div class="dashboardRecommendations" id="dashboardRecommendations"></div>
+    <div class="modalBody premiumModalBody dashboardModalBody">
+      <div class="dashboardIntro" id="dashboardIntro"></div>
+      <div class="dashboardGrid" id="dashboardGrid"></div>
+      <div class="dashboardRecommendations" id="dashboardRecommendations"></div>
+    </div>
   </div>
 </div>
 
@@ -975,7 +977,8 @@
       </div>
       <button class="chip" id="btnClosePlayers" type="button">Cerrar</button>
     </div>
-    <div class="playerLibraryShell" id="playerLibraryShell">
+    <div class="modalBody premiumModalBody playersModalBody">
+      <div class="playerLibraryShell" id="playerLibraryShell">
       <div class="playerLibraryModes" role="tablist" aria-label="Opciones de jugador">
         <button class="playerModeBtn active" id="btnPlayersChooseMode" type="button" aria-pressed="true">
           <span>Elegir jugador</span>
@@ -1026,6 +1029,7 @@
           </div>
         </div>
       </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1039,10 +1043,12 @@
       </div>
       <button class="chip" id="btnCloseAccount" type="button">Cerrar</button>
     </div>
-    <div class="panelLike" id="accountSummary"></div>
-    <div class="accountActionsRow">
-      <button class="btn" id="btnOpenOnboarding" type="button">Ver onboarding</button>
-      <button class="btn warn" id="btnLogout" type="button">Cerrar sesión</button>
+    <div class="modalBody premiumModalBody accountModalBody">
+      <div class="panelLike" id="accountSummary"></div>
+      <div class="accountActionsRow">
+        <button class="btn" id="btnOpenOnboarding" type="button">Ver onboarding</button>
+        <button class="btn warn" id="btnLogout" type="button">Cerrar sesión</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1056,13 +1062,15 @@
       </div>
       <button class="chip" id="btnCloseHelp" type="button">Cerrar</button>
     </div>
-    <div class="helpGrid">
-      <article class="helpCard"><h3>1. Crea tu workspace</h3><p>Accede con tu cuenta, crea perfiles de jugador y asigna rápidamente jugadores a A o B.</p></article>
-      <article class="helpCard"><h3>2. Registra el punto</h3><p>Usa la pista, el modo de juego y la superficie para reflejar la realidad del entrenamiento o partido.</p></article>
-      <article class="helpCard"><h3>3. Interpreta los datos</h3><p>Combina historial, analíticas, estadísticas, gráficos y Panel Pro para detectar prioridades de mejora.</p></article>
-      <article class="helpCard"><h3>4. Exporta y presenta</h3><p>Entrega CSV o PDF con una imagen más profesional para jugadores, padres o dirección deportiva.</p></article>
+    <div class="modalBody premiumModalBody helpModalBody">
+      <div class="helpGrid">
+        <article class="helpCard"><h3>1. Crea tu workspace</h3><p>Accede con tu cuenta, crea perfiles de jugador y asigna rápidamente jugadores a A o B.</p></article>
+        <article class="helpCard"><h3>2. Registra el punto</h3><p>Usa la pista, el modo de juego y la superficie para reflejar la realidad del entrenamiento o partido.</p></article>
+        <article class="helpCard"><h3>3. Interpreta los datos</h3><p>Combina historial, analíticas, estadísticas, gráficos y Panel Pro para detectar prioridades de mejora.</p></article>
+        <article class="helpCard"><h3>4. Exporta y presenta</h3><p>Entrega CSV o PDF con una imagen más profesional para jugadores, padres o dirección deportiva.</p></article>
+      </div>
+      <div class="helpNote">Consejo: esta versión guarda datos por usuario en el mismo dispositivo. Para comercialización completa, el siguiente paso natural será conectar backend, autenticación real y base de datos centralizada.</div>
     </div>
-    <div class="helpNote">Consejo: esta versión guarda datos por usuario en el mismo dispositivo. Para comercialización completa, el siguiente paso natural será conectar backend, autenticación real y base de datos centralizada.</div>
   </div>
 </div>
 
@@ -1075,27 +1083,29 @@
       </div>
       <button class="chip" id="btnCloseLegal" type="button">Cerrar</button>
     </div>
-    <div class="legalTabs">
-      <button class="chip legalTab active" data-legal-tab="privacy" type="button">Privacidad</button>
-      <button class="chip legalTab" data-legal-tab="terms" type="button">Términos</button>
-    </div>
-    <div class="legalPane" id="legalPrivacyPane">
-      <h3>Privacidad</h3>
-      <ul>
-        <li>Los datos se guardan localmente en este dispositivo por usuario.</li>
-        <li>Los perfiles de jugador, partidos y preferencias quedan separados por sesión.</li>
-        <li>El usuario decide cuándo exportar, borrar o sobrescribir sus datos.</li>
-        <li>Para una comercialización real con múltiples clientes, se recomienda migrar a backend y almacenamiento cifrado del lado servidor.</li>
-      </ul>
-    </div>
-    <div class="legalPane hidden" id="legalTermsPane">
-      <h3>Términos</h3>
-      <ul>
-        <li>La herramienta está pensada como apoyo al análisis técnico y táctico del tenis.</li>
-        <li>Las recomendaciones automáticas son orientativas y deben revisarse por un entrenador.</li>
-        <li>El usuario es responsable de custodiar el dispositivo donde se almacenan los datos.</li>
-        <li>Las exportaciones y contenidos generados deben verificarse antes de compartirse con terceros.</li>
-      </ul>
+    <div class="modalBody premiumModalBody legalModalBody">
+      <div class="legalTabs">
+        <button class="chip legalTab active" data-legal-tab="privacy" type="button">Privacidad</button>
+        <button class="chip legalTab" data-legal-tab="terms" type="button">Términos</button>
+      </div>
+      <div class="legalPane" id="legalPrivacyPane">
+        <h3>Privacidad</h3>
+        <ul>
+          <li>Los datos se guardan localmente en este dispositivo por usuario.</li>
+          <li>Los perfiles de jugador, partidos y preferencias quedan separados por sesión.</li>
+          <li>El usuario decide cuándo exportar, borrar o sobrescribir sus datos.</li>
+          <li>Para una comercialización real con múltiples clientes, se recomienda migrar a backend y almacenamiento cifrado del lado servidor.</li>
+        </ul>
+      </div>
+      <div class="legalPane hidden" id="legalTermsPane">
+        <h3>Términos</h3>
+        <ul>
+          <li>La herramienta está pensada como apoyo al análisis técnico y táctico del tenis.</li>
+          <li>Las recomendaciones automáticas son orientativas y deben revisarse por un entrenador.</li>
+          <li>El usuario es responsable de custodiar el dispositivo donde se almacenan los datos.</li>
+          <li>Las exportaciones y contenidos generados deben verificarse antes de compartirse con terceros.</li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>
@@ -1109,15 +1119,17 @@
       </div>
       <button class="chip" id="btnCloseOnboarding" type="button">Cerrar</button>
     </div>
-    <div class="onboardingSteps">
-      <div class="onboardingStep"><strong>1.</strong><span>Crea al menos dos perfiles de jugador en la biblioteca.</span></div>
-      <div class="onboardingStep"><strong>2.</strong><span>Asigna esos perfiles a A y B para empezar a registrar puntos con contexto.</span></div>
-      <div class="onboardingStep"><strong>3.</strong><span>Define superficie, modo de juego y datos del partido antes de empezar.</span></div>
-      <div class="onboardingStep"><strong>4.</strong><span>Revisa el Panel Pro después del tracking para detectar prioridades de mejora.</span></div>
-    </div>
-    <div class="accountActionsRow">
-      <button class="btn primary" id="btnOnboardingPlayers" type="button">Ir a jugadores</button>
-      <button class="btn" id="btnOnboardingDone" type="button">Entendido</button>
+    <div class="modalBody premiumModalBody onboardingModalBody">
+      <div class="onboardingSteps">
+        <div class="onboardingStep"><strong>1.</strong><span>Crea al menos dos perfiles de jugador en la biblioteca.</span></div>
+        <div class="onboardingStep"><strong>2.</strong><span>Asigna esos perfiles a A y B para empezar a registrar puntos con contexto.</span></div>
+        <div class="onboardingStep"><strong>3.</strong><span>Define superficie, modo de juego y datos del partido antes de empezar.</span></div>
+        <div class="onboardingStep"><strong>4.</strong><span>Revisa el Panel Pro después del tracking para detectar prioridades de mejora.</span></div>
+      </div>
+      <div class="accountActionsRow">
+        <button class="btn primary" id="btnOnboardingPlayers" type="button">Ir a jugadores</button>
+        <button class="btn" id="btnOnboardingDone" type="button">Entendido</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1234,7 +1246,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=2660"></script>
+<script src="app.js?v=2700"></script>
 
 </body>
 </html>
