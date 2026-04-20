@@ -1,0 +1,12 @@
+Tennis Direction Tracker — v2.79
+
+Cambios principales:
+- Casilla de punto importante en acciones del punto.
+- Bandera roja discreta en historial para puntos marcados.
+- Nota específica editable dentro del detalle de cada punto importante.
+- Foto de perfil integrada en el marcador. Si no hay foto, se muestra silueta por sexo.
+- Campo de sexo añadido al crear y editar perfiles de jugador.
+- Botón de idioma centrado correctamente en el menú.
+- Ampliación de traducciones al inglés en menús, acciones de punto, biblioteca de jugadores e historial.
+- Selector de pista con scroll interno en dispositivos pequeños.
+- Transiciones y microanimaciones suavizadas.

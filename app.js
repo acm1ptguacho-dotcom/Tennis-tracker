@@ -126,6 +126,7 @@ function createDefaultState(){
 
     meta: { event:"", venue:"", date:"", time:"", conditions:"", notes:"" },
     handed: { A:"R", B:"R" },
+    playerSex: { A:"M", B:"M" },
     playerAssignments: { A:null, B:null },
 
     ui: {
@@ -156,6 +157,35 @@ let __sessionCache = null;
 
 const playerName = (id)=> (state.names && state.names[id]) ? state.names[id] : (id==="A" ? "Jugador A" : "Jugador B");
 const playerNameSafe = (id)=> escapeHtml(playerName(id));
+const isEn = ()=> (state.lang || "es") === "en";
+const tr = (es, en)=> isEn() ? en : es;
+
+function getAssignedProfile(side){
+  const id = state.playerAssignments && state.playerAssignments[side];
+  return id ? (getPlayerProfiles().find(p => p.id === id) || null) : null;
+}
+function getPlayerSex(side){
+  const profile = getAssignedProfile(side);
+  return (profile && profile.sex) || (state.playerSex && state.playerSex[side]) || "M";
+}
+function defaultAvatarSVG(sex){
+  const female = String(sex || "").toUpperCase() === "F";
+  if (female){
+    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10c0-3.4 1.8-6 4-6s4 2.6 4 6c0 2.5-1.2 4-4 4s-4-1.5-4-4z" fill="currentColor"/><path d="M6 20c0-3.8 2.8-6 6-6s6 2.2 6 6v1H6z" fill="currentColor"/><path d="M7 8c.5-3.1 2.5-5 5-5s4.5 1.9 5 5c-1.3-1.2-3.2-1.8-5-1.8S8.3 6.8 7 8z" fill="currentColor" opacity=".25"/></svg>`;
+  }
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="4" fill="currentColor"/><path d="M5 20c0-4 3.2-7 7-7s7 3 7 7v1H5z" fill="currentColor"/></svg>`;
+}
+function playerAvatarMarkup(side){
+  const profile = getAssignedProfile(side);
+  if (profile && profile.photoData) return `<img src="${profile.photoData}" alt="${escapeHtml(profile.name || 'Jugador')}">`;
+  return defaultAvatarSVG(getPlayerSex(side));
+}
+function renderScoreAvatars(){
+  const a = document.getElementById('tvAvatarA');
+  const b = document.getElementById('tvAvatarB');
+  if (a){ const pa=getAssignedProfile('A'); a.innerHTML = playerAvatarMarkup('A'); a.classList.toggle('hasPhoto', !!(pa && pa.photoData)); }
+  if (b){ const pb=getAssignedProfile('B'); b.innerHTML = playerAvatarMarkup('B'); b.classList.toggle('hasPhoto', !!(pb && pb.photoData)); }
+}
 
 // --- I18N (ES/EN) ---
 const I18N = {
@@ -270,6 +300,47 @@ function applyI18n(){
       `;
     }
   }
+  const setTxt = (sel, txt)=>{ const el = document.querySelector(sel); if (el) el.textContent = txt; };
+  setTxt('#surfaceModalTitle', tr('Cambiar pista','Change court'));
+  setTxt('#surfaceModalSub', tr('Selecciona la superficie del diagrama','Select the diagram surface'));
+  setTxt('#languageModalTitle', tr('Idioma','Language'));
+  setTxt('#languageModalSub', tr('Elige Español o English','Choose Spanish or English'));
+  setTxt('#playersModalTitle', tr('Biblioteca de jugadores','Player library'));
+  setTxt('#btnClosePlayers', tr('Cerrar','Close'));
+  setTxt('#btnPlayersChooseMode span', tr('Elegir jugador','Choose player'));
+  setTxt('#btnPlayersChooseMode small', tr('Selecciona un perfil ya guardado y asígnalo a A o B.','Select a saved profile and assign it to A or B.'));
+  setTxt('#btnPlayersCreateMode span', tr('Nuevo jugador','New player'));
+  setTxt('#btnPlayersCreateMode small', tr('Crea un perfil nuevo con datos técnicos, fortalezas y notas.','Create a new profile with technical data, strengths and notes.'));
+  setTxt('#profileNameLabel', tr('Nombre','Name'));
+  setTxt('#profileCategoryLabel', tr('Edad o categoría','Age or category'));
+  setTxt('#profileHandLabel', tr('Mano hábil','Dominant hand'));
+  setTxt('#profileSexLabel', tr('Sexo','Sex'));
+  setTxt('#profileGoalLabel', tr('Objetivo principal','Main goal'));
+  setTxt('#profileStrengthsLabel', tr('Fortalezas','Strengths'));
+  setTxt('#profileWeaknessesLabel', tr('Debilidades','Weaknesses'));
+  setTxt('#profileNotesLabel', tr('Notas del entrenador','Coach notes'));
+  setTxt('#btnSaveProfile', tr('Guardar perfil','Save profile'));
+  setTxt('#btnResetProfile', tr('Nuevo perfil','New profile'));
+  setTxt('#tabNormal', tr('Normal','Normal'));
+  setTxt('#tabAdvanced', tr('Avanzado','Advanced'));
+  setTxt('.finishMenuTitle', tr('Acciones del punto','Point actions'));
+  setTxt('#finishMenuSub', tr('Selecciona una opción (se cierra automáticamente)','Choose an option (closes automatically)'));
+  setTxt('#pointImportantLabel', tr('Marcar punto importante','Mark point as important'));
+  setTxt('#finishServeGroup .finishGroupTitle', tr('Saque','Serve'));
+  setTxt('#mFault', tr('Falta','Fault'));
+  setTxt('#mDoubleFault', tr('Doble falta','Double fault'));
+  setTxt('#finishRallyGroup .finishGroupTitle', tr('Finalizar punto','Finish point'));
+  [['#mUeA_n', tr('Error no forzado','Unforced error')], ['#mGainA_n', tr('Gana','Wins')], ['#mWinA_n','Winner'], ['#mUeA_a', tr('Error no forzado','Unforced error')], ['#mFeA_a', tr('Error forzado','Forced error')], ['#mGainA_a', tr('Gana','Wins')], ['#mWinA_a','Winner'], ['#mVolA_a', tr('Volea','Volley')], ['#mUeB_n', tr('Error no forzado','Unforced error')], ['#mGainB_n', tr('Gana','Wins')], ['#mWinB_n','Winner'], ['#mUeB_a', tr('Error no forzado','Unforced error')], ['#mFeB_a', tr('Error forzado','Forced error')], ['#mGainB_a', tr('Gana','Wins')], ['#mWinB_a','Winner'], ['#mVolB_a', tr('Volea','Volley')]].forEach(([sel,txt])=>setTxt(sel,txt));
+  setTxt('#btnPlayerLibraryMenu span', tr('Jugadores','Players'));
+  setTxt('#btnAccountMenu span', tr('Cuenta','Account'));
+  setTxt('#btnHelpCenter span', tr('Centro de ayuda','Help center'));
+  setTxt('#btnLegal span', tr('Privacidad y términos','Privacy & terms'));
+  setTxt('#btnPlayerLibrary', tr('Jugadores','Players'));
+  setTxt('#btnAccount', tr('Cuenta','Account'));
+  const optM = document.querySelector('#profileSex option[value="M"]'); if (optM) optM.textContent = tr('Hombre','Male');
+  const optF = document.querySelector('#profileSex option[value="F"]'); if (optF) optF.textContent = tr('Mujer','Female');
+  const optR = document.querySelector('#profileHand option[value="R"]'); if (optR) optR.textContent = tr('Diestro','Right-handed');
+  const optL = document.querySelector('#profileHand option[value="L"]'); if (optL) optL.textContent = tr('Zurdo','Left-handed');
 }
 
 
@@ -323,6 +394,7 @@ function load(){
     state.setHistory = state.setHistory || [];
     state.meta = state.meta || { event:"", venue:"", date:"", time:"", conditions:"", notes:"" };
     state.handed = state.handed || { A:"R", B:"R" };
+    state.playerSex = state.playerSex || { A:"M", B:"M" };
     state.playerAssignments = state.playerAssignments || { A:null, B:null };
     state.ui = state.ui || {theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false, surface:"hard", chartPlayer:"A", saveLoadMode:"save"};
     if (typeof state.ui.showHistoryArrows === "undefined") state.ui.showHistoryArrows = true;
@@ -332,6 +404,7 @@ function load(){
     if (!state.ui.surface) state.ui.surface = "hard";
     if (!state.ui.chartPlayer) state.ui.chartPlayer = "A";
     if (!state.ui.saveLoadMode) state.ui.saveLoadMode = "save";
+    if (state.point){ if (typeof state.point.important === "undefined") state.point.important = false; if (typeof state.point.importantNote === "undefined") state.point.importantNote = ""; }
   }catch(e){ console.error(e); }
 }
 
@@ -425,7 +498,7 @@ function renderSavedMatchesList(){
       </div>
       <div class="savedItemActions">
         <button class="chip good" type="button" data-act="load">Cargar</button>
-        <button class="chip warn" type="button" data-act="del">Borrar</button>
+        <button class="chip warn" type="button" data-act="del">${tr("Borrar","Delete")}</button>
       </div>
     `;
     row.querySelector('[data-act="load"]').addEventListener("click", ()=>{
@@ -547,6 +620,8 @@ function initPoint(){
     firstServeFault: false,
     events: [], // {type:"serve"/"rally", player, code, meta, elId}
     arrows: [], // flechas de dirección (durante el punto)
+    important: false,
+    importantNote: "",
   };
   clearLiveArrows();
   updateZoneHint();
@@ -1327,6 +1402,7 @@ function renderScore(){
   $("#nameA").value = state.names.A;
   $("#nameB").value = state.names.B;
   refreshABOptionLabels();
+  renderScoreAvatars();
 
   // Serve indicator
   $("#serveA").classList.toggle("on", state.currentServer==="A");
@@ -1436,7 +1512,9 @@ function savePoint(winner, reason){
     side: p.side,
     snapshot,
     finishDetail,
-        events: p.events.slice(),
+    important: !!p.important,
+    importantNote: p.importantNote || "",
+    events: p.events.slice(),
     arrows: p.arrows ? JSON.parse(JSON.stringify(p.arrows)) : [],
   });
 }
@@ -1674,7 +1752,7 @@ function renderPointViewer(point){
 
   const title = $("#pvTitle");
   const sub = $("#pvSub");
-  if (title) title.textContent = `Punto ${p.n} · Gana ${winName}`;
+  if (title) title.textContent = isEn() ? `Point ${p.n} · Won by ${winName}` : `Punto ${p.n} · Gana ${winName}`;
 
   const reasonLine = (p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : "");
   if (sub) sub.textContent = `${formatSnapshot(p.snapshot)}${reasonLine ? " · " + reasonLine : ""}`;
@@ -1695,7 +1773,7 @@ function renderPointViewer(point){
   const pvEvents = $("#pvEvents");
   if (pvEvents){
     if (!evs.length){
-      pvEvents.innerHTML = `<div class="muted">Sin eventos</div>`;
+      pvEvents.innerHTML = `<div class="muted">${tr("Sin eventos","No events")}</div>`;
     } else {
       pvEvents.innerHTML = evs.map((e,i)=>`
         <div class="mono" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,.08);">
@@ -2233,9 +2311,14 @@ function refreshFinishMenuMode(){
   if (rallyGrp) rallyGrp.classList.toggle("hidden", isServe);
 }
 
+function syncFinishImportantUI(){
+  const chk = document.getElementById("pointImportantChk");
+  if (chk) chk.checked = !!(state.point && state.point.important);
+}
 function openFinishMenu(){
   setFinishMode(finishMode);
   refreshFinishMenuMode();
+  syncFinishImportantUI();
   const m=$("#finishMenu");
   if (!m) return;
   m.classList.remove("hidden");
@@ -2445,8 +2528,8 @@ function finishVolley(offender){
 
 function finishDetailLabel(fd){
   if (!fd) return "";
-  const strokeMap = { FH:"Derecha", BH:"Revés", VOL:"Volea", SM:"Smash", OTHER:"Otro" };
-  const winMap = { ACE:"Ace", FH:"Derecha", BH:"Revés", VOL_FH:"Volea derecha", VOL_BH:"Volea revés", PASS:"Passing", DROP:"Dejada", VOL:"Volea", WIN:"Winner", OTHER:"Otro" };
+  const strokeMap = isEn() ? { FH:"Forehand", BH:"Backhand", VOL:"Volley", SM:"Smash", OTHER:"Other" } : { FH:"Derecha", BH:"Revés", VOL:"Volea", SM:"Smash", OTHER:"Otro" };
+  const winMap = isEn() ? { ACE:"Ace", FH:"Forehand", BH:"Backhand", VOL_FH:"Forehand volley", VOL_BH:"Backhand volley", PASS:"Passing", DROP:"Drop shot", VOL:"Volley", WIN:"Winner", OTHER:"Other" } : { ACE:"Ace", FH:"Derecha", BH:"Revés", VOL_FH:"Volea derecha", VOL_BH:"Volea revés", PASS:"Passing", DROP:"Dejada", VOL:"Volea", WIN:"Winner", OTHER:"Otro" };
   if (fd.kind==="WINNER" && fd.winnerType) return winMap[fd.winnerType] || fd.winnerType;
   if ((fd.kind==="UE" || fd.kind==="FE" || fd.kind==="GAIN") && fd.strokeType) return strokeMap[fd.strokeType] || fd.strokeType;
   return "";
@@ -2454,7 +2537,7 @@ function finishDetailLabel(fd){
 
 function renderHistory(){
   const sub=$("#historySub");
-  if (sub) sub.textContent = `${state.matchPoints.length} puntos`;
+  if (sub) sub.textContent = `${state.matchPoints.length} ${tr("puntos","points")}`;
 
   const server=$("#fServer").value;
   const side=$("#fSide").value;
@@ -2509,7 +2592,7 @@ function renderHistory(){
 
   list.innerHTML="";
   if (!rows.length){
-    list.innerHTML = `<div class="historyItem"><div class="historyItemTitle">No hay puntos.</div><div class="historyItemMeta">Cambia filtros o registra puntos.</div></div>`;
+    list.innerHTML = `<div class="historyItem"><div class="historyItemTitle">${tr("No hay puntos.","No points yet.")}</div><div class="historyItemMeta">${tr("Cambia filtros o registra puntos.","Change filters or track points.")}</div></div>`;
     return;
   }
 
@@ -2544,8 +2627,8 @@ function renderHistory(){
     g.innerHTML = `
       <div class="historyGameHead">
         <div style="min-width:0;">
-          <div class="historyGameTitle">Juego ${info.num || "—"}</div>
-          <div class="historyGameMeta">${escapeHtml(meta)} · ${pts.length} punto(s)</div>
+          <div class="historyGameTitle">${tr("Juego","Game")} ${info.num || "—"}</div>
+          <div class="historyGameMeta">${escapeHtml(meta)} · ${pts.length} ${tr("punto(s)","point(s)")}</div>
         </div>
         <div class="historyGameChevron"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></div>
       </div>
@@ -2567,10 +2650,10 @@ function renderHistory(){
       item.innerHTML = `
         <div class="historyItemTop">
           <div>
-            <div class="historyItemTitle">Punto ${p.n}</div>
+            <div class="historyItemTitle">${p.important ? `<span class="miniFlag" title="${tr("Punto importante","Important point")}"></span>` : ""}${tr("Punto","Point")} ${p.n}</div>
             <div class="historyItemMeta">${escapeHtml(formatSnapshot(p.snapshot))}<br/>${escapeHtml((p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : ""))}</div>
           </div>
-          <span class="pill ${p.winner==="A"?"pillGood":"pillWarn"}">Gana ${escapeHtml(winName)}</span>
+          <span class="pill ${p.winner==="A"?"pillGood":"pillWarn"}">${tr("Gana","Wins")} ${escapeHtml(winName)}</span>
         </div>
         <div class="historyItemMeta mono" style="margin-top:8px;">${escapeHtml(pat)}</div>
       `;
@@ -2607,7 +2690,7 @@ function renderHistoryDetail(p){
   const header = `
     <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
       <div style="min-width:0;">
-        <div class="modalTitle" style="margin:0;">Punto ${p.n} · Gana ${escapeHtml(winName)}</div>
+        <div class="modalTitle" style="margin:0;">${p.important ? `<span class="miniFlag large" title="${tr("Punto importante","Important point")}"></span>` : ""}${isEn() ? `Point ${p.n} · Won by ${escapeHtml(winName)}` : `Punto ${p.n} · Gana ${escapeHtml(winName)}`}</div>
         <div class="modalSub" style="margin-top:4px;">
           ${escapeHtml(formatSnapshot(p.snapshot))}<br/>
           ${escapeHtml((p.reason||"") + (finishDetailLabel(p.finishDetail) ? " · " + finishDetailLabel(p.finishDetail) : ""))}
@@ -2616,8 +2699,8 @@ function renderHistoryDetail(p){
       <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
         <div class="pill ${p.winner==="A"?"pillGood":"pillWarn"}">${escapeHtml(winName)}</div>
         <div class="historyDetailTools">
-          <button class="chip" id="btnHistToggleArrows" type="button">${showArrows ? "Flechas: ON" : "Flechas: OFF"}</button>
-          <button class="chip" id="btnHistReplayArrows" type="button" ${hasArrows ? "" : "disabled"}>Reproducir</button>
+          <button class="chip" id="btnHistToggleArrows" type="button">${showArrows ? tr("Flechas: ON","Arrows: ON") : tr("Flechas: OFF","Arrows: OFF")}</button>
+          <button class="chip" id="btnHistReplayArrows" type="button" ${hasArrows ? "" : "disabled"}>${tr("Reproducir","Replay")}</button>
         </div>
       </div>
     </div>
@@ -2629,7 +2712,7 @@ function renderHistoryDetail(p){
         <img src="assets/court_top_view.png" alt="pista mini">
         <svg id="historyArrowSvg" class="arrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
       </div>
-      ${hasArrows ? "" : "<div class='muted' style='margin-top:8px;'>Este punto no tiene flechas.</div>"}
+      ${hasArrows ? "" : `<div class='muted' style='margin-top:8px;'>${tr("Este punto no tiene flechas.","This point has no arrows.")}</div>`}
     </div>
   `;
 
@@ -2637,8 +2720,9 @@ function renderHistoryDetail(p){
   const lines = evs.map((e,i)=>`<div class="mono" style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,.08);">
     <b>${i+1}.</b> ${playerNameSafe(e.player)} - ${escapeHtml(e.code)}
   </div>`).join("");
+  const noteBlock = p.important ? `<div class="pointNoteBlock"><label><b>${tr("Nota del punto importante","Important point note")}</b><textarea id="importantPointNote" rows="4" placeholder="${tr("Escribe una nota sobre este punto...","Write a note about this point...")}">${escapeHtml(p.importantNote || "")}</textarea></label></div>` : "";
 
-  detail.innerHTML = header + courtBlock + `<div>${lines || "<div class='muted'>Sin eventos</div>"}</div>`;
+  detail.innerHTML = header + courtBlock + `<div>${lines || `<div class='muted'>${tr("Sin eventos","No events")}</div>`}</div>` + noteBlock;
 
   // bind tools
   const btnT=$("#btnHistToggleArrows");
@@ -2648,6 +2732,14 @@ function renderHistoryDetail(p){
       persist();
       renderHistoryDetail(p);
     };
+  }
+  const noteInput=$("#importantPointNote");
+  if (noteInput){
+    noteInput.addEventListener("input", ()=>{
+      p.importantNote = noteInput.value || "";
+      const idx = state.matchPoints.findIndex(x=>x.n===p.n);
+      if (idx >= 0){ state.matchPoints[idx].importantNote = p.importantNote; persist(); renderHistory(); }
+    });
   }
   const btnR=$("#btnHistReplayArrows");
   if (btnR){
@@ -4285,6 +4377,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // finish ball menu
   on("finishBall","click", toggleFinishMenu);
   on("finishMenuClose","click", ()=>{ closeFinishMenu(); closeAdvStep2(); });
+  on("pointImportantChk","change", (e)=>{ if (!state.point) initPoint(); state.point.important = !!e.target.checked; });
   // cerrar al tocar fuera (backdrop)
   const fm = $("#finishMenu");
   if (fm) fm.addEventListener("click", (e)=>{
@@ -4528,7 +4621,7 @@ function buildPlayerProfileDataset(profile){
     const ps = stats?.[side] || emptyPlayerStats();
     const result = inferSavedMatchResult(matchState, side);
     const opponentSide = side === "A" ? "B" : "A";
-    const opponent = matchState.names?.[opponentSide] || "Rival";
+    const opponent = matchState.names?.[opponentSide] || tr("Rival","Opponent");
     history.push({
       id: item.id,
       name: item.name || `${matchState.names?.A || 'Jugador A'} vs ${matchState.names?.B || 'Jugador B'}`,
@@ -4541,9 +4634,9 @@ function buildPlayerProfileDataset(profile){
       state: matchState
     });
     totals.matches++;
-    if (result.status === "Victoria") totals.wins++;
-    if (result.status === "Derrota") totals.losses++;
-    if (result.status !== "Sesión guardada") totals.completed++;
+    if (result.tone === "good") totals.wins++;
+    if (result.tone === "bad") totals.losses++;
+    if (result.tone !== "ghost") totals.completed++;
     totals.totalPoints += stats.totalPoints || 0;
     totals.pointsWon += ps.pointsWon || 0;
     totals.servePoints += ps.servePoints || 0;
@@ -4574,72 +4667,73 @@ function renderPlayerProfileDetail(id){
   const returnInPct = totals.returnPoints ? Math.round((totals.returnsIn / totals.returnPoints) * 100) : 0;
   const breakPct = totals.bpOpp ? Math.round((totals.bpConv / totals.bpOpp) * 100) : 0;
   const insight = totals.matches === 0
-    ? 'Aún no hay partidos guardados para este jugador. Guarda encuentros asignados para construir su historial.'
+    ? tr('Aún no hay partidos guardados para este jugador. Guarda encuentros asignados para construir su historial.','No saved matches yet for this player. Save assigned matches to build the player history.')
     : totals.ue > totals.winners
-      ? `Ahora mismo comete más errores no forzados (${totals.ue}) que winners (${totals.winners}).`
-      : `Balance ofensivo positivo: ${totals.winners} winners frente a ${totals.ue} errores no forzados.`;
+      ? (isEn() ? `Currently this player makes more unforced errors (${totals.ue}) than winners (${totals.winners}).` : `Ahora mismo comete más errores no forzados (${totals.ue}) que winners (${totals.winners}).`)
+      : (isEn() ? `Positive attacking balance: ${totals.winners} winners versus ${totals.ue} unforced errors.` : `Balance ofensivo positivo: ${totals.winners} winners frente a ${totals.ue} errores no forzados.`);
   shell.innerHTML = `
     <section class="playerSheetBanner">
       <div class="playerSheetTop">
         <div class="playerSheetIdentity">
-          <div class="playerSheetPhoto ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : `<span>${escapeHtml((profile.name || 'J').charAt(0))}</span>`}</div>
+          <div class="playerSheetPhoto ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : defaultAvatarSVG(profile.sex || 'M')}</div>
           <div class="playerSheetText">
-            <div class="playerSheetEyebrow">Perfil del jugador</div>
+            <div class="playerSheetEyebrow">${tr("Perfil del jugador","Player profile")}</div>
             <h3>${escapeHtml(profile.name || 'Jugador')}</h3>
             <div class="playerSheetMeta">
-              <span>${escapeHtml(profile.category || 'Sin categoría')}</span>
-              <span>${(profile.hand || 'R') === 'L' ? 'Zurdo' : 'Diestro'}</span>
-              <span>${totals.matches} partidos asignados</span>
+              <span>${escapeHtml(profile.category || tr("Sin categoría","No category"))}</span>
+              <span>${(profile.hand || "R") === "L" ? tr("Zurdo","Left-handed") : tr("Diestro","Right-handed")}</span>
+              <span>${(profile.sex || "M") === "F" ? tr("Mujer","Female") : tr("Hombre","Male")}</span>
+              <span>${totals.matches} ${tr("partidos asignados","assigned matches")}</span>
             </div>
           </div>
         </div>
         <div class="playerSheetHeaderActions">
-          <button class="chip" type="button" data-profile-action="edit" data-profile-id="${profile.id}">Editar ficha</button>
-          <button class="chip" type="button" data-profile-action="closeDetail">Cerrar</button>
+          <button class="chip" type="button" data-profile-action="edit" data-profile-id="${profile.id}">${tr("Editar ficha","Edit profile")}</button>
+          <button class="chip" type="button" data-profile-action="closeDetail">${tr("Cerrar","Close")}</button>
         </div>
       </div>
       <div class="playerSheetStatsGrid">
-        <article class="playerStatTile"><strong>${totals.matches}</strong><span>Partidos</span></article>
-        <article class="playerStatTile"><strong>${totals.wins}</strong><span>Victorias</span></article>
-        <article class="playerStatTile"><strong>${pointsWonPct}%</strong><span>Puntos ganados</span></article>
-        <article class="playerStatTile"><strong>${firstServePct}%</strong><span>1º saque dentro</span></article>
-        <article class="playerStatTile"><strong>${returnInPct}%</strong><span>Restos dentro</span></article>
-        <article class="playerStatTile"><strong>${breakPct}%</strong><span>Break convertidos</span></article>
+        <article class="playerStatTile"><strong>${totals.matches}</strong><span>${tr("Partidos","Matches")}</span></article>
+        <article class="playerStatTile"><strong>${totals.wins}</strong><span>${tr("Victorias","Wins")}</span></article>
+        <article class="playerStatTile"><strong>${pointsWonPct}%</strong><span>${tr("Puntos ganados","Points won")}</span></article>
+        <article class="playerStatTile"><strong>${firstServePct}%</strong><span>${tr("1º saque dentro","1st serve in")}</span></article>
+        <article class="playerStatTile"><strong>${returnInPct}%</strong><span>${tr("Restos dentro","Returns in")}</span></article>
+        <article class="playerStatTile"><strong>${breakPct}%</strong><span>${tr("Break convertidos","Break converted")}</span></article>
       </div>
       <div class="playerSheetGrid">
         <article class="playerDataPanel">
-          <h4>Ficha técnica</h4>
+          <h4>${tr("Ficha técnica","Player card")}</h4>
           <ul class="playerDataList">
-            <li><b>Objetivo:</b> ${escapeHtml(profile.goal || '—')}</li>
-            <li><b>Fortalezas:</b> ${escapeHtml(profile.strengths || '—')}</li>
-            <li><b>Debilidades:</b> ${escapeHtml(profile.weaknesses || '—')}</li>
-            <li><b>Notas:</b> ${escapeHtml(profile.notes || '—')}</li>
+            <li><b>${tr("Objetivo","Goal")}:</b> ${escapeHtml(profile.goal || '—')}</li>
+            <li><b>${tr("Fortalezas","Strengths")}:</b> ${escapeHtml(profile.strengths || '—')}</li>
+            <li><b>${tr("Debilidades","Weaknesses")}:</b> ${escapeHtml(profile.weaknesses || '—')}</li>
+            <li><b>${tr("Notas","Notes")}:</b> ${escapeHtml(profile.notes || '—')}</li>
           </ul>
         </article>
         <article class="playerDataPanel">
-          <h4>Lectura rápida</h4>
+          <h4>${tr("Lectura rápida","Quick read")}</h4>
           <div class="playerInsightBox">${escapeHtml(insight)}</div>
           <ul class="playerDataList compact">
             <li><b>Winners:</b> ${totals.winners}</li>
-            <li><b>Errores no forzados:</b> ${totals.ue}</li>
-            <li><b>Puntos al saque:</b> ${totals.servePointsWon}/${totals.servePoints}</li>
-            <li><b>Puntos al resto:</b> ${totals.returnPointsWon}/${totals.returnPoints}</li>
-            <li><b>Puntos de break:</b> ${totals.bpConv}/${totals.bpOpp}</li>
+            <li><b>${tr("Errores no forzados","Unforced errors")}:</b> ${totals.ue}</li>
+            <li><b>${tr("Puntos al saque","Serve points")}:</b> ${totals.servePointsWon}/${totals.servePoints}</li>
+            <li><b>${tr("Puntos al resto","Return points")}:</b> ${totals.returnPointsWon}/${totals.returnPoints}</li>
+            <li><b>${tr("Puntos de break","Break points")}:</b> ${totals.bpConv}/${totals.bpOpp}</li>
           </ul>
         </article>
       </div>
       <article class="playerDataPanel">
-        <h4>Historial del jugador</h4>
+        <h4>${tr("Historial del jugador","Player history")}</h4>
         ${history.length ? `<div class="playerHistoryList">${history.map(item => `<div class="playerHistoryRow">
           <div class="playerHistoryMain">
             <strong>${escapeHtml(item.name)}</strong>
-            <span>${escapeHtml(item.opponent)} · ${new Date(item.when || Date.now()).toLocaleDateString()} · ${item.pointsCount} puntos</span>
+            <span>${escapeHtml(item.opponent)} · ${new Date(item.when || Date.now()).toLocaleDateString()} · ${item.pointsCount} ${tr("puntos","points")}</span>
           </div>
           <div class="playerHistorySide">
             <span class="playerHistoryBadge ${item.result.tone}">${item.result.status}</span>
-            <small>${Math.round(((item.stats.pointsWon || 0) / Math.max(1, item.pointsCount)) * 100)}% puntos</small>
+            <small>${Math.round(((item.stats.pointsWon || 0) / Math.max(1, item.pointsCount)) * 100)}% ${tr("puntos","points")}</small>
           </div>
-        </div>`).join('')}</div>` : `<div class="playerHistoryEmpty">Todavía no hay partidos guardados para este jugador.</div>`}
+        </div>`).join('')}</div>` : `<div class="playerHistoryEmpty">${tr("Todavía no hay partidos guardados para este jugador.","There are no saved matches for this player yet.")}</div>`}
       </article>
     </section>`;
   shell.classList.remove("hidden");
@@ -4665,6 +4759,7 @@ function switchPlayerLibraryMode(mode="choose"){
 function resetProfileForm(){
   ["profileId","profileName","profileCategory","profileGoal","profileStrengths","profileWeaknesses","profileNotes","profilePhotoData"].forEach(id=>{ const el=$("#"+id); if (el) el.value=""; });
   const hand = $("#profileHand"); if (hand) hand.value = "R";
+  const sex = $("#profileSex"); if (sex) sex.value = "M";
   const input = $("#profilePhotoInput"); if (input) input.value = "";
   setProfilePhotoPreview("", "Jugador");
   switchPlayerLibraryMode("create");
@@ -4678,6 +4773,7 @@ function loadProfileIntoForm(id){
   $("#profileCategory").value = p.category || "";
   $("#profileHand").value = p.hand || "R";
   $("#profileGoal").value = p.goal || "";
+  $("#profileSex").value = p.sex || "M";
   $("#profileStrengths").value = p.strengths || "";
   $("#profileWeaknesses").value = p.weaknesses || "";
   $("#profileNotes").value = p.notes || "";
@@ -4691,6 +4787,7 @@ function saveProfileFromForm(){
     name: ($("#profileName")?.value || "").trim(),
     category: ($("#profileCategory")?.value || "").trim(),
     hand: ($("#profileHand")?.value || "R").trim(),
+    sex: ($("#profileSex")?.value || "M").trim(),
     goal: ($("#profileGoal")?.value || "").trim(),
     strengths: ($("#profileStrengths")?.value || "").trim(),
     weaknesses: ($("#profileWeaknesses")?.value || "").trim(),
@@ -4698,7 +4795,7 @@ function saveProfileFromForm(){
     photoData: $("#profilePhotoData")?.value || "",
     updatedAt: Date.now()
   };
-  if (!payload.name){ toast("Escribe el nombre del jugador"); return; }
+  if (!payload.name){ toast(tr("Escribe el nombre del jugador","Enter the player name")); return; }
   const profiles = getPlayerProfiles();
   const idx = profiles.findIndex(p => p.id === payload.id);
   if (idx >= 0) profiles[idx] = { ...profiles[idx], ...payload };
@@ -4709,7 +4806,7 @@ function saveProfileFromForm(){
   renderPlayerLibrary();
   switchPlayerLibraryMode("choose");
   updateWorkspaceBar();
-  toast("✅ Perfil guardado");
+  toast(`✅ ${tr("Perfil guardado","Profile saved")}`);
 }
 function deleteProfile(id){
   closePlayerProfileDetail();
@@ -4720,7 +4817,7 @@ function deleteProfile(id){
   persist();
   renderPlayerLibrary();
   updateWorkspaceBar();
-  toast("Perfil eliminado");
+  toast(tr("Perfil eliminado","Profile deleted"));
 }
 function assignProfileToSide(id, side){
   const profile = getPlayerProfiles().find(p => p.id === id);
@@ -4729,47 +4826,49 @@ function assignProfileToSide(id, side){
   state.playerAssignments[side] = id;
   state.names[side] = profile.name || state.names[side];
   state.handed[side] = profile.hand || state.handed[side] || "R";
+  state.playerSex = state.playerSex || { A:"M", B:"M" };
+  state.playerSex[side] = profile.sex || state.playerSex[side] || "M";
   persist();
   renderAll();
   renderPlayerLibrary();
-  toast(`✅ ${profile.name} asignado a ${side}`);
+  toast(isEn() ? `✅ ${profile.name} assigned to ${side}` : `✅ ${profile.name} asignado a ${side}`);
 }
 function renderPlayerLibrary(){
   const list = $("#playerProfileList");
   const summary = $("#playerLibrarySummary");
   const profiles = getPlayerProfiles().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
-  if (summary) summary.textContent = `${profiles.length} perfiles disponibles · Cada ficha guarda historial, foto y estadísticas generales`;
+  if (summary) summary.textContent = isEn() ? `${profiles.length} profiles available · Each profile stores history, photo and overall stats` : `${profiles.length} perfiles disponibles · Cada ficha guarda historial, foto y estadísticas generales`;
   if (!list) return;
   if (!profiles.length){
     closePlayerProfileDetail();
-    list.innerHTML = `<div class="profileCard"><h4>Sin perfiles todavía</h4><p>Crea tu primer jugador para empezar a guardar historial, objetivos, foto y notas del entrenador.</p></div>`;
+    list.innerHTML = `<div class="profileCard"><h4>${tr("Sin perfiles todavía","No profiles yet")}</h4><p>${tr("Crea tu primer jugador para empezar a guardar historial, objetivos, foto y notas del entrenador.","Create the first player to start saving history, goals, photo and coach notes.")}</p></div>`;
     return;
   }
   list.innerHTML = profiles.map(profile => {
     const assigned = [];
     if (state.playerAssignments?.A === profile.id) assigned.push("A");
     if (state.playerAssignments?.B === profile.id) assigned.push("B");
-    const meta = [profile.category || "Sin categoría", (profile.hand || "R") === "L" ? "Zurdo" : "Diestro"].concat(assigned.length ? [`Asignado: ${assigned.join(" / ")}`] : []);
+    const meta = [profile.category || tr("Sin categoría","No category"), (profile.hand || "R") === "L" ? tr("Zurdo","Left-handed") : tr("Diestro","Right-handed"), (profile.sex || "M") === "F" ? tr("Mujer","Female") : tr("Hombre","Male")].concat(assigned.length ? [`${tr("Asignado","Assigned")}: ${assigned.join(" / ")}`] : []);
     return `
       <article class="profileCard profileCardRich">
         <div class="profileCardTop">
-          <div class="profileAvatar ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : `<span>${escapeHtml((profile.name || 'J').charAt(0))}</span>`}</div>
+          <div class="profileAvatar ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : defaultAvatarSVG(profile.sex || 'M')}</div>
           <div class="profileCardInfo">
             <h4>${escapeHtml(profile.name || "Jugador")}</h4>
             <div class="profileMeta">${meta.map(x=>`<span>${escapeHtml(x)}</span>`).join("")}</div>
           </div>
         </div>
-        <p><strong>Objetivo:</strong> ${escapeHtml(profile.goal || "—")}</p>
-        <p><strong>Fortalezas:</strong> ${escapeHtml(profile.strengths || "—")}</p>
-        <p><strong>Debilidades:</strong> ${escapeHtml(profile.weaknesses || "—")}</p>
+        <p><strong>${tr("Objetivo","Goal")}:</strong> ${escapeHtml(profile.goal || "—")}</p>
+        <p><strong>${tr("Fortalezas","Strengths")}:</strong> ${escapeHtml(profile.strengths || "—")}</p>
+        <p><strong>${tr("Debilidades","Weaknesses")}:</strong> ${escapeHtml(profile.weaknesses || "—")}</p>
         <div class="profileActions">
-          <button class="chip primary" type="button" data-profile-action="view" data-profile-id="${profile.id}">Ver ficha</button>
-          <button class="chip" type="button" data-profile-action="assignA" data-profile-id="${profile.id}">Asignar A</button>
-          <button class="chip" type="button" data-profile-action="assignB" data-profile-id="${profile.id}">Asignar B</button>
+          <button class="chip primary" type="button" data-profile-action="view" data-profile-id="${profile.id}">${tr("Ver ficha","View profile")}</button>
+          <button class="chip" type="button" data-profile-action="assignA" data-profile-id="${profile.id}">${tr("Asignar A","Assign A")}</button>
+          <button class="chip" type="button" data-profile-action="assignB" data-profile-id="${profile.id}">${tr("Asignar B","Assign B")}</button>
         </div>
         <div class="profileActions">
-          <button class="chip good" type="button" data-profile-action="edit" data-profile-id="${profile.id}">Editar</button>
-          <button class="chip warn" type="button" data-profile-action="delete" data-profile-id="${profile.id}">Borrar</button>
+          <button class="chip good" type="button" data-profile-action="edit" data-profile-id="${profile.id}">${tr("Editar","Edit")}</button>
+          <button class="chip warn" type="button" data-profile-action="delete" data-profile-id="${profile.id}">${tr("Borrar","Delete")}</button>
         </div>
       </article>`;
   }).join("");

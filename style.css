@@ -5387,3 +5387,34 @@ h1,h2,h3,h4,h5,h6,
 #playersModal .playerLibraryShell::-webkit-scrollbar-thumb{
   background:linear-gradient(180deg, rgba(14,77,179,.34), rgba(10,42,136,.18)) !important;
 }
+
+/* ===== v2.79 important points + avatars + menu/language polish ===== */
+.finishImportantRow{display:flex;justify-content:flex-end;margin:-2px 0 10px;}
+.importantCheck{display:inline-flex;align-items:center;gap:10px;color:var(--text);font-weight:800;font-size:12px;letter-spacing:.02em;}
+.importantCheck input{accent-color:#d62839;width:16px;height:16px;}
+.miniFlag{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px;position:relative;}
+.miniFlag::before{content:"";position:absolute;left:2px;top:0;width:2px;height:11px;background:#8e1120;border-radius:1px;}
+.miniFlag::after{content:"";position:absolute;left:4px;top:1px;width:6px;height:5px;background:#d62839;clip-path:polygon(0 0,100% 12%,74% 52%,100% 100%,0 100%);border-radius:1px;box-shadow:0 1px 4px rgba(214,40,57,.25);}
+.miniFlag.large{width:14px;height:14px;margin-right:8px;}
+.miniFlag.large::before{height:14px;}
+.miniFlag.large::after{width:8px;height:6px;}
+.pointNoteBlock{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);}
+.pointNoteBlock label{display:block;font-size:13px;color:var(--text);}
+.pointNoteBlock textarea{width:100%;margin-top:8px;border-radius:14px;min-height:96px;resize:vertical;padding:12px 14px;border:1px solid rgba(14,27,77,.12);background:linear-gradient(180deg,#fff,#f5f8fc);color:#0E1B4D;font:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.96);}
+.tvAvatar{width:34px;height:34px;border-radius:12px;border:1px solid rgba(14,27,77,.10);background:linear-gradient(180deg,#edf3fb,#e2ebf8);box-shadow:0 6px 14px rgba(24,51,108,.06), inset 0 1px 0 rgba(255,255,255,.96);display:inline-flex;align-items:center;justify-content:center;color:#0E1B4D;overflow:hidden;flex:0 0 auto;}
+.tvAvatar img{width:100%;height:100%;object-fit:cover;display:block;}
+.tvAvatar svg{width:22px;height:22px;display:block;}
+.scoreTv .tvName{gap:8px;}
+.drawerBody .menuItem.langMenu{justify-content:center;gap:8px;}
+.drawerBody .menuItem.langMenu .flag{margin-right:0;}
+.drawerBody .menuItem.langMenu span:last-child{flex:0;text-align:center;}
+#surfaceModal .modalCard{max-height:min(88vh,760px);overflow:hidden;}
+#surfaceModal .surfaceModalBody{max-height:calc(min(88vh,760px) - 96px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#surfaceModal .surfaceGrid{padding-right:4px;}
+#surfaceModal .surfaceGrid::-webkit-scrollbar{width:8px;}
+#surfaceModal .surfaceGrid::-webkit-scrollbar-thumb{background:linear-gradient(180deg, rgba(14,77,179,.34), rgba(10,42,136,.18));border-radius:999px;}
+#playersModal .playerSheetPhoto svg,
+#playersModal .profileAvatar svg,
+#playersModal .profilePhotoPreview svg{width:42px;height:42px;display:block;color:#0E1B4D;}
+button,.chip,.btn,.finishBtn,.finishTab,.surfaceOpt,.playerModeBtn,.quickBtn,.menuItem,.workspaceToggle,.profileCard,.modalCard,.panelLike,.historyItem,.historyGame{transition:background .22s ease,color .22s ease,box-shadow .22s ease,border-color .22s ease,transform .18s ease,opacity .18s ease;will-change:transform;}
+.modal,.drawer,.workspaceExpand,.finishMenuCard,.playerProfileSheet,.surfaceModalBody{scroll-behavior:smooth;}

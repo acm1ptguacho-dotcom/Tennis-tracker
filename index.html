@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2780" />
+<link rel="stylesheet" href="style.css?v=2790" />
 </head>
 <body>
 
@@ -216,7 +216,7 @@
     <div class="drawerDivider"></div>
     <div class="drawerGroupLabel" data-i18n="settings">Configuración</div>
 
-    <button class="chip menuItem" id="btnLanguage" type="button">
+    <button class="chip menuItem langMenu" id="btnLanguage" type="button">
       <span class="flag" id="langFlag" aria-hidden="true">🇪🇸</span>
       <span data-i18n="language">Idioma</span>
     </button>
@@ -284,6 +284,7 @@
     <div class="tvRow" id="tvRowA">
       <div class="tvName">
         <span class="tvTag">A</span>
+        <div class="tvAvatar" id="tvAvatarA" aria-hidden="true"></div>
         <input id="nameA" value="Jugador A" />
       </div>
       <div class="tvServe"><span class="serveBall" id="serveA" aria-label="Servidor A"></span></div>
@@ -295,6 +296,7 @@
     <div class="tvRow" id="tvRowB">
       <div class="tvName">
         <span class="tvTag">B</span>
+        <div class="tvAvatar" id="tvAvatarB" aria-hidden="true"></div>
         <input id="nameB" value="Jugador B" />
       </div>
       <div class="tvServe"><span class="serveBall" id="serveB" aria-label="Servidor B"></span></div>
@@ -473,7 +475,13 @@
     </div>
 
 <div class="finishMenuTitle">Acciones del punto</div>
-    <div class="finishMenuSub">Selecciona una opción (se cierra automáticamente)</div>
+    <div class="finishMenuSub" id="finishMenuSub">Selecciona una opción (se cierra automáticamente)</div>
+    <div class="finishImportantRow">
+      <label class="importantCheck" for="pointImportantChk">
+        <input type="checkbox" id="pointImportantChk">
+        <span id="pointImportantLabel">Marcar punto importante</span>
+      </label>
+    </div>
 
     
     <div class="advStep2 hidden" id="advStep2" aria-label="Detalle avanzado">
@@ -619,14 +627,16 @@
   <div class="modalCard solid">
     <div class="modalHead">
       <div>
-        <div class="modalTitle">Cambiar pista</div>
-        <div class="muted">Selecciona la superficie del diagrama</div>
+        <div class="modalTitle" id="surfaceModalTitle">Cambiar pista</div>
+        <div class="muted" id="surfaceModalSub">Selecciona la superficie del diagrama</div>
       </div>
       <button class="chip" id="btnCloseSurface" type="button" data-i18n="close">Cerrar</button>
     </div>
 
-    <div class="surfaceGrid" id="surfaceGrid">
-      <!-- se rellena por JS con previews -->
+    <div class="modalBody premiumModalBody surfaceModalBody">
+      <div class="surfaceGrid" id="surfaceGrid">
+        <!-- se rellena por JS con previews -->
+      </div>
     </div>
   </div>
 </div>
@@ -635,8 +645,8 @@
   <div class="modalCard solid">
     <div class="modalHead">
       <div>
-        <div class="modalTitle">Idioma</div>
-        <div class="muted">Elige Español o English</div>
+        <div class="modalTitle" id="languageModalTitle">Idioma</div>
+        <div class="muted" id="languageModalSub">Elige Español o English</div>
       </div>
       <button class="chip" id="btnCloseLanguage" type="button" data-i18n="close">Cerrar</button>
     </div>
@@ -981,7 +991,7 @@
   <div class="modalCard solid playersModalCard">
     <div class="modalHead">
       <div>
-        <div class="modalTitle">Biblioteca de jugadores</div>
+        <div class="modalTitle" id="playersModalTitle">Biblioteca de jugadores</div>
         <div class="muted" id="playerLibrarySummary">Guarda perfiles y asígnalos a A o B</div>
       </div>
       <button class="chip" id="btnClosePlayers" type="button">Cerrar</button>
@@ -1021,29 +1031,35 @@
             </div>
           </div>
           <div class="formGrid">
-            <label>Nombre
+            <label id="profileNameLabel">Nombre
               <input id="profileName" type="text" placeholder="Nombre del jugador">
             </label>
-            <label>Edad o categoría
+            <label id="profileCategoryLabel">Edad o categoría
               <input id="profileCategory" type="text" placeholder="U14, ATP, amateur, etc.">
             </label>
-            <label>Mano hábil
+            <label id="profileHandLabel">Mano hábil
               <select id="profileHand">
                 <option value="R">Diestro</option>
                 <option value="L">Zurdo</option>
               </select>
             </label>
-            <label>Objetivo principal
+            <label id="profileSexLabel">Sexo
+              <select id="profileSex">
+                <option value="M">Hombre</option>
+                <option value="F">Mujer</option>
+              </select>
+            </label>
+            <label id="profileGoalLabel">Objetivo principal
               <input id="profileGoal" type="text" placeholder="Ej: mejorar primer saque">
             </label>
           </div>
-          <label>Fortalezas
+          <label id="profileStrengthsLabel">Fortalezas
             <textarea id="profileStrengths" rows="3" placeholder="Ej: agresivo con derecha, buena devolución..."></textarea>
           </label>
-          <label>Debilidades
+          <label id="profileWeaknessesLabel">Debilidades
             <textarea id="profileWeaknesses" rows="3" placeholder="Ej: baja efectividad con segundo saque..."></textarea>
           </label>
-          <label>Notas del entrenador
+          <label id="profileNotesLabel">Notas del entrenador
             <textarea id="profileNotes" rows="4" placeholder="Observaciones técnicas, tácticas o mentales"></textarea>
           </label>
           <div class="profileEditorActions">
@@ -1269,7 +1285,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=2780"></script>
+<script src="app.js?v=2790"></script>
 
 </body>
 </html>
