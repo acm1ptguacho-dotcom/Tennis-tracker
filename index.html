@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2641" />
+<link rel="stylesheet" href="style.css?v=2650" />
 </head>
 <body>
 
@@ -252,7 +252,7 @@
     <div class="workspaceName" id="workspaceName">Modo local</div>
     <div class="workspaceSub" id="workspaceSub">Cuenta sin cargar</div>
   </div>
-  <div class="workspaceStats">
+  <div class="workspaceStats hidden" aria-hidden="true">
     <div class="workspaceStat"><strong id="workspacePlayers">0</strong><span>Jugadores</span></div>
     <div class="workspaceStat"><strong id="workspaceMatches">0</strong><span>Partidos</span></div>
     <div class="workspaceStat"><strong id="workspacePoints">0</strong><span>Puntos</span></div>
@@ -975,39 +975,55 @@
       </div>
       <button class="chip" id="btnClosePlayers" type="button">Cerrar</button>
     </div>
-    <div class="playerLibraryLayout">
-      <div class="profileList" id="playerProfileList"></div>
-      <div class="profileEditor panelLike">
-        <input type="hidden" id="profileId">
-        <div class="formGrid">
-          <label>Nombre
-            <input id="profileName" type="text" placeholder="Nombre del jugador">
+    <div class="playerLibraryShell" id="playerLibraryShell">
+      <div class="playerLibraryModes" role="tablist" aria-label="Opciones de jugador">
+        <button class="playerModeBtn active" id="btnPlayersChooseMode" type="button" aria-pressed="true">
+          <span>Elegir jugador</span>
+          <small>Selecciona un perfil ya guardado y asígnalo a A o B.</small>
+        </button>
+        <button class="playerModeBtn" id="btnPlayersCreateMode" type="button" aria-pressed="false">
+          <span>Nuevo jugador</span>
+          <small>Crea un perfil nuevo con datos técnicos, fortalezas y notas.</small>
+        </button>
+      </div>
+
+      <div class="playerModePane" id="playersChoosePane">
+        <div class="profileList profileListStandalone" id="playerProfileList"></div>
+      </div>
+
+      <div class="playerModePane hidden" id="playersCreatePane">
+        <div class="profileEditor panelLike">
+          <input type="hidden" id="profileId">
+          <div class="formGrid">
+            <label>Nombre
+              <input id="profileName" type="text" placeholder="Nombre del jugador">
+            </label>
+            <label>Edad o categoría
+              <input id="profileCategory" type="text" placeholder="U14, ATP, amateur, etc.">
+            </label>
+            <label>Mano hábil
+              <select id="profileHand">
+                <option value="R">Diestro</option>
+                <option value="L">Zurdo</option>
+              </select>
+            </label>
+            <label>Objetivo principal
+              <input id="profileGoal" type="text" placeholder="Ej: mejorar primer saque">
+            </label>
+          </div>
+          <label>Fortalezas
+            <textarea id="profileStrengths" rows="3" placeholder="Ej: agresivo con derecha, buena devolución..."></textarea>
           </label>
-          <label>Edad o categoría
-            <input id="profileCategory" type="text" placeholder="U14, ATP, amateur, etc.">
+          <label>Debilidades
+            <textarea id="profileWeaknesses" rows="3" placeholder="Ej: baja efectividad con segundo saque..."></textarea>
           </label>
-          <label>Mano hábil
-            <select id="profileHand">
-              <option value="R">Diestro</option>
-              <option value="L">Zurdo</option>
-            </select>
+          <label>Notas del entrenador
+            <textarea id="profileNotes" rows="4" placeholder="Observaciones técnicas, tácticas o mentales"></textarea>
           </label>
-          <label>Objetivo principal
-            <input id="profileGoal" type="text" placeholder="Ej: mejorar primer saque">
-          </label>
-        </div>
-        <label>Fortalezas
-          <textarea id="profileStrengths" rows="3" placeholder="Ej: agresivo con derecha, buena devolución..."></textarea>
-        </label>
-        <label>Debilidades
-          <textarea id="profileWeaknesses" rows="3" placeholder="Ej: baja efectividad con segundo saque..."></textarea>
-        </label>
-        <label>Notas del entrenador
-          <textarea id="profileNotes" rows="4" placeholder="Observaciones técnicas, tácticas o mentales"></textarea>
-        </label>
-        <div class="profileEditorActions">
-          <button class="btn primary" id="btnSaveProfile" type="button">Guardar perfil</button>
-          <button class="btn" id="btnResetProfile" type="button">Nuevo perfil</button>
+          <div class="profileEditorActions">
+            <button class="btn primary" id="btnSaveProfile" type="button">Guardar perfil</button>
+            <button class="btn" id="btnResetProfile" type="button">Nuevo perfil</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1218,7 +1234,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=2641"></script>
+<script src="app.js?v=2650"></script>
 
 </body>
 </html>

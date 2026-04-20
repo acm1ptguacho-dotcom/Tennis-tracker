@@ -4453,9 +4453,21 @@ function hideAuthPortal(){
 }
 function getPlayerProfiles(){ return safeReadJSON(localStorage, getProfilesStorageKey(), []) || []; }
 function setPlayerProfiles(arr){ return safeWriteJSON(localStorage, getProfilesStorageKey(), arr || []); }
+function switchPlayerLibraryMode(mode="choose"){
+  const choose = mode !== "create";
+  $("#playersChoosePane")?.classList.toggle("hidden", !choose);
+  $("#playersCreatePane")?.classList.toggle("hidden", choose);
+  $("#btnPlayersChooseMode")?.classList.toggle("active", choose);
+  $("#btnPlayersCreateMode")?.classList.toggle("active", !choose);
+  $("#btnPlayersChooseMode")?.setAttribute("aria-pressed", choose ? "true" : "false");
+  $("#btnPlayersCreateMode")?.setAttribute("aria-pressed", !choose ? "true" : "false");
+  const shell = $("#playerLibraryShell");
+  if (shell) shell.scrollTop = 0;
+}
 function resetProfileForm(){
   ["profileId","profileName","profileCategory","profileGoal","profileStrengths","profileWeaknesses","profileNotes"].forEach(id=>{ const el=$("#"+id); if (el) el.value=""; });
   const hand = $("#profileHand"); if (hand) hand.value = "R";
+  switchPlayerLibraryMode("create");
 }
 function loadProfileIntoForm(id){
   const p = getPlayerProfiles().find(x => x.id === id);
@@ -4468,6 +4480,7 @@ function loadProfileIntoForm(id){
   $("#profileStrengths").value = p.strengths || "";
   $("#profileWeaknesses").value = p.weaknesses || "";
   $("#profileNotes").value = p.notes || "";
+  switchPlayerLibraryMode("create");
 }
 function saveProfileFromForm(){
   const payload = {
@@ -4489,6 +4502,7 @@ function saveProfileFromForm(){
   setPlayerProfiles(profiles);
   resetProfileForm();
   renderPlayerLibrary();
+  switchPlayerLibraryMode("choose");
   updateWorkspaceBar();
   toast("✅ Perfil guardado");
 }
@@ -4649,7 +4663,12 @@ function renderAccountModal(){
 }
 function openDashboard(){ renderDashboard(); openModal("#dashboardModal"); }
 function closeDashboard(){ closeModal("#dashboardModal"); }
-function openPlayers(){ renderPlayerLibrary(); openModal("#playersModal"); }
+function openPlayers(){
+  renderPlayerLibrary();
+  const hasProfiles = getPlayerProfiles().length > 0;
+  switchPlayerLibraryMode(hasProfiles ? "choose" : "create");
+  openModal("#playersModal");
+}
 function closePlayers(){ closeModal("#playersModal"); }
 function openAccount(){ renderAccountModal(); openModal("#accountModal"); }
 function closeAccount(){ closeModal("#accountModal"); }
@@ -4789,6 +4808,8 @@ function initProfessionalShell(){
   $("#btnLogout")?.addEventListener("click", handleLogout);
   $("#btnSaveProfile")?.addEventListener("click", saveProfileFromForm);
   $("#btnResetProfile")?.addEventListener("click", resetProfileForm);
+  $("#btnPlayersChooseMode")?.addEventListener("click", ()=> switchPlayerLibraryMode("choose"));
+  $("#btnPlayersCreateMode")?.addEventListener("click", ()=> switchPlayerLibraryMode("create"));
   $("#btnOnboardingPlayers")?.addEventListener("click", ()=>{ markOnboardingSeen(false); closeOnboarding(); openPlayers(); });
   $("#btnOnboardingDone")?.addEventListener("click", ()=>{ markOnboardingSeen(true); closeOnboarding(); });
   document.querySelectorAll(".legalTab").forEach(btn => btn.addEventListener("click", ()=> applyLegalTab(btn.dataset.legalTab || "privacy")));

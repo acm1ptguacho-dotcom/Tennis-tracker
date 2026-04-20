@@ -1052,6 +1052,33 @@ body.coach .kpi .v{font-size:24px}
   z-index: 40;
   padding-top: env(safe-area-inset-top);
   display: block; /* evita conflictos con la .topbar (flex) */
+  isolation: isolate;
+}
+.topbarInline::before{
+  content:"";
+  position:absolute;
+  inset:0 -18px auto -18px;
+  height:calc(100% + 26px);
+  border-bottom:1px solid rgba(57,213,255,.10);
+  background:
+    linear-gradient(180deg, rgba(6,17,38,.96) 0%, rgba(8,21,50,.90) 56%, rgba(8,21,50,.56) 82%, transparent 100%),
+    radial-gradient(620px 180px at 50% -10%, rgba(57,213,255,.16), transparent 70%);
+  box-shadow:0 16px 34px rgba(0,0,0,.24);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  pointer-events:none;
+  z-index:-2;
+}
+.topbarInline::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-28px;
+  height:30px;
+  background:linear-gradient(180deg, rgba(8,21,50,.36), transparent 100%);
+  pointer-events:none;
+  z-index:-1;
 }
 
 /* Menú hamburguesa */
@@ -2938,16 +2965,34 @@ body.isAuthenticated #workspaceBar{display:grid;}
 .authDebugLink:hover{opacity:1; text-decoration:underline;}
 .authDebugHint{display:block; margin-top:4px; color:var(--muted); font:12px/1.5 "Inter", system-ui, sans-serif;}
 
-.workspaceBar{display:none; grid-template-columns:1.15fr .95fr auto; gap:12px; align-items:center; padding:16px 18px; border:1px solid rgba(255,255,255,.12); border-radius:22px; background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03)); box-shadow:var(--shadow2), var(--inset);}
-.workspaceIdentity{display:flex; flex-direction:column; gap:4px; min-width:0;}
-.workspaceEyebrow{font-size:11px; letter-spacing:.2em; color:var(--accent2); font-weight:900;}
-.workspaceName{font-size:28px; line-height:1; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.workspaceSub{color:var(--muted); font-family:"Inter", system-ui, sans-serif; font-size:13px;}
+.workspaceBar{display:none; grid-template-columns:minmax(0, 1fr) auto; gap:12px; align-items:center; padding:14px 18px; border:1px solid rgba(255,255,255,.12); border-radius:24px; background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03)); box-shadow:var(--shadow2), var(--inset); overflow:hidden; transform:translateY(0); opacity:1; max-height:140px; transition:max-height 260ms var(--ease), opacity 220ms var(--ease), transform 260ms var(--ease), padding 260ms var(--ease), margin 260ms var(--ease), border-color 220ms var(--ease);}
+.workspaceIdentity{display:flex; flex-direction:column; gap:3px; min-width:0;}
+.workspaceEyebrow{font-size:10px; letter-spacing:.24em; color:var(--accent2); font-weight:900;}
+.workspaceName{font-size:clamp(22px, 3vw, 32px); line-height:.98; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.workspaceSub{color:var(--muted); font-family:"Inter", system-ui, sans-serif; font-size:12px; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .workspaceStats{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px;}
 .workspaceStat{padding:12px; border-radius:18px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.14); display:flex; flex-direction:column; gap:4px; text-align:center;}
 .workspaceStat strong{font-size:26px; line-height:1;}
 .workspaceStat span{font-size:12px; color:var(--muted); font-family:"Inter", system-ui, sans-serif;}
-.workspaceActions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+.workspaceActions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; align-items:center;}
+.workspaceActions .chip{min-width:148px; justify-content:center; padding:14px 18px; border-radius:24px;}
+body.isAuthenticated.railHidden #workspaceBar{max-height:0; opacity:0; transform:translateY(-18px); padding-top:0; padding-bottom:0; margin-top:-4px; margin-bottom:-2px; border-color:transparent; pointer-events:none;}
+
+.playersModalCard{max-width:860px; width:min(860px, calc(100vw - 24px)); max-height:min(86vh, 900px); display:flex; flex-direction:column; overflow:hidden;}
+.playerLibraryShell{display:flex; flex-direction:column; gap:14px; overflow:auto; padding-right:4px; max-height:calc(min(86vh, 900px) - 96px);}
+.playerLibraryModes{display:grid; gap:12px;}
+.playerModeBtn{width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:6px; text-align:left; padding:18px 20px; border-radius:24px; border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); color:var(--text); box-shadow:var(--shadow2), var(--inset); cursor:pointer; transition:transform 180ms var(--ease), box-shadow 180ms var(--ease), border-color 180ms var(--ease), background 180ms var(--ease);}
+.playerModeBtn:hover{transform:translateY(-1px); border-color:rgba(57,213,255,.22); box-shadow:0 16px 30px rgba(0,0,0,.18), var(--inset);}
+.playerModeBtn.active{border-color:rgba(57,213,255,.38); background:linear-gradient(180deg, rgba(57,213,255,.18), rgba(57,213,255,.07)); box-shadow:0 0 0 1px rgba(57,213,255,.12), 0 16px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.10);}
+.playerModeBtn span{font-size:22px; font-weight:1000; line-height:1;}
+.playerModeBtn small{font:600 13px/1.55 "Inter", system-ui, sans-serif; color:var(--muted);}
+.playerModePane{display:block;}
+.profileListStandalone{max-height:none; overflow:visible; padding-right:0;}
+.profileCard{padding:18px; border-radius:22px; background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); box-shadow:var(--shadow2), var(--inset);}
+.profileCard h4{font-size:26px;}
+.profileActions .chip,.profileEditorActions .btn,.accountActionsRow .btn{flex:1; justify-content:center; min-height:48px;}
+.profileEditor{padding:18px; border-radius:24px; background:linear-gradient(180deg, rgba(11,35,72,.46), rgba(7,15,30,.62)); box-shadow:var(--shadow2), var(--inset);}
+.profileEditor textarea{resize:vertical; min-height:96px;}
 
 .dashboardModalCard,.playersModalCard,.accountModalCard,.helpModalCard,.legalModalCard,.onboardingModalCard{max-width:1100px;}
 .dashboardIntro,.dashboardGrid,.dashboardRecommendations,.helpGrid,.playerLibraryLayout{display:grid; gap:12px;}
@@ -2998,12 +3043,113 @@ body.isAuthenticated #workspaceBar{display:grid;}
 @media (max-width: 980px){
   .authShell,.showcaseGrid,.pricingStack,.dashboardIntro,.dashboardGrid,.dashboardRecommendations,.playerLibraryLayout,.helpGrid{grid-template-columns:1fr;}
   .authCard{max-width:none; justify-self:stretch;}
-  .workspaceBar{grid-template-columns:1fr;}
-  .workspaceActions{justify-content:flex-start;}
+  .workspaceBar{grid-template-columns:1fr; align-items:flex-start;}
+  .workspaceActions{justify-content:flex-start; width:100%;}
+  .workspaceActions .chip{flex:1 1 calc(33.333% - 8px); min-width:0;}
 }
 @media (max-width: 700px){
-  .formGrid,.workspaceStats,.dashboardKpis{grid-template-columns:1fr;}
+  .formGrid,.dashboardKpis{grid-template-columns:1fr;}
+  .workspaceBar{padding:12px 14px; border-radius:20px;}
+  .workspaceSub{white-space:normal;}
+  .playerLibraryShell{max-height:calc(82vh - 90px);}
+  .playerModeBtn{padding:16px 16px;}
+  .playerModeBtn span{font-size:20px;}
   .splashInner{padding:24px 18px;}
   .authPortal{padding:14px;}
   .authShowcase,.authCard{padding:20px;}
+}
+
+/* ===== v2.65 UX refinements: compact workspace + premium player modal ===== */
+body.isAuthenticated #workspaceBar{display:grid;}
+#workspaceBar.workspaceBar{
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+}
+#workspaceBar .workspaceStats{display:none !important;}
+#workspaceBar .workspaceActions .chip{min-width:148px; padding:14px 18px; border-radius:24px;}
+body.isAuthenticated.railHidden #workspaceBar{
+  max-height:0;
+  opacity:0;
+  transform:translateY(-18px);
+  padding-top:0;
+  padding-bottom:0;
+  margin-top:-4px;
+  margin-bottom:-2px;
+  border-color:transparent;
+  pointer-events:none;
+}
+
+#playersModal .playersModalCard{
+  max-width:860px;
+  width:min(860px, calc(100vw - 24px));
+  max-height:min(86vh, 900px);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+#playersModal .playerLibraryShell{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  overflow:auto;
+  padding-right:4px;
+  max-height:calc(min(86vh, 900px) - 96px);
+}
+#playersModal .playerLibraryLayout{display:block;}
+#playersModal .playerLibraryModes{display:grid; gap:12px;}
+#playersModal .playerModeBtn{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:6px;
+  text-align:left;
+  padding:18px 20px;
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+  color:var(--text);
+  box-shadow:var(--shadow2), var(--inset);
+  cursor:pointer;
+  transition:transform 180ms var(--ease), box-shadow 180ms var(--ease), border-color 180ms var(--ease), background 180ms var(--ease);
+}
+#playersModal .playerModeBtn:hover{transform:translateY(-1px); border-color:rgba(57,213,255,.22); box-shadow:0 16px 30px rgba(0,0,0,.18), var(--inset);}
+#playersModal .playerModeBtn.active{border-color:rgba(57,213,255,.38); background:linear-gradient(180deg, rgba(57,213,255,.18), rgba(57,213,255,.07)); box-shadow:0 0 0 1px rgba(57,213,255,.12), 0 16px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.10);}
+#playersModal .playerModeBtn span{font-size:22px; font-weight:1000; line-height:1;}
+#playersModal .playerModeBtn small{font:600 13px/1.55 "Inter", system-ui, sans-serif; color:var(--muted);}
+#playersModal .profileList{
+  max-height:none;
+  overflow:visible;
+  padding-right:0;
+}
+#playersModal .profileCard{
+  padding:18px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.10);
+  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+  box-shadow:var(--shadow2), var(--inset);
+}
+#playersModal .profileCard h4{font-size:26px;}
+#playersModal .profileActions .chip,
+#playersModal .profileEditorActions .btn{flex:1; justify-content:center; min-height:48px;}
+#playersModal .profileEditor{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding:18px;
+  border-radius:24px;
+  background:linear-gradient(180deg, rgba(11,35,72,.46), rgba(7,15,30,.62));
+  box-shadow:var(--shadow2), var(--inset);
+}
+#playersModal .profileEditor textarea{resize:vertical; min-height:96px;}
+
+@media (max-width: 980px){
+  #workspaceBar.workspaceBar{grid-template-columns:1fr; align-items:flex-start;}
+  #workspaceBar .workspaceActions{justify-content:flex-start; width:100%;}
+  #workspaceBar .workspaceActions .chip{flex:1 1 calc(33.333% - 8px); min-width:0;}
+}
+@media (max-width: 700px){
+  #playersModal .playerLibraryShell{max-height:calc(82vh - 90px);}
+  #playersModal .playerModeBtn{padding:16px 16px;}
+  #playersModal .playerModeBtn span{font-size:20px;}
 }

@@ -1,0 +1,32 @@
+Tennis Direction Tracker · v2.65.0
+
+Mejoras aplicadas:
+1. Workspace reducido y más limpio
+- Eliminados los indicadores de jugadores, partidos y puntos del bloque visual principal.
+- Mantiene solo identidad del workspace y botones Panel Pro, Jugadores y Cuenta.
+- Diseño más compacto para no romper la estética de la pantalla principal.
+
+2. Workspace sincronizado con el botón derecho de herramientas
+- Al pulsar el botón superior derecho, ahora se ocultan o muestran a la vez:
+  - la barra lateral de herramientas
+  - la ventana de workspace
+- La transición usa la misma duración y estilo visual para que el movimiento quede coherente.
+
+3. Modal de Jugadores rediseñado
+- Sustituido el formato caótico anterior por dos accesos largos tipo barra:
+  - Elegir jugador
+  - Nuevo jugador
+- Las opciones están una debajo de la otra con diseño premium.
+- El contenido interno ahora tiene scroll dentro del modal.
+- Elegir jugador muestra la biblioteca guardada.
+- Nuevo jugador abre el formulario completo.
+- Editar un jugador existente cambia automáticamente al modo de edición.
+
+4. Barra superior fija mejorada
+- Añadido fondo sólido acorde con la web para evitar transparencias incómodas.
+- Añadido degradado final hacia transparente para suavizar el corte visual al hacer scroll.
+
+5. Ajustes técnicos
+- Actualizada versión de caché a 2650.
+- Mantenida compatibilidad con acceso demo, cuenta local y flujo principal.
+- Verificada sintaxis JavaScript tras los cambios.
