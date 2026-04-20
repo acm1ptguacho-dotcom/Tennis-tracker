@@ -1,0 +1,9 @@
+Tennis Direction Tracker — v2.81
+
+Cambios principales:
+- Casilla de punto importante movida a la izquierda y rediseñada visualmente.
+- Corrección del clic/tap para marcar y desmarcar correctamente el punto importante.
+- Opción de idioma alineada visualmente con el resto del menú.
+- Cabecera superior extendida hasta el borde superior sin hueco visual.
+- Degradado de la cabecera rehecho para verse más limpio y de más calidad.
+- Caché actualizada a v2810.

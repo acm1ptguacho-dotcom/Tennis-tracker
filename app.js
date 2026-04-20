@@ -2313,7 +2313,10 @@ function refreshFinishMenuMode(){
 
 function syncFinishImportantUI(){
   const chk = document.getElementById("pointImportantChk");
-  if (chk) chk.checked = !!(state.point && state.point.important);
+  const label = document.querySelector("label[for='pointImportantChk']");
+  const checked = !!(state.point && state.point.important);
+  if (chk) chk.checked = checked;
+  if (label) label.classList.toggle("isChecked", checked);
 }
 function openFinishMenu(){
   setFinishMode(finishMode);
@@ -4377,7 +4380,30 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // finish ball menu
   on("finishBall","click", toggleFinishMenu);
   on("finishMenuClose","click", ()=>{ closeFinishMenu(); closeAdvStep2(); });
-  on("pointImportantChk","change", (e)=>{ if (!state.point) initPoint(); state.point.important = !!e.target.checked; });
+  on("pointImportantChk","change", (e)=>{
+    if (!state.point) initPoint();
+    state.point.important = !!e.target.checked;
+    syncFinishImportantUI();
+  });
+  const importantRow = document.querySelector(".finishImportantRow");
+  const importantLabel = document.querySelector("label[for='pointImportantChk']");
+  const importantChk = document.getElementById("pointImportantChk");
+  const toggleImportantPoint = (ev)=>{
+    if (!importantChk) return;
+    if (ev){ try{ ev.preventDefault(); }catch(_){ } try{ ev.stopPropagation(); }catch(_){ } }
+    if (!state.point) initPoint();
+    importantChk.checked = !importantChk.checked;
+    state.point.important = !!importantChk.checked;
+    syncFinishImportantUI();
+  };
+  if (importantRow) importantRow.addEventListener("click", (ev)=>{
+    if (ev.target === importantChk) return;
+    toggleImportantPoint(ev);
+  }, {passive:false});
+  if (importantLabel) importantLabel.addEventListener("click", (ev)=>{
+    if (ev.target === importantChk) return;
+    toggleImportantPoint(ev);
+  }, {passive:false});
   // cerrar al tocar fuera (backdrop)
   const fm = $("#finishMenu");
   if (fm) fm.addEventListener("click", (e)=>{
