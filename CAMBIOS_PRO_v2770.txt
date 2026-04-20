@@ -1,0 +1,9 @@
+Tennis Direction Tracker — v2.77
+
+Cambios principales:
+- Nuevo re-skin visual inspirado en la estética ATP: base clara, azul deportivo, superficies blancas y contornos finos.
+- No se han cambiado tamaños, posiciones ni estructura; solo colores y forma visual de cajas/paneles.
+- Botones, tarjetas, workspace, modales y ficha de jugador con estilo más limpio y profesional.
+- Cabecera y modales con azul ATP-like, y paneles interiores blancos con borde fino azul.
+- Bordes más rectangulares/redondeados y menos estilo glass o banner difuso.
+- Caché actualizada a v2770.
