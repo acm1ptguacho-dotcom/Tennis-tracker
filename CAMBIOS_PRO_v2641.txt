@@ -1,0 +1,15 @@
+Tennis Direction Tracker v2.64.1
+
+Correcciones principales:
+- Arreglado el acceso desde "Modo demo".
+- Arreglado el acceso desde "Crear cuenta y entrar".
+- Arreglado el acceso desde cuenta guardada / login.
+- Añadidas las funciones base que faltaban para sesión, cuentas y almacenamiento por usuario.
+- Añadidas claves de almacenamiento por usuario para estado, partidos, perfiles y modo de finalización.
+- Añadido acceso técnico sutil a la interfaz principal como respaldo de desarrollo.
+- Reforzado el script de entrada para botones de splash y autenticación en móvil.
+- Actualizadas versiones de CSS, JS y service worker para evitar caché antigua.
+
+Revisión adicional:
+- Comprobada la sintaxis de app.js.
+- Revisada la lógica de la interfaz de pista y el flujo de zonas activas.

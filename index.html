@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2611" />
+<link rel="stylesheet" href="style.css?v=2641" />
 </head>
 <body>
 
@@ -124,6 +124,8 @@
       <div class="authTrust">
         <strong>Esta versión funciona sin backend.</strong>
         <p>Las cuentas, perfiles y partidos quedan guardados en este dispositivo por usuario. Es una base muy útil para demo, validación comercial y preparación del siguiente paso con base de datos real.</p>
+        <button class="authDebugLink" id="btnDirectAccess" type="button">Acceso técnico a la interfaz</button>
+        <small class="authDebugHint">Solo para revisión interna si el acceso local falla.</small>
       </div>
     </section>
   </div>
@@ -1166,6 +1168,7 @@
     }
     if (which === 'demo') {
       if (typeof window.handleDemoAccess === 'function') return window.handleDemoAccess();
+      if (typeof window.forceEnterMainInterface === 'function') return window.forceEnterMainInterface();
       var splash = byId('splash'); var auth = byId('authPortal');
       if (splash) splash.classList.add('hidden');
       if (auth) auth.classList.add('hidden');
@@ -1198,6 +1201,7 @@
     pressBinder('btnLogin', function(){ authAction('login'); });
     pressBinder('btnSignup', function(){ authAction('signup'); });
     pressBinder('btnDemoAccess', function(){ authAction('demo'); });
+    pressBinder('btnDirectAccess', function(){ if (typeof window.handleDeveloperAccess === 'function') return window.handleDeveloperAccess(); if (typeof window.forceEnterMainInterface === 'function') return window.forceEnterMainInterface(); return authAction('demo'); });
   }
   window.__tdtSwitchAuth = switchAuth;
   window.__tdtQuickAccess = quickAccess;
@@ -1214,7 +1218,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=2611"></script>
+<script src="app.js?v=2641"></script>
 
 </body>
 </html>

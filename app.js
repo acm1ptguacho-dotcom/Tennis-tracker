@@ -8,6 +8,104 @@ const STORAGE_BASE_FINISH_MODE = "tdt_finish_mode_v2";
 const ACCOUNTS_KEY = "tdt_accounts_v1";
 const SESSION_KEY = "tdt_session_v1";
 
+
+function storageAvailable(area){
+  try{
+    const k = "__tdt_probe__" + Math.random().toString(36).slice(2);
+    area.setItem(k, "1");
+    area.removeItem(k);
+    return true;
+  }catch(e){ return false; }
+}
+function readRaw(area, key){
+  try{ return area.getItem(key); }catch(e){ return null; }
+}
+function writeRaw(area, key, value){
+  try{ area.setItem(key, value); return true; }catch(e){ console.error(e); return false; }
+}
+function removeRaw(area, key){
+  try{ area.removeItem(key); }catch(e){ console.error(e); }
+}
+function safeReadJSON(area, key, fallback){
+  try{
+    const raw = readRaw(area, key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return parsed == null ? fallback : parsed;
+  }catch(e){
+    console.error(e);
+    return fallback;
+  }
+}
+function safeWriteJSON(area, key, value){
+  try{ return writeRaw(area, key, JSON.stringify(value)); }catch(e){ console.error(e); return false; }
+}
+function getSession(){
+  if (__sessionCache) return __sessionCache;
+  const local = safeReadJSON(localStorage, SESSION_KEY, null);
+  const session = local || safeReadJSON(sessionStorage, SESSION_KEY, null);
+  __sessionCache = session || null;
+  return __sessionCache;
+}
+function refreshSessionCache(){
+  __sessionCache = null;
+  return getSession();
+}
+function setSession(session, remember=false){
+  const payload = session ? { ...session, remember: !!remember } : null;
+  try{ removeRaw(localStorage, SESSION_KEY); }catch(e){}
+  try{ removeRaw(sessionStorage, SESSION_KEY); }catch(e){}
+  if (!payload){
+    __sessionCache = null;
+    return null;
+  }
+  const target = remember ? localStorage : sessionStorage;
+  safeWriteJSON(target, SESSION_KEY, payload);
+  __sessionCache = payload;
+  return payload;
+}
+function clearSession(){
+  try{ removeRaw(localStorage, SESSION_KEY); }catch(e){}
+  try{ removeRaw(sessionStorage, SESSION_KEY); }catch(e){}
+  __sessionCache = null;
+}
+function isAuthenticated(){
+  const s = getSession();
+  return !!(s && s.uid);
+}
+function getAccounts(){ return safeReadJSON(localStorage, ACCOUNTS_KEY, []) || []; }
+function setAccounts(arr){ return safeWriteJSON(localStorage, ACCOUNTS_KEY, Array.isArray(arr) ? arr : []); }
+function getCurrentAccount(){
+  const s = getSession();
+  if (!s || !s.uid || s.isDemo) return s && s.isDemo ? s : null;
+  return getAccounts().find(acc => acc.id === s.uid) || null;
+}
+function updateAccountRecord(updater){
+  const current = getCurrentAccount();
+  if (!current || typeof updater !== "function") return null;
+  const accounts = getAccounts();
+  const idx = accounts.findIndex(acc => acc.id === current.id);
+  if (idx < 0) return null;
+  const next = updater({ ...accounts[idx] });
+  if (!next) return null;
+  accounts[idx] = next;
+  setAccounts(accounts);
+  const s = getSession();
+  if (s && s.uid === next.id){
+    setSession({ ...s, name: next.name || s.name, email: next.email || s.email, plan: next.plan || s.plan, isDemo: !!s.isDemo }, !!s.remember);
+  }
+  return next;
+}
+function scopedKey(base){
+  const s = getSession();
+  const uid = s && s.uid ? s.uid : "guest";
+  return `${base}__${uid}`;
+}
+function getStateStorageKey(){ return scopedKey(STORAGE_BASE_STATE); }
+function getSavedMatchesStorageKey(){ return scopedKey(STORAGE_BASE_MATCHES); }
+function getProfilesStorageKey(){ return scopedKey(STORAGE_BASE_PROFILES); }
+function getFinishModeKey(){ return scopedKey(STORAGE_BASE_FINISH_MODE); }
+
 function createDefaultState(){
   return {
     lang: "es",
@@ -45,6 +143,15 @@ function createDefaultState(){
 }
 
 const state = createDefaultState();
+
+function resetState(){
+  const prevLang = state.lang || "es";
+  Object.keys(state).forEach(key => { delete state[key]; });
+  Object.assign(state, createDefaultState());
+  state.lang = prevLang;
+  return state;
+}
+
 let __sessionCache = null;
 
 const playerName = (id)=> (state.names && state.names[id]) ? state.names[id] : (id==="A" ? "Jugador A" : "Jugador B");
@@ -4565,18 +4672,44 @@ function maybeOpenOnboarding(force=false){
   if (!account || account.isDemo) return;
   if (force || (!account.onboardingComplete && !account.onboardingSeen)) openOnboarding();
 }
+function forceEnterMainInterface(){
+  try{ document.getElementById("splash")?.classList.add("hidden"); }catch(e){}
+  try{ document.getElementById("authPortal")?.classList.add("hidden"); }catch(e){}
+  document.body.classList.remove("splashLock", "unauth");
+  document.body.classList.add("isAuthenticated");
+  try{ if (!state.point) initPoint(); }catch(e){}
+  try{ renderAll(); }catch(e){ console.error("forceEnterMainInterface renderAll error", e); }
+  try{ window.scrollTo({ top: 0, behavior: "instant" }); }catch(e){ try{ window.scrollTo(0,0); }catch(_){} }
+  return false;
+}
 function activateUserContext(openOnboardingNow=false){
-  resetState();
-  load();
-  applyModes();
-  if (!state.point) initPoint();
-  renderAll();
-  renderPlayerLibrary();
-  renderAccountModal();
-  renderDashboard();
-  updateWorkspaceBar();
-  hideAuthPortal();
-  if (openOnboardingNow) maybeOpenOnboarding(true);
+  try{
+    resetState();
+    load();
+    applyModes();
+    if (!state.point) initPoint();
+    renderAll();
+    renderPlayerLibrary();
+    renderAccountModal();
+    renderDashboard();
+    updateWorkspaceBar();
+    hideAuthPortal();
+    forceEnterMainInterface();
+    if (openOnboardingNow) maybeOpenOnboarding(true);
+    return true;
+  }catch(err){
+    console.error("activateUserContext error", err);
+    try{ hideAuthPortal(); }catch(e){}
+    forceEnterMainInterface();
+    try{ toast("⚠️ Entrada en modo seguro"); }catch(e){}
+    return false;
+  }
+}
+function handleDeveloperAccess(){
+  try{
+    setSession({ uid:"__dev__", name:"Developer Access", email:"dev@local", plan:"Debug", isDemo:true, remember:false }, false);
+  }catch(e){ console.error("handleDeveloperAccess session error", e); }
+  return activateUserContext(false);
 }
 async function handleSignup(){
   const name = ($("#signupName")?.value || "").trim();
@@ -4633,6 +4766,7 @@ function initProfessionalShell(){
   $("#btnLogin")?.addEventListener("click", handleLogin);
   $("#btnSignup")?.addEventListener("click", handleSignup);
   $("#btnDemoAccess")?.addEventListener("click", handleDemoAccess);
+  $("#btnDirectAccess")?.addEventListener("click", handleDeveloperAccess);
   ["loginEmail","loginPassword"].forEach(id=> $("#"+id)?.addEventListener("keydown", (e)=>{ if (e.key === "Enter") handleLogin(); }));
   ["signupName","signupEmail","signupPassword"].forEach(id=> $("#"+id)?.addEventListener("keydown", (e)=>{ if (e.key === "Enter") handleSignup(); }));
   $("#btnOpenHelpFromAuth")?.addEventListener("click", openHelp);
@@ -4808,7 +4942,13 @@ function showSplashAgain(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2611").catch(console.error);
+  navigator.serviceWorker.getRegistrations()
+    .then((regs) => Promise.all(regs.map((reg) => reg.unregister())))
+    .then(() => {
+      if (!("caches" in window)) return;
+      return caches.keys().then((keys) => Promise.all(keys.filter((k) => String(k).startsWith("tennis-tracker-web-")).map((k) => caches.delete(k))));
+    })
+    .catch(console.error);
 }
 
 function init(){
@@ -4839,6 +4979,14 @@ function safeInit(){
   }
 }
 window.safeInit = safeInit;
+window.switchAuthTab = switchAuthTab;
+window.getSession = getSession;
+window.setSession = setSession;
+window.handleLogin = handleLogin;
+window.handleSignup = handleSignup;
+window.handleDemoAccess = handleDemoAccess;
+window.handleDeveloperAccess = handleDeveloperAccess;
+window.forceEnterMainInterface = forceEnterMainInterface;
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", safeInit, {once:true});
 } else {

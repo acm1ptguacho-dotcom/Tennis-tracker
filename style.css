@@ -2934,6 +2934,9 @@ body.isAuthenticated #workspaceBar{display:grid;}
 .authFeedback.success{color:#8af0c7;}
 .authTrust{border-top:1px solid rgba(255,255,255,.10); padding-top:16px; color:var(--muted); font-family:"Inter", system-ui, sans-serif; line-height:1.65;}
 .authTrust strong{display:block; color:var(--text); margin-bottom:6px;}
+.authDebugLink{margin-top:12px; padding:0; border:0; background:none; color:var(--accent2); font:700 13px/1.4 "Inter", system-ui, sans-serif; text-align:left; cursor:pointer; opacity:.9;}
+.authDebugLink:hover{opacity:1; text-decoration:underline;}
+.authDebugHint{display:block; margin-top:4px; color:var(--muted); font:12px/1.5 "Inter", system-ui, sans-serif;}
 
 .workspaceBar{display:none; grid-template-columns:1.15fr .95fr auto; gap:12px; align-items:center; padding:16px 18px; border:1px solid rgba(255,255,255,.12); border-radius:22px; background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03)); box-shadow:var(--shadow2), var(--inset);}
 .workspaceIdentity{display:flex; flex-direction:column; gap:4px; min-width:0;}
