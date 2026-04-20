@@ -341,8 +341,35 @@ function applyI18n(){
   const optF = document.querySelector('#profileSex option[value="F"]'); if (optF) optF.textContent = tr('Mujer','Female');
   const optR = document.querySelector('#profileHand option[value="R"]'); if (optR) optR.textContent = tr('Diestro','Right-handed');
   const optL = document.querySelector('#profileHand option[value="L"]'); if (optL) optL.textContent = tr('Zurdo','Left-handed');
+  upgradeCloseButtons();
 }
 
+function closeIconMarkup(){
+  return `<svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+}
+function upgradeCloseButtons(scope=document){
+  const ids = [
+    'btnClosePlayers','btnCloseDashboard','btnCloseAccount','btnCloseHelp','btnCloseLegal','btnCloseOnboarding',
+    'btnCloseHistory','btnClosePointViewer','btnCloseAnalytics','btnCloseStats','btnCloseCharts','btnCloseExport',
+    'btnCloseLanguage','btnCloseInfo','btnCloseSurface','btnCloseGameMode','btnCloseSaveLoad','btnCloseConfirm'
+  ];
+  ids.forEach(id=>{
+    const el = (scope && scope.querySelector) ? scope.querySelector(`#${id}`) : null;
+    const btn = el || document.getElementById(id);
+    if (!btn) return;
+    btn.classList.add('modalCloseX');
+    btn.innerHTML = closeIconMarkup();
+    btn.setAttribute('aria-label', tr('Cerrar','Close'));
+    btn.setAttribute('title', tr('Cerrar','Close'));
+  });
+  const detailBtns = (scope && scope.querySelectorAll) ? scope.querySelectorAll('[data-profile-action="closeDetail"]') : document.querySelectorAll('[data-profile-action="closeDetail"]');
+  detailBtns.forEach(btn=>{
+    btn.classList.add('modalCloseX');
+    btn.innerHTML = closeIconMarkup();
+    btn.setAttribute('aria-label', tr('Cerrar','Close'));
+    btn.setAttribute('title', tr('Cerrar','Close'));
+  });
+}
 
 function refreshABOptionLabels(){
   const nameA = playerName("A");
@@ -4715,7 +4742,7 @@ function renderPlayerProfileDetail(id){
         </div>
         <div class="playerSheetHeaderActions">
           <button class="chip" type="button" data-profile-action="edit" data-profile-id="${profile.id}">${tr("Editar ficha","Edit profile")}</button>
-          <button class="chip" type="button" data-profile-action="closeDetail">${tr("Cerrar","Close")}</button>
+          <button class="chip modalCloseX" type="button" data-profile-action="closeDetail" aria-label="${tr("Cerrar","Close")}" title="${tr("Cerrar","Close")}">${closeIconMarkup()}</button>
         </div>
       </div>
       <div class="playerSheetStatsGrid">
@@ -4763,6 +4790,7 @@ function renderPlayerProfileDetail(id){
       </article>
     </section>`;
   shell.classList.remove("hidden");
+  upgradeCloseButtons(shell);
   shell.scrollIntoView({ block:"start", behavior:"smooth" });
 }
 function closePlayerProfileDetail(){
@@ -5357,6 +5385,7 @@ function afterSplashStart(){
 function initBottomSheet(){
   const sheet = $("#bottomSheet");
   const handle = $("#sheetHandle");
+  upgradeCloseButtons();
   const close = $("#sheetClose");
   if (!sheet || !handle) return;
 

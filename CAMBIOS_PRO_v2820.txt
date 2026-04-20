@@ -1,0 +1,8 @@
+Tennis Direction Tracker — v2.82
+
+Cambios principales:
+- Reparada la vista Ver ficha del jugador, que aparecía blanca en móvil.
+- Reparado el formulario Nuevo jugador para que todos los campos vuelvan a verse y editarse correctamente.
+- Sustituidos los botones de texto “Cerrar” por botones con icono X en modales y ficha de jugador.
+- Mantiene la paleta oscura aplicada anteriormente y elimina restos visuales del skin ATP en el menú de jugadores.
+- Caché actualizada a v2820.
