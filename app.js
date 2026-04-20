@@ -4453,6 +4453,204 @@ function hideAuthPortal(){
 }
 function getPlayerProfiles(){ return safeReadJSON(localStorage, getProfilesStorageKey(), []) || []; }
 function setPlayerProfiles(arr){ return safeWriteJSON(localStorage, getProfilesStorageKey(), arr || []); }
+function setProfilePhotoPreview(dataUrl="", name=""){
+  const preview = $("#profilePhotoPreview");
+  const hidden = $("#profilePhotoData");
+  if (hidden) hidden.value = dataUrl || "";
+  if (!preview) return;
+  const label = escapeHtml((name || "Jugador").trim().charAt(0) || "J");
+  if (dataUrl){
+    preview.innerHTML = `<img src="${dataUrl}" alt="Foto del jugador">`;
+    preview.classList.add("hasPhoto");
+  } else {
+    preview.innerHTML = `<span>${label}</span>`;
+    preview.classList.remove("hasPhoto");
+  }
+}
+function bindProfilePhotoInput(){
+  const input = $("#profilePhotoInput");
+  const removeBtn = $("#btnRemoveProfilePhoto");
+  if (input && input.dataset.bound !== "1"){
+    input.dataset.bound = "1";
+    input.addEventListener("change", ()=>{
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=> setProfilePhotoPreview(String(reader.result || ""), $("#profileName")?.value || "Jugador");
+      reader.readAsDataURL(file);
+    });
+  }
+  if (removeBtn && removeBtn.dataset.bound !== "1"){
+    removeBtn.dataset.bound = "1";
+    removeBtn.addEventListener("click", ()=>{
+      if (input) input.value = "";
+      setProfilePhotoPreview("", $("#profileName")?.value || "Jugador");
+    });
+  }
+  $("#profileName")?.addEventListener("input", ()=>{
+    if (!$("#profilePhotoData")?.value) setProfilePhotoPreview("", $("#profileName")?.value || "Jugador");
+  });
+}
+function inferProfileSideFromMatch(profile, matchState){
+  if (!profile || !matchState) return null;
+  const assignments = matchState.playerAssignments || {};
+  if (assignments.A === profile.id) return "A";
+  if (assignments.B === profile.id) return "B";
+  const name = String(profile.name || "").trim().toLowerCase();
+  if (!name) return null;
+  if (String(matchState.names?.A || "").trim().toLowerCase() === name) return "A";
+  if (String(matchState.names?.B || "").trim().toLowerCase() === name) return "B";
+  return null;
+}
+function inferSavedMatchResult(matchState, side){
+  const sets = matchState?.sets || {A:0,B:0};
+  const games = matchState?.games || {A:0,B:0};
+  const finished = !!matchState?.matchFinished;
+  if (finished){
+    const winner = (sets.A !== sets.B) ? (sets.A > sets.B ? "A" : "B") : (games.A !== games.B ? (games.A > games.B ? "A" : "B") : null);
+    if (winner) return { status: winner === side ? "Victoria" : "Derrota", tone: winner === side ? "good" : "bad" };
+  }
+  return { status: "Sesión guardada", tone: "ghost" };
+}
+function buildPlayerProfileDataset(profile){
+  const saved = getSavedMatches().slice().sort((a,b)=>(b.when||0)-(a.when||0));
+  const history = [];
+  const totals = {
+    matches:0, completed:0, wins:0, losses:0, totalPoints:0, pointsWon:0,
+    servePoints:0, servePointsWon:0, firstIn:0, firstInWon:0, secondPlayed:0, secondIn:0, secondInWon:0,
+    returnPoints:0, returnPointsWon:0, returnsIn:0, winners:0, ue:0, bpOpp:0, bpConv:0
+  };
+  for (const item of saved){
+    const matchState = item?.state;
+    const side = inferProfileSideFromMatch(profile, matchState);
+    if (!matchState || !side) continue;
+    const stats = computeStats(matchState.matchPoints || []);
+    const ps = stats?.[side] || emptyPlayerStats();
+    const result = inferSavedMatchResult(matchState, side);
+    const opponentSide = side === "A" ? "B" : "A";
+    const opponent = matchState.names?.[opponentSide] || "Rival";
+    history.push({
+      id: item.id,
+      name: item.name || `${matchState.names?.A || 'Jugador A'} vs ${matchState.names?.B || 'Jugador B'}`,
+      when: item.when || 0,
+      pointsCount: item.pointsCount ?? (matchState.matchPoints?.length || 0),
+      side,
+      opponent,
+      result,
+      stats: ps,
+      state: matchState
+    });
+    totals.matches++;
+    if (result.status === "Victoria") totals.wins++;
+    if (result.status === "Derrota") totals.losses++;
+    if (result.status !== "Sesión guardada") totals.completed++;
+    totals.totalPoints += stats.totalPoints || 0;
+    totals.pointsWon += ps.pointsWon || 0;
+    totals.servePoints += ps.servePoints || 0;
+    totals.servePointsWon += ps.servePointsWon || 0;
+    totals.firstIn += ps.firstIn || 0;
+    totals.firstInWon += ps.firstInWon || 0;
+    totals.secondPlayed += ps.secondPlayed || 0;
+    totals.secondIn += ps.secondIn || 0;
+    totals.secondInWon += ps.secondInWon || 0;
+    totals.returnPoints += ps.returnPoints || 0;
+    totals.returnPointsWon += ps.returnPointsWon || 0;
+    totals.returnsIn += ps.returnsIn || 0;
+    totals.winners += ps.winners || 0;
+    totals.ue += ps.ue || 0;
+    totals.bpOpp += ps.bpOpp || 0;
+    totals.bpConv += ps.bpConv || 0;
+  }
+  return { history, totals };
+}
+function renderPlayerProfileDetail(id){
+  const shell = $("#playerProfileSheet");
+  if (!shell) return;
+  const profile = getPlayerProfiles().find(p => p.id === id);
+  if (!profile){ shell.classList.add("hidden"); shell.innerHTML = ""; return; }
+  const { history, totals } = buildPlayerProfileDataset(profile);
+  const firstServePct = totals.servePoints ? Math.round((totals.firstIn / totals.servePoints) * 100) : 0;
+  const pointsWonPct = totals.totalPoints ? Math.round((totals.pointsWon / totals.totalPoints) * 100) : 0;
+  const returnInPct = totals.returnPoints ? Math.round((totals.returnsIn / totals.returnPoints) * 100) : 0;
+  const breakPct = totals.bpOpp ? Math.round((totals.bpConv / totals.bpOpp) * 100) : 0;
+  const insight = totals.matches === 0
+    ? 'Aún no hay partidos guardados para este jugador. Guarda encuentros asignados para construir su historial.'
+    : totals.ue > totals.winners
+      ? `Ahora mismo comete más errores no forzados (${totals.ue}) que winners (${totals.winners}).`
+      : `Balance ofensivo positivo: ${totals.winners} winners frente a ${totals.ue} errores no forzados.`;
+  shell.innerHTML = `
+    <section class="playerSheetBanner">
+      <div class="playerSheetTop">
+        <div class="playerSheetIdentity">
+          <div class="playerSheetPhoto ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : `<span>${escapeHtml((profile.name || 'J').charAt(0))}</span>`}</div>
+          <div class="playerSheetText">
+            <div class="playerSheetEyebrow">Perfil del jugador</div>
+            <h3>${escapeHtml(profile.name || 'Jugador')}</h3>
+            <div class="playerSheetMeta">
+              <span>${escapeHtml(profile.category || 'Sin categoría')}</span>
+              <span>${(profile.hand || 'R') === 'L' ? 'Zurdo' : 'Diestro'}</span>
+              <span>${totals.matches} partidos asignados</span>
+            </div>
+          </div>
+        </div>
+        <div class="playerSheetHeaderActions">
+          <button class="chip" type="button" data-profile-action="edit" data-profile-id="${profile.id}">Editar ficha</button>
+          <button class="chip" type="button" data-profile-action="closeDetail">Cerrar</button>
+        </div>
+      </div>
+      <div class="playerSheetStatsGrid">
+        <article class="playerStatTile"><strong>${totals.matches}</strong><span>Partidos</span></article>
+        <article class="playerStatTile"><strong>${totals.wins}</strong><span>Victorias</span></article>
+        <article class="playerStatTile"><strong>${pointsWonPct}%</strong><span>Puntos ganados</span></article>
+        <article class="playerStatTile"><strong>${firstServePct}%</strong><span>1º saque dentro</span></article>
+        <article class="playerStatTile"><strong>${returnInPct}%</strong><span>Restos dentro</span></article>
+        <article class="playerStatTile"><strong>${breakPct}%</strong><span>Break convertidos</span></article>
+      </div>
+      <div class="playerSheetGrid">
+        <article class="playerDataPanel">
+          <h4>Ficha técnica</h4>
+          <ul class="playerDataList">
+            <li><b>Objetivo:</b> ${escapeHtml(profile.goal || '—')}</li>
+            <li><b>Fortalezas:</b> ${escapeHtml(profile.strengths || '—')}</li>
+            <li><b>Debilidades:</b> ${escapeHtml(profile.weaknesses || '—')}</li>
+            <li><b>Notas:</b> ${escapeHtml(profile.notes || '—')}</li>
+          </ul>
+        </article>
+        <article class="playerDataPanel">
+          <h4>Lectura rápida</h4>
+          <div class="playerInsightBox">${escapeHtml(insight)}</div>
+          <ul class="playerDataList compact">
+            <li><b>Winners:</b> ${totals.winners}</li>
+            <li><b>Errores no forzados:</b> ${totals.ue}</li>
+            <li><b>Puntos al saque:</b> ${totals.servePointsWon}/${totals.servePoints}</li>
+            <li><b>Puntos al resto:</b> ${totals.returnPointsWon}/${totals.returnPoints}</li>
+            <li><b>Puntos de break:</b> ${totals.bpConv}/${totals.bpOpp}</li>
+          </ul>
+        </article>
+      </div>
+      <article class="playerDataPanel">
+        <h4>Historial del jugador</h4>
+        ${history.length ? `<div class="playerHistoryList">${history.map(item => `<div class="playerHistoryRow">
+          <div class="playerHistoryMain">
+            <strong>${escapeHtml(item.name)}</strong>
+            <span>${escapeHtml(item.opponent)} · ${new Date(item.when || Date.now()).toLocaleDateString()} · ${item.pointsCount} puntos</span>
+          </div>
+          <div class="playerHistorySide">
+            <span class="playerHistoryBadge ${item.result.tone}">${item.result.status}</span>
+            <small>${Math.round(((item.stats.pointsWon || 0) / Math.max(1, item.pointsCount)) * 100)}% puntos</small>
+          </div>
+        </div>`).join('')}</div>` : `<div class="playerHistoryEmpty">Todavía no hay partidos guardados para este jugador.</div>`}
+      </article>
+    </section>`;
+  shell.classList.remove("hidden");
+  shell.scrollIntoView({ block:"start", behavior:"smooth" });
+}
+function closePlayerProfileDetail(){
+  const shell = $("#playerProfileSheet");
+  if (!shell) return;
+  shell.innerHTML = "";
+  shell.classList.add("hidden");
+}
 function switchPlayerLibraryMode(mode="choose"){
   const choose = mode !== "create";
   $("#playersChoosePane")?.classList.toggle("hidden", !choose);
@@ -4465,11 +4663,14 @@ function switchPlayerLibraryMode(mode="choose"){
   if (shell) shell.scrollTop = 0;
 }
 function resetProfileForm(){
-  ["profileId","profileName","profileCategory","profileGoal","profileStrengths","profileWeaknesses","profileNotes"].forEach(id=>{ const el=$("#"+id); if (el) el.value=""; });
+  ["profileId","profileName","profileCategory","profileGoal","profileStrengths","profileWeaknesses","profileNotes","profilePhotoData"].forEach(id=>{ const el=$("#"+id); if (el) el.value=""; });
   const hand = $("#profileHand"); if (hand) hand.value = "R";
+  const input = $("#profilePhotoInput"); if (input) input.value = "";
+  setProfilePhotoPreview("", "Jugador");
   switchPlayerLibraryMode("create");
 }
 function loadProfileIntoForm(id){
+  closePlayerProfileDetail();
   const p = getPlayerProfiles().find(x => x.id === id);
   if (!p) return;
   $("#profileId").value = p.id;
@@ -4480,6 +4681,8 @@ function loadProfileIntoForm(id){
   $("#profileStrengths").value = p.strengths || "";
   $("#profileWeaknesses").value = p.weaknesses || "";
   $("#profileNotes").value = p.notes || "";
+  $("#profilePhotoData").value = p.photoData || "";
+  setProfilePhotoPreview(p.photoData || "", p.name || "Jugador");
   switchPlayerLibraryMode("create");
 }
 function saveProfileFromForm(){
@@ -4492,6 +4695,7 @@ function saveProfileFromForm(){
     strengths: ($("#profileStrengths")?.value || "").trim(),
     weaknesses: ($("#profileWeaknesses")?.value || "").trim(),
     notes: ($("#profileNotes")?.value || "").trim(),
+    photoData: $("#profilePhotoData")?.value || "",
     updatedAt: Date.now()
   };
   if (!payload.name){ toast("Escribe el nombre del jugador"); return; }
@@ -4500,6 +4704,7 @@ function saveProfileFromForm(){
   if (idx >= 0) profiles[idx] = { ...profiles[idx], ...payload };
   else profiles.unshift({ ...payload, createdAt: Date.now() });
   setPlayerProfiles(profiles);
+  closePlayerProfileDetail();
   resetProfileForm();
   renderPlayerLibrary();
   switchPlayerLibraryMode("choose");
@@ -4507,6 +4712,7 @@ function saveProfileFromForm(){
   toast("✅ Perfil guardado");
 }
 function deleteProfile(id){
+  closePlayerProfileDetail();
   const profiles = getPlayerProfiles().filter(p => p.id !== id);
   setPlayerProfiles(profiles);
   if (state.playerAssignments?.A === id) state.playerAssignments.A = null;
@@ -4532,10 +4738,11 @@ function renderPlayerLibrary(){
   const list = $("#playerProfileList");
   const summary = $("#playerLibrarySummary");
   const profiles = getPlayerProfiles().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
-  if (summary) summary.textContent = `${profiles.length} perfiles disponibles · Asigna a A o B con un toque`;
+  if (summary) summary.textContent = `${profiles.length} perfiles disponibles · Cada ficha guarda historial, foto y estadísticas generales`;
   if (!list) return;
   if (!profiles.length){
-    list.innerHTML = `<div class="profileCard"><h4>Sin perfiles todavía</h4><p>Crea tu primer jugador para empezar a guardar historial, objetivos y notas del entrenador.</p></div>`;
+    closePlayerProfileDetail();
+    list.innerHTML = `<div class="profileCard"><h4>Sin perfiles todavía</h4><p>Crea tu primer jugador para empezar a guardar historial, objetivos, foto y notas del entrenador.</p></div>`;
     return;
   }
   list.innerHTML = profiles.map(profile => {
@@ -4544,15 +4751,19 @@ function renderPlayerLibrary(){
     if (state.playerAssignments?.B === profile.id) assigned.push("B");
     const meta = [profile.category || "Sin categoría", (profile.hand || "R") === "L" ? "Zurdo" : "Diestro"].concat(assigned.length ? [`Asignado: ${assigned.join(" / ")}`] : []);
     return `
-      <article class="profileCard">
-        <div>
-          <h4>${escapeHtml(profile.name || "Jugador")}</h4>
-          <div class="profileMeta">${meta.map(x=>`<span>${escapeHtml(x)}</span>`).join("")}</div>
+      <article class="profileCard profileCardRich">
+        <div class="profileCardTop">
+          <div class="profileAvatar ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : `<span>${escapeHtml((profile.name || 'J').charAt(0))}</span>`}</div>
+          <div class="profileCardInfo">
+            <h4>${escapeHtml(profile.name || "Jugador")}</h4>
+            <div class="profileMeta">${meta.map(x=>`<span>${escapeHtml(x)}</span>`).join("")}</div>
+          </div>
         </div>
         <p><strong>Objetivo:</strong> ${escapeHtml(profile.goal || "—")}</p>
         <p><strong>Fortalezas:</strong> ${escapeHtml(profile.strengths || "—")}</p>
         <p><strong>Debilidades:</strong> ${escapeHtml(profile.weaknesses || "—")}</p>
         <div class="profileActions">
+          <button class="chip primary" type="button" data-profile-action="view" data-profile-id="${profile.id}">Ver ficha</button>
           <button class="chip" type="button" data-profile-action="assignA" data-profile-id="${profile.id}">Asignar A</button>
           <button class="chip" type="button" data-profile-action="assignB" data-profile-id="${profile.id}">Asignar B</button>
         </div>
@@ -4956,22 +5167,27 @@ function initProfessionalShell(){
   $("#btnLogout")?.addEventListener("click", handleLogout);
   $("#btnSaveProfile")?.addEventListener("click", saveProfileFromForm);
   $("#btnResetProfile")?.addEventListener("click", resetProfileForm);
+  bindProfilePhotoInput();
   $("#btnPlayersChooseMode")?.addEventListener("click", ()=> switchPlayerLibraryMode("choose"));
   $("#btnPlayersCreateMode")?.addEventListener("click", ()=> switchPlayerLibraryMode("create"));
   $("#btnOnboardingPlayers")?.addEventListener("click", ()=>{ markOnboardingSeen(false); closeOnboarding(); openPlayers(); });
   $("#btnOnboardingDone")?.addEventListener("click", ()=>{ markOnboardingSeen(true); closeOnboarding(); });
   document.querySelectorAll(".legalTab").forEach(btn => btn.addEventListener("click", ()=> applyLegalTab(btn.dataset.legalTab || "privacy")));
-  $("#playerProfileList")?.addEventListener("click", (e)=>{
+  const playerActionDelegate = (e)=>{
     const btn = e.target.closest("[data-profile-action]");
     if (!btn) return;
     const action = btn.dataset.profileAction;
     const id = btn.dataset.profileId;
-    if (!id) return;
+    if (action !== "closeDetail" && !id) return;
     if (action === "assignA") assignProfileToSide(id, "A");
     if (action === "assignB") assignProfileToSide(id, "B");
+    if (action === "view") renderPlayerProfileDetail(id);
     if (action === "edit") loadProfileIntoForm(id);
     if (action === "delete") openConfirm("Eliminar perfil", "Se borrará el perfil del jugador seleccionado.", ()=> deleteProfile(id));
-  });
+    if (action === "closeDetail") closePlayerProfileDetail();
+  };
+  $("#playerProfileList")?.addEventListener("click", playerActionDelegate);
+  $("#playerProfileSheet")?.addEventListener("click", playerActionDelegate);
   ["dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal"].forEach(mid=>{
     const modal = $("#"+mid);
     if (!modal) return;

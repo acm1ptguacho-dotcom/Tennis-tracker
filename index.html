@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2730" />
+<link rel="stylesheet" href="style.css?v=2760" />
 </head>
 <body>
 
@@ -1000,12 +1000,26 @@
       </div>
 
       <div class="playerModePane" id="playersChoosePane">
+        <div class="playerProfileSheet hidden" id="playerProfileSheet"></div>
         <div class="profileList profileListStandalone" id="playerProfileList"></div>
       </div>
 
       <div class="playerModePane hidden" id="playersCreatePane">
         <div class="profileEditor panelLike">
           <input type="hidden" id="profileId">
+          <input type="hidden" id="profilePhotoData">
+          <div class="profilePhotoEditor">
+            <div class="profilePhotoPreview" id="profilePhotoPreview" aria-label="Foto del jugador"></div>
+            <div class="profilePhotoMeta">
+              <strong>Foto / ficha técnica</strong>
+              <span>Añade una imagen del jugador para identificarlo rápido en su perfil.</span>
+              <div class="profilePhotoActions">
+                <label class="chip primary profilePhotoUpload" for="profilePhotoInput">Subir foto</label>
+                <input id="profilePhotoInput" type="file" accept="image/*" hidden>
+                <button class="chip" id="btnRemoveProfilePhoto" type="button">Quitar</button>
+              </div>
+            </div>
+          </div>
           <div class="formGrid">
             <label>Nombre
               <input id="profileName" type="text" placeholder="Nombre del jugador">
@@ -1255,7 +1269,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=2730"></script>
+<script src="app.js?v=2760"></script>
 
 </body>
 </html>

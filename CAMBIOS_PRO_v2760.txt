@@ -1,0 +1,9 @@
+Tennis Direction Tracker — v2.76
+
+Novedades en Jugadores:
+- Se añade Perfil del jugador dentro de la Biblioteca de jugadores.
+- Cada perfil puede mostrar estadísticas generales acumuladas y el historial de partidos guardados asignados a ese jugador.
+- Nuevo bloque de foto/ficha técnica para subir una imagen del jugador desde el formulario.
+- Rediseño de tarjetas de jugador con avatar, botón Ver ficha y mejor jerarquía visual.
+- El historial se construye a partir de los partidos guardados asociados al perfil.
+- Caché actualizada a v2760.
