@@ -1051,6 +1051,8 @@ body.coach .kpi .v{font-size:24px}
   top: 0;
   z-index: 40;
   padding-top: env(safe-area-inset-top);
+  padding-bottom: 2px;
+  margin-bottom: 4px;
   display: block; /* evita conflictos con la .topbar (flex) */
   isolation: isolate;
 }
@@ -1058,12 +1060,12 @@ body.coach .kpi .v{font-size:24px}
   content:"";
   position:absolute;
   inset:0 -18px auto -18px;
-  height:calc(100% + 26px);
+  height:calc(100% + 10px);
   border-bottom:1px solid rgba(57,213,255,.10);
   background:
-    linear-gradient(180deg, rgba(6,17,38,.96) 0%, rgba(8,21,50,.90) 56%, rgba(8,21,50,.56) 82%, transparent 100%),
+    linear-gradient(180deg, rgba(6,17,38,.97) 0%, rgba(8,21,50,.92) 58%, rgba(8,21,50,.70) 82%, rgba(8,21,50,.22) 100%),
     radial-gradient(620px 180px at 50% -10%, rgba(57,213,255,.16), transparent 70%);
-  box-shadow:0 16px 34px rgba(0,0,0,.24);
+  box-shadow:0 12px 26px rgba(0,0,0,.22);
   backdrop-filter:blur(14px);
   -webkit-backdrop-filter:blur(14px);
   pointer-events:none;
@@ -1074,9 +1076,9 @@ body.coach .kpi .v{font-size:24px}
   position:absolute;
   left:0;
   right:0;
-  bottom:-28px;
-  height:30px;
-  background:linear-gradient(180deg, rgba(8,21,50,.36), transparent 100%);
+  bottom:-12px;
+  height:14px;
+  background:linear-gradient(180deg, rgba(8,21,50,.18), transparent 100%);
   pointer-events:none;
   z-index:-1;
 }
@@ -3152,4 +3154,52 @@ body.isAuthenticated.railHidden #workspaceBar{
   #playersModal .playerLibraryShell{max-height:calc(82vh - 90px);}
   #playersModal .playerModeBtn{padding:16px 16px;}
   #playersModal .playerModeBtn span{font-size:20px;}
+}
+
+
+/* ===== v2.66 visual fix: shorter sticky fade + mobile dashboard scroll ===== */
+#workspaceBar.workspaceBar{
+  position: relative;
+  z-index: 0;
+}
+#dashboardModal .dashboardModalCard{
+  width:min(1100px, calc(100vw - 24px));
+  max-height:min(86vh, 920px);
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:14px;
+}
+#dashboardModal .modalHead{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:linear-gradient(180deg, rgba(9,18,39,.98), rgba(9,18,39,.92));
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+#dashboardModal .dashboardIntro,
+#dashboardModal .dashboardGrid,
+#dashboardModal .dashboardRecommendations{
+  padding-left:16px;
+  padding-right:16px;
+}
+#dashboardModal .dashboardRecommendations{
+  padding-bottom:4px;
+}
+@media (max-width: 700px){
+  .topbarInline{ margin-bottom: 2px; }
+  .topbarInline::before{ height:calc(100% + 6px); }
+  .topbarInline::after{ bottom:-8px; height:10px; }
+  #dashboardModal{ align-items:flex-start; padding:12px; }
+  #dashboardModal .dashboardModalCard{
+    width:calc(100vw - 24px);
+    max-height:calc(100vh - 24px);
+    border-radius:20px;
+  }
+  #dashboardModal .dashboardIntro,
+  #dashboardModal .dashboardGrid,
+  #dashboardModal .dashboardRecommendations{
+    padding-left:12px;
+    padding-right:12px;
+  }
 }
