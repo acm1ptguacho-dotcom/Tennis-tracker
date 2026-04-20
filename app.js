@@ -4808,7 +4808,7 @@ function showSplashAgain(){
 
 function registerSW(){
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js?v=2600").catch(console.error);
+  navigator.serviceWorker.register("./service-worker.js?v=2611").catch(console.error);
 }
 
 function init(){
@@ -4825,4 +4825,25 @@ function init(){
   registerSW();
 }
 
-window.addEventListener("load", init);
+let __tdtSafeBooted = false;
+function safeInit(){
+  if (__tdtSafeBooted) return;
+  __tdtSafeBooted = true;
+  try{
+    init();
+  }catch(err){
+    console.error("TDT init error", err);
+    try{ initProfessionalShell(); }catch(e){ console.error("TDT shell fallback error", e); }
+    try{ initSplash(); }catch(e){ console.error("TDT splash fallback error", e); }
+    try{ if (window.__tdtBindEntryFallback) window.__tdtBindEntryFallback(); }catch(e){ console.error("TDT entry fallback bind error", e); }
+  }
+}
+window.safeInit = safeInit;
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", safeInit, {once:true});
+} else {
+  setTimeout(safeInit, 0);
+}
+window.addEventListener("pageshow", ()=>{
+  try{ if (window.__tdtBindEntryFallback) window.__tdtBindEntryFallback(); }catch(e){}
+});

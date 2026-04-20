@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2600" />
+<link rel="stylesheet" href="style.css?v=2611" />
 </head>
 <body>
 
@@ -26,12 +26,12 @@
       <span class="splashBadge">Informes premium</span>
     </div>
     <div class="splashQuickAccess" aria-label="Acceso rápido">
-      <button class="btn primary" id="btnSplashLogin" type="button">Acceder</button>
-      <button class="btn" id="btnSplashSignup" type="button">Crear cuenta</button>
-      <button class="btn good" id="btnSplashDemo" type="button">Modo demo</button>
+      <button class="btn primary" id="btnSplashLogin" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('login')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'login')">Acceder</button>
+      <button class="btn" id="btnSplashSignup" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('signup')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'signup')">Crear cuenta</button>
+      <button class="btn good" id="btnSplashDemo" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('demo')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'demo')">Modo demo</button>
     </div>
     <div class="splashHint">También puedes pulsar cualquier zona de la portada para continuar.</div>
-    <button class="btn primary splashStart" id="btnStartApp" type="button" data-i18n="start">Continuar</button>
+    <button class="btn primary splashStart" id="btnStartApp" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('login')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'login')" data-i18n="start">Continuar</button>
   </div>
 </div>
 
@@ -83,8 +83,8 @@
 
     <section class="authCard">
       <div class="authTabs" role="tablist" aria-label="Acceso">
-        <button class="authTab active" id="tabAuthLogin" type="button">Acceder</button>
-        <button class="authTab" id="tabAuthSignup" type="button">Crear cuenta</button>
+        <button class="authTab active" id="tabAuthLogin" type="button" onclick="return window.__tdtSwitchAuth && window.__tdtSwitchAuth('login')" ontouchend="return window.__tdtTouchTab && window.__tdtTouchTab(event, 'login')">Acceder</button>
+        <button class="authTab" id="tabAuthSignup" type="button" onclick="return window.__tdtSwitchAuth && window.__tdtSwitchAuth('signup')" ontouchend="return window.__tdtTouchTab && window.__tdtTouchTab(event, 'signup')">Crear cuenta</button>
       </div>
 
       <div class="authPane" id="authLoginPane">
@@ -95,8 +95,8 @@
           <input id="loginPassword" type="password" placeholder="Tu contraseña" autocomplete="current-password">
         </label>
         <label class="authCheck"><input id="rememberSession" type="checkbox" checked> Recordar sesión en este dispositivo</label>
-        <button class="btn primary authSubmit" id="btnLogin" type="button">Entrar en la plataforma</button>
-        <button class="btn authGhost" id="btnDemoAccess" type="button">Entrar en modo demo</button>
+        <button class="btn primary authSubmit" id="btnLogin" type="button" onclick="return window.__tdtAuthAction && window.__tdtAuthAction('login')" ontouchend="return window.__tdtTouchAuth && window.__tdtTouchAuth(event, 'login')">Entrar en la plataforma</button>
+        <button class="btn authGhost" id="btnDemoAccess" type="button" onclick="return window.__tdtAuthAction && window.__tdtAuthAction('demo')" ontouchend="return window.__tdtTouchAuth && window.__tdtTouchAuth(event, 'demo')">Entrar en modo demo</button>
         <div class="authFeedback" id="loginFeedback"></div>
       </div>
 
@@ -117,7 +117,7 @@
             <option value="Academy">Academy</option>
           </select>
         </label>
-        <button class="btn primary authSubmit" id="btnSignup" type="button">Crear cuenta y entrar</button>
+        <button class="btn primary authSubmit" id="btnSignup" type="button" onclick="return window.__tdtAuthAction && window.__tdtAuthAction('signup')" ontouchend="return window.__tdtTouchAuth && window.__tdtTouchAuth(event, 'signup')">Crear cuenta y entrar</button>
         <div class="authFeedback" id="signupFeedback"></div>
       </div>
 
@@ -1119,7 +1119,102 @@
 <button id="btnWinA" class="hidden" type="button"></button>
 <button id="btnWinB" class="hidden" type="button"></button>
 
-<script src="app.js?v=2600"></script>
+
+<script>
+(function(){
+  function byId(id){ return document.getElementById(id); }
+  function focusSoon(el){ if (!el) return; setTimeout(function(){ try{ el.focus(); }catch(e){} }, 40); }
+  function switchAuth(tab){
+    var login = tab !== 'signup';
+    var tabLogin = byId('tabAuthLogin');
+    var tabSignup = byId('tabAuthSignup');
+    var paneLogin = byId('authLoginPane');
+    var paneSignup = byId('authSignupPane');
+    if (tabLogin) tabLogin.classList.toggle('active', login);
+    if (tabSignup) tabSignup.classList.toggle('active', !login);
+    if (paneLogin) paneLogin.classList.toggle('hidden', !login);
+    if (paneSignup) paneSignup.classList.toggle('hidden', login);
+    if (typeof window.switchAuthTab === 'function') { try{ window.switchAuthTab(tab); }catch(e){} }
+    focusSoon(login ? byId('loginEmail') : byId('signupName'));
+    return false;
+  }
+  function showAuth(tab){
+    var splash = byId('splash');
+    var auth = byId('authPortal');
+    if (splash) splash.classList.add('hidden');
+    if (auth) auth.classList.remove('hidden');
+    document.body.classList.remove('splashLock');
+    document.body.classList.add('unauth');
+    document.body.classList.remove('isAuthenticated');
+    switchAuth(tab || 'login');
+    try{ window.dispatchEvent(new Event('resize')); }catch(e){}
+    return false;
+  }
+  function authAction(which){
+    try{ if (typeof window.safeInit === 'function') window.safeInit(); }catch(e){}
+    if (which === 'login') {
+      if (typeof window.handleLogin === 'function') return window.handleLogin();
+      showAuth('login');
+      var fb = byId('loginFeedback'); if (fb) fb.textContent = 'La lógica de acceso aún no se ha inicializado. Vuelve a pulsar.';
+      return false;
+    }
+    if (which === 'signup') {
+      if (typeof window.handleSignup === 'function') return window.handleSignup();
+      showAuth('signup');
+      var fb2 = byId('signupFeedback'); if (fb2) fb2.textContent = 'La lógica de registro aún no se ha inicializado. Vuelve a pulsar.';
+      return false;
+    }
+    if (which === 'demo') {
+      if (typeof window.handleDemoAccess === 'function') return window.handleDemoAccess();
+      var splash = byId('splash'); var auth = byId('authPortal');
+      if (splash) splash.classList.add('hidden');
+      if (auth) auth.classList.add('hidden');
+      document.body.classList.remove('splashLock','unauth');
+      document.body.classList.add('isAuthenticated');
+      try{ window.dispatchEvent(new Event('resize')); }catch(e){}
+      return false;
+    }
+    return false;
+  }
+  function quickAccess(mode){
+    try{ if (typeof window.safeInit === 'function') window.safeInit(); }catch(e){}
+    if (mode === 'demo') return authAction('demo');
+    return showAuth(mode === 'signup' ? 'signup' : 'login');
+  }
+  function pressBinder(id, fn){
+    var el = byId(id);
+    if (!el || el.dataset.quickBound === '1') return;
+    el.dataset.quickBound = '1';
+    el.addEventListener('click', function(ev){ try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){} fn(); }, true);
+    el.addEventListener('touchend', function(ev){ try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){} fn(); }, {passive:false, capture:true});
+  }
+  function bindAll(){
+    pressBinder('btnSplashLogin', function(){ quickAccess('login'); });
+    pressBinder('btnSplashSignup', function(){ quickAccess('signup'); });
+    pressBinder('btnSplashDemo', function(){ quickAccess('demo'); });
+    pressBinder('btnStartApp', function(){ quickAccess('login'); });
+    pressBinder('tabAuthLogin', function(){ switchAuth('login'); });
+    pressBinder('tabAuthSignup', function(){ switchAuth('signup'); });
+    pressBinder('btnLogin', function(){ authAction('login'); });
+    pressBinder('btnSignup', function(){ authAction('signup'); });
+    pressBinder('btnDemoAccess', function(){ authAction('demo'); });
+  }
+  window.__tdtSwitchAuth = switchAuth;
+  window.__tdtQuickAccess = quickAccess;
+  window.__tdtAuthAction = authAction;
+  window.__tdtBindEntryFallback = bindAll;
+  window.__tdtTouchQuick = function(ev, mode){ try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){} return quickAccess(mode); };
+  window.__tdtTouchTab = function(ev, tab){ try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){} return switchAuth(tab); };
+  window.__tdtTouchAuth = function(ev, which){ try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){} return authAction(which); };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindAll, {once:true});
+  } else {
+    bindAll();
+  }
+  window.addEventListener('pageshow', bindAll);
+})();
+</script>
+<script src="app.js?v=2611"></script>
 
 </body>
 </html>
