@@ -1,0 +1,16 @@
+Tennis Direction Tracker — v2.73
+
+FASE 3 aplicada sobre la base v2.72.1 (pista refinada).
+
+Incluye:
+- sistema visual de datos mejorado en Panel Pro
+- comparativa rápida entre jugadores
+- tarjetas de rendimiento con barras visuales
+- tags tácticos de dirección, profundidad, saque y break
+- cuenta/workspace con presentación más premium
+- branding avanzado con acentos de marca y mayor profundidad visual
+- actualización de versiones de caché (2730)
+
+No incluye:
+- cambios en botones laterales
+- microanimaciones extra de la fase 2 descartada

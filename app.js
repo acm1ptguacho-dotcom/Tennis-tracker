@@ -4593,37 +4593,149 @@ function renderDashboard(){
   const intro = $("#dashboardIntro");
   const grid = $("#dashboardGrid");
   const recs = $("#dashboardRecommendations");
+  const sub = $("#dashboardSub");
   if (!intro || !grid || !recs) return;
   const stats = computeStats(state.matchPoints || []);
   const matches = getSavedMatches();
   const profiles = getPlayerProfiles();
   const session = getSession();
+  const totalPoints = Math.max(1, (state.matchPoints || []).length);
   const modeLabel = state.matchMode === "super" ? "Super tie-break" : state.matchMode === "tiebreak" ? "Tie-break" : "Partido estándar";
+  const pctNum = (won, total) => total ? Math.round((won / total) * 100) : 0;
+  const dirLabel = { C:"Cruzado", M:"Medio", P:"Paralelo" };
+  const depthLabel = { P:"Profundo", M:"Medio", C:"Corto" };
+  const targetLabel = { T:"T", C:"Cuerpo", A:"Abierto" };
+  const dominantKey = (obj) => {
+    const entries = Object.entries(obj || {}).sort((a,b)=> (b[1]||0) - (a[1]||0));
+    return entries[0] && entries[0][1] > 0 ? entries[0][0] : null;
+  };
+  const bestBucket = (buckets) => {
+    const labels = { b02:"0-2 golpes", b35:"3-5 golpes", b68:"6-8 golpes", b9p:"9+ golpes" };
+    const key = dominantKey(buckets || {});
+    return key ? labels[key] : "Sin patrón claro";
+  };
+  const formatPctPlain = (won, total) => `${pctNum(won, total)}%`;
+  const meter = (label, value, tone="cyan") => `
+    <div class="dashboardMeterRow">
+      <div class="dashboardMeterHead"><span>${escapeHtml(label)}</span><strong>${value}%</strong></div>
+      <div class="dashboardMeterTrack ${tone}"><span style="width:${Math.max(4, Math.min(100, value || 0))}%"></span></div>
+    </div>`;
+  const compareMetric = (label, aValue, bValue, suffix="%") => {
+    const total = Math.max(1, aValue + bValue);
+    const leftPct = Math.max(8, Math.round((aValue / total) * 100));
+    const rightPct = Math.max(8, 100 - leftPct);
+    const leftText = suffix ? `${aValue}${suffix}` : `${aValue}`;
+    const rightText = suffix ? `${bValue}${suffix}` : `${bValue}`;
+    return `
+      <div class="compareMetric">
+        <div class="compareMetricHead">
+          <span>${escapeHtml(label)}</span>
+          <strong>${escapeHtml(playerName("A"))} ${leftText} · ${rightText} ${escapeHtml(playerName("B"))}</strong>
+        </div>
+        <div class="compareTrack">
+          <span class="left" style="width:${leftPct}%"></span>
+          <span class="right" style="width:${rightPct}%"></span>
+        </div>
+      </div>`;
+  };
+
+  const a = stats.A || {};
+  const b = stats.B || {};
+  const serveA = pctNum(a.servePointsWon || 0, a.servePoints || 0);
+  const serveB = pctNum(b.servePointsWon || 0, b.servePoints || 0);
+  const returnA = pctNum(a.returnPointsWon || 0, a.returnPoints || 0);
+  const returnB = pctNum(b.returnPointsWon || 0, b.returnPoints || 0);
+  const pressureA = pctNum((a.pressureDeuceWon || 0) + (a.pressure3030Won || 0), (a.pressureDeucePlayed || 0) + (a.pressure3030Played || 0));
+  const pressureB = pctNum((b.pressureDeuceWon || 0) + (b.pressure3030Won || 0), (b.pressureDeucePlayed || 0) + (b.pressure3030Played || 0));
+  const pointShareA = pctNum(a.pointsWon || 0, totalPoints);
+  const pointShareB = pctNum(b.pointsWon || 0, totalPoints);
+  const leadName = (a.pointsWon || 0) === (b.pointsWon || 0)
+    ? "Partido equilibrado"
+    : ((a.pointsWon || 0) > (b.pointsWon || 0) ? playerName("A") : playerName("B"));
+
+  if (sub) sub.textContent = `${modeLabel} · ${state.matchPoints.length} puntos analizados · ${matches.length} partidos guardados`;
+
   intro.innerHTML = [
-    { label:"Cuenta activa", value: escapeHtml(session?.name || "Invitado"), note: `${escapeHtml(session?.plan || "Local")}` },
+    { label:"Cuenta activa", value: escapeHtml(session?.name || "Invitado"), note: `${escapeHtml(session?.plan || "Local")} · sistema visual pro` },
     { label:"Modo actual", value: escapeHtml(modeLabel), note: `${state.matchPoints.length} puntos registrados` },
     { label:"Activos en workspace", value: `${profiles.length} jugadores`, note: `${matches.length} partidos guardados` }
-  ].map(card => `<div class="dashboardHeroCard"><strong>${card.label}</strong><span>${card.value}</span><small>${card.note}</small></div>`).join("");
+  ].map(card => `<div class="dashboardHeroCard dataPanel"><strong>${card.label}</strong><span>${card.value}</span><small>${card.note}</small></div>`).join("");
 
   const buildCard = (pid) => {
     const p = stats[pid] || {};
+    const pointsShare = pctNum(p.pointsWon || 0, totalPoints);
+    const servePct = pctNum(p.servePointsWon || 0, p.servePoints || 0);
+    const returnPct = pctNum(p.returnPointsWon || 0, p.returnPoints || 0);
+    const pressurePct = pctNum((p.pressureDeuceWon || 0) + (p.pressure3030Won || 0), (p.pressureDeucePlayed || 0) + (p.pressure3030Played || 0));
+    const bpConvPct = pctNum(p.bpConv || 0, p.bpOpp || 0);
+    const balance = (p.winners || 0) - (p.ue || 0);
+    const domDir = dominantKey(p.strokeDir || {});
+    const domDepth = dominantKey(p.strokeDepth || {});
+    const domTarget = dominantKey(p.serveTargets || {});
+    const playerTone = pid === "A" ? "cyan" : "gold";
     return `
-      <article class="dashboardCard">
-        <h3>${escapeHtml(playerName(pid))}</h3>
+      <article class="dashboardCard dataPanel dataPlayerCard player-${pid}">
+        <div class="dashboardCardHead">
+          <div>
+            <span class="dataEyebrow">Perfil en juego</span>
+            <h3>${escapeHtml(playerName(pid))}</h3>
+          </div>
+          <div class="playerImpact ${pointsShare >= 50 ? 'positive' : 'neutral'}">${pointsShare}%</div>
+        </div>
         <div class="dashboardKpis">
           <div class="dashboardKpi"><strong>${p.pointsWon || 0}</strong><span>Puntos ganados</span></div>
-          <div class="dashboardKpi"><strong>${fmtPct(p.servePointsWon || 0, p.servePoints || 0)}</strong><span>Puntos al saque</span></div>
-          <div class="dashboardKpi"><strong>${fmtPct(p.returnPointsWon || 0, p.returnPoints || 0)}</strong><span>Puntos al resto</span></div>
+          <div class="dashboardKpi"><strong>${formatPctPlain(p.servePointsWon || 0, p.servePoints || 0)}</strong><span>Puntos al saque</span></div>
+          <div class="dashboardKpi"><strong>${formatPctPlain(p.returnPointsWon || 0, p.returnPoints || 0)}</strong><span>Puntos al resto</span></div>
           <div class="dashboardKpi"><strong>${p.winners || 0} / ${p.ue || 0}</strong><span>Winners / UE</span></div>
+        </div>
+        <div class="dashboardMeters">
+          ${meter("Saque", servePct, playerTone)}
+          ${meter("Resto", returnPct, playerTone)}
+          ${meter("Presión", pressurePct, playerTone)}
+        </div>
+        <div class="dashboardTags">
+          <span class="dataTag ${playerTone}">Dirección: ${escapeHtml(dirLabel[domDir] || "Sin lectura")}</span>
+          <span class="dataTag ${playerTone}">Profundidad: ${escapeHtml(depthLabel[domDepth] || "Sin lectura")}</span>
+          <span class="dataTag ${playerTone}">Saque: ${escapeHtml(targetLabel[domTarget] || "Sin lectura")}</span>
+          <span class="dataTag ${playerTone}">Break: ${bpConvPct}% conv.</span>
+          <span class="dataTag ${playerTone}">${escapeHtml(bestBucket(p.rallyWonBuckets || {}))}</span>
+          <span class="dataTag ${balance >= 0 ? 'green' : 'red'}">Balance ofensivo ${balance >= 0 ? '+' : ''}${balance}</span>
         </div>
       </article>`;
   };
-  grid.innerHTML = buildCard("A") + buildCard("B");
+
+  grid.innerHTML = `
+    <article class="dashboardCompareCard dataPanel">
+      <div class="dashboardCompareHead">
+        <div>
+          <span class="dataEyebrow">Lectura rápida</span>
+          <h3>Ventaja comparativa actual</h3>
+        </div>
+        <div class="dashboardCompareBadge">${escapeHtml(leadName)}</div>
+      </div>
+      <div class="dashboardCompareMetrics">
+        ${compareMetric("Total de puntos", a.pointsWon || 0, b.pointsWon || 0, "")}
+        ${compareMetric("Rendimiento al saque", serveA, serveB)}
+        ${compareMetric("Rendimiento al resto", returnA, returnB)}
+        ${compareMetric("Gestión de presión", pressureA, pressureB)}
+      </div>
+    </article>
+    ${buildCard("A")}
+    ${buildCard("B")}`;
+
   const ra = getPlayerRecommendations("A", stats);
   const rb = getPlayerRecommendations("B", stats);
   recs.innerHTML = `
-    <article class="recommendCard"><h4>Foco para ${escapeHtml(playerName("A"))}</h4><ul class="recommendList">${ra.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></article>
-    <article class="recommendCard"><h4>Foco para ${escapeHtml(playerName("B"))}</h4><ul class="recommendList">${rb.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></article>`;
+    <article class="recommendCard dataPanel">
+      <span class="dataEyebrow">Plan táctico</span>
+      <h4>Foco para ${escapeHtml(playerName("A"))}</h4>
+      <ul class="recommendList">${ra.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
+    </article>
+    <article class="recommendCard dataPanel">
+      <span class="dataEyebrow">Plan táctico</span>
+      <h4>Foco para ${escapeHtml(playerName("B"))}</h4>
+      <ul class="recommendList">${rb.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>
+    </article>`;
 }
 function updateWorkspaceBar(){
   const session = getSession();
@@ -4648,17 +4760,33 @@ function renderAccountModal(){
   const matches = getSavedMatches();
   const current = getCurrentAccount();
   const mode = session?.isDemo ? "Modo demo" : "Cuenta local";
+  const created = current?.createdAt ? new Date(current.createdAt).toLocaleDateString('es-ES') : "Sesión local";
   box.innerHTML = `
-    <div class="dashboardKpis">
-      <div class="dashboardKpi"><strong>${escapeHtml(session?.name || "Sin sesión")}</strong><span>Workspace</span></div>
-      <div class="dashboardKpi"><strong>${escapeHtml(session?.plan || mode)}</strong><span>Plan visual</span></div>
-      <div class="dashboardKpi"><strong>${profiles.length}</strong><span>Perfiles guardados</span></div>
-      <div class="dashboardKpi"><strong>${matches.length}</strong><span>Partidos guardados</span></div>
-    </div>
-    <div class="helpNote" style="margin-top:12px;">
-      <strong>Estado actual:</strong> ${escapeHtml(mode)}.<br>
-      <strong>Email:</strong> ${escapeHtml(session?.email || "No disponible")}.<br>
-      <strong>Nota:</strong> Esta implementación separa datos por usuario en el propio dispositivo y deja preparada la lógica para conectar autenticación y base de datos reales más adelante.
+    <div class="accountBrandPanel dataPanel">
+      <div class="accountBrandHeader">
+        <div>
+          <span class="dataEyebrow">Workspace activo</span>
+          <h3>${escapeHtml(session?.name || "Sin sesión")}</h3>
+          <p class="accountBrandLead">Entorno preparado para seguimiento profesional, perfiles de jugador y evolución visual del producto.</p>
+        </div>
+        <span class="accountStateBadge">${escapeHtml(session?.plan || mode)}</span>
+      </div>
+      <div class="dashboardKpis accountSummaryGrid">
+        <div class="dashboardKpi"><strong>${escapeHtml(session?.plan || mode)}</strong><span>Plan visual</span></div>
+        <div class="dashboardKpi"><strong>${profiles.length}</strong><span>Perfiles guardados</span></div>
+        <div class="dashboardKpi"><strong>${matches.length}</strong><span>Partidos guardados</span></div>
+        <div class="dashboardKpi"><strong>${(state.matchPoints || []).length}</strong><span>Puntos en sesión</span></div>
+      </div>
+      <div class="accountMetaChips">
+        <span class="dataTag cyan">${escapeHtml(mode)}</span>
+        <span class="dataTag gold">${escapeHtml(session?.email || "Sin email")}</span>
+        <span class="dataTag">Alta: ${escapeHtml(created)}</span>
+      </div>
+      <div class="helpNote accountNote">
+        <strong>Estado actual:</strong> ${escapeHtml(mode)}.<br>
+        <strong>Cuenta:</strong> ${escapeHtml(session?.email || "No disponible")}.<br>
+        <strong>Nota:</strong> Esta implementación separa datos por usuario en el propio dispositivo y deja preparada la lógica para conectar autenticación y base de datos reales más adelante.
+      </div>
     </div>`;
 }
 function openDashboard(){ renderDashboard(); openModal("#dashboardModal"); }
