@@ -246,21 +246,30 @@
   </div>
 </nav>
 
-<section class="workspaceBar" id="workspaceBar">
-  <div class="workspaceIdentity">
-    <span class="workspaceEyebrow">WORKSPACE</span>
-    <div class="workspaceName" id="workspaceName">Modo local</div>
+<section class="workspaceBar workspaceCompact" id="workspaceBar" data-expanded="false">
+  <div class="workspaceSummaryRow">
+    <div class="workspaceIdentityCompact">
+      <span class="workspaceEyebrow">WORKSPACE</span>
+      <div class="workspaceName" id="workspaceName">Modo local</div>
+    </div>
+    <button class="workspaceToggle" id="workspaceToggle" type="button" aria-expanded="false" aria-controls="workspaceExpand" aria-label="Mostrar opciones del workspace">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 9l6 6 6-6"/>
+      </svg>
+    </button>
+  </div>
+  <div class="workspaceExpand" id="workspaceExpand" hidden>
     <div class="workspaceSub" id="workspaceSub">Cuenta sin cargar</div>
-  </div>
-  <div class="workspaceStats hidden" aria-hidden="true">
-    <div class="workspaceStat"><strong id="workspacePlayers">0</strong><span>Jugadores</span></div>
-    <div class="workspaceStat"><strong id="workspaceMatches">0</strong><span>Partidos</span></div>
-    <div class="workspaceStat"><strong id="workspacePoints">0</strong><span>Puntos</span></div>
-  </div>
-  <div class="workspaceActions">
-    <button class="chip" id="btnDashboard" type="button">Panel Pro</button>
-    <button class="chip" id="btnPlayerLibrary" type="button">Jugadores</button>
-    <button class="chip primary" id="btnAccount" type="button">Cuenta</button>
+    <div class="workspaceStats hidden" aria-hidden="true">
+      <div class="workspaceStat"><strong id="workspacePlayers">0</strong><span>Jugadores</span></div>
+      <div class="workspaceStat"><strong id="workspaceMatches">0</strong><span>Partidos</span></div>
+      <div class="workspaceStat"><strong id="workspacePoints">0</strong><span>Puntos</span></div>
+    </div>
+    <div class="workspaceActions">
+      <button class="chip" id="btnDashboard" type="button">Panel Pro</button>
+      <button class="chip" id="btnPlayerLibrary" type="button">Jugadores</button>
+      <button class="chip primary" id="btnAccount" type="button">Cuenta</button>
+    </div>
   </div>
 </section>
 

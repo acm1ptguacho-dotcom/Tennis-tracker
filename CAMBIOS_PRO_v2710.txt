@@ -1,0 +1,9 @@
+v2.71 - Ajuste solicitado antes de Fase 2
+
+Cambios principales:
+- Workspace reducido a una sola línea en reposo.
+- Añadido botón de flecha para desplegar/plegar opciones del workspace.
+- Los botones Panel Pro, Jugadores y Cuenta ahora aparecen dentro del desplegable.
+- La línea principal del workspace muestra solo identidad compacta + control de despliegue.
+- Al abrir Panel Pro, Jugadores o Cuenta, el workspace vuelve a plegarse automáticamente.
+- Mantiene compatibilidad con el ocultado general del workspace al usar el menú derecho.

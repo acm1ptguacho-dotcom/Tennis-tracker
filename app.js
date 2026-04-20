@@ -4778,6 +4778,26 @@ function handleLogout(){
     closeAccount();
   });
 }
+function setWorkspaceExpanded(expanded){
+  const bar = $("#workspaceBar");
+  const panel = $("#workspaceExpand");
+  const toggle = $("#workspaceToggle");
+  if (!bar || !panel || !toggle) return;
+  const isExpanded = !!expanded;
+  bar.dataset.expanded = isExpanded ? "true" : "false";
+  toggle.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+  panel.hidden = false;
+}
+function initWorkspaceToggle(){
+  const toggle = $("#workspaceToggle");
+  if (!toggle || toggle.dataset.bound === "1") return;
+  toggle.dataset.bound = "1";
+  setWorkspaceExpanded(false);
+  toggle.addEventListener("click", ()=>{
+    const expanded = $("#workspaceBar")?.dataset.expanded === "true";
+    setWorkspaceExpanded(!expanded);
+  });
+}
 function initProfessionalShell(){
   switchAuthTab("login");
   $("#tabAuthLogin")?.addEventListener("click", ()=> switchAuthTab("login"));
@@ -4790,9 +4810,9 @@ function initProfessionalShell(){
   ["signupName","signupEmail","signupPassword"].forEach(id=> $("#"+id)?.addEventListener("keydown", (e)=>{ if (e.key === "Enter") handleSignup(); }));
   $("#btnOpenHelpFromAuth")?.addEventListener("click", openHelp);
   $("#btnOpenLegalFromAuth")?.addEventListener("click", openLegal);
-  $("#btnDashboard")?.addEventListener("click", openDashboard);
-  $("#btnPlayerLibrary")?.addEventListener("click", openPlayers);
-  $("#btnAccount")?.addEventListener("click", openAccount);
+  $("#btnDashboard")?.addEventListener("click", ()=>{ setWorkspaceExpanded(false); openDashboard(); });
+  $("#btnPlayerLibrary")?.addEventListener("click", ()=>{ setWorkspaceExpanded(false); openPlayers(); });
+  $("#btnAccount")?.addEventListener("click", ()=>{ setWorkspaceExpanded(false); openAccount(); });
   $("#btnDashboardMenu")?.addEventListener("click", ()=> openFromMenu(()=>openDashboard()));
   $("#btnPlayerLibraryMenu")?.addEventListener("click", ()=> openFromMenu(()=>openPlayers()));
   $("#btnAccountMenu")?.addEventListener("click", ()=> openFromMenu(()=>openAccount()));
@@ -4829,6 +4849,7 @@ function initProfessionalShell(){
     if (!modal) return;
     modal.addEventListener("click", (e)=>{ if (e.target === modal) closeModal(mid); });
   });
+  initWorkspaceToggle();
   updateWorkspaceBar();
   renderPlayerLibrary();
   renderAccountModal();

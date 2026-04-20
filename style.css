@@ -3630,3 +3630,166 @@ body.isAuthenticated.railHidden #workspaceBar{
     font-size:18px;
   }
 }
+
+/* ===== v2.71 Workspace compact row with expandable actions ===== */
+#workspaceBar.workspaceCompact{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:0;
+  padding:10px 12px;
+  border-radius:22px;
+  max-height:none;
+  overflow:visible;
+}
+#workspaceBar.workspaceCompact .workspaceSummaryRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-width:0;
+}
+#workspaceBar.workspaceCompact .workspaceIdentity,
+#workspaceBar.workspaceCompact .workspaceIdentityCompact{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+#workspaceBar.workspaceCompact .workspaceEyebrow{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:26px;
+  padding:0 11px;
+  border-radius:999px;
+  border:1px solid rgba(57,213,255,.18);
+  background:linear-gradient(180deg, rgba(57,213,255,.12), rgba(57,213,255,.04));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+  white-space:nowrap;
+}
+#workspaceBar.workspaceCompact .workspaceName{
+  font-size:clamp(20px, 2.5vw, 30px);
+  line-height:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#workspaceBar.workspaceCompact .workspaceToggle{
+  flex:0 0 auto;
+  width:42px;
+  height:42px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 10px 22px rgba(0,0,0,.14);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text);
+  transition:transform 220ms var(--ease), background 220ms var(--ease), border-color 220ms var(--ease), box-shadow 220ms var(--ease);
+}
+#workspaceBar.workspaceCompact .workspaceToggle svg{
+  width:18px;
+  height:18px;
+  stroke:currentColor;
+  stroke-width:2.2;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  transition:transform 220ms var(--ease);
+}
+#workspaceBar.workspaceCompact .workspaceToggle:active{transform:scale(.97);}
+#workspaceBar.workspaceCompact .workspaceExpand{
+  display:grid;
+  grid-template-rows:0fr;
+  overflow:hidden;
+  opacity:0;
+  transform:translateY(-4px);
+  transition:grid-template-rows 260ms var(--ease), opacity 220ms var(--ease), transform 260ms var(--ease), margin-top 260ms var(--ease);
+  min-width:0;
+}
+#workspaceBar.workspaceCompact .workspaceExpandInner,
+#workspaceBar.workspaceCompact .workspaceExpand > *{
+  min-height:0;
+}
+#workspaceBar.workspaceCompact[data-expanded="true"] .workspaceExpand{
+  grid-template-rows:1fr;
+  opacity:1;
+  transform:translateY(0);
+  margin-top:10px;
+}
+#workspaceBar.workspaceCompact[data-expanded="true"] .workspaceToggle{
+  border-color:rgba(57,213,255,.28);
+  background:linear-gradient(180deg, rgba(57,213,255,.18), rgba(57,213,255,.08));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 0 0 1px rgba(57,213,255,.10), 0 14px 28px rgba(0,0,0,.18);
+}
+#workspaceBar.workspaceCompact[data-expanded="true"] .workspaceToggle svg{
+  transform:rotate(180deg);
+}
+#workspaceBar.workspaceCompact .workspaceSub{
+  margin:0 0 10px;
+  font-size:12px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#workspaceBar.workspaceCompact .workspaceActions{
+  width:100%;
+  justify-content:stretch;
+}
+#workspaceBar.workspaceCompact .workspaceActions .chip{
+  flex:1 1 calc(33.333% - 8px);
+  min-width:0;
+}
+body.isAuthenticated.railHidden #workspaceBar.workspaceCompact{
+  transform:translateY(-12px);
+  opacity:0;
+  max-height:0;
+  padding-top:0;
+  padding-bottom:0;
+  border-color:transparent;
+  pointer-events:none;
+}
+
+@media (max-width: 700px){
+  #workspaceBar.workspaceCompact{
+    padding:9px 10px;
+    border-radius:20px;
+  }
+  #workspaceBar.workspaceCompact .workspaceSummaryRow{
+    gap:8px;
+  }
+  #workspaceBar.workspaceCompact .workspaceIdentity,
+  #workspaceBar.workspaceCompact .workspaceIdentityCompact{
+    gap:8px;
+  }
+  #workspaceBar.workspaceCompact .workspaceEyebrow{
+    min-height:24px;
+    padding:0 9px;
+    font-size:9px;
+    letter-spacing:.18em;
+  }
+  #workspaceBar.workspaceCompact .workspaceName{
+    font-size:clamp(18px, 7vw, 24px);
+  }
+  #workspaceBar.workspaceCompact .workspaceToggle{
+    width:38px;
+    height:38px;
+    border-radius:14px;
+  }
+  #workspaceBar.workspaceCompact .workspaceSub{
+    font-size:11px;
+    margin-bottom:8px;
+  }
+  #workspaceBar.workspaceCompact .workspaceActions{
+    padding:4px;
+    gap:6px;
+    border-radius:18px;
+  }
+  #workspaceBar.workspaceCompact .workspaceActions .chip{
+    min-height:44px;
+    padding:12px 8px;
+    font-size:13px;
+    border-radius:16px;
+  }
+}
