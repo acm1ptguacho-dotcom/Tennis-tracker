@@ -1,0 +1,12 @@
+v2.72.1 — Ajuste de Fase 2 solo con pista refinada
+
+Cambios aplicados:
+- Base recuperada desde v2.71.1
+- Se añadieron únicamente mejoras visuales de la pista
+- No se incluyeron cambios en botones laterales
+- No se incluyeron microanimaciones de Fase 2
+- Marco de pista con acabado más premium
+- Superficie de pista con mejor profundidad visual
+- Etiquetas de jugadores más limpias y elegantes
+- Zonas y celdas con mejor integración visual
+- Caché actualizada para evitar mezcla con versiones anteriores
