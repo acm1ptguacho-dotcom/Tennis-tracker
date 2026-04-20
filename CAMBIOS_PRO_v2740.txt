@@ -1,0 +1,10 @@
+Tennis Direction Tracker — v2.74 Fresh Palette
+
+Cambios principales:
+- nueva paleta general menos azul y más fresca
+- fondo principal en verde petróleo / grafito con luces menta y arena
+- cabecera superior recoloreada
+- workspace y paneles con nuevo acabado cromático
+- modales y acceso recoloreados con la nueva identidad
+- pista refinada conservada sobre la nueva paleta
+- caché actualizada a 2740
