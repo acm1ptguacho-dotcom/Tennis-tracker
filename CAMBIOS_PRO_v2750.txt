@@ -1,0 +1,9 @@
+Tennis Direction Tracker — v2.75
+
+Cambios principales:
+- Nueva paleta más viva y fresca con acentos menta, ámbar y coral sobre base ciruela/grafito.
+- Rediseño de cuadros y ventanas hacia un estilo más tipo banner, más limpio y profesional.
+- Eliminación visual de bordes en paneles, modales, workspace, tarjetas y menús.
+- Cabecera, workspace y modales con superficies más fluidas, suaves y mejor integradas.
+- Ajustes de sombras, fondos y scrollbars para mantener profundidad sin contornos duros.
+- Versión de caché actualizada a v2750.
