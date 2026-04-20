@@ -1,0 +1,9 @@
+Tennis Direction Tracker — v2.80
+
+Cambios principales:
+- Aplicada a la versión v2.79 la paleta de colores de la versión v2.76.
+- Se han mantenido todas las funciones nuevas de la última versión.
+- No se ha modificado la estructura ni la disposición, solo el colorido general.
+- Restaurados fondos oscuros ciruela/grafito con acentos menta, ámbar y coral.
+- Ajustados también los nuevos elementos de v2.79 para que encajen con esa paleta.
+- Caché actualizada a v2800.

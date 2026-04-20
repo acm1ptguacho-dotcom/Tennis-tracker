@@ -8,8 +8,8 @@ const CACHE = "tennis-tracker-web-v2.79-important-points";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=2790",
-  "./app.js?v=2790",
+  "./style.css?v=2800",
+  "./app.js?v=2800",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",
