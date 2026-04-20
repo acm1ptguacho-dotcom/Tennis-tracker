@@ -5196,3 +5196,194 @@ body::before{
     border-radius:16px !important;
   }
 }
+
+
+/* ===== v2.78 ATP soft ash background + stronger contrast ===== */
+:root{
+  --bg0:#eef2f7;
+  --bg1:#e7edf6;
+  --card:#f7f9fc;
+  --card2:#f1f5fa;
+  --stroke:rgba(14,27,77,.10);
+  --stroke2:rgba(14,27,77,.14);
+  --text:#0E1B4D;
+  --muted:#4D5A78;
+  --header-shell: rgba(7,18,119,.96);
+  --header-line: rgba(18,100,196,.14);
+  --panelShadow:0 14px 28px rgba(24,51,108,.08);
+}
+
+body{
+  color:var(--text) !important;
+  background:
+    radial-gradient(1000px 420px at 15% -10%, rgba(28,91,194,.06), transparent 60%),
+    radial-gradient(1000px 460px at 85% 0%, rgba(91,142,221,.05), transparent 58%),
+    linear-gradient(180deg, #eef2f7 0%, #e9eff6 45%, #e7edf6 100%) !important;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 26%);
+  z-index:-1;
+}
+
+.topbarInline::before{
+  background:
+    linear-gradient(180deg, rgba(5,12,114,.98) 0%, rgba(5,12,114,.95) 66%, rgba(5,12,114,.84) 84%, rgba(5,12,114,.18) 100%) !important;
+  box-shadow:0 10px 20px rgba(9,30,86,.10), inset 0 -1px 0 rgba(255,255,255,.04) !important;
+}
+.topbarInline::after{
+  background:linear-gradient(180deg, rgba(18,100,196,.10), rgba(18,100,196,0)) !important;
+}
+
+.mainLeft, .mainRight, .section, .panelLike, .savedItem, .historyGame,
+.timelineCard, .dashboardHeroCard, .dashboardCard, .recommendCard,
+.helpCard, .helpNote, .legalPane, .onboardingStep,
+.profileCard, .profileEditor, .playerModeBtn,
+#workspaceBar.workspaceBar, #workspaceBar.workspaceCompact, #workspaceBar .workspaceActions,
+.modalCard, .modalCard.solid, .statusBar,
+.kpi, .workspaceStat, .radioRow, .savedList, .historyGameBody,
+.playerSheetBanner, .playerProfileSheet,
+.playerCard input, .chartsCard .chartsFilters, .chartsCard .chartsLegend .legendItem,
+#accountModal #accountSummary, #accountModal .panelLike,
+#playersModal .profileList .profileItem,
+#dashboardModal .dashboardHeroCard, #dashboardModal .dashboardCard, #dashboardModal .recommendCard,
+#helpModal .helpCard, #helpModal .helpNote, #legalModal .legalPane,
+.courtWrap, .sideRail, .toolbarRail{
+  color:var(--text) !important;
+  border:1px solid rgba(14,27,77,.08) !important;
+  background:linear-gradient(180deg, #f7f9fc, #f1f5fa) !important;
+  box-shadow:0 12px 24px rgba(24,51,108,.06), inset 0 1px 0 rgba(255,255,255,.96) !important;
+}
+
+#workspaceBar.workspaceCompact,
+#workspaceBar.workspaceBar,
+#workspaceBar .workspaceActions,
+.modalBody.premiumModalBody,
+#playersModal .playersModalBody,
+.playerCard input,
+.courtWrap{
+  background:linear-gradient(180deg, #f7f9fc, #f1f5fa) !important;
+}
+
+.courtWrap.courtRow .court, .court{
+  border:1px solid rgba(14,27,77,.08) !important;
+  background:linear-gradient(180deg, #f8fbff, #f4f8fc) !important;
+  box-shadow:0 18px 32px rgba(24,51,108,.07), inset 0 1px 0 rgba(255,255,255,.96) !important;
+}
+
+.chip, .btn, .segTab, .historyGameChevron,
+#workspaceBar.workspaceCompact .workspaceToggle,
+#workspaceBar .workspaceActions .chip,
+#playersModal .playerSheetMeta span,
+#playersModal .profileMeta span,
+#playersModal .playerHistoryBadge{
+  color:#0E1B4D !important;
+  border:1px solid rgba(14,27,77,.12) !important;
+  background:linear-gradient(180deg, #ffffff, #f4f8fd) !important;
+  box-shadow:0 6px 14px rgba(24,51,108,.05), inset 0 1px 0 rgba(255,255,255,.98) !important;
+}
+
+.chip.primary,
+.segTab.active,
+#workspaceBar.workspaceCompact .workspaceEyebrow,
+#playersModal .playerSheetEyebrow,
+#workspaceBar.workspaceCompact[data-expanded="true"] .workspaceToggle{
+  color:#ffffff !important;
+  border-color:#0a2a88 !important;
+  background:linear-gradient(180deg, #0e4db3, #0a2a88) !important;
+  box-shadow:0 8px 18px rgba(10,42,136,.16), inset 0 1px 0 rgba(255,255,255,.16) !important;
+}
+
+.iconChip{
+  color:#ffffff !important;
+  border:1px solid rgba(255,255,255,.16) !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.08)) !important;
+}
+
+.muted,
+#workspaceBar .workspaceSub,
+.workspaceSub,
+.savedItemMeta,
+.historyGameMeta,
+.modalSub,
+.recommendCard p,
+.dashboardNote,
+.timelineSub,
+.label,
+.small,
+.toolLabel,
+.toolSub,
+.playerMeta,
+.profileMeta,
+.eyebrowSub,
+.sectionSub,
+.statLabel,
+.kpiLabel,
+.workspaceLabel,
+.formHint,
+.emptyState,
+#dashboardModal .muted,
+#playersModal .muted,
+#accountModal .muted,
+#helpModal .muted,
+#legalModal .muted{
+  color:#4D5A78 !important;
+}
+
+h1,h2,h3,h4,h5,h6,
+.modalTitle,
+.workspaceName,
+.savedItemTitle,
+.historyGameTitle,
+.playerSheetName,
+.profileName,
+.kpiValue,
+.statValue,
+#dashboardModal .dashboardCard h3,
+#dashboardModal .recommendCard h4,
+#helpModal .helpCard h3,
+#legalModal .legalPane h3,
+.toolBtnLabel,
+.sideRailLabel{
+  color:#0E1B4D !important;
+}
+
+.modalHead{
+  color:#ffffff !important;
+  background:linear-gradient(180deg, #0d2a84, #06176a) !important;
+}
+.modalHead .muted,
+.modalHead .modalSub,
+.modalHead .modalTitle,
+.modalHead .chip{
+  color:#ffffff !important;
+}
+
+.drawer{
+  color:#ffffff !important;
+  background:linear-gradient(180deg, #0d2a84, #06176a) !important;
+}
+.drawerBody .menuItem{
+  color:#ffffff !important;
+}
+
+#playersModal .playerSheetPhoto,
+#playersModal .profileAvatar,
+#playersModal .profilePhotoPreview{
+  background:linear-gradient(180deg, #edf3fb, #e2ebf8) !important;
+  border:1px solid rgba(14,27,77,.10) !important;
+}
+#playersModal .playerSheetPhoto span,
+#playersModal .profileAvatar span,
+#playersModal .profilePhotoPreview span{
+  color:#0E1B4D !important;
+}
+
+.modalBody.premiumModalBody::-webkit-scrollbar-thumb,
+.profileList::-webkit-scrollbar-thumb,
+#playersModal .playerLibraryShell::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg, rgba(14,77,179,.34), rgba(10,42,136,.18)) !important;
+}

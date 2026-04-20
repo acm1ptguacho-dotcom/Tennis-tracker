@@ -1,0 +1,9 @@
+Tennis Direction Tracker — v2.78
+
+Cambios principales:
+- Fondo general cambiado de blanco puro a gris ceniza azulado suave.
+- Mejora global del contraste en textos y etiquetas.
+- Paneles y cajas ligeramente más oscuros que el fondo para separarse mejor.
+- Textos principales reforzados en azul marino oscuro y secundarios en gris azulado.
+- Estilo ATP mantenido, pero con más profundidad visual y mejor lectura.
+- Caché actualizada a v2780.

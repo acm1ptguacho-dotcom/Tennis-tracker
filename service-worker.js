@@ -4,12 +4,12 @@
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
 
-const CACHE = "tennis-tracker-web-v2.77-atp-clean-skin";
+const CACHE = "tennis-tracker-web-v2.78-atp-soft-ash";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=2770",
-  "./app.js?v=2770",
+  "./style.css?v=2780",
+  "./app.js?v=2780",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",
