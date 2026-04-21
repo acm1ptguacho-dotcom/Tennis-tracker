@@ -1,0 +1,9 @@
+Tennis Direction Tracker — v2.85
+
+Cambios principales:
+- Reubicadas las direcciones de saque con lógica T/C/W correcta: T más cerca del centro, C en la zona intermedia y W más abierta.
+- Aplicado en ambos lados de saque y en ambas mitades de la pista.
+- Ajustadas las cuadrículas tácticas a la pista de individuales real, sin invadir los pasillos de dobles.
+- Ajustadas también las zonas de saque a las cajas de servicio reales de individuales.
+- Actualizada la ayuda visual de saque a T/C/W.
+- Compatibilidad mantenida con registros antiguos que usaban A = Abierto.

@@ -808,7 +808,7 @@ function updateZoneHint(){
   if (!p) return;
 
   if (p.phase==="serve"){
-    if (hint) hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca T/C/A`;
+    if (hint) hint.textContent = `SAQUE (${p.server}) · lado ${p.side} · toca T/C/W`;
     if (phase) phase.textContent = "SAQUE";
   } else {
     if (hint) hint.textContent = `RALLY · toca dirección (P/M/C)`;
@@ -852,12 +852,13 @@ function flashTap(el, evt){
 
 /** ZONE LAYER **/
 const Z = {
-  // Rally grids: 3x3 for top half (B side) and bottom half (A side)
-  rallyTop: { left:.16, top:.08, width:.68, height:.40 },    // B side (upper half)
-  rallyBottom: { left:.16, top:.52, width:.68, height:.40 }, // A side (lower half)
-  // Serve boxes region (two boxes), each split into T/C/A horizontally.
-  serveTop: { left:.22, top:.285, width:.56, height:.18 },     // B receiving service boxes (upper service line area)
-  serveBottom: { left:.22, top:.535, width:.56, height:.18 },  // A receiving boxes (lower service line area)
+  // Singles-only playable areas aligned to the inner singles lines of the court image.
+  // Rally grids span each half from baseline to net, constrained to singles sidelines.
+  rallyTop: { left:.26, top:.11, width:.48, height:.39 },    // B side (upper singles half)
+  rallyBottom: { left:.26, top:.50, width:.48, height:.39 }, // A side (lower singles half)
+  // Serve boxes span the actual service boxes only, constrained to singles sidelines.
+  serveTop: { left:.26, top:.235, width:.48, height:.265 },     // B receiving service boxes (upper service boxes)
+  serveBottom: { left:.26, top:.50, width:.48, height:.265 },   // A receiving service boxes (lower service boxes)
 };
 
 
@@ -1166,13 +1167,13 @@ function buildZones(){
     return btn;
   });
 
-  // Serve: represent two boxes (left/right) split into T/C/A (3 columns each) => total 6 columns, 1 row
+  // Serve: represent two boxes (left/right) split into T/C/W (3 columns each) => total 6 columns, 1 row
   const serveCell = (side, box, target, label)=>{
     const btn=document.createElement("div");
     btn.className="serveCell";
     btn.dataset.side=side;
     btn.dataset.box=box; // 0 left, 1 right
-    btn.dataset.target=target; // T/C/A
+    btn.dataset.target=target; // T/C/W
     btn.innerHTML=`<span class="zoneTxt">SAQUE</span>`;
     btn.style.fontSize="11px";
     btn.style.fontWeight="1100";
@@ -1184,13 +1185,17 @@ function buildZones(){
   makeGrid("serveTop", Z.serveTop, 1, 6, (r,c)=>{
     const box = c<3 ? 0 : 1;
     const idx = c%3;
-    const target = idx===0 ? "T" : (idx===1 ? "C" : "A");
+    const target = box===0
+      ? (idx===0 ? "W" : (idx===1 ? "C" : "T"))
+      : (idx===0 ? "T" : (idx===1 ? "C" : "W"));
     return serveCell("top", box, target, "SAQUE");
   });
   makeGrid("serveBottom", Z.serveBottom, 1, 6, (r,c)=>{
     const box = c<3 ? 0 : 1;
     const idx = c%3;
-    const target = idx===0 ? "T" : (idx===1 ? "C" : "A");
+    const target = box===0
+      ? (idx===0 ? "W" : (idx===1 ? "C" : "T"))
+      : (idx===0 ? "T" : (idx===1 ? "C" : "W"));
     return serveCell("bottom", box, target, "SAQUE");
   });
 
@@ -3172,7 +3177,7 @@ function computeStats(points){
     const serveEvs = evs.filter(e=>e && e.type==="serve" && e.player===server);
     const hasDF = serveEvs.some(e=>e?.meta?.df || /\sDF$/.test(String(e.code||"")));
     const hasFault = serveEvs.some(e=>e?.meta?.fault || /\sF$/.test(String(e.code||"")));
-    const targetEvs = serveEvs.filter(e=>e?.meta?.target && ["T","C","A"].includes(e.meta.target));
+    const targetEvs = serveEvs.filter(e=>e?.meta?.target && ["T","C","W","A"].includes(e.meta.target));
     const serveIn = targetEvs.length>0 && !hasDF;
     const firstFaulted = hasFault || hasDF; // DF implica 1º fallado aunque no lo registre
 
@@ -4969,7 +4974,7 @@ function renderDashboard(){
   const pctNum = (won, total) => total ? Math.round((won / total) * 100) : 0;
   const dirLabel = { C:"Cruzado", M:"Medio", P:"Paralelo" };
   const depthLabel = { P:"Profundo", M:"Medio", C:"Corto" };
-  const targetLabel = { T:"T", C:"Cuerpo", A:"Abierto" };
+  const targetLabel = { T:"T", C:"Cuerpo", W:"Abierto", A:"Abierto" };
   const dominantKey = (obj) => {
     const entries = Object.entries(obj || {}).sort((a,b)=> (b[1]||0) - (a[1]||0));
     return entries[0] && entries[0][1] > 0 ? entries[0][0] : null;
