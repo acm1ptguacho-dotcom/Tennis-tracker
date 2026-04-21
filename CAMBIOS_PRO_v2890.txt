@@ -1,0 +1,8 @@
+Tennis Direction Tracker — v2.89
+
+Cambios principales:
+- Flechas de rally: ahora caen en la posición exacta donde el usuario toca dentro de cada zona táctica.
+- Se mantiene la clasificación por zona (9 zonas), pero el dibujo usa coordenada real del toque.
+- Corregida otra vez la colocación de T/C/W al rotar la pista.
+- La banda inferior muestra T/C/W en el borde inferior cuando corresponde y cambia correctamente con la rotación.
+- Caché actualizada a v2890.

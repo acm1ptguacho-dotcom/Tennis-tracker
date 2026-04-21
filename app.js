@@ -911,6 +911,20 @@ function centerNormFromEl(el){
   return { x: clamp01(x), y: clamp01(y) };
 }
 
+function pointNormFromEvent(evt, el){
+  if (!evt || !el) return centerNormFromEl(el);
+  const court = $("#court");
+  if (!court) return centerNormFromEl(el);
+  const cr = court.getBoundingClientRect();
+  const xClient = (typeof evt.clientX === "number") ? evt.clientX : ((evt.touches && evt.touches[0] && evt.touches[0].clientX) || (evt.changedTouches && evt.changedTouches[0] && evt.changedTouches[0].clientX));
+  const yClient = (typeof evt.clientY === "number") ? evt.clientY : ((evt.touches && evt.touches[0] && evt.touches[0].clientY) || (evt.changedTouches && evt.changedTouches[0] && evt.changedTouches[0].clientY));
+  if (typeof xClient !== "number" || typeof yClient !== "number") return centerNormFromEl(el);
+  let x = (xClient - cr.left) / cr.width;
+  let y = (yClient - cr.top) / cr.height;
+  if (state.ui && state.ui.rotated){ x = 1 - x; y = 1 - y; }
+  return { x: clamp01(x), y: clamp01(y) };
+}
+
 function clamp01(v){ return Math.max(0, Math.min(1, v)); }
 
 function extendToOpponentBaseline(from, through, opponent){
@@ -932,12 +946,12 @@ function lastArrowEnd(p){
   return p.arrows[p.arrows.length-1].to;
 }
 
-function recordArrow({hitter, throughEl, isServe=false}){
+function recordArrow({hitter, throughEl, throughNorm=null, isServe=false}){
   const p = state.point;
   if (!p) return;
   if (!p.arrows) p.arrows = [];
 
-  const through = centerNormFromEl(throughEl);
+  const through = throughNorm || centerNormFromEl(throughEl);
   let from = null;
 
   if (isServe){
@@ -1151,7 +1165,7 @@ function buildZones(){
     btn.dataset.row=r;
     btn.dataset.col=c;
     btn.innerHTML = `<span class="zoneTxt">${(r===0?"P":(r===1?"M":"C"))}</span>`;
-    btn.addEventListener("click",(e)=>{ flashTap(btn,e); onRallyTap("top", r, c, btn); });
+    btn.addEventListener("click",(e)=>{ flashTap(btn,e); onRallyTap("top", r, c, btn, e); });
     return btn;
   });
 
@@ -1163,7 +1177,7 @@ function buildZones(){
     btn.dataset.row=r;
     btn.dataset.col=c;
     btn.innerHTML = `<span class="zoneTxt">${(r===0?"C":(r===1?"M":"P"))}</span>`;
-    btn.addEventListener("click",(e)=>{ flashTap(btn,e); onRallyTap("bottom", r, c, btn); });
+    btn.addEventListener("click",(e)=>{ flashTap(btn,e); onRallyTap("bottom", r, c, btn, e); });
     return btn;
   });
 
@@ -1188,7 +1202,9 @@ function buildZones(){
     const target = box===0
       ? (idx===0 ? "W" : (idx===1 ? "C" : "T"))
       : (idx===0 ? "T" : (idx===1 ? "C" : "W"));
-    return serveCell("top", box, target);
+    const cell = serveCell("top", box, target);
+    cell.dataset.grid = "serveTop";
+    return cell;
   });
   makeGrid("serveBottom", Z.serveBottom, 1, 6, (r,c)=>{
     const box = c<3 ? 0 : 1;
@@ -1197,7 +1213,7 @@ function buildZones(){
       ? (idx===0 ? "W" : (idx===1 ? "C" : "T"))
       : (idx===0 ? "T" : (idx===1 ? "C" : "W"));
     const cell = serveCell("bottom", box, target);
-    cell.classList.add("serveCellBottomLabel");
+    cell.dataset.grid = "serveBottom";
     return cell;
   });
 
@@ -1208,9 +1224,10 @@ function buildZones(){
 
 function updateServeLabelPlacement(){
   const rotated = !!(state.ui && state.ui.rotated);
-  const visualBottomSide = rotated ? "top" : "bottom";
   document.querySelectorAll("#serveTop .serveCell, #serveBottom .serveCell").forEach(el=>{
-    el.classList.toggle("serveCellBottomLabel", el.dataset.side === visualBottomSide);
+    const grid = el.dataset.grid || "";
+    const shouldSitAtBottom = rotated ? (grid === "serveTop") : (grid === "serveBottom");
+    el.classList.toggle("serveCellBottomLabel", shouldSitAtBottom);
   });
 }
 
@@ -1342,7 +1359,7 @@ function onServeTap(side, box, target, el){
   persist();
 }
 
-function onRallyTap(side, row, col, el){
+function onRallyTap(side, row, col, el, evt){
   if (state.matchFinished) return;
   if (!state.point) initPoint();
   if (state.point.phase!=="rally") return;
@@ -1367,11 +1384,11 @@ function onRallyTap(side, row, col, el){
     type:"rally",
     player: hitter,
     code: `${prefix}${code}`,
-    meta: { side, row, col },
+    meta: { side, row, col, touch: pointNormFromEvent(evt, el) },
     elId: elIdForRally(side, row, col)
   };
   state.point.events.push(ev);
-  try { recordArrow({ hitter, throughEl: el, isServe: false }); } catch(e){ console.error(e); }
+  try { recordArrow({ hitter, throughEl: el, throughNorm: pointNormFromEvent(evt, el), isServe: false }); } catch(e){ console.error(e); }
   renderPoint();
   applyTapConstraints();
   persist();
