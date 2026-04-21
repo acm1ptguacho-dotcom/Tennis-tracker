@@ -6093,3 +6093,78 @@ h1,h2,h3,h4,h5,h6,
 @media (max-width:700px){
   #playersModal .formGrid{grid-template-columns:1fr !important;}
 }
+
+
+/* ===== v2.84 fix new player inputs + visible close X ===== */
+#playersModal .profileEditor .formGrid,
+#playersModal .profileEditor .playerFormStack{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:14px !important;
+}
+#playersModal .profileEditor label{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  gap:8px !important;
+}
+#playersModal .profileEditor label > span{
+  display:block !important;
+  color:#fffaf7 !important;
+  font-weight:900 !important;
+  font-size:14px !important;
+  line-height:1.2 !important;
+}
+#playersModal .profileEditor input,
+#playersModal .profileEditor select,
+#playersModal .profileEditor textarea{
+  display:block !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+  width:100% !important;
+  min-height:52px !important;
+  border:1px solid rgba(255,255,255,.14) !important;
+  background:linear-gradient(180deg, rgba(18,10,28,.60), rgba(18,10,28,.36)) !important;
+  color:#fffaf7 !important;
+  opacity:1 !important;
+  -webkit-text-fill-color:#fffaf7 !important;
+}
+#playersModal .profileEditor textarea{min-height:110px !important;}
+#playersModal .modalHead .modalCloseX,
+#historyModal .modalHead .modalCloseX,
+#dashboardModal .modalHead .modalCloseX,
+#accountModal .modalHead .modalCloseX,
+#helpModal .modalHead .modalCloseX,
+#legalModal .modalHead .modalCloseX,
+#languageModal .modalHead .modalCloseX,
+#infoModal .modalHead .modalCloseX,
+#surfaceModal .modalHead .modalCloseX,
+#gameModeModal .modalHead .modalCloseX,
+#saveLoadModal .modalHead .modalCloseX,
+#analyticsModal .modalHead .modalCloseX,
+#statsModal .modalHead .modalCloseX,
+#chartsModal .modalHead .modalCloseX,
+#exportModal .modalHead .modalCloseX,
+#confirmModal .modalHead .modalCloseX{
+  color:#fffaf7 !important;
+  font-size:0 !important;
+}
+#playersModal .modalHead .modalCloseX .svgIcon,
+#historyModal .modalHead .modalCloseX .svgIcon,
+#dashboardModal .modalHead .modalCloseX .svgIcon,
+#accountModal .modalHead .modalCloseX .svgIcon,
+#helpModal .modalHead .modalCloseX .svgIcon,
+#legalModal .modalHead .modalCloseX .svgIcon,
+#languageModal .modalHead .modalCloseX .svgIcon,
+#infoModal .modalHead .modalCloseX .svgIcon,
+#surfaceModal .modalHead .modalCloseX .svgIcon,
+#gameModeModal .modalHead .modalCloseX .svgIcon,
+#saveLoadModal .modalHead .modalCloseX .svgIcon,
+#analyticsModal .modalHead .modalCloseX .svgIcon,
+#statsModal .modalHead .modalCloseX .svgIcon,
+#chartsModal .modalHead .modalCloseX .svgIcon,
+#exportModal .modalHead .modalCloseX .svgIcon,
+#confirmModal .modalHead .modalCloseX .svgIcon{
+  stroke:#fffaf7 !important;
+  opacity:1 !important;
+}

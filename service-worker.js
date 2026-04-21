@@ -8,8 +8,8 @@ const CACHE = "tennis-tracker-web-v2.83-players-form-fix";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=2830",
-  "./app.js?v=2830",
+  "./style.css?v=2840",
+  "./app.js?v=2840",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",

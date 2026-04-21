@@ -1,0 +1,8 @@
+Tennis Direction Tracker — v2.84
+
+Cambios principales:
+- Reparado el formulario de Nuevo jugador: los campos vuelven a mostrarse y se pueden editar.
+- La traducción ya no elimina los inputs del formulario al cambiar etiquetas.
+- Botones de cierre con X visibles en modales.
+- Refuerzo visual de inputs y textareas en Jugadores para mejorar compatibilidad en móvil.
+- Caché actualizada a v2840.
