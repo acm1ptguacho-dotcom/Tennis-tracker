@@ -1,0 +1,8 @@
+Tennis Direction Tracker — v2.83
+
+Cambios principales:
+- Corregido el formulario de Nuevo jugador para que los campos se vean y sean editables.
+- Reforzada la apariencia oscura del Perfil del jugador para evitar el fondo blanco.
+- Los botones de cabecera de modales se fuerzan a estilo X al abrir cada modal.
+- Ajustado el enfoque al campo Nombre cuando no hay perfiles y se abre Jugadores.
+- Versión de caché actualizada a v2830.

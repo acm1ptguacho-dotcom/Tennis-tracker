@@ -1687,6 +1687,7 @@ function openModal(id){
   const el = $(modalSel(id));
   if (el){
     el.classList.remove("hidden");
+    upgradeCloseButtons(el);
     document.body.classList.add("modalOpen");
   }
 }
@@ -5160,6 +5161,7 @@ function openPlayers(){
   const hasProfiles = getPlayerProfiles().length > 0;
   switchPlayerLibraryMode(hasProfiles ? "choose" : "create");
   openModal("#playersModal");
+  if (!hasProfiles) setTimeout(()=> $("#profileName")?.focus(), 30);
 }
 function closePlayers(){ closeModal("#playersModal"); }
 function openAccount(){ renderAccountModal(); openModal("#accountModal"); }
