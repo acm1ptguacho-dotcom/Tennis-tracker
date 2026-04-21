@@ -1,0 +1,7 @@
+Tennis Direction Tracker — v2.88
+
+Cambios principales:
+- Corregida de nuevo la colocación de T/C/W al rotar la pista.
+- Las etiquetas de saque ahora se colocan en el borde visual correcto según la orientación actual.
+- Al abrir Historial, los filtros se muestran plegados por defecto para ganar altura útil.
+- Cache actualizada a v2880.

@@ -1203,6 +1203,15 @@ function buildZones(){
 
   renderZonesVisibility();
   applyTapConstraints();
+  updateServeLabelPlacement();
+}
+
+function updateServeLabelPlacement(){
+  const rotated = !!(state.ui && state.ui.rotated);
+  const visualBottomSide = rotated ? "top" : "bottom";
+  document.querySelectorAll("#serveTop .serveCell, #serveBottom .serveCell").forEach(el=>{
+    el.classList.toggle("serveCellBottomLabel", el.dataset.side === visualBottomSide);
+  });
 }
 
 function serveRequiredBox(neededSide, sideLabel){
@@ -1271,6 +1280,7 @@ function renderZonesVisibility(){
   if (serveBottom) serveBottom.classList.toggle("hidden", !showServe);
   if (rallyTop) rallyTop.classList.toggle("hidden", showServe);
   if (rallyBottom) rallyBottom.classList.toggle("hidden", showServe);
+  updateServeLabelPlacement();
 }
 
 function zoneCodeFromTap(side, row, col){
@@ -1750,7 +1760,7 @@ function renderPlayerModal(){
 
 function openHistory(){
   state.ui = state.ui || {};
-  if (typeof state.ui.historyFiltersOpen === "undefined") state.ui.historyFiltersOpen = false;
+  state.ui.historyFiltersOpen = false;
   renderHistory();
   applyHistoryFiltersVisibility();
   openModal("#historyModal");

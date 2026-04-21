@@ -6218,3 +6218,22 @@ h1,h2,h3,h4,h5,h6,
     padding:13px 14px;
   }
 }
+
+
+/* ===== v2.88 serve label placement polish ===== */
+#serveTop .serveCell .zoneTxt,
+#serveBottom .serveCell .zoneTxt{
+  margin-top:10px;
+  margin-bottom:0;
+}
+#serveTop .serveCell.serveCellBottomLabel,
+#serveBottom .serveCell.serveCellBottomLabel,
+.serveCellBottomLabel{
+  align-items:flex-end !important;
+}
+#serveTop .serveCell.serveCellBottomLabel .zoneTxt,
+#serveBottom .serveCell.serveCellBottomLabel .zoneTxt,
+.serveCellBottomLabel .zoneTxt{
+  margin-top:0 !important;
+  margin-bottom:10px !important;
+}
