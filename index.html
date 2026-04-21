@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2860" />
+<link rel="stylesheet" href="style.css?v=2870" />
 </head>
 <body>
 
@@ -692,13 +692,21 @@
       <button class="chip" id="btnCloseHistory" type="button" data-i18n="close">Cerrar</button>
     </div>
 
-    <div class="filters">
-      <label>Servidor <select id="fServer"><option value="">Todos</option><option value="A">A</option><option value="B">B</option></select></label>
-      <label>Lado <select id="fSide"><option value="">Todos</option><option value="SD">SD</option><option value="SV">SV</option></select></label>
-      <label>Ganador <select id="fWinner"><option value="">Todos</option><option value="A">A</option><option value="B">B</option></select></label>
-      <label>Final <select id="fEnd"><option value="">Todos</option><option value="Winner">Winner</option><option value="Error no forzado">Error no forzado</option><option value="Error forzado">Error forzado</option><option value="Doble falta">Doble falta</option></select></label>
-      <label class="search">Buscar patrón <input id="fSearch" placeholder="Ej: A-CP - B-CP"></label>
-      <label class="search">Buscar marcador <input id="fScoreSearch" placeholder="Ej: 40-30 o 30-40"></label>
+    <div class="historyFiltersShell">
+      <button class="historyFiltersToggle" id="btnHistoryFiltersToggle" type="button" aria-expanded="false">
+        <span class="historyFiltersToggleText">Filtros de puntos</span>
+        <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="filters historyFiltersPanel hidden" id="historyFiltersPanel">
+        <label>Servidor <select id="fServer"><option value="">Todos</option><option value="A">A</option><option value="B">B</option></select></label>
+        <label>Lado <select id="fSide"><option value="">Todos</option><option value="SD">SD</option><option value="SV">SV</option></select></label>
+        <label>Ganador <select id="fWinner"><option value="">Todos</option><option value="A">A</option><option value="B">B</option></select></label>
+        <label>Final <select id="fEnd"><option value="">Todos</option><option value="Winner">Winner</option><option value="Error no forzado">Error no forzado</option><option value="Error forzado">Error forzado</option><option value="Doble falta">Doble falta</option></select></label>
+        <label class="search">Buscar patrón <input id="fSearch" placeholder="Ej: A-CP - B-CP"></label>
+        <label class="search">Buscar marcador <input id="fScoreSearch" placeholder="Ej: 40-30 o 30-40"></label>
+      </div>
     </div>
 
     <div class="historyHint muted">Toca un punto para ver el diagrama en pantalla completa y reproducirlo.</div>
@@ -1285,7 +1293,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=2860"></script>
+<script src="app.js?v=2870"></script>
 
 </body>
 </html>

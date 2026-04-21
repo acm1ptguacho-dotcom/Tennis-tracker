@@ -1,0 +1,9 @@
+Tennis Direction Tracker — v2.87
+
+Cambios principales:
+- Corrección de las etiquetas T/C/W del lado inferior: ahora aparecen en el borde inferior de la zona de saque.
+- El comportamiento sigue siendo correcto al rotar la pista, porque las etiquetas se invierten visualmente con la rotación del court.
+- Se mantiene la lógica correcta T cerca de la T, C intermedia y W abierta.
+- Historial del partido: los filtros se han movido a una ventana desplegable para liberar espacio vertical.
+- Nueva flecha de despliegue para abrir/cerrar filtros de puntos.
+- Versionado de caché actualizado a v2870.

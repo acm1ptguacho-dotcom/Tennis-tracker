@@ -1196,7 +1196,9 @@ function buildZones(){
     const target = box===0
       ? (idx===0 ? "W" : (idx===1 ? "C" : "T"))
       : (idx===0 ? "T" : (idx===1 ? "C" : "W"));
-    return serveCell("bottom", box, target);
+    const cell = serveCell("bottom", box, target);
+    cell.classList.add("serveCellBottomLabel");
+    return cell;
   });
 
   renderZonesVisibility();
@@ -1747,10 +1749,31 @@ function renderPlayerModal(){
 
 
 function openHistory(){
+  state.ui = state.ui || {};
+  if (typeof state.ui.historyFiltersOpen === "undefined") state.ui.historyFiltersOpen = false;
   renderHistory();
+  applyHistoryFiltersVisibility();
   openModal("#historyModal");
 }
 function closeHistory(){ closeModal("#historyModal"); }
+
+function applyHistoryFiltersVisibility(){
+  state.ui = state.ui || {};
+  const expanded = !!state.ui.historyFiltersOpen;
+  const panel = $("#historyFiltersPanel");
+  const btn = $("#btnHistoryFiltersToggle");
+  if (panel) panel.classList.toggle("hidden", !expanded);
+  if (btn){
+    btn.setAttribute("aria-expanded", expanded ? "true" : "false");
+    btn.classList.toggle("isOpen", expanded);
+  }
+}
+function toggleHistoryFilters(){
+  state.ui = state.ui || {};
+  state.ui.historyFiltersOpen = !state.ui.historyFiltersOpen;
+  applyHistoryFiltersVisibility();
+  persist();
+}
 
 function openPointViewer(point){
   if (!point) return;
@@ -4498,6 +4521,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
     on(id,"input", renderHistory);
     on(id,"change", renderHistory);
   });
+  on("btnHistoryFiltersToggle","click", toggleHistoryFilters);
 
   // analytics filters
   ["aView","aMin","aIncludeServe","aMoment"].forEach(id=>{

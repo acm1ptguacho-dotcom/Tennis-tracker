@@ -6168,3 +6168,53 @@ h1,h2,h3,h4,h5,h6,
   stroke:#fffaf7 !important;
   opacity:1 !important;
 }
+
+
+/* ===== v2.87 serve labels + history filters toggle ===== */
+#serveBottom .serveCell,
+.serveCellBottomLabel{
+  align-items:flex-end;
+}
+#serveBottom .serveCell .zoneTxt,
+.serveCellBottomLabel .zoneTxt{
+  margin-top:0;
+  margin-bottom:10px;
+}
+
+.historyFiltersShell{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.historyFiltersToggle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  width:100%;
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.10);
+  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+  color:var(--text);
+  font-weight:1000;
+  letter-spacing:.03em;
+  box-shadow:0 10px 24px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.historyFiltersToggle .svgIcon{
+  width:20px;
+  height:20px;
+  flex:0 0 20px;
+  transition:transform 220ms cubic-bezier(.2,.9,.2,1);
+}
+.historyFiltersToggle.isOpen .svgIcon{
+  transform:rotate(180deg);
+}
+.historyFiltersPanel{
+  margin-top:0;
+}
+@media (max-width: 700px){
+  .historyFiltersToggle{
+    padding:13px 14px;
+  }
+}
