@@ -1,0 +1,8 @@
+Tennis Direction Tracker — v2.86
+
+Cambios principales:
+- Se restauran las zonas de saque al tamaño y posición previos a v2.85.
+- Las zonas de saque vuelven a mostrar las letras T, C y W.
+- La lógica T/C/W se mantiene correcta: T cerca del centro, C intermedia y W abierta en ambos lados.
+- La cuadrícula táctica de rally se ensancha ligeramente para acercarse más a las líneas de individuales sin invadir dobles.
+- Caché actualizada a v2860.

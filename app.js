@@ -854,11 +854,11 @@ function flashTap(el, evt){
 const Z = {
   // Singles-only playable areas aligned to the inner singles lines of the court image.
   // Rally grids span each half from baseline to net, constrained to singles sidelines.
-  rallyTop: { left:.26, top:.11, width:.48, height:.39 },    // B side (upper singles half)
-  rallyBottom: { left:.26, top:.50, width:.48, height:.39 }, // A side (lower singles half)
-  // Serve boxes span the actual service boxes only, constrained to singles sidelines.
-  serveTop: { left:.26, top:.235, width:.48, height:.265 },     // B receiving service boxes (upper service boxes)
-  serveBottom: { left:.26, top:.50, width:.48, height:.265 },   // A receiving service boxes (lower service boxes)
+  rallyTop: { left:.25, top:.11, width:.50, height:.39 },    // B side (upper singles half)
+  rallyBottom: { left:.25, top:.50, width:.50, height:.39 }, // A side (lower singles half)
+  // Serve boxes restored to the original service-box bounds used before v2.85.
+  serveTop: { left:.22, top:.285, width:.56, height:.18 },     // B receiving service boxes (upper service line area)
+  serveBottom: { left:.22, top:.535, width:.56, height:.18 },  // A receiving boxes (lower service line area)
 };
 
 
@@ -1167,16 +1167,16 @@ function buildZones(){
     return btn;
   });
 
-  // Serve: represent two boxes (left/right) split into T/C/W (3 columns each) => total 6 columns, 1 row
-  const serveCell = (side, box, target, label)=>{
+  // Serve: represent two boxes (left/right) split into W/C/T or T/C/W so T is always nearest the T, W the most open.
+  const serveCell = (side, box, target)=>{
     const btn=document.createElement("div");
     btn.className="serveCell";
     btn.dataset.side=side;
     btn.dataset.box=box; // 0 left, 1 right
     btn.dataset.target=target; // T/C/W
-    btn.innerHTML=`<span class="zoneTxt">SAQUE</span>`;
-    btn.style.fontSize="11px";
-    btn.style.fontWeight="1100";
+    btn.innerHTML=`<span class="zoneTxt">${target}</span>`;
+    btn.style.fontSize="18px";
+    btn.style.fontWeight="1200";
     btn.addEventListener("click",(e)=>{ flashTap(btn,e); onServeTap(side, box, target, btn); });
     return btn;
   };
@@ -1188,7 +1188,7 @@ function buildZones(){
     const target = box===0
       ? (idx===0 ? "W" : (idx===1 ? "C" : "T"))
       : (idx===0 ? "T" : (idx===1 ? "C" : "W"));
-    return serveCell("top", box, target, "SAQUE");
+    return serveCell("top", box, target);
   });
   makeGrid("serveBottom", Z.serveBottom, 1, 6, (r,c)=>{
     const box = c<3 ? 0 : 1;
@@ -1196,7 +1196,7 @@ function buildZones(){
     const target = box===0
       ? (idx===0 ? "W" : (idx===1 ? "C" : "T"))
       : (idx===0 ? "T" : (idx===1 ? "C" : "W"));
-    return serveCell("bottom", box, target, "SAQUE");
+    return serveCell("bottom", box, target);
   });
 
   renderZonesVisibility();
