@@ -6259,3 +6259,98 @@ h1,h2,h3,h4,h5,h6,
   margin-top:0 !important;
   margin-bottom:10px !important;
 }
+
+
+/* ===== v2.90 polish: serve labels, finish menu spacing, stats toggle, chart zoom, blended seams ===== */
+.serveCell{display:flex;justify-content:center;align-items:flex-start;}
+.serveCell .zoneTxt{
+  position:absolute;
+  left:50%;
+  top:10px;
+  bottom:auto;
+  margin:0 !important;
+  transform:translateX(-50%);
+  z-index:3;
+  opacity:.98;
+}
+.court.rotated .serveCell .zoneTxt{ transform:translateX(-50%) rotate(180deg); }
+.serveCell.serveCellBottomLabel .zoneTxt,
+#serveTop .serveCell.serveCellBottomLabel .zoneTxt,
+#serveBottom .serveCell.serveCellBottomLabel .zoneTxt{
+  top:auto !important;
+  bottom:10px !important;
+}
+.serveCell.disabled{ opacity:.18; filter:saturate(.72); }
+.serveCell.disabled .zoneTxt{ opacity:.72; }
+
+.finishMenuCard{ padding-top:18px; }
+.finishMenuClose{
+  right:14px;
+  top:14px;
+  width:48px;
+  height:48px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  z-index:5;
+}
+.finishMenuTabs{
+  padding:12px 64px 12px 6px;
+  margin-top:8px;
+}
+@media (max-width:700px){
+  .finishMenuTabs{ padding-right:74px; }
+}
+
+.statsActions{ flex-wrap:nowrap; gap:8px; }
+.statsPdfBtn{ display:inline-flex; align-items:center; gap:8px; min-width:auto; padding:10px 12px; }
+.statsPdfBtn .svgIcon{ width:16px; height:16px; }
+.statsFiltersShell{ display:flex; flex-direction:column; gap:10px; }
+.statsFiltersToggle{
+  width:46px; height:46px; padding:0; display:grid; place-items:center;
+}
+.statsFiltersToggle .svgIcon{ width:20px; height:20px; transition:transform 220ms cubic-bezier(.2,.9,.2,1); }
+.statsFiltersToggle.isOpen .svgIcon{ transform:rotate(180deg); }
+#statsFiltersPanel.hidden{ display:none !important; }
+@media (max-width:700px){
+  .statsActions{ gap:6px; }
+  .statsPdfBtn span{ font-size:12px; }
+}
+
+.chartsZoomCard{ width:min(1100px, calc(100vw - 18px)); max-height:92vh; display:flex; flex-direction:column; overflow:hidden; }
+.chartsZoomBody{ padding:12px; overflow:auto; }
+.chartWrapZoom{ overflow:auto; }
+#chartsZoomCanvas.zoom{ min-height:340px; max-height:none; height:auto; }
+
+.topbarInline{ margin-bottom:2px !important; }
+.topbarInline::before{
+  height:calc(100% + 14px) !important;
+  border-bottom:1px solid rgba(69,216,255,.08) !important;
+}
+.topbarInline::after{
+  bottom:-14px !important;
+  height:18px !important;
+  background:linear-gradient(180deg, rgba(61,46,84,.58), rgba(61,46,84,0)) !important;
+}
+.mainLeft,.mainRight,.diagramArea,.section{ background:transparent !important; box-shadow:none !important; border-color:transparent !important; }
+.courtWrap.courtRow{
+  position:relative;
+  padding:4px 6px 6px;
+  border-radius:28px;
+  background:transparent !important;
+}
+.courtWrap.courtRow::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:28px;
+  pointer-events:none;
+  background:
+    radial-gradient(120% 110% at 0% 0%, rgba(57,224,196,.08), transparent 46%),
+    radial-gradient(120% 110% at 100% 100%, rgba(255,178,30,.07), transparent 50%),
+    linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,0));
+}
+.courtWrap.courtRow .court,
+.courtRail{ position:relative; z-index:1; }
+.courtRail{ background:transparent !important; box-shadow:none !important; }
+.quickLbl{ text-shadow:0 2px 8px rgba(0,0,0,.22); }

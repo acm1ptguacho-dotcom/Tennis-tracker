@@ -816,13 +816,20 @@
         <div class="modalTitle">Estadísticas del partido</div>
         <div class="muted" id="statsSub">—</div>
       </div>
-      <div class="modalActions">
-        <button class="chip" id="btnStatsPDF" type="button">PDF</button>
+      <div class="modalActions statsActions">
+        <button class="chip statsPdfBtn" id="btnStatsPDF" type="button" aria-label="Exportar PDF" title="Exportar PDF">
+          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h6l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M14 3v6h6"></path></svg>
+          <span>PDF</span>
+        </button>
+        <button class="chip statsFiltersToggle" id="btnStatsFiltersToggle" type="button" aria-expanded="false" aria-label="Mostrar filtros" title="Mostrar filtros">
+          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
         <button class="chip" id="btnCloseStats" type="button" data-i18n="close">Cerrar</button>
       </div>
     </div>
 
-    <div class="filters statsFilters">
+    <div class="statsFiltersShell">
+      <div class="filters statsFilters hidden" id="statsFiltersPanel">
       <label>Rango
         <select id="sRange">
           <option value="all" selected>Partido</option>
@@ -870,6 +877,7 @@
           <option value="side">Por lado (SD/SV)</option>
         </select>
       </label>
+      </div>
     </div>
 
     <div class="statsBody" id="statsBody"></div>
@@ -905,7 +913,7 @@
     </div>
 
     <div class="chartsBody">
-      <div class="chartWrap">
+      <div class="chartWrap" id="chartsWrap" title="Toca para ampliar el gráfico">
         <canvas id="chartsCanvas" class="chartCanvas" width="800" height="320"></canvas>
       </div>
       <div class="stripWrap">
@@ -913,6 +921,23 @@
         <div class="pointStrip" id="pointStrip"></div>
         <div class="chartsScores" id="chartsScores"></div>
         <div class="muted stripHint">Tip: círculo = saque · cuadrado = resto · borde dorado = punto importante</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="chartsZoomModal">
+  <div class="modalCard solid chartsZoomCard">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle">Gráfico ampliado</div>
+        <div class="muted" id="chartsZoomSub">Vista ajustada a pantalla</div>
+      </div>
+      <button class="chip" id="btnCloseChartsZoom" type="button" data-i18n="close">Cerrar</button>
+    </div>
+    <div class="chartsZoomBody">
+      <div class="chartWrap chartWrapZoom" id="chartsZoomWrap">
+        <canvas id="chartsZoomCanvas" class="chartCanvas zoom" width="900" height="420"></canvas>
       </div>
     </div>
   </div>

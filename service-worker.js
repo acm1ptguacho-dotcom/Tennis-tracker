@@ -8,8 +8,8 @@ const CACHE = "tennis-tracker-web-v2.89-exact-touch-serve-labels";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=2890",
-  "./app.js?v=2890",
+  "./style.css?v=2900",
+  "./app.js?v=2900",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",

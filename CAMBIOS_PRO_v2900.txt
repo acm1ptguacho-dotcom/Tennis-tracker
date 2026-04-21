@@ -1,0 +1,9 @@
+Tennis Direction Tracker — v2.90
+
+Cambios principales:
+- Fix adicional de T/C/W al rotar la pista, actualizando la colocación de etiquetas en tiempo real.
+- Etiquetas de saque reposicionadas con anclaje absoluto para evitar desapariciones visuales.
+- Menú de acciones del punto: la X ya no se superpone con el botón Avanzado.
+- Estadísticas: filtros ahora en panel desplegable con flecha, manteniendo PDF + flecha + X en cabecera.
+- Gráficos: tocar el gráfico abre una vista ampliada ajustada a pantalla.
+- Pulido visual de uniones y capas para reducir cortes entre cabecera, pista y rail lateral.

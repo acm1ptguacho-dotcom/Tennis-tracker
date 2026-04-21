@@ -1802,6 +1802,24 @@ function toggleHistoryFilters(){
   persist();
 }
 
+function applyStatsFiltersVisibility(){
+  state.ui = state.ui || {};
+  const expanded = !!state.ui.statsFiltersOpen;
+  const panel = $("#statsFiltersPanel");
+  const btn = $("#btnStatsFiltersToggle");
+  if (panel) panel.classList.toggle("hidden", !expanded);
+  if (btn){
+    btn.setAttribute("aria-expanded", expanded ? "true" : "false");
+    btn.classList.toggle("isOpen", expanded);
+  }
+}
+function toggleStatsFilters(){
+  state.ui = state.ui || {};
+  state.ui.statsFiltersOpen = !state.ui.statsFiltersOpen;
+  applyStatsFiltersVisibility();
+  persist();
+}
+
 function openPointViewer(point){
   if (!point) return;
   state.ui = state.ui || {};
@@ -1928,8 +1946,10 @@ function openAnalytics(){
 function closeAnalytics(){ closeModal("#analyticsModal"); }
 
 function openStats(){
+  state.ui = state.ui || {};
+  state.ui.statsFiltersOpen = false;
   openModal("#statsModal");
-  try{ buildStatsSetOptions(); renderStats(); }
+  try{ buildStatsSetOptions(); renderStats(); applyStatsFiltersVisibility(); }
   catch(e){ console.error(e); toast("Error al abrir estadísticas"); }
 }
 function closeStats(){ closeModal("#statsModal"); }
@@ -2179,6 +2199,13 @@ function renderCharts(){
 
   const canvas = $("#chartsCanvas");
   if (!canvas) return;
+  const chartWrap = canvas.parentElement;
+  if (chartWrap && !chartWrap.dataset.zoomBound){
+    chartWrap.dataset.zoomBound = "1";
+    chartWrap.style.cursor = "zoom-in";
+    chartWrap.title = state.lang==="en" ? "Tap to expand chart" : "Toca para ampliar el gráfico";
+    chartWrap.addEventListener("click", ()=> openChartsZoom());
+  }
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
@@ -2383,6 +2410,88 @@ function renderCharts(){
 
 
 
+
+function renderChartsZoom(){
+  const canvas = $("#chartsZoomCanvas");
+  if (!canvas) return;
+  const sel = $("#chartsPlayer");
+  const persp = sel ? sel.value : ((state.ui && state.ui.chartPlayer) || "A");
+  const points = Array.isArray(state.matchPoints) ? state.matchPoints.slice() : [];
+  const dpr = window.devicePixelRatio || 1;
+  const wrap = canvas.parentElement;
+  const rectW = Math.max(320, wrap ? wrap.getBoundingClientRect().width : 320);
+  const rectH = Math.max(320, Math.min(window.innerHeight * 0.58, 520));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const padL=42, padR=14, padT=16, padB=48;
+  const steps = Math.max(1, points.length - 1);
+  const usableW = Math.max(220, rectW - padL - padR);
+  const step = Math.max(10, usableW / steps);
+  const W = padL + padR + (step * steps);
+  const H = rectH;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const cs = getComputedStyle(document.documentElement);
+  const cAccent2 = (cs.getPropertyValue("--accent2") || "#39D5FF").trim();
+  const cGood = (cs.getPropertyValue("--good") || "#2EE59D").trim();
+  const cBad = (cs.getPropertyValue("--bad") || "#FF3B5C").trim();
+  ctx.clearRect(0,0,W,H);
+  if (!points.length){
+    ctx.fillStyle = "rgba(255,255,255,.78)";
+    ctx.font = "700 14px Inter, system-ui, sans-serif";
+    ctx.fillText(state.lang==="en" ? "No points yet." : "No hay puntos todavía.", 16, 36);
+    return;
+  }
+  const ys=[]; const wonFlags=[];
+  let y=0;
+  for (let i=0;i<points.length;i++){
+    const won = isPointWonBy(points[i], persp);
+    wonFlags.push(won);
+    y += won ? 1 : -1;
+    ys.push(y);
+  }
+  const minY = Math.min(0, ...ys), maxY = Math.max(0, ...ys);
+  const yPad = (maxY-minY) < 6 ? 3 : 2;
+  const yMin = minY - yPad, yMax = maxY + yPad;
+  const plotH = H - padT - padB;
+  const xAt = i => padL + i*step;
+  const yAt = v => padT + (1 - ((v - yMin)/(yMax - yMin))) * plotH;
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "rgba(255,255,255,.10)";
+  for (let g=0; g<=5; g++){
+    const yy = padT + (g/5)*plotH;
+    ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(W-padR,yy); ctx.stroke();
+  }
+  const y0 = yAt(0);
+  ctx.strokeStyle = "rgba(255,255,255,.22)";
+  ctx.beginPath(); ctx.moveTo(padL,y0); ctx.lineTo(W-padR,y0); ctx.stroke();
+  ctx.save();
+  ctx.lineWidth = 3.2;
+  ctx.strokeStyle = cAccent2;
+  ctx.shadowColor = cAccent2;
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ys.forEach((v,i)=>{ const xx=xAt(i), yy=yAt(v); if(i===0) ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);});
+  ctx.stroke();
+  ctx.restore();
+  ys.forEach((v,i)=>{
+    const xx=xAt(i), yy=yAt(v), won=wonFlags[i];
+    ctx.beginPath();
+    ctx.fillStyle = won ? cGood : cBad;
+    ctx.shadowColor = won ? cGood : cBad;
+    ctx.shadowBlur = 10;
+    ctx.arc(xx,yy,4.8,0,Math.PI*2); ctx.fill();
+  });
+}
+function openChartsZoom(){
+  renderCharts();
+  openModal("#chartsZoomModal");
+  setTimeout(renderChartsZoom, 30);
+}
+function closeChartsZoom(){ closeModal("#chartsZoomModal"); }
 
 /** FINISH MENU (tennis ball) **/
 function refreshFinishMenuMode(){
@@ -4221,6 +4330,8 @@ function applyRotation(){
   }
   const lbl = $("#lblRotateCourt");
   if (lbl) lbl.textContent = state.ui.rotated ? "Restaurar" : "Rotar";
+  try{ updateServeLabelPlacement(); }catch(_){ }
+  try{ applyTapConstraints(); }catch(_){ }
   // ensure arrows reflect the current orientation
   renderLiveArrows(false);
 }
@@ -4414,6 +4525,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCloseAnalytics","click", closeAnalytics);
   on("btnCloseStats","click", closeStats);
   on("btnCloseCharts","click", closeCharts);
+  on("btnCloseChartsZoom","click", closeChartsZoom);
   on("btnCloseExport","click", closeExport);
 
   // confirm modal
@@ -4549,6 +4661,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
     on(id,"change", renderHistory);
   });
   on("btnHistoryFiltersToggle","click", toggleHistoryFilters);
+  on("btnStatsFiltersToggle","click", toggleStatsFilters);
 
   // analytics filters
   ["aView","aMin","aIncludeServe","aMoment"].forEach(id=>{
@@ -4587,6 +4700,11 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
         try{ closeModal(mid); }catch(_){ }
       }
     }, {passive:false});
+  });
+
+  window.addEventListener("resize", ()=>{
+    try{ if (!$("#chartsModal")?.classList.contains("hidden")) renderCharts(); }catch(_){ }
+    try{ if (!$("#chartsZoomModal")?.classList.contains("hidden")) renderChartsZoom(); }catch(_){ }
   });
 
   // keyboard shortcuts
