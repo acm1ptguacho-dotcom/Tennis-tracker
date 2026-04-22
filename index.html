@@ -757,55 +757,83 @@
 </div>
 
 <div class="modal hidden" id="analyticsModal">
-  <div class="modalCard solid">
+  <div class="modalCard solid analyticsModalCard">
     <div class="modalHead">
       <div>
-        <div class="modalTitle">Analíticas del partido</div>
-        <div class="muted">Top patrones</div>
+        <div class="modalTitle">Analíticas tácticas</div>
+        <div class="muted" id="analyticsSub">Patrones, presión, direcciones e insights del partido</div>
       </div>
-      <button class="chip" id="btnCloseAnalytics" type="button" data-i18n="close">Cerrar</button>
+      <div class="modalActions">
+        <button class="chip" id="btnAnalyticsRefresh" type="button">Actualizar</button>
+        <button class="chip" id="btnCloseAnalytics" type="button" data-i18n="close">Cerrar</button>
+      </div>
     </div>
 
-    <div class="filters">
-      <label>Vista
-        <select id="aView">
-          <option value="freq">Más repetidos (exactos)</option>
-          <option value="sim">Similitud (≥3 direcciones)</option>
-          <option value="effective">Más efectivos</option>
-          <option value="deucead">DEUCE vs AD</option>
-          <option value="server">Por servidor</option>
-        </select>
-      </label>
-      <label>Mín. ocurrencias
-        <select id="aMin">
-          <option value="1">1</option>
-          <option value="3">3</option>
-          <option value="5" selected>5</option>
-          <option value="8">8</option>
-        </select>
-      </label>
-      <label class="check"><input type="checkbox" id="aIncludeServe" checked> Incluir saque</label>
+    <div class="modalBody premiumModalBody analyticsModalBodyShell">
+      <div class="analyticsToolbar analyticsToolbarPremium">
+        <label>Jugador
+          <select id="aPerspective">
+            <option value="A">Jugador A</option>
+            <option value="B">Jugador B</option>
+          </select>
+        </label>
+        <label>Contexto
+          <select id="aContext">
+            <option value="all">Todo el partido</option>
+            <option value="important">Puntos importantes</option>
+            <option value="break_for">Break point a favor</option>
+            <option value="break_against">Break point en contra</option>
+            <option value="deuce">Deuce / ventaja</option>
+            <option value="game">Game points</option>
+            <option value="set">Set points</option>
+            <option value="tb">Tie-break</option>
+            <option value="serve">Puntos al saque</option>
+            <option value="return">Puntos al resto</option>
+          </select>
+        </label>
+        <label>Longitud patrón
+          <select id="aPatternLen">
+            <option value="2">2 golpes</option>
+            <option value="3" selected>3 golpes</option>
+            <option value="4">4 golpes</option>
+            <option value="5">5 golpes</option>
+          </select>
+        </label>
+        <label>Modo
+          <select id="aMode">
+            <option value="exact">Exacto</option>
+            <option value="similar">Similar táctico</option>
+            <option value="effective">Más eficaces</option>
+          </select>
+        </label>
+        <label>Mín. ocurrencias
+          <select id="aMin">
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="aIncludeServe" checked> Incluir saque</label>
+      </div>
 
-      <label>Momento
-        <select id="aMoment">
-          <option value="">Todos</option>
-          <option value="break">Break points</option>
-          <option value="game">Game points</option>
-          <option value="set">Set points</option>
-          <option value="tb">Tie-break</option>
-          <option value="deuce">Deuce/Adv</option>
-          <option value="3030">30-30+</option>
-          <option value="0-40">0-40</option>
-          <option value="40-0">40-0</option>
-          <option value="30-40">30-40</option>
-          <option value="40-30">40-30</option>
-        </select>
-      </label>
-    </div>
+      <div class="analyticsKpiGrid" id="analyticsKpis"></div>
 
-    <div class="analyticsBody">
-      <div class="analyticsList" id="analyticsList"></div>
-      <div class="analyticsDetail" id="analyticsDetail">Selecciona un patrón.</div>
+      <div class="analyticsTabBar" id="analyticsTabs" role="tablist" aria-label="Tabs analíticas">
+        <button class="analyticsTabBtn active" type="button" data-analytics-tab="summary">Resumen</button>
+        <button class="analyticsTabBtn" type="button" data-analytics-tab="points">Puntos importantes</button>
+        <button class="analyticsTabBtn" type="button" data-analytics-tab="patterns">Patrones</button>
+        <button class="analyticsTabBtn" type="button" data-analytics-tab="directions">Direcciones</button>
+        <button class="analyticsTabBtn" type="button" data-analytics-tab="insights">Insights</button>
+      </div>
+
+      <div class="analyticsPaneWrap">
+        <section class="analyticsPane active" id="analyticsPane-summary"></section>
+        <section class="analyticsPane" id="analyticsPane-points"></section>
+        <section class="analyticsPane" id="analyticsPane-patterns"></section>
+        <section class="analyticsPane" id="analyticsPane-directions"></section>
+        <section class="analyticsPane" id="analyticsPane-insights"></section>
+      </div>
     </div>
   </div>
 </div>
