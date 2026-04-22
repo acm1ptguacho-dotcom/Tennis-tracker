@@ -1,0 +1,9 @@
+Tennis Direction Tracker v2930
+
+Refinado visual específico para móvil:
+- Menos espacio vertical entre barra superior, workspace y pista.
+- Barra superior más compacta para acercarse a la proporción de la versión anterior.
+- Workspace compacto reducido en altura sin perder legibilidad.
+- Rail lateral de acciones más estrecho y con menos separación entre iconos.
+- Botones laterales e iconos reducidos para que vuelva a entrar toda la columna sin scroll en pantalla.
+- Etiquetas de acciones compactadas para recuperar altura útil de la pista.

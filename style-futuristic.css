@@ -1045,3 +1045,174 @@ textarea.input:focus{
   #statsModal .statsActions{gap:4px !important;}
   #statsModal .statsPdfBtn span{display:none !important;}
 }
+
+
+/* ===== v2930 mobile density refinement ===== */
+.topbarInline{ margin:0 0 2px !important; }
+#workspaceBar.workspaceCompact{ margin-bottom:0 !important; }
+.diagramGrid{ gap:6px !important; }
+.courtWrap.courtRow{ padding:8px !important; }
+.courtRail{
+  width:72px !important;
+  padding-top:0 !important;
+  gap:8px !important;
+}
+.quickItem{ gap:5px !important; }
+.quickBtn{
+  width:58px !important;
+  height:58px !important;
+  min-width:58px !important;
+  min-height:58px !important;
+}
+.quickBtn .svgIcon{
+  width:19px !important;
+  height:19px !important;
+}
+.quickLbl{
+  width:62px !important;
+  font-size:8px !important;
+  line-height:1.02 !important;
+  letter-spacing:.14em !important;
+}
+
+@media (max-width: 820px){
+  .app{ padding:8px 10px 18px !important; }
+  .topbarInline{ margin-bottom:2px !important; }
+  .topbarRow{
+    grid-template-columns:50px minmax(0,1fr) 50px !important;
+    gap:8px !important;
+    padding:9px 10px !important;
+    border-radius:24px !important;
+  }
+  .topbarRow::after{ inset:5px !important; border-radius:18px !important; }
+  .iconChip{
+    width:44px !important;
+    min-width:44px !important;
+    height:44px !important;
+    border-radius:15px !important;
+  }
+  .iconChip .svgIcon{ width:20px !important; height:20px !important; }
+  .topbarBrand{
+    min-height:48px !important;
+    padding:6px 10px !important;
+    border-radius:18px !important;
+  }
+  .brandLogoImg{ height:30px !important; }
+
+  #workspaceBar.workspaceCompact{
+    padding:10px 12px !important;
+    border-radius:22px !important;
+    margin-bottom:0 !important;
+  }
+  #workspaceBar.workspaceCompact .workspaceSummaryRow{
+    min-height:34px !important;
+    gap:8px !important;
+  }
+  #workspaceBar.workspaceCompact .workspaceIdentity,
+  #workspaceBar.workspaceCompact .workspaceIdentityCompact{ gap:8px !important; }
+  #workspaceBar.workspaceCompact .workspaceEyebrow{
+    min-height:20px !important;
+    padding:0 8px !important;
+    font-size:8px !important;
+    letter-spacing:.16em !important;
+  }
+  #workspaceBar.workspaceCompact .workspaceName{
+    font-size:clamp(15px, 5vw, 20px) !important;
+  }
+  #workspaceBar.workspaceCompact .workspaceToggle{
+    width:32px !important;
+    height:32px !important;
+    border-radius:11px !important;
+  }
+  #workspaceBar.workspaceCompact .workspaceToggle svg{
+    width:16px !important;
+    height:16px !important;
+  }
+
+  .diagramArea{ padding:0 10px 10px !important; }
+  .diagramGrid{ gap:4px !important; }
+  .courtWrap.courtRow{
+    gap:8px !important;
+    padding:6px !important;
+    border-radius:26px !important;
+  }
+  .court{ border-radius:22px !important; }
+  .courtRail{
+    width:66px !important;
+    gap:8px !important;
+  }
+  .quickBtn{
+    width:54px !important;
+    height:54px !important;
+    min-width:54px !important;
+    min-height:54px !important;
+  }
+  .quickBtn .svgIcon{ width:18px !important; height:18px !important; }
+  .quickLbl{
+    width:58px !important;
+    font-size:7.8px !important;
+    letter-spacing:.13em !important;
+  }
+}
+
+@media (max-width: 620px){
+  .app{ padding:6px 8px 14px !important; }
+  .topbarRow{
+    grid-template-columns:48px minmax(0,1fr) 48px !important;
+    gap:8px !important;
+    padding:8px 9px !important;
+  }
+  .topbarBrand{
+    min-height:46px !important;
+    padding:6px 8px !important;
+  }
+  .brandLogoImg{ height:28px !important; }
+  #workspaceBar.workspaceCompact{
+    padding:8px 10px !important;
+    border-radius:20px !important;
+  }
+  #workspaceBar.workspaceCompact .workspaceSummaryRow{ min-height:32px !important; }
+  #workspaceBar.workspaceCompact .workspaceName{ font-size:clamp(14px, 5.6vw, 18px) !important; }
+  #workspaceBar.workspaceCompact .workspaceToggle{
+    width:30px !important;
+    height:30px !important;
+  }
+  .diagramArea{ padding:0 8px 8px !important; }
+  .courtWrap.courtRow{ gap:7px !important; padding:5px !important; }
+  .courtRail{
+    width:62px !important;
+    gap:7px !important;
+  }
+  .quickBtn{
+    width:50px !important;
+    height:50px !important;
+    min-width:50px !important;
+    min-height:50px !important;
+  }
+  .quickBtn .svgIcon{ width:17px !important; height:17px !important; }
+  .quickLbl{
+    width:54px !important;
+    font-size:7.2px !important;
+    letter-spacing:.12em !important;
+  }
+}
+
+@media (max-width: 480px){
+  .topbarRow{ grid-template-columns:46px minmax(0,1fr) 46px !important; padding:8px !important; }
+  .iconChip{ width:42px !important; min-width:42px !important; height:42px !important; }
+  .brandLogoImg{ height:26px !important; }
+  #workspaceBar.workspaceCompact .workspaceEyebrow{ font-size:7.5px !important; }
+  .courtRail{ width:58px !important; gap:6px !important; }
+  .quickBtn{
+    width:46px !important;
+    height:46px !important;
+    min-width:46px !important;
+    min-height:46px !important;
+  }
+  .quickBtn .svgIcon{ width:16px !important; height:16px !important; }
+  .quickLbl{
+    width:50px !important;
+    font-size:6.8px !important;
+    letter-spacing:.11em !important;
+  }
+}
