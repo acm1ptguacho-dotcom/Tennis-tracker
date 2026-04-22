@@ -1,0 +1,8 @@
+Tennis Direction Tracker v2920
+
+Ajustes aplicados sobre el estilo futurista metálico:
+- Barra superior móvil corregida: el botón de herramientas vuelve a la fila principal y se han pulido mejor los bordes del header.
+- Espaciado superior ajustado para acercar la pista a la barra principal.
+- Menú lateral redimensionado en móvil para que no ocupe tanto ancho.
+- Biblioteca de jugadores, ficha de jugador y Panel Pro migrados al mismo lenguaje visual azul metálico del rediseño.
+- Modal de estadísticas corregido: iconos visibles en PDF/filtros, botones más compactos y mejor aprovechamiento del espacio horizontal.
