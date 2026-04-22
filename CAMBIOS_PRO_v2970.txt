@@ -1,0 +1,8 @@
+Tennis Direction Tracker v2970
+
+Cambios aplicados:
+- Reducido drásticamente el hueco entre cabecera y diagrama cuando el marcador y/o workspace están ocultos.
+- Marcador refinado: misma anchura visual pero con menor altura, menor tamaño de fuente y números más contenidos.
+- Cabecera superior simplificada para evitar líneas raras y capas visuales excesivas.
+- Tarjetas, tablas y ventanas más integradas con el fondo general.
+- Portada rediseñada sobre la imagen principal: se eliminan los badges/elementos inferiores previos y se coloca el bloque de texto + botones Acceder / Crear cuenta / Modo demo con una composición más limpia y coherente.

@@ -1661,3 +1661,352 @@ textarea.input:focus{
     border-radius:20px !important;
   }
 }
+
+
+/* ===== v2970 precision polish: compact court spacing, slimmer scoreboard, cleaner header, new splash layout ===== */
+/* cleaner integration for top bar / workspace / tables */
+.topbarRow::before,
+.topbarRow::after{
+  display:none !important;
+}
+.topbarRow{
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(255,255,255,.10), transparent 42%),
+    linear-gradient(180deg, rgba(33,70,103,.96), rgba(10,30,49,.98)) !important;
+  border-color:rgba(214,232,248,.14) !important;
+  box-shadow:
+    0 14px 28px rgba(4,12,22,.18),
+    inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+#workspaceBar.workspaceCompact,
+.scoreTv,
+.courtWrap.courtRow,
+.drawer,
+.modalCard,
+.modalCard.solid,
+.table,
+.panelLike,
+.timelineCard,
+.metaCard{
+  background:
+    radial-gradient(120% 120% at 10% 0%, rgba(255,255,255,.08), transparent 40%),
+    linear-gradient(180deg, rgba(34,72,107,.74), rgba(11,33,53,.86)) !important;
+  border-color:rgba(216,234,248,.12) !important;
+  box-shadow:
+    0 14px 32px rgba(4,12,22,.16),
+    inset 0 1px 0 rgba(255,255,255,.10) !important;
+}
+
+/* slimmer scoreboard */
+.scoreTv{
+  padding:12px 16px 10px !important;
+  border-radius:26px !important;
+}
+.tvHeader{
+  padding-bottom:8px !important;
+  margin-bottom:4px !important;
+  font-size:11px !important;
+}
+.tvRow{
+  min-height:70px !important;
+  padding:8px 0 !important;
+}
+.scoreTv input{
+  font-size:clamp(18px, 2.2vw, 24px) !important;
+  letter-spacing:.01em !important;
+}
+.tvTag{
+  width:28px !important;
+  height:28px !important;
+  font-size:14px !important;
+}
+.tvAvatar{
+  width:34px !important;
+  height:34px !important;
+  border-radius:10px !important;
+}
+.tvGames,
+.tvPts{
+  font-size:clamp(20px, 2.6vw, 28px) !important;
+  min-width:64px !important;
+  height:52px !important;
+  border-radius:16px !important;
+}
+.tvHeaderGames,
+.tvHeaderPts,
+.tvHeaderSets,
+.tvHeaderName{
+  font-size:10px !important;
+}
+
+/* splash portada refined to match requested composition */
+.splashHighlights,
+.splashHint,
+.splashStart{
+  display:none !important;
+}
+.splash{
+  align-items:stretch !important;
+  justify-content:center !important;
+  padding:0 !important;
+  background:
+    linear-gradient(180deg, rgba(234,241,248,.12) 0%, rgba(201,214,228,.10) 16%, rgba(26,44,67,.14) 48%, rgba(6,18,31,.18) 100%),
+    url("assets/cover_portada.jpg") center center / cover no-repeat !important;
+}
+.splash::before{
+  background:
+    linear-gradient(180deg, rgba(250,252,255,.10) 0%, rgba(255,255,255,.02) 18%, rgba(12,22,34,.10) 56%, rgba(7,15,25,.20) 100%),
+    radial-gradient(800px 560px at 20% 12%, rgba(255,255,255,.20), transparent 54%),
+    radial-gradient(620px 360px at 84% 26%, rgba(162,189,219,.14), transparent 48%) !important;
+}
+.splash::after{ display:none !important; }
+.splashInner{
+  position:relative !important;
+  width:100% !important;
+  max-width:none !important;
+  min-height:100vh !important;
+  padding:34px 18px calc(max(env(safe-area-inset-bottom), 18px) + 24px) !important;
+  background:none !important;
+  border:none !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  border-radius:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:0 !important;
+}
+.splashLogo{
+  margin-top:28px !important;
+  width:min(80vw, 560px) !important;
+  max-width:560px !important;
+}
+.splashCopy{
+  margin-top:68px !important;
+  max-width:min(90vw, 760px) !important;
+  text-align:center !important;
+  gap:12px !important;
+  padding:20px 18px !important;
+  border-radius:28px !important;
+  background:
+    linear-gradient(180deg, rgba(55,75,97,.74), rgba(33,51,72,.82)) !important;
+  border:1px solid rgba(224,238,249,.12) !important;
+  box-shadow:0 16px 34px rgba(8,16,26,.18), inset 0 1px 0 rgba(255,255,255,.08) !important;
+  backdrop-filter:blur(8px) !important;
+  -webkit-backdrop-filter:blur(8px) !important;
+}
+.splashEyebrow{
+  font-size:clamp(13px, 2vw, 18px) !important;
+  letter-spacing:.26em !important;
+  color:#87bff6 !important;
+}
+.splashCopy h1{
+  margin:0 !important;
+  font-size:clamp(34px, 7vw, 74px) !important;
+  line-height:.98 !important;
+  color:#f2f6fb !important;
+}
+.splashCopy p{
+  max-width:760px !important;
+  margin:0 auto !important;
+  font-size:clamp(17px, 3.4vw, 24px) !important;
+  line-height:1.48 !important;
+  color:rgba(241,247,252,.92) !important;
+}
+.splashQuickAccess{
+  position:absolute !important;
+  left:50% !important;
+  bottom:clamp(76px, 13vh, 140px) !important;
+  transform:translateX(-50%) !important;
+  width:min(84vw, 420px) !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  gap:14px !important;
+  z-index:2 !important;
+}
+.splashQuickAccess .btn{
+  width:100% !important;
+  min-width:0 !important;
+  min-height:58px !important;
+  border-radius:999px !important;
+  font-family:var(--font-display) !important;
+  font-size:clamp(20px, 4.6vw, 28px) !important;
+  letter-spacing:.03em !important;
+  font-weight:800 !important;
+  box-shadow:0 12px 24px rgba(5,12,22,.18), inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+
+@media (max-width: 900px){
+  #appRoot.app.single{
+    padding-top:0 !important;
+    gap:2px !important;
+  }
+  .topbarInline{
+    margin:0 -10px 0 !important;
+    padding-top:0 !important;
+    padding-bottom:0 !important;
+  }
+  .topbar{
+    gap:0 !important;
+  }
+  .topbarRow{
+    grid-template-columns:52px minmax(0,1fr) 52px !important;
+    padding:10px 12px !important;
+    border-radius:0 0 20px 20px !important;
+    border-top:none !important;
+    border-left:none !important;
+    border-right:none !important;
+  }
+  .topbarBrand{
+    min-height:52px !important;
+    padding:8px 14px !important;
+    border-radius:18px !important;
+  }
+  .brandLogoImg{
+    height:34px !important;
+  }
+  #workspaceBar.workspaceCompact{
+    margin:2px 10px 0 !important;
+    padding:10px 14px !important;
+    border-radius:22px !important;
+  }
+  #workspaceBar.workspaceCompact .workspaceSummaryRow{
+    min-height:38px !important;
+  }
+  #workspaceBar.workspaceCompact .workspaceName{
+    font-size:clamp(16px, 4.3vw, 22px) !important;
+  }
+  #workspaceBar.workspaceCompact .workspaceEyebrow{
+    font-size:9px !important;
+  }
+  #workspaceBar.workspaceCompact .workspaceToggle{
+    width:48px !important;
+    height:48px !important;
+    min-height:48px !important;
+  }
+  #scoreSection.hidden,
+  #workspaceBar.hidden{
+    margin:0 !important;
+  }
+  #workspaceBar.hidden + #scoreSection.hidden + .diagramArea,
+  #workspaceBar.hidden + #scoreSection + .diagramArea,
+  #workspaceBar + #scoreSection.hidden + .diagramArea,
+  .topbarInline + #workspaceBar.hidden + #scoreSection.hidden + .diagramArea{
+    margin-top:0 !important;
+  }
+  .diagramArea{
+    padding:0 !important;
+    margin-top:0 !important;
+  }
+  .diagramGrid{
+    gap:4px !important;
+    margin-top:0 !important;
+  }
+  .courtWrap.courtRow{
+    padding:4px !important;
+    margin-top:0 !important;
+    border-radius:22px !important;
+  }
+  .scoreTv{
+    margin:2px 10px 0 !important;
+    padding:10px 12px 8px !important;
+    border-radius:22px !important;
+  }
+  .tvRow{
+    min-height:62px !important;
+    padding:6px 0 !important;
+  }
+  .scoreTv input{
+    font-size:clamp(16px, 4.4vw, 22px) !important;
+  }
+  .tvGames,
+  .tvPts{
+    font-size:clamp(16px, 5vw, 24px) !important;
+    min-width:54px !important;
+    height:44px !important;
+  }
+  .tvAvatar{
+    width:30px !important;
+    height:30px !important;
+  }
+  .tvTag{
+    width:24px !important;
+    height:24px !important;
+    font-size:13px !important;
+  }
+  .drawer{
+    background:
+      linear-gradient(180deg, rgba(35,73,108,.94), rgba(10,31,50,.98)) !important;
+    border:1px solid rgba(216,234,248,.14) !important;
+  }
+  .splashInner{
+    padding:28px 18px calc(max(env(safe-area-inset-bottom), 18px) + 22px) !important;
+  }
+  .splashLogo{
+    margin-top:26px !important;
+    width:min(82vw, 520px) !important;
+  }
+  .splashCopy{
+    margin-top:64px !important;
+    max-width:min(92vw, 720px) !important;
+    padding:18px 16px !important;
+    border-radius:24px !important;
+  }
+  .splashEyebrow{
+    font-size:clamp(11px, 2.8vw, 14px) !important;
+  }
+  .splashCopy h1{
+    font-size:clamp(28px, 8vw, 48px) !important;
+  }
+  .splashCopy p{
+    font-size:clamp(14px, 4.2vw, 18px) !important;
+  }
+  .splashQuickAccess{
+    bottom:clamp(54px, 11vh, 104px) !important;
+    width:min(80vw, 360px) !important;
+    gap:12px !important;
+  }
+  .splashQuickAccess .btn{
+    min-height:52px !important;
+    font-size:clamp(17px, 5.2vw, 23px) !important;
+  }
+}
+
+@media (max-width: 620px){
+  .topbarInline{
+    margin:0 -6px 0 !important;
+  }
+  .topbarRow{
+    grid-template-columns:48px minmax(0,1fr) 48px !important;
+    padding:8px 10px !important;
+    border-radius:0 0 18px 18px !important;
+  }
+  .topbarBrand{
+    min-height:46px !important;
+    padding:7px 12px !important;
+  }
+  .brandLogoImg{height:30px !important;}
+  #workspaceBar.workspaceCompact{
+    margin:1px 8px 0 !important;
+    padding:9px 12px !important;
+  }
+  .scoreTv{
+    margin:1px 8px 0 !important;
+  }
+  .diagramArea{
+    padding:0 !important;
+  }
+  .courtWrap.courtRow{
+    padding:3px !important;
+    border-radius:20px !important;
+  }
+  .splashLogo{ margin-top:18px !important; }
+  .splashCopy{ margin-top:58px !important; }
+  .splashQuickAccess{
+    width:min(78vw, 330px) !important;
+    bottom:clamp(38px, 8vh, 76px) !important;
+  }
+}
