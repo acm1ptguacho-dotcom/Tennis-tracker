@@ -1,0 +1,8 @@
+Tennis Direction Tracker v2960
+
+Refinamiento visual y de integración:
+- Reducido el hueco entre la barra superior y el diagrama/pista.
+- Header móvil integrado al borde superior y laterales para evitar el efecto de barra "pegada" sin sentido.
+- Compactado el espaciado general del layout móvil para aprovechar mejor la pantalla.
+- Tarjetas, ventanas y tablas ajustadas para integrarse mejor con el fondo general de la web.
+- Sombras y fondos suavizados para una estética más coherente y premium.

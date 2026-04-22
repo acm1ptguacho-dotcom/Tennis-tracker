@@ -1,0 +1,7 @@
+Tennis Direction Tracker v2940
+
+Nueva portada integrada con la imagen proporcionada por el usuario.
+- La splash screen ahora usa la imagen de portada como fondo principal.
+- Se mantiene una tarjeta central translúcida inspirada en el segundo screenshot.
+- El botón inferior principal pasa a llamarse “Iniciar”.
+- El botón “Iniciar” y el acceso rápido siguen llevando directamente a la pantalla de Acceder.

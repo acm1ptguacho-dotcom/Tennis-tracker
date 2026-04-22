@@ -1,0 +1,6 @@
+Tennis Direction Tracker v2950
+
+Ajuste fino de tipografía en móvil:
+- Marcador reducido: nombres, etiquetas y números ahora ocupan menos espacio visual.
+- Menú lateral reducido: títulos e items con tipografía algo más compacta.
+- Ajustes responsive adicionales para iPhone y pantallas estrechas.
