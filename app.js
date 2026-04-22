@@ -5109,27 +5109,15 @@ function renderPlayerLibrary(){
     const assigned = [];
     if (state.playerAssignments?.A === profile.id) assigned.push("A");
     if (state.playerAssignments?.B === profile.id) assigned.push("B");
-    const hand = (profile.hand || "R") === "L" ? tr("Zurdo","Left") : tr("Diestro","Right");
-    const sex = (profile.sex || "M") === "F" ? tr("Mujer","Female") : tr("Hombre","Male");
-    const ageOrCategory = profile.category || tr("S/C","N/A");
-    const assignedLabel = assigned.length ? `${tr("Asignado","Assigned")}: ${assigned.join(" / ")}` : tr("Sin asignar","Unassigned");
     return `
       <article class="playerChooserCard">
         <div class="playerChooserTop">
           <div class="playerChooserAvatar ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : defaultAvatarSVG(profile.sex || 'M')}</div>
           <div class="playerChooserIdentity">
             <div class="playerChooserName">${escapeHtml(profile.name || 'Jugador')}</div>
-            <div class="playerChooserMetaRow">
-              <span>${escapeHtml(ageOrCategory)}</span>
-              <span>${escapeHtml(hand)}</span>
-              <span>${escapeHtml(sex)}</span>
-              <span>${escapeHtml(assignedLabel)}</span>
-            </div>
           </div>
-          <div class="playerChooserIconActions">
-            <button class="playerIconBtn" type="button" data-profile-action="edit" data-profile-id="${profile.id}" aria-label="${tr('Editar','Edit')}" title="${tr('Editar','Edit')}">${playerEditIcon()}</button>
-            <button class="playerIconBtn delete" type="button" data-profile-action="delete" data-profile-id="${profile.id}" aria-label="${tr('Borrar','Delete')}" title="${tr('Borrar','Delete')}">${playerDeleteIcon()}</button>
-          </div>
+          <button class="playerIconBtn" type="button" data-profile-action="edit" data-profile-id="${profile.id}" aria-label="${tr('Editar','Edit')}" title="${tr('Editar','Edit')}">${playerEditIcon()}</button>
+          <button class="playerIconBtn delete" type="button" data-profile-action="delete" data-profile-id="${profile.id}" aria-label="${tr('Borrar','Delete')}" title="${tr('Borrar','Delete')}">${playerDeleteIcon()}</button>
         </div>
         <div class="playerChooserBottom">
           <button class="chip primary" type="button" data-profile-action="view" data-profile-id="${profile.id}">${tr('Ver ficha','View profile')}</button>
