@@ -2819,11 +2819,12 @@ function renderHistory(){
     g.className = "historyGame" + (collapsed ? " collapsed" : "");
     const setNo = (info.snap.setsA + info.snap.setsB + 1);
     const meta = `Set ${setNo} · Games ${info.snap.gamesA}-${info.snap.gamesB}` + (info.isTB ? " · Tie-break" : "");
+    const hasImportant = pts.some(p => !!p.important);
     g.innerHTML = `
       <div class="historyGameHead">
         <div style="min-width:0;">
-          <div class="historyGameTitle">${tr("Juego","Game")} ${info.num || "—"}</div>
-          <div class="historyGameMeta">${escapeHtml(meta)} · ${pts.length} ${tr("punto(s)","point(s)")}</div>
+          <div class="historyGameTitle">${hasImportant ? `<span class="miniFlag inGameHeader" title="${tr("Juego con punto importante","Game has an important point")}"></span>` : ""}${tr("Juego","Game")} ${info.num || "—"}</div>
+          <div class="historyGameMeta">${escapeHtml(meta)} · ${pts.length} ${tr("punto(s)","point(s)")}${hasImportant ? ` · ${tr("Hay punto importante","Important point inside")}` : ""}</div>
         </div>
         <div class="historyGameChevron"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></div>
       </div>
@@ -4287,6 +4288,7 @@ function openFromMenu(fn){
 function applyScoreVisibility(){
   const s = $("#scoreSection");
   if (s) s.classList.toggle("hidden", !!state.ui.hideScore);
+  document.body.classList.toggle("scoreHiddenMode", !!state.ui.hideScore);
 
   const eye = $("#btnEyeScore");
   if (eye){
@@ -4974,17 +4976,43 @@ function closePlayerProfileDetail(){
   shell.innerHTML = "";
   shell.classList.add("hidden");
 }
-function switchPlayerLibraryMode(mode="choose"){
-  const choose = mode !== "create";
-  $("#playersChoosePane")?.classList.toggle("hidden", !choose);
-  $("#playersCreatePane")?.classList.toggle("hidden", choose);
-  $("#btnPlayersChooseMode")?.classList.toggle("active", choose);
-  $("#btnPlayersCreateMode")?.classList.toggle("active", !choose);
-  $("#btnPlayersChooseMode")?.setAttribute("aria-pressed", choose ? "true" : "false");
-  $("#btnPlayersCreateMode")?.setAttribute("aria-pressed", !choose ? "true" : "false");
+function playerEditIcon(){
+  return `<svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/><path d="M14.06 4.94l3.75 3.75"/></svg>`;
+}
+function playerDeleteIcon(){
+  return `<svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`;
+}
+function playerChooserEmptyMarkup(){
+  return `<div class="chooserEmptyCard"><h4>${tr("Sin perfiles todavía","No profiles yet")}</h4><p>${tr("Crea tu primer jugador para empezar a guardar historial, foto y asignaciones.","Create your first player to start saving history, photo and assignments.")}</p></div>`;
+}
+function switchPlayerLibraryMode(mode="home"){
+  const choosePane = $("#playersChoosePane");
+  const createPane = $("#playersCreatePane");
+  const chooseBtn = $("#btnPlayersChooseMode");
+  const createBtn = $("#btnPlayersCreateMode");
   const shell = $("#playerLibraryShell");
+
+  if (mode === "choose"){
+    closePlayerProfileDetail();
+    closePlayers();
+    renderPlayerLibrary();
+    openPlayerChooser();
+    return;
+  }
+
+  const isCreate = mode === "create";
+  if (choosePane){
+    choosePane.classList.add("hidden");
+    choosePane.classList.remove("isVisibleForDetail");
+  }
+  if (createPane) createPane.classList.toggle("hidden", !isCreate);
+  chooseBtn?.classList.remove("active");
+  createBtn?.classList.toggle("active", isCreate);
+  chooseBtn?.setAttribute("aria-pressed", "false");
+  createBtn?.setAttribute("aria-pressed", isCreate ? "true" : "false");
   if (shell) shell.scrollTop = 0;
 }
+
 function resetProfileForm(){
   ["profileId","profileName","profileCategory","profileGoal","profileStrengths","profileWeaknesses","profileNotes","profilePhotoData"].forEach(id=>{ const el=$("#"+id); if (el) el.value=""; });
   const hand = $("#profileHand"); if (hand) hand.value = "R";
@@ -5063,41 +5091,50 @@ function assignProfileToSide(id, side){
   toast(isEn() ? `✅ ${profile.name} assigned to ${side}` : `✅ ${profile.name} asignado a ${side}`);
 }
 function renderPlayerLibrary(){
-  const list = $("#playerProfileList");
+  const list = $("#playerChooserList");
+  const legacyList = $("#playerProfileList");
   const summary = $("#playerLibrarySummary");
+  const chooserSummary = $("#playerChooserSummary");
   const profiles = getPlayerProfiles().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
-  if (summary) summary.textContent = isEn() ? `${profiles.length} profiles available · Each profile stores history, photo and overall stats` : `${profiles.length} perfiles disponibles · Cada ficha guarda historial, foto y estadísticas generales`;
+  if (summary) summary.textContent = isEn() ? `${profiles.length} profiles available` : `${profiles.length} perfiles disponibles`;
+  if (chooserSummary) chooserSummary.textContent = isEn() ? `${profiles.length} profiles available · Tap a card to view, edit, delete or assign.` : `${profiles.length} perfiles disponibles · Toca una ficha para ver, editar, borrar o asignar.`;
+  if (legacyList) legacyList.innerHTML = "";
   if (!list) return;
   if (!profiles.length){
     closePlayerProfileDetail();
-    list.innerHTML = `<div class="profileCard"><h4>${tr("Sin perfiles todavía","No profiles yet")}</h4><p>${tr("Crea tu primer jugador para empezar a guardar historial, objetivos, foto y notas del entrenador.","Create the first player to start saving history, goals, photo and coach notes.")}</p></div>`;
+    list.innerHTML = playerChooserEmptyMarkup();
     return;
   }
   list.innerHTML = profiles.map(profile => {
     const assigned = [];
     if (state.playerAssignments?.A === profile.id) assigned.push("A");
     if (state.playerAssignments?.B === profile.id) assigned.push("B");
-    const meta = [profile.category || tr("Sin categoría","No category"), (profile.hand || "R") === "L" ? tr("Zurdo","Left-handed") : tr("Diestro","Right-handed"), (profile.sex || "M") === "F" ? tr("Mujer","Female") : tr("Hombre","Male")].concat(assigned.length ? [`${tr("Asignado","Assigned")}: ${assigned.join(" / ")}`] : []);
+    const hand = (profile.hand || "R") === "L" ? tr("Zurdo","Left") : tr("Diestro","Right");
+    const sex = (profile.sex || "M") === "F" ? tr("Mujer","Female") : tr("Hombre","Male");
+    const ageOrCategory = profile.category || tr("S/C","N/A");
+    const assignedLabel = assigned.length ? `${tr("Asignado","Assigned")}: ${assigned.join(" / ")}` : tr("Sin asignar","Unassigned");
     return `
-      <article class="profileCard profileCardRich">
-        <div class="profileCardTop">
-          <div class="profileAvatar ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : defaultAvatarSVG(profile.sex || 'M')}</div>
-          <div class="profileCardInfo">
-            <h4>${escapeHtml(profile.name || "Jugador")}</h4>
-            <div class="profileMeta">${meta.map(x=>`<span>${escapeHtml(x)}</span>`).join("")}</div>
+      <article class="playerChooserCard">
+        <div class="playerChooserTop">
+          <div class="playerChooserAvatar ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : defaultAvatarSVG(profile.sex || 'M')}</div>
+          <div class="playerChooserIdentity">
+            <div class="playerChooserName">${escapeHtml(profile.name || 'Jugador')}</div>
+            <div class="playerChooserMetaRow">
+              <span>${escapeHtml(ageOrCategory)}</span>
+              <span>${escapeHtml(hand)}</span>
+              <span>${escapeHtml(sex)}</span>
+              <span>${escapeHtml(assignedLabel)}</span>
+            </div>
+          </div>
+          <div class="playerChooserIconActions">
+            <button class="playerIconBtn" type="button" data-profile-action="edit" data-profile-id="${profile.id}" aria-label="${tr('Editar','Edit')}" title="${tr('Editar','Edit')}">${playerEditIcon()}</button>
+            <button class="playerIconBtn delete" type="button" data-profile-action="delete" data-profile-id="${profile.id}" aria-label="${tr('Borrar','Delete')}" title="${tr('Borrar','Delete')}">${playerDeleteIcon()}</button>
           </div>
         </div>
-        <p><strong>${tr("Objetivo","Goal")}:</strong> ${escapeHtml(profile.goal || "—")}</p>
-        <p><strong>${tr("Fortalezas","Strengths")}:</strong> ${escapeHtml(profile.strengths || "—")}</p>
-        <p><strong>${tr("Debilidades","Weaknesses")}:</strong> ${escapeHtml(profile.weaknesses || "—")}</p>
-        <div class="profileActions">
-          <button class="chip primary" type="button" data-profile-action="view" data-profile-id="${profile.id}">${tr("Ver ficha","View profile")}</button>
-          <button class="chip" type="button" data-profile-action="assignA" data-profile-id="${profile.id}">${tr("Asignar A","Assign A")}</button>
-          <button class="chip" type="button" data-profile-action="assignB" data-profile-id="${profile.id}">${tr("Asignar B","Assign B")}</button>
-        </div>
-        <div class="profileActions">
-          <button class="chip good" type="button" data-profile-action="edit" data-profile-id="${profile.id}">${tr("Editar","Edit")}</button>
-          <button class="chip warn" type="button" data-profile-action="delete" data-profile-id="${profile.id}">${tr("Borrar","Delete")}</button>
+        <div class="playerChooserBottom">
+          <button class="chip primary" type="button" data-profile-action="view" data-profile-id="${profile.id}">${tr('Ver ficha','View profile')}</button>
+          <button class="chip" type="button" data-profile-action="assignA" data-profile-id="${profile.id}">${tr('Asignar A','Assign A')}</button>
+          <button class="chip" type="button" data-profile-action="assignB" data-profile-id="${profile.id}">${tr('Asignar B','Assign B')}</button>
         </div>
       </article>`;
   }).join("");
@@ -5332,12 +5369,18 @@ function openDashboard(){ renderDashboard(); openModal("#dashboardModal"); }
 function closeDashboard(){ closeModal("#dashboardModal"); }
 function openPlayers(){
   renderPlayerLibrary();
+  closePlayerProfileDetail();
   const hasProfiles = getPlayerProfiles().length > 0;
-  switchPlayerLibraryMode(hasProfiles ? "choose" : "create");
   openModal("#playersModal");
+  switchPlayerLibraryMode(hasProfiles ? "home" : "create");
   if (!hasProfiles) setTimeout(()=> $("#profileName")?.focus(), 30);
 }
 function closePlayers(){ closeModal("#playersModal"); }
+function openPlayerChooser(){
+  renderPlayerLibrary();
+  openModal("#playerChooserModal");
+}
+function closePlayerChooser(){ closeModal("#playerChooserModal"); }
 function openAccount(){ renderAccountModal(); openModal("#accountModal"); }
 function closeAccount(){ closeModal("#accountModal"); }
 function openHelp(){ openModal("#helpModal"); }
@@ -5488,6 +5531,7 @@ function initProfessionalShell(){
   $("#btnLegal")?.addEventListener("click", ()=> openFromMenu(()=>openLegal()));
   $("#btnCloseDashboard")?.addEventListener("click", closeDashboard);
   $("#btnClosePlayers")?.addEventListener("click", closePlayers);
+  $("#btnClosePlayerChooser")?.addEventListener("click", closePlayerChooser);
   $("#btnCloseAccount")?.addEventListener("click", closeAccount);
   $("#btnCloseHelp")?.addEventListener("click", closeHelp);
   $("#btnCloseLegal")?.addEventListener("click", closeLegal);
@@ -5510,14 +5554,30 @@ function initProfessionalShell(){
     if (action !== "closeDetail" && !id) return;
     if (action === "assignA") assignProfileToSide(id, "A");
     if (action === "assignB") assignProfileToSide(id, "B");
-    if (action === "view") renderPlayerProfileDetail(id);
-    if (action === "edit") loadProfileIntoForm(id);
+    if (action === "view"){
+      closePlayerChooser();
+      openModal("#playersModal");
+      const choosePane = $("#playersChoosePane");
+      if (choosePane){
+        choosePane.classList.remove("hidden");
+        choosePane.classList.add("isVisibleForDetail");
+      }
+      const createPane = $("#playersCreatePane");
+      if (createPane) createPane.classList.add("hidden");
+      renderPlayerProfileDetail(id);
+    }
+    if (action === "edit"){
+      closePlayerChooser();
+      openModal("#playersModal");
+      loadProfileIntoForm(id);
+    }
     if (action === "delete") openConfirm("Eliminar perfil", "Se borrará el perfil del jugador seleccionado.", ()=> deleteProfile(id));
     if (action === "closeDetail") closePlayerProfileDetail();
   };
   $("#playerProfileList")?.addEventListener("click", playerActionDelegate);
   $("#playerProfileSheet")?.addEventListener("click", playerActionDelegate);
-  ["dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal"].forEach(mid=>{
+  $("#playerChooserList")?.addEventListener("click", playerActionDelegate);
+  ["dashboardModal","playersModal","playerChooserModal","accountModal","helpModal","legalModal","onboardingModal"].forEach(mid=>{
     const modal = $("#"+mid);
     if (!modal) return;
     modal.addEventListener("click", (e)=>{ if (e.target === modal) closeModal(mid); });
@@ -5711,111 +5771,3 @@ if (document.readyState === "loading") {
 window.addEventListener("pageshow", ()=>{
   try{ if (window.__tdtBindEntryFallback) window.__tdtBindEntryFallback(); }catch(e){}
 });
-
-/* ===== v2980 players flow + splash/workspace polish ===== */
-function playerEditIconSVG(){
-  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-.8L18.5 8.9a1.9 1.9 0 0 0 0-2.7l-.7-.7a1.9 1.9 0 0 0-2.7 0L4.8 15.8 4 20z"></path><path d="M13.5 6.5l4 4"></path></svg>';
-}
-function playerDeleteIconSVG(){
-  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M7 7l1 13h8l1-13"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>';
-}
-function closePlayerChooser(options){
-  closeModal('#playerSelectModal');
-  if (options && options.reopenPlayers) openPlayers();
-}
-function renderPlayerChooser(){
-  const list = $("#playerChooserList");
-  const summary = $("#playerChooserSummary");
-  if (!list) return;
-  const profiles = getPlayerProfiles().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
-  if (summary) summary.textContent = isEn() ? `${profiles.length} profiles available · Tap a card to view, edit, delete or assign` : `${profiles.length} perfiles disponibles · Toca una ficha para ver, editar, borrar o asignar`;
-  if (!profiles.length){
-    list.innerHTML = `<div class="playerChooserEmpty"><strong>${tr('Todavía no hay jugadores guardados.','There are no saved players yet.')}</strong><p>${tr('Crea un jugador nuevo para empezar tu biblioteca.','Create a new player to start your library.')}</p></div>`;
-    return;
-  }
-  list.innerHTML = profiles.map(profile => `
-    <article class="playerChooserCard">
-      <div class="playerChooserTop">
-        <div class="playerChooserAvatar ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : defaultAvatarSVG(profile.sex || 'M')}</div>
-        <div class="playerChooserName">${escapeHtml(profile.name || 'Jugador')}</div>
-        <button class="playerChooserIcon" type="button" data-chooser-action="edit" data-profile-id="${profile.id}" aria-label="${tr('Editar','Edit')}" title="${tr('Editar','Edit')}">${playerEditIconSVG()}</button>
-        <button class="playerChooserIcon delete" type="button" data-chooser-action="delete" data-profile-id="${profile.id}" aria-label="${tr('Borrar','Delete')}" title="${tr('Borrar','Delete')}">${playerDeleteIconSVG()}</button>
-      </div>
-      <div class="playerChooserActions">
-        <button class="chip primary" type="button" data-chooser-action="view" data-profile-id="${profile.id}">${tr('Ver ficha','View profile')}</button>
-        <button class="chip" type="button" data-chooser-action="assignA" data-profile-id="${profile.id}">${tr('Asignar A','Assign A')}</button>
-        <button class="chip" type="button" data-chooser-action="assignB" data-profile-id="${profile.id}">${tr('Asignar B','Assign B')}</button>
-      </div>
-    </article>`).join('');
-}
-function openPlayerChooser(){
-  renderPlayerChooser();
-  openModal('#playerSelectModal');
-}
-function openPlayerProfileFromChooser(id){
-  closeModal('#playerSelectModal');
-  openPlayers();
-  $("#playersChoosePane")?.classList.remove('hidden');
-  renderPlayerProfileDetail(id);
-}
-function openPlayerEditFromChooser(id){
-  closeModal('#playerSelectModal');
-  openPlayers();
-  loadProfileIntoForm(id);
-}
-function switchPlayerLibraryMode(mode="choose"){
-  const choose = mode !== "create";
-  $("#playersCreatePane")?.classList.toggle("hidden", choose);
-  $("#playersChoosePane")?.classList.toggle("hidden", true);
-  $("#btnPlayersChooseMode")?.classList.toggle("active", choose);
-  $("#btnPlayersCreateMode")?.classList.toggle("active", !choose);
-  $("#btnPlayersChooseMode")?.setAttribute("aria-pressed", choose ? "true" : "false");
-  $("#btnPlayersCreateMode")?.setAttribute("aria-pressed", !choose ? "true" : "false");
-  if (choose) closePlayerProfileDetail();
-  const shell = $("#playerLibraryShell");
-  if (shell) shell.scrollTop = 0;
-}
-function openPlayers(){
-  renderPlayerLibrary();
-  const hasProfiles = getPlayerProfiles().length > 0;
-  switchPlayerLibraryMode(hasProfiles ? 'choose' : 'create');
-  openModal('#playersModal');
-  if (!hasProfiles) setTimeout(()=> $("#profileName")?.focus(), 30);
-}
-(function initRequestedRefinements(){
-  const bind = ()=>{
-    const chooseBtn = $("#btnPlayersChooseMode");
-    if (chooseBtn && !chooseBtn.dataset.submodalBound){
-      chooseBtn.dataset.submodalBound = '1';
-      chooseBtn.addEventListener('click', ()=> openPlayerChooser());
-    }
-    const closeBtn = $("#btnClosePlayerSelect");
-    if (closeBtn && !closeBtn.dataset.bound){
-      closeBtn.dataset.bound='1';
-      closeBtn.addEventListener('click', ()=> closePlayerChooser({ reopenPlayers:true }));
-    }
-    const list = $("#playerChooserList");
-    if (list && !list.dataset.bound){
-      list.dataset.bound='1';
-      list.addEventListener('click', (e)=>{
-        const btn = e.target.closest('[data-chooser-action]');
-        if (!btn) return;
-        const action = btn.dataset.chooserAction;
-        const id = btn.dataset.profileId;
-        if (!id) return;
-        if (action === 'view') openPlayerProfileFromChooser(id);
-        if (action === 'edit') openPlayerEditFromChooser(id);
-        if (action === 'delete') openConfirm(tr('Eliminar perfil','Delete profile'), tr('Se borrará el perfil del jugador seleccionado.','The selected player profile will be deleted.'), ()=>{ deleteProfile(id); renderPlayerChooser(); });
-        if (action === 'assignA'){ assignProfileToSide(id, 'A'); renderPlayerChooser(); }
-        if (action === 'assignB'){ assignProfileToSide(id, 'B'); renderPlayerChooser(); }
-      });
-    }
-    const modal = $("#playerSelectModal");
-    if (modal && !modal.dataset.bound){
-      modal.dataset.bound='1';
-      modal.addEventListener('click', (e)=>{ if (e.target === modal) closePlayerChooser({ reopenPlayers:true }); });
-    }
-  };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once:true });
-  else bind();
-})();
