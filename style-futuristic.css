@@ -2297,3 +2297,105 @@ html,body{overflow-x:hidden !important;}
   .scoreTv{ margin:0 8px 8px !important; }
   #workspaceBar.workspaceCompact{ margin-top:2px !important; margin-bottom:4px !important; }
 }
+
+
+/* ===== v305 rail visible + hidden score: keep court visible and reduce top gaps ===== */
+@media (max-width: 820px){
+  .topbarInline{ margin-bottom:0 !important; }
+  #workspaceBar.workspaceCompact{
+    margin-top:0 !important;
+    margin-bottom:4px !important;
+  }
+  .scoreTv{
+    margin-top:2px !important;
+    margin-bottom:8px !important;
+  }
+
+  body.scoreHiddenMode:not(.railHidden) .diagramArea{
+    display:block !important;
+    padding:0 2px 12px !important;
+    margin-top:0 !important;
+    min-height:0 !important;
+  }
+  body.scoreHiddenMode:not(.railHidden) .diagramGrid{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    width:100% !important;
+    max-width:100% !important;
+    gap:6px !important;
+    margin:0 !important;
+    min-height:0 !important;
+    align-items:start !important;
+  }
+  body.scoreHiddenMode:not(.railHidden) .courtWrap.courtRow{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) var(--mobile-visible-rail-w) !important;
+    grid-auto-rows:auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-height:0 !important;
+    height:auto !important;
+    gap:6px !important;
+    padding:2px 0 4px 2px !important;
+    margin:0 !important;
+    align-items:start !important;
+    justify-items:stretch !important;
+    overflow:hidden !important;
+    background:transparent !important;
+    border:none !important;
+    box-shadow:none !important;
+  }
+  body.scoreHiddenMode:not(.railHidden) .courtWrap.courtRow .court,
+  body.scoreHiddenMode:not(.railHidden) .court,
+  body.scoreHiddenMode:not(.railHidden) #court{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    position:relative !important;
+    width:calc(100vw - var(--mobile-visible-rail-w) - 12px) !important;
+    max-width:calc(100vw - var(--mobile-visible-rail-w) - 12px) !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    height:auto !important;
+    aspect-ratio:auto !important;
+    margin:0 !important;
+    border-radius:24px !important;
+    overflow:hidden !important;
+  }
+  body.scoreHiddenMode:not(.railHidden) .courtSurface,
+  body.scoreHiddenMode:not(.railHidden) #courtSurface{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    position:relative !important;
+  }
+  body.scoreHiddenMode:not(.railHidden) #courtImg{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    width:100% !important;
+    height:auto !important;
+    max-width:100% !important;
+    object-fit:contain !important;
+  }
+  body.scoreHiddenMode:not(.railHidden) .courtRail{
+    width:var(--mobile-visible-rail-w) !important;
+    min-width:var(--mobile-visible-rail-w) !important;
+    max-width:var(--mobile-visible-rail-w) !important;
+    padding:0 !important;
+    margin:0 !important;
+    gap:7px !important;
+    justify-content:flex-start !important;
+    align-items:center !important;
+    overflow:visible !important;
+  }
+}
+
+@media (max-width: 560px){
+  body.scoreHiddenMode:not(.railHidden) .courtWrap.courtRow .court,
+  body.scoreHiddenMode:not(.railHidden) .court,
+  body.scoreHiddenMode:not(.railHidden) #court{
+    width:calc(100vw - var(--mobile-visible-rail-w) - 10px) !important;
+    max-width:calc(100vw - var(--mobile-visible-rail-w) - 10px) !important;
+  }
+}
