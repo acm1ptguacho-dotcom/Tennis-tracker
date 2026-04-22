@@ -1,0 +1,7 @@
+Tennis Direction Tracker v3000
+
+Ajuste específico del gap entre la barra superior y la pista cuando el marcador está oculto.
+- gap global del layout reducido a 0 en scoreHiddenMode
+- workspace ocultado completamente en ese modo
+- diagramArea y diagramGrid sin separación vertical
+- courtWrap pegado a la barra superior en móvil

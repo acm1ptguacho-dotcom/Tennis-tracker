@@ -1735,3 +1735,53 @@ body.scoreHiddenMode .courtWrap.courtRow{margin-top:0 !important; padding-top:8p
 }
 
 #playersModal #playersChoosePane.isVisibleForDetail{display:block !important;}
+
+
+/* ===== v300 gap fix: topbar to court with hidden score ===== */
+body.scoreHiddenMode .app{
+  gap: 0 !important;
+  padding-top: 0 !important;
+}
+body.scoreHiddenMode .topbarInline{
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+body.scoreHiddenMode #workspaceBar.workspaceCompact{
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  max-height: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+}
+body.scoreHiddenMode .diagramArea{
+  margin-top: 0 !important;
+  padding: 0 !important;
+}
+body.scoreHiddenMode .diagramGrid{
+  gap: 0 !important;
+  margin-top: 0 !important;
+}
+body.scoreHiddenMode .courtWrap.courtRow{
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+@media (max-width: 700px){
+  body.scoreHiddenMode .diagramArea{
+    padding: 0 !important;
+  }
+  body.scoreHiddenMode .diagramGrid{
+    gap: 0 !important;
+  }
+  body.scoreHiddenMode .courtWrap.courtRow{
+    padding: 0 !important;
+    margin-top: -1px !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  body.scoreHiddenMode .court{
+    border-radius: 0 0 22px 22px !important;
+  }
+}
