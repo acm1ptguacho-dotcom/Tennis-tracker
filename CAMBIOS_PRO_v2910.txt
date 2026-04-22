@@ -1,0 +1,7 @@
+Tennis Direction Tracker PRO v2910
+
+- Añadido nuevo archivo style-futuristic.css con rediseño visual metálico/futurista inspirado en la portada aprobada.
+- Se mantiene la estructura existente de la web, ids y lógica principal de app.js.
+- Rediseñados: topbar, drawer, paneles, scoreboard, timeline, modales, formularios, tablas, splash y portal de acceso.
+- Se conservan los controles y flujo de la app para facilitar revisión rápida del nuevo estilo.
+- index.html ahora carga el override style-futuristic.css después del style.css original.
