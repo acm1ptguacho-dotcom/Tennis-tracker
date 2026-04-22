@@ -1519,494 +1519,236 @@ textarea.input:focus{
 }
 
 
-/* ===== v2960 mobile integration refinement: compact spacing + edge-integrated header ===== */
-.modalCard,
-.modalCard.solid,
-.timelineCard,
-.metaCard,
-.panelLike,
-.savedItem,
-.historyGame,
-.filters,
-.profileCard,
-.profileEditor,
-.drawer,
-.table{
-  border-color:rgba(220,236,252,.10) !important;
-  background:
-    radial-gradient(120% 120% at 8% 0%, rgba(255,255,255,.08), transparent 44%),
-    radial-gradient(120% 120% at 100% 100%, rgba(183,217,58,.06), transparent 46%),
-    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03) 16%, rgba(8,30,48,.14) 100%),
-    linear-gradient(180deg, rgba(23,58,89,.66), rgba(10,33,52,.78)) !important;
-  box-shadow:
-    0 16px 40px rgba(5,12,23,.18),
-    inset 0 1px 0 rgba(255,255,255,.10) !important;
-}
-.table th{
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03)),
-    rgba(10,35,56,.42) !important;
-}
-.table td{background:rgba(9,34,54,.16) !important;}
-.table tr:nth-child(even) td{background:rgba(255,255,255,.02) !important;}
-
-@media (max-width: 900px){
-  .app{
-    max-width:none !important;
-    padding:0 10px 14px !important;
-    gap:8px !important;
-  }
-  .topbarInline{
-    margin:0 -10px 4px !important;
-    top:0 !important;
-  }
-  .topbarRow{
-    border-radius:0 0 28px 28px !important;
-    border-top:none !important;
-    border-left:none !important;
-    border-right:none !important;
-    padding:10px 14px 12px !important;
-    box-shadow:
-      0 18px 40px rgba(5,12,23,.26),
-      inset 0 1px 0 rgba(255,255,255,.16),
-      inset 0 -1px 0 rgba(0,0,0,.08) !important;
-  }
-  .topbarRow::after{
-    inset:6px 10px 6px !important;
-    border-radius:0 0 20px 20px !important;
-  }
-  #workspaceBar.workspaceCompact,
-  .scoreTv{
-    margin-top:0 !important;
-    margin-bottom:0 !important;
-  }
-  .diagramArea{
-    padding:0 3px 3px !important;
-    margin-top:0 !important;
-  }
-  body.railHidden .diagramArea{
-    padding:0 3px 4px !important;
-  }
-  .diagramGrid{
-    gap:6px !important;
-    margin-top:0 !important;
-  }
-  .courtWrap.courtRow{
-    margin-top:0 !important;
-    padding:6px !important;
-    border-radius:26px !important;
-    box-shadow:
-      0 16px 34px rgba(5,12,23,.18),
-      inset 0 1px 0 rgba(255,255,255,.10) !important;
-  }
-  .courtWrap.courtRow .court{
-    border-radius:22px !important;
-  }
-}
-
-@media (max-width: 620px){
-  .app{
-    padding:0 6px 10px !important;
-    gap:4px !important;
-  }
-  .topbarInline{
-    margin:0 -6px 2px !important;
-  }
-  .topbarRow{
-    border-radius:0 0 24px 24px !important;
-    padding:9px 12px 10px !important;
-  }
-  .topbarRow::after{
-    inset:5px 8px 5px !important;
-    border-radius:0 0 18px 18px !important;
-  }
-  #workspaceBar.workspaceCompact{
-    margin:0 2px 2px !important;
-  }
-  .diagramArea{
-    padding:0 1px 1px !important;
-  }
-  body.railHidden .diagramArea{
-    padding:0 1px 2px !important;
-  }
-  .diagramGrid{
-    gap:4px !important;
-  }
-  .courtWrap.courtRow{
-    padding:4px !important;
-    border-radius:22px !important;
-  }
-}
-
-@media (max-width: 420px){
-  .app{
-    padding:0 4px 8px !important;
-    gap:3px !important;
-  }
-  .topbarInline{
-    margin:0 -4px 1px !important;
-  }
-  .topbarRow{
-    padding:8px 10px 9px !important;
-    border-radius:0 0 22px 22px !important;
-  }
-  .topbarRow::after{
-    inset:4px 7px 4px !important;
-    border-radius:0 0 16px 16px !important;
-  }
-  .diagramArea{padding:0 !important;}
-  body.railHidden .diagramArea{padding:0 !important;}
-  .courtWrap.courtRow{
-    padding:3px !important;
-    border-radius:20px !important;
-  }
-}
-
-
-/* ===== v2970 precision polish: compact court spacing, slimmer scoreboard, cleaner header, new splash layout ===== */
-/* cleaner integration for top bar / workspace / tables */
-.topbarRow::before,
-.topbarRow::after{
-  display:none !important;
-}
-.topbarRow{
-  background:
-    radial-gradient(120% 120% at 50% 0%, rgba(255,255,255,.10), transparent 42%),
-    linear-gradient(180deg, rgba(33,70,103,.96), rgba(10,30,49,.98)) !important;
-  border-color:rgba(214,232,248,.14) !important;
-  box-shadow:
-    0 14px 28px rgba(4,12,22,.18),
-    inset 0 1px 0 rgba(255,255,255,.12) !important;
-}
-#workspaceBar.workspaceCompact,
-.scoreTv,
-.courtWrap.courtRow,
-.drawer,
-.modalCard,
-.modalCard.solid,
-.table,
-.panelLike,
-.timelineCard,
-.metaCard{
-  background:
-    radial-gradient(120% 120% at 10% 0%, rgba(255,255,255,.08), transparent 40%),
-    linear-gradient(180deg, rgba(34,72,107,.74), rgba(11,33,53,.86)) !important;
-  border-color:rgba(216,234,248,.12) !important;
-  box-shadow:
-    0 14px 32px rgba(4,12,22,.16),
-    inset 0 1px 0 rgba(255,255,255,.10) !important;
-}
-
-/* slimmer scoreboard */
-.scoreTv{
-  padding:12px 16px 10px !important;
-  border-radius:26px !important;
-}
-.tvHeader{
-  padding-bottom:8px !important;
-  margin-bottom:4px !important;
-  font-size:11px !important;
-}
-.tvRow{
-  min-height:70px !important;
-  padding:8px 0 !important;
-}
-.scoreTv input{
-  font-size:clamp(18px, 2.2vw, 24px) !important;
-  letter-spacing:.01em !important;
-}
-.tvTag{
-  width:28px !important;
-  height:28px !important;
-  font-size:14px !important;
-}
-.tvAvatar{
-  width:34px !important;
-  height:34px !important;
-  border-radius:10px !important;
-}
-.tvGames,
-.tvPts{
-  font-size:clamp(20px, 2.6vw, 28px) !important;
-  min-width:64px !important;
-  height:52px !important;
-  border-radius:16px !important;
-}
-.tvHeaderGames,
-.tvHeaderPts,
-.tvHeaderSets,
-.tvHeaderName{
-  font-size:10px !important;
-}
-
-/* splash portada refined to match requested composition */
+/* ===== v2980 requested UX refinements ===== */
+/* splash: only logo + 3 buttons, higher placement */
+.splashCopy,
 .splashHighlights,
 .splashHint,
 .splashStart{
   display:none !important;
 }
 .splash{
-  align-items:stretch !important;
-  justify-content:center !important;
-  padding:0 !important;
   background:
-    linear-gradient(180deg, rgba(234,241,248,.12) 0%, rgba(201,214,228,.10) 16%, rgba(26,44,67,.14) 48%, rgba(6,18,31,.18) 100%),
+    linear-gradient(180deg, rgba(245,249,253,.08) 0%, rgba(217,228,239,.06) 15%, rgba(18,34,52,.10) 58%, rgba(7,18,30,.16) 100%),
     url("assets/cover_portada.jpg") center center / cover no-repeat !important;
 }
-.splash::before{
-  background:
-    linear-gradient(180deg, rgba(250,252,255,.10) 0%, rgba(255,255,255,.02) 18%, rgba(12,22,34,.10) 56%, rgba(7,15,25,.20) 100%),
-    radial-gradient(800px 560px at 20% 12%, rgba(255,255,255,.20), transparent 54%),
-    radial-gradient(620px 360px at 84% 26%, rgba(162,189,219,.14), transparent 48%) !important;
-}
-.splash::after{ display:none !important; }
 .splashInner{
-  position:relative !important;
   width:100% !important;
   max-width:none !important;
   min-height:100vh !important;
-  padding:34px 18px calc(max(env(safe-area-inset-bottom), 18px) + 24px) !important;
-  background:none !important;
-  border:none !important;
-  box-shadow:none !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-  border-radius:0 !important;
+  padding:28px 18px calc(max(env(safe-area-inset-bottom), 18px) + 20px) !important;
   display:flex !important;
   flex-direction:column !important;
   align-items:center !important;
   justify-content:flex-start !important;
-  gap:0 !important;
+  background:none !important;
+  border:none !important;
+  box-shadow:none !important;
 }
 .splashLogo{
-  margin-top:28px !important;
-  width:min(80vw, 560px) !important;
-  max-width:560px !important;
-}
-.splashCopy{
-  margin-top:68px !important;
-  max-width:min(90vw, 760px) !important;
-  text-align:center !important;
-  gap:12px !important;
-  padding:20px 18px !important;
-  border-radius:28px !important;
-  background:
-    linear-gradient(180deg, rgba(55,75,97,.74), rgba(33,51,72,.82)) !important;
-  border:1px solid rgba(224,238,249,.12) !important;
-  box-shadow:0 16px 34px rgba(8,16,26,.18), inset 0 1px 0 rgba(255,255,255,.08) !important;
-  backdrop-filter:blur(8px) !important;
-  -webkit-backdrop-filter:blur(8px) !important;
-}
-.splashEyebrow{
-  font-size:clamp(13px, 2vw, 18px) !important;
-  letter-spacing:.26em !important;
-  color:#87bff6 !important;
-}
-.splashCopy h1{
-  margin:0 !important;
-  font-size:clamp(34px, 7vw, 74px) !important;
-  line-height:.98 !important;
-  color:#f2f6fb !important;
-}
-.splashCopy p{
-  max-width:760px !important;
-  margin:0 auto !important;
-  font-size:clamp(17px, 3.4vw, 24px) !important;
-  line-height:1.48 !important;
-  color:rgba(241,247,252,.92) !important;
+  width:min(82vw, 560px) !important;
+  margin-top:26px !important;
 }
 .splashQuickAccess{
   position:absolute !important;
   left:50% !important;
-  bottom:clamp(76px, 13vh, 140px) !important;
-  transform:translateX(-50%) !important;
-  width:min(84vw, 420px) !important;
+  top:63% !important;
+  transform:translate(-50%, -50%) !important;
+  width:min(78vw, 390px) !important;
   display:flex !important;
   flex-direction:column !important;
-  align-items:center !important;
   gap:14px !important;
-  z-index:2 !important;
+  z-index:3 !important;
 }
 .splashQuickAccess .btn{
-  width:100% !important;
   min-width:0 !important;
-  min-height:58px !important;
+  width:100% !important;
+  min-height:56px !important;
   border-radius:999px !important;
   font-family:var(--font-display) !important;
-  font-size:clamp(20px, 4.6vw, 28px) !important;
-  letter-spacing:.03em !important;
+  font-size:clamp(18px, 4.6vw, 28px) !important;
+  letter-spacing:.04em !important;
   font-weight:800 !important;
-  box-shadow:0 12px 24px rgba(5,12,22,.18), inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+
+/* workspace action buttons smaller + integrated futuristic style */
+#workspaceBar.workspaceCompact .workspaceActions{
+  gap:10px !important;
+  justify-content:flex-start !important;
+}
+#workspaceBar.workspaceCompact .workspaceActions .chip{
+  flex:1 1 calc(33.333% - 8px) !important;
+  min-width:0 !important;
+  padding:11px 14px !important;
+  min-height:50px !important;
+  border-radius:22px !important;
+  font-size:clamp(14px, 3.2vw, 18px) !important;
+  font-family:var(--font-display) !important;
+  letter-spacing:.01em !important;
+  color:#f1f6fb !important;
+  background:linear-gradient(180deg, rgba(77,92,135,.52), rgba(49,41,78,.64)) !important;
+  border:1px solid rgba(204,221,239,.12) !important;
+  box-shadow:0 12px 22px rgba(7,14,24,.14), inset 0 1px 0 rgba(255,255,255,.10) !important;
+}
+#workspaceBar.workspaceCompact .workspaceActions .chip.primary{
+  color:#f7fbeb !important;
+  background:linear-gradient(180deg, rgba(197,219,95,.96), rgba(159,186,73,.94)) !important;
+  border-color:rgba(226,239,177,.48) !important;
+}
+
+/* players main modal: only mode cards visible initially, cleaner style */
+#playersModal .playersModalCard{ max-width:900px !important; }
+#playersModal .playerLibraryModes{ gap:14px !important; }
+#playersModal .playerModeBtn{
+  padding:18px 18px !important;
+  border-radius:26px !important;
+  background:linear-gradient(180deg, rgba(93,126,103,.84), rgba(57,89,70,.84)) !important;
+  border:1px solid rgba(196,220,143,.28) !important;
+  box-shadow:0 14px 28px rgba(6,14,24,.14), inset 0 1px 0 rgba(255,255,255,.10) !important;
+}
+#playersModal .playerModeBtn + .playerModeBtn{
+  background:linear-gradient(180deg, rgba(38,77,119,.84), rgba(18,45,79,.90)) !important;
+  border-color:rgba(179,210,246,.20) !important;
+}
+#playersModal .playerModeBtn span{
+  font-size:clamp(20px, 4.6vw, 28px) !important;
+  color:#f2f7fb !important;
+}
+#playersModal .playerModeBtn small{
+  font-size:clamp(12px, 2.8vw, 15px) !important;
+  color:rgba(240,246,251,.86) !important;
+}
+#playersModal .playerModeBtn.active{
+  filter:saturate(1.06) brightness(1.02) !important;
+  transform:none !important;
+}
+#playersModal #playerProfileList{ display:none !important; }
+#playersModal #playersChoosePane.hidden{ display:none !important; }
+
+/* secondary choose-player modal with rectangular cards */
+#playerSelectModal .playerSelectModalCard{
+  max-width:900px !important;
+  width:min(900px, calc(100vw - 20px)) !important;
+  max-height:min(88vh, 980px) !important;
+}
+.playerChooserList{
+  display:grid;
+  gap:12px;
+  align-content:start;
+  max-height:64vh;
+  overflow:auto;
+  padding-right:2px;
+}
+.playerChooserCard{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding:14px;
+  border-radius:24px;
+  border:1px solid rgba(214,232,248,.12);
+  background:linear-gradient(180deg, rgba(43,79,120,.72), rgba(14,39,68,.88));
+  box-shadow:0 16px 28px rgba(7,14,24,.16), inset 0 1px 0 rgba(255,255,255,.10);
+}
+.playerChooserTop{
+  display:grid;
+  grid-template-columns:68px minmax(0, 1fr) 52px 52px;
+  gap:12px;
+  align-items:center;
+}
+.playerChooserAvatar{
+  width:68px;
+  height:68px;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid rgba(216,232,248,.16);
+  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  display:grid;
+  place-items:center;
+}
+.playerChooserAvatar img{
+  width:100%; height:100%; object-fit:cover; display:block;
+}
+.playerChooserName{
+  min-width:0;
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  padding:0 16px;
+  border-radius:18px;
+  border:1px solid rgba(214,232,248,.12);
+  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+  font-family:var(--font-display);
+  font-size:clamp(24px, 5vw, 40px);
+  font-weight:800;
+  line-height:1;
+  color:#f2f7fb;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.playerChooserIcon{
+  width:52px;
+  height:52px;
+  border-radius:16px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:1px solid rgba(214,232,248,.14);
+  background:linear-gradient(180deg, rgba(58,96,139,.78), rgba(17,42,74,.92));
+  color:#eff5fb;
+  box-shadow:0 10px 20px rgba(7,14,24,.14), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.playerChooserIcon.delete{
+  background:linear-gradient(180deg, rgba(137,69,77,.92), rgba(97,29,36,.94));
+  border-color:rgba(229,155,163,.24);
+}
+.playerChooserIcon svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:2; }
+.playerChooserActions{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:12px;
+}
+.playerChooserActions .chip{
+  min-width:0 !important;
+  min-height:54px;
+  justify-content:center;
+  border-radius:22px !important;
+  font-family:var(--font-display) !important;
+  font-size:clamp(15px, 3.5vw, 22px) !important;
+  letter-spacing:.01em;
+}
+.playerChooserActions .chip.primary{
+  background:linear-gradient(180deg, rgba(197,219,95,.96), rgba(159,186,73,.94)) !important;
+  color:#f8fbec !important;
+  border-color:rgba(227,240,177,.46) !important;
+}
+.playerChooserEmpty{
+  padding:24px 18px;
+  border-radius:24px;
+  border:1px dashed rgba(214,232,248,.18);
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  color:rgba(240,246,251,.88);
+  text-align:center;
 }
 
 @media (max-width: 900px){
-  #appRoot.app.single{
-    padding-top:0 !important;
-    gap:2px !important;
-  }
-  .topbarInline{
-    margin:0 -10px 0 !important;
-    padding-top:0 !important;
-    padding-bottom:0 !important;
-  }
-  .topbar{
-    gap:0 !important;
-  }
-  .topbarRow{
-    grid-template-columns:52px minmax(0,1fr) 52px !important;
-    padding:10px 12px !important;
-    border-radius:0 0 20px 20px !important;
-    border-top:none !important;
-    border-left:none !important;
-    border-right:none !important;
-  }
-  .topbarBrand{
-    min-height:52px !important;
-    padding:8px 14px !important;
-    border-radius:18px !important;
-  }
-  .brandLogoImg{
-    height:34px !important;
-  }
-  #workspaceBar.workspaceCompact{
-    margin:2px 10px 0 !important;
-    padding:10px 14px !important;
-    border-radius:22px !important;
-  }
-  #workspaceBar.workspaceCompact .workspaceSummaryRow{
-    min-height:38px !important;
-  }
-  #workspaceBar.workspaceCompact .workspaceName{
-    font-size:clamp(16px, 4.3vw, 22px) !important;
-  }
-  #workspaceBar.workspaceCompact .workspaceEyebrow{
-    font-size:9px !important;
-  }
-  #workspaceBar.workspaceCompact .workspaceToggle{
-    width:48px !important;
-    height:48px !important;
-    min-height:48px !important;
-  }
-  #scoreSection.hidden,
-  #workspaceBar.hidden{
-    margin:0 !important;
-  }
-  #workspaceBar.hidden + #scoreSection.hidden + .diagramArea,
-  #workspaceBar.hidden + #scoreSection + .diagramArea,
-  #workspaceBar + #scoreSection.hidden + .diagramArea,
-  .topbarInline + #workspaceBar.hidden + #scoreSection.hidden + .diagramArea{
-    margin-top:0 !important;
-  }
-  .diagramArea{
-    padding:0 !important;
-    margin-top:0 !important;
-  }
-  .diagramGrid{
-    gap:4px !important;
-    margin-top:0 !important;
-  }
-  .courtWrap.courtRow{
-    padding:4px !important;
-    margin-top:0 !important;
-    border-radius:22px !important;
-  }
-  .scoreTv{
-    margin:2px 10px 0 !important;
-    padding:10px 12px 8px !important;
-    border-radius:22px !important;
-  }
-  .tvRow{
-    min-height:62px !important;
-    padding:6px 0 !important;
-  }
-  .scoreTv input{
-    font-size:clamp(16px, 4.4vw, 22px) !important;
-  }
-  .tvGames,
-  .tvPts{
-    font-size:clamp(16px, 5vw, 24px) !important;
-    min-width:54px !important;
-    height:44px !important;
-  }
-  .tvAvatar{
-    width:30px !important;
-    height:30px !important;
-  }
-  .tvTag{
-    width:24px !important;
-    height:24px !important;
-    font-size:13px !important;
-  }
-  .drawer{
-    background:
-      linear-gradient(180deg, rgba(35,73,108,.94), rgba(10,31,50,.98)) !important;
-    border:1px solid rgba(216,234,248,.14) !important;
-  }
-  .splashInner{
-    padding:28px 18px calc(max(env(safe-area-inset-bottom), 18px) + 22px) !important;
-  }
-  .splashLogo{
-    margin-top:26px !important;
-    width:min(82vw, 520px) !important;
-  }
-  .splashCopy{
-    margin-top:64px !important;
-    max-width:min(92vw, 720px) !important;
-    padding:18px 16px !important;
-    border-radius:24px !important;
-  }
-  .splashEyebrow{
-    font-size:clamp(11px, 2.8vw, 14px) !important;
-  }
-  .splashCopy h1{
-    font-size:clamp(28px, 8vw, 48px) !important;
-  }
-  .splashCopy p{
-    font-size:clamp(14px, 4.2vw, 18px) !important;
-  }
-  .splashQuickAccess{
-    bottom:clamp(54px, 11vh, 104px) !important;
-    width:min(80vw, 360px) !important;
-    gap:12px !important;
-  }
-  .splashQuickAccess .btn{
-    min-height:52px !important;
-    font-size:clamp(17px, 5.2vw, 23px) !important;
-  }
+  .splashQuickAccess{ top:61% !important; width:min(78vw, 360px) !important; }
 }
-
 @media (max-width: 620px){
-  .topbarInline{
-    margin:0 -6px 0 !important;
-  }
-  .topbarRow{
-    grid-template-columns:48px minmax(0,1fr) 48px !important;
-    padding:8px 10px !important;
-    border-radius:0 0 18px 18px !important;
-  }
-  .topbarBrand{
+  .splashLogo{ width:min(82vw, 460px) !important; margin-top:14px !important; }
+  .splashQuickAccess{ top:60% !important; width:min(78vw, 330px) !important; gap:12px !important; }
+  .splashQuickAccess .btn{ min-height:52px !important; font-size:clamp(17px, 5vw, 22px) !important; }
+  #workspaceBar.workspaceCompact .workspaceActions .chip{
+    padding:10px 10px !important;
     min-height:46px !important;
-    padding:7px 12px !important;
-  }
-  .brandLogoImg{height:30px !important;}
-  #workspaceBar.workspaceCompact{
-    margin:1px 8px 0 !important;
-    padding:9px 12px !important;
-  }
-  .scoreTv{
-    margin:1px 8px 0 !important;
-  }
-  .diagramArea{
-    padding:0 !important;
-  }
-  .courtWrap.courtRow{
-    padding:3px !important;
+    font-size:clamp(12px, 3.6vw, 15px) !important;
     border-radius:20px !important;
   }
-  .splashLogo{ margin-top:18px !important; }
-  .splashCopy{ margin-top:58px !important; }
-  .splashQuickAccess{
-    width:min(78vw, 330px) !important;
-    bottom:clamp(38px, 8vh, 76px) !important;
-  }
+  #playersModal .playerModeBtn{ padding:16px 16px !important; }
+  .playerChooserTop{ grid-template-columns:58px minmax(0,1fr) 46px 46px; gap:10px; }
+  .playerChooserAvatar{ width:58px; height:58px; border-radius:16px; }
+  .playerChooserName{ min-height:46px; padding:0 12px; font-size:clamp(20px, 7vw, 30px); }
+  .playerChooserIcon{ width:46px; height:46px; border-radius:14px; }
+  .playerChooserActions{ grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .playerChooserActions .chip{ min-height:48px; font-size:clamp(13px, 3.8vw, 18px) !important; padding:10px 8px !important; }
 }

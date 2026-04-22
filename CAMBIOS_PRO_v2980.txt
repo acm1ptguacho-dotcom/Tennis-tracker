@@ -1,0 +1,9 @@
+Tennis Direction Tracker v2980
+
+Cambios aplicados:
+1. Portada: eliminada la caja de texto; se deja únicamente el logo y los tres botones principales, colocados más arriba.
+2. Workspace: rediseñados los botones Panel Pro / Jugadores / Cuenta con estilo futurista coherente y tamaño más compacto.
+3. Jugadores: la biblioteca principal muestra solo dos opciones (Elegir jugador y Nuevo jugador).
+4. Elegir jugador abre una ventana nueva con fichas rectangulares apiladas verticalmente.
+5. Cada ficha incluye imagen, nombre, iconos de editar y borrar, y botones Ver ficha / Asignar A / Asignar B.
+6. Editar abre la ficha para edición; borrar abre confirmación.

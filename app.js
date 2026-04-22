@@ -5711,3 +5711,111 @@ if (document.readyState === "loading") {
 window.addEventListener("pageshow", ()=>{
   try{ if (window.__tdtBindEntryFallback) window.__tdtBindEntryFallback(); }catch(e){}
 });
+
+/* ===== v2980 players flow + splash/workspace polish ===== */
+function playerEditIconSVG(){
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-.8L18.5 8.9a1.9 1.9 0 0 0 0-2.7l-.7-.7a1.9 1.9 0 0 0-2.7 0L4.8 15.8 4 20z"></path><path d="M13.5 6.5l4 4"></path></svg>';
+}
+function playerDeleteIconSVG(){
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M7 7l1 13h8l1-13"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>';
+}
+function closePlayerChooser(options){
+  closeModal('#playerSelectModal');
+  if (options && options.reopenPlayers) openPlayers();
+}
+function renderPlayerChooser(){
+  const list = $("#playerChooserList");
+  const summary = $("#playerChooserSummary");
+  if (!list) return;
+  const profiles = getPlayerProfiles().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  if (summary) summary.textContent = isEn() ? `${profiles.length} profiles available · Tap a card to view, edit, delete or assign` : `${profiles.length} perfiles disponibles · Toca una ficha para ver, editar, borrar o asignar`;
+  if (!profiles.length){
+    list.innerHTML = `<div class="playerChooserEmpty"><strong>${tr('Todavía no hay jugadores guardados.','There are no saved players yet.')}</strong><p>${tr('Crea un jugador nuevo para empezar tu biblioteca.','Create a new player to start your library.')}</p></div>`;
+    return;
+  }
+  list.innerHTML = profiles.map(profile => `
+    <article class="playerChooserCard">
+      <div class="playerChooserTop">
+        <div class="playerChooserAvatar ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : defaultAvatarSVG(profile.sex || 'M')}</div>
+        <div class="playerChooserName">${escapeHtml(profile.name || 'Jugador')}</div>
+        <button class="playerChooserIcon" type="button" data-chooser-action="edit" data-profile-id="${profile.id}" aria-label="${tr('Editar','Edit')}" title="${tr('Editar','Edit')}">${playerEditIconSVG()}</button>
+        <button class="playerChooserIcon delete" type="button" data-chooser-action="delete" data-profile-id="${profile.id}" aria-label="${tr('Borrar','Delete')}" title="${tr('Borrar','Delete')}">${playerDeleteIconSVG()}</button>
+      </div>
+      <div class="playerChooserActions">
+        <button class="chip primary" type="button" data-chooser-action="view" data-profile-id="${profile.id}">${tr('Ver ficha','View profile')}</button>
+        <button class="chip" type="button" data-chooser-action="assignA" data-profile-id="${profile.id}">${tr('Asignar A','Assign A')}</button>
+        <button class="chip" type="button" data-chooser-action="assignB" data-profile-id="${profile.id}">${tr('Asignar B','Assign B')}</button>
+      </div>
+    </article>`).join('');
+}
+function openPlayerChooser(){
+  renderPlayerChooser();
+  openModal('#playerSelectModal');
+}
+function openPlayerProfileFromChooser(id){
+  closeModal('#playerSelectModal');
+  openPlayers();
+  $("#playersChoosePane")?.classList.remove('hidden');
+  renderPlayerProfileDetail(id);
+}
+function openPlayerEditFromChooser(id){
+  closeModal('#playerSelectModal');
+  openPlayers();
+  loadProfileIntoForm(id);
+}
+function switchPlayerLibraryMode(mode="choose"){
+  const choose = mode !== "create";
+  $("#playersCreatePane")?.classList.toggle("hidden", choose);
+  $("#playersChoosePane")?.classList.toggle("hidden", true);
+  $("#btnPlayersChooseMode")?.classList.toggle("active", choose);
+  $("#btnPlayersCreateMode")?.classList.toggle("active", !choose);
+  $("#btnPlayersChooseMode")?.setAttribute("aria-pressed", choose ? "true" : "false");
+  $("#btnPlayersCreateMode")?.setAttribute("aria-pressed", !choose ? "true" : "false");
+  if (choose) closePlayerProfileDetail();
+  const shell = $("#playerLibraryShell");
+  if (shell) shell.scrollTop = 0;
+}
+function openPlayers(){
+  renderPlayerLibrary();
+  const hasProfiles = getPlayerProfiles().length > 0;
+  switchPlayerLibraryMode(hasProfiles ? 'choose' : 'create');
+  openModal('#playersModal');
+  if (!hasProfiles) setTimeout(()=> $("#profileName")?.focus(), 30);
+}
+(function initRequestedRefinements(){
+  const bind = ()=>{
+    const chooseBtn = $("#btnPlayersChooseMode");
+    if (chooseBtn && !chooseBtn.dataset.submodalBound){
+      chooseBtn.dataset.submodalBound = '1';
+      chooseBtn.addEventListener('click', ()=> openPlayerChooser());
+    }
+    const closeBtn = $("#btnClosePlayerSelect");
+    if (closeBtn && !closeBtn.dataset.bound){
+      closeBtn.dataset.bound='1';
+      closeBtn.addEventListener('click', ()=> closePlayerChooser({ reopenPlayers:true }));
+    }
+    const list = $("#playerChooserList");
+    if (list && !list.dataset.bound){
+      list.dataset.bound='1';
+      list.addEventListener('click', (e)=>{
+        const btn = e.target.closest('[data-chooser-action]');
+        if (!btn) return;
+        const action = btn.dataset.chooserAction;
+        const id = btn.dataset.profileId;
+        if (!id) return;
+        if (action === 'view') openPlayerProfileFromChooser(id);
+        if (action === 'edit') openPlayerEditFromChooser(id);
+        if (action === 'delete') openConfirm(tr('Eliminar perfil','Delete profile'), tr('Se borrará el perfil del jugador seleccionado.','The selected player profile will be deleted.'), ()=>{ deleteProfile(id); renderPlayerChooser(); });
+        if (action === 'assignA'){ assignProfileToSide(id, 'A'); renderPlayerChooser(); }
+        if (action === 'assignB'){ assignProfileToSide(id, 'B'); renderPlayerChooser(); }
+      });
+    }
+    const modal = $("#playerSelectModal");
+    if (modal && !modal.dataset.bound){
+      modal.dataset.bound='1';
+      modal.addEventListener('click', (e)=>{ if (e.target === modal) closePlayerChooser({ reopenPlayers:true }); });
+    }
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once:true });
+  else bind();
+})();

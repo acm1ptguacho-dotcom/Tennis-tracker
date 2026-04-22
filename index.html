@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=2890" />
-  <link rel="stylesheet" href="style-futuristic.css?v=2970" />
+  <link rel="stylesheet" href="style-futuristic.css?v=2980" />
 </head>
 <body>
 
@@ -1107,6 +1107,22 @@
   </div>
 </div>
 
+
+<div class="modal hidden" id="playerSelectModal">
+  <div class="modalCard solid playerSelectModalCard">
+    <div class="modalHead">
+      <div>
+        <div class="modalTitle" id="playerSelectModalTitle">Elegir jugador</div>
+        <div class="muted" id="playerChooserSummary">Selecciona una ficha guardada y asígnala a A o B</div>
+      </div>
+      <button class="chip" id="btnClosePlayerSelect" type="button">Cerrar</button>
+    </div>
+    <div class="modalBody premiumModalBody playerSelectModalBody">
+      <div class="playerChooserList" id="playerChooserList"></div>
+    </div>
+  </div>
+</div>
+
 <div class="modal hidden" id="accountModal">
   <div class="modalCard solid accountModalCard">
     <div class="modalHead">
@@ -1319,7 +1335,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=2890"></script>
+<script src="app.js?v=2980"></script>
 
 </body>
 </html>
