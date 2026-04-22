@@ -1,0 +1,30 @@
+Tennis Direction Tracker · v3.07
+
+NOVEDADES PRINCIPALES
+- Se añade exportación PDF específica del módulo de Analíticas desde el propio modal.
+- Se incorporan heatmaps visuales dentro de la pestaña Direcciones:
+  - Heatmap visual al saque
+  - Heatmap visual al resto
+  - Heatmap visual de rally
+- Se mantiene la integración desde el menú existente “Analíticas”.
+
+DETALLES FUNCIONALES
+- El botón PDF del módulo usa los filtros activos del usuario:
+  - jugador
+  - contexto
+  - longitud de patrón
+  - modo
+  - mínimo de ocurrencias
+  - incluir saque
+- El reporte premium de analíticas incluye:
+  - KPIs principales
+  - heatmaps visuales
+  - patrones detectados
+  - insights tácticos
+  - recomendaciones
+  - puntos clave filtrados
+- La pestaña Direcciones se refuerza con lectura visual + comparativa + barras.
+
+DISEÑO
+- Nuevos bloques visuales de heatmap integrados con la estética futurista/metálica de la web.
+- Ajustes responsive para que el nuevo módulo siga siendo usable en tamaños más pequeños.

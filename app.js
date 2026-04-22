@@ -3313,6 +3313,233 @@ function analyticsPatternCard(it){
     <div class="analyticsPatternPoints">${it.points.slice(0,8).map(n => `<button class="analyticsPointMiniBtn" type="button" data-point-open="${n}">${n}</button>`).join('')}</div>
   </article>`;
 }
+
+function analyticsCurrentFilters(){
+  state.ui = state.ui || {};
+  if (!state.ui.analyticsTab) state.ui.analyticsTab = 'summary';
+  const filters = {
+    persp: $('#aPerspective')?.value || state.ui.analyticsPerspective || 'A',
+    context: $('#aContext')?.value || state.ui.analyticsContext || 'all',
+    includeServe: $('#aIncludeServe')?.checked ?? true,
+    mode: $('#aMode')?.value || 'exact',
+    minCount: parseInt($('#aMin')?.value || '2', 10) || 2,
+    len: parseInt($('#aPatternLen')?.value || '3', 10) || 3
+  };
+  state.ui.analyticsPerspective = filters.persp;
+  state.ui.analyticsContext = filters.context;
+  persist();
+  return filters;
+}
+function analyticsDirectionMatrix(points, persp, phase='rally'){
+  const matrix = {
+    P:{C:0,M:0,P:0},
+    M:{C:0,M:0,P:0},
+    C:{C:0,M:0,P:0}
+  };
+  (Array.isArray(points) ? points : []).forEach(p => {
+    (Array.isArray(p?.events) ? p.events : []).forEach(ev => {
+      if (!ev || ev.type !== 'rally' || ev.player !== persp) return;
+      const normalized = normalizeShotCode(ev.code);
+      const isReturn = normalized.isReturn;
+      if (phase === 'return' && !isReturn) return;
+      if (phase === 'rally' && isReturn) return;
+      const dd = decodeDirDepth(normalized.code);
+      if (!dd || !matrix[dd.depth] || matrix[dd.depth][dd.dir] === undefined) return;
+      matrix[dd.depth][dd.dir]++;
+    });
+  });
+  return matrix;
+}
+function analyticsHeatCell(label, value, max){
+  const pct = max ? Math.max(0.12, value / max) : 0;
+  const alpha = value ? Math.min(0.92, pct) : 0.08;
+  return `<div class="analyticsHeatCell ${value ? 'active' : ''}" style="--heat:${alpha};"><span>${escapeHtml(label)}</span><strong>${value || 0}</strong></div>`;
+}
+function analyticsServeHeatmap(title, counts, subtitle=''){
+  const safe = { A: counts?.A || 0, C: counts?.C || 0, T: counts?.T || 0 };
+  const max = Math.max(safe.A, safe.C, safe.T, 1);
+  const total = safe.A + safe.C + safe.T;
+  return `
+    <div class="analyticsPanel analyticsPanelSoft analyticsHeatPanel">
+      <div class="analyticsPanelTitle">${escapeHtml(title)}</div>
+      ${subtitle ? `<div class="analyticsPanelSub">${escapeHtml(subtitle)}</div>` : ''}
+      <div class="analyticsHeatmapCourt analyticsHeatmapCourtServe">
+        <div class="analyticsServeNet"></div>
+        <div class="analyticsServeBox analyticsServeBox-wide">${analyticsHeatCell(tr('Abierto','Wide'), safe.A, max)}</div>
+        <div class="analyticsServeBox analyticsServeBox-body">${analyticsHeatCell(tr('Cuerpo','Body'), safe.C, max)}</div>
+        <div class="analyticsServeBox analyticsServeBox-t">${analyticsHeatCell(tr('T','T'), safe.T, max)}</div>
+      </div>
+      <div class="analyticsHeatLegend">${[
+        [tr('Abierto','Wide'), safe.A],
+        [tr('Cuerpo','Body'), safe.C],
+        ['T', safe.T]
+      ].map(([label,val]) => `<span>${escapeHtml(label)} · ${analyticsFmtPct(val, Math.max(1,total))}</span>`).join('')}</div>
+    </div>`;
+}
+function analyticsMatrixHeatmap(title, matrix, subtitle=''){
+  const rows = ['P','M','C'];
+  const cols = ['C','M','P'];
+  const max = Math.max(1, ...rows.flatMap(r => cols.map(c => matrix?.[r]?.[c] || 0)));
+  const total = rows.reduce((sum, r) => sum + cols.reduce((acc, c) => acc + (matrix?.[r]?.[c] || 0), 0), 0);
+  return `
+    <div class="analyticsPanel analyticsPanelSoft analyticsHeatPanel">
+      <div class="analyticsPanelTitle">${escapeHtml(title)}</div>
+      ${subtitle ? `<div class="analyticsPanelSub">${escapeHtml(subtitle)}</div>` : ''}
+      <div class="analyticsHeatmapCourt analyticsHeatmapCourtMatrix">
+        <div class="analyticsCourtAxis analyticsCourtAxis-top">${[tr('Cruzado','Crosscourt'), tr('Centro','Middle'), tr('Paralelo','Down the line')].map(label => `<span>${escapeHtml(label)}</span>`).join('')}</div>
+        <div class="analyticsCourtAxis analyticsCourtAxis-side">${[tr('Profundo','Deep'), tr('Medio','Mid'), tr('Corto','Short')].map(label => `<span>${escapeHtml(label)}</span>`).join('')}</div>
+        <div class="analyticsHeatMatrix">${rows.map(r => cols.map(c => analyticsHeatCell(`${analyticsDepthName(r)} · ${analyticsDirName(c)}`, matrix?.[r]?.[c] || 0, max)).join('')).join('')}</div>
+      </div>
+      <div class="analyticsHeatLegend">${[
+        [tr('Cruzado','Crosscourt'), rows.reduce((sum,r)=>sum + (matrix?.[r]?.C || 0),0)],
+        [tr('Centro','Middle'), rows.reduce((sum,r)=>sum + (matrix?.[r]?.M || 0),0)],
+        [tr('Paralelo','Down the line'), rows.reduce((sum,r)=>sum + (matrix?.[r]?.P || 0),0)]
+      ].map(([label,val]) => `<span>${escapeHtml(label)} · ${analyticsFmtPct(val, Math.max(1,total))}</span>`).join('')}</div>
+    </div>`;
+}
+function analyticsCollectData(){
+  const filters = analyticsCurrentFilters();
+  const { persp, context, includeServe, mode, minCount, len } = filters;
+  const allPoints = Array.isArray(state.matchPoints) ? state.matchPoints.slice() : [];
+  const filteredPoints = allPoints.filter(p => analyticsContextMatch(p, persp, context));
+  const filteredStatsAll = computeStats(filteredPoints);
+  const filteredStats = filteredStatsAll?.[persp] || emptyPlayerStats();
+  const allStatsAll = computeStats(allPoints);
+  const allStats = allStatsAll?.[persp] || emptyPlayerStats();
+  const patternMode = mode === 'similar' ? 'similar' : 'exact';
+  let patterns = analyticsWindowStats(filteredPoints, persp, { includeServe, len, mode: patternMode });
+  patterns = patterns.filter(it => it.count >= minCount);
+  if (mode === 'effective') patterns.sort((a,b)=> (b.winRate - a.winRate) || (b.count - a.count));
+  else patterns.sort((a,b)=> (b.count - a.count) || (b.winRate - a.winRate));
+  const topPattern = patterns[0] || null;
+  const bestPattern = patterns.slice().sort((a,b)=> (b.winRate - a.winRate) || (b.count - a.count))[0] || null;
+  const contextSummary = analyticsContextSummary(filteredPoints, persp);
+  const insights = analyticsBuildInsights(allPoints, filteredPoints, persp, patterns, filteredStatsAll);
+  const serveHeat = { A: filteredStats.serveTargets?.A || 0, C: filteredStats.serveTargets?.C || 0, T: filteredStats.serveTargets?.T || 0 };
+  const returnHeat = analyticsDirectionMatrix(filteredPoints, persp, 'return');
+  const rallyHeat = analyticsDirectionMatrix(filteredPoints, persp, 'rally');
+  const importantPoints = filteredPoints.filter(p => analyticsContextMatch(p, persp, 'important'));
+  const importantWins = importantPoints.filter(p => p.winner === persp).length;
+  return {
+    filters, persp, context, includeServe, mode, minCount, len,
+    allPoints, filteredPoints, filteredStatsAll, filteredStats, allStatsAll, allStats,
+    patterns, topPattern, bestPattern, contextSummary, insights, importantPoints, importantWins,
+    serveHeat, returnHeat, rallyHeat
+  };
+}
+function analyticsPrintHeatmapTable(title, cells, labels){
+  const max = Math.max(1, ...cells.flat());
+  return `
+    <div style="border:1px solid #cbd5e1;border-radius:14px;padding:12px;background:#fff;break-inside:avoid;">
+      <div style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:10px;">${escapeHtml(title)}</div>
+      <table style="width:100%;border-collapse:separate;border-spacing:6px;table-layout:fixed;">
+        ${cells.map((row,ri) => `<tr>${row.map((value,ci) => {
+          const alpha = value ? Math.min(0.9, Math.max(0.12, value / max)) : 0.06;
+          return `<td style="height:56px;border-radius:10px;text-align:center;font-weight:800;color:#0f172a;background:rgba(79,135,255,${alpha});border:1px solid rgba(148,163,184,.45);font-size:12px;">${labels?.[ri]?.[ci] ? `<div style='font-size:10px;opacity:.75;margin-bottom:4px;'>${escapeHtml(labels[ri][ci])}</div>` : ''}${value || 0}</td>`;
+        }).join('')}</tr>`).join('')}
+      </table>
+    </div>`;
+}
+function exportAnalyticsPDF(){
+  const data = analyticsCollectData();
+  const { filters, persp, filteredPoints, patterns, topPattern, bestPattern, insights, filteredStats, allPoints, serveHeat, returnHeat, rallyHeat } = data;
+  if (!filteredPoints.length){
+    alert(tr('No hay datos suficientes en Analíticas para exportar.','Not enough Analytics data to export.'));
+    return;
+  }
+  const playerName = analyticsPlayerName(persp);
+  const stamp = new Date().toLocaleString();
+  const existing = document.getElementById('printAnalyticsReport');
+  if (existing) existing.remove();
+  const recommendations = [];
+  if (topPattern && topPattern.winRate >= 60) recommendations.push(tr('Reforzar el patrón más rentable detectado.','Reinforce the most profitable detected pattern.'));
+  if ((filteredStats.serveTargets?.A || 0) && (filteredStats.serveTargets?.A || 0) >= ((filteredStats.serveTargets?.T || 0) + (filteredStats.serveTargets?.C || 0))) recommendations.push(tr('Añadir más variedad al saque para no repetir el abierto.','Add more serve variety to avoid overusing the wide serve.'));
+  if (analyticsTopDirection(filteredStats.returnDir || {})) recommendations.push(tr('Entrenar una alternativa al resto dominante en puntos de presión.','Train an alternative to the dominant return in pressure points.'));
+  if (!recommendations.length) recommendations.push(tr('Seguir registrando más puntos para afinar las recomendaciones.','Keep tracking more points to refine recommendations.'));
+  const kpis = [
+    [tr('Puntos analizados','Points analysed'), String(filteredPoints.length)],
+    [tr('% ganados','Win %'), analyticsFmtPct(filteredPoints.filter(p => p.winner === persp).length, Math.max(1, filteredPoints.length))],
+    [tr('Puntos importantes','Important points'), String(filteredPoints.filter(p => analyticsContextMatch(p, persp, 'important')).length)],
+    [tr('Patrón top','Top pattern'), topPattern ? `${topPattern.count}x` : '—'],
+    [tr('Patrón eficaz','Best pattern'), bestPattern ? `${bestPattern.winRate}%` : '—'],
+    [tr('Resto dominante','Top return'), analyticsTopDirection(filteredStats.returnDir || {})?.label || '—']
+  ];
+  const patternRows = patterns.slice(0,8).map(it => `<tr>
+    <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${it.longLabel}</td>
+    <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center;">${it.count}</td>
+    <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center;">${it.winRate}%</td>
+    <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center;">${escapeHtml(analyticsShortContextLabel(it.dominantContext))}</td>
+  </tr>`).join('');
+  const pointRows = filteredPoints.slice(-10).reverse().map(p => `<tr>
+    <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${p.n}</td>
+    <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(formatSnapshot(p.snapshot))}</td>
+    <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(pointPattern(p, filters.includeServe) || '—')}</td>
+    <td style="padding:8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(p.winner === persp ? tr('Ganado','Won') : tr('Perdido','Lost'))}</td>
+  </tr>`).join('');
+  const returnLabels = [
+    [tr('Profundo cruzado','Deep crosscourt'), tr('Profundo centro','Deep middle'), tr('Profundo paralelo','Deep line')],
+    [tr('Medio cruzado','Mid crosscourt'), tr('Medio centro','Mid middle'), tr('Medio paralelo','Mid line')],
+    [tr('Corto cruzado','Short crosscourt'), tr('Corto centro','Short middle'), tr('Corto paralelo','Short line')]
+  ];
+  const serveLabels = [[tr('Abierto','Wide'), tr('Cuerpo','Body'), 'T']];
+  const wrap = document.createElement('div');
+  wrap.id = 'printAnalyticsReport';
+  wrap.innerHTML = `
+    <div style="font-family:Arial,sans-serif;background:#fff;color:#0f172a;padding:28px 30px;">
+      <div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-end;border-bottom:2px solid #cbd5e1;padding-bottom:14px;margin-bottom:18px;">
+        <div>
+          <div style="font-size:16px;font-weight:900;letter-spacing:.03em;">Tennis Direction Tracker</div>
+          <div style="font-size:24px;font-weight:900;margin-top:6px;">${tr('Reporte premium de analíticas','Premium analytics report')}</div>
+          <div style="font-size:13px;color:#334155;margin-top:6px;">${escapeHtml(playerName)} · ${escapeHtml(analyticsContextLabel(filters.context))} · ${filters.len} ${tr('golpes','shots')} · ${escapeHtml(analyticsModeLabel(filters.mode))}</div>
+        </div>
+        <div style="font-size:12px;color:#475569;text-align:right;">${escapeHtml(stamp)}<br>${filteredPoints.length} ${tr('puntos filtrados','filtered points')} / ${allPoints.length} ${tr('totales','total')}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px;">${kpis.map(([label,val]) => `<div style="border:1px solid #dbe6ff;border-radius:14px;padding:12px;background:linear-gradient(180deg,#f8fbff,#eef4ff);"><div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#64748b;letter-spacing:.06em;">${escapeHtml(label)}</div><div style="font-size:22px;font-weight:900;color:#0f172a;margin-top:8px;">${escapeHtml(val)}</div></div>`).join('')}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        ${analyticsPrintHeatmapTable(tr('Heatmap visual al saque','Serve visual heatmap'), [[serveHeat.A || 0, serveHeat.C || 0, serveHeat.T || 0]], serveLabels)}
+        ${analyticsPrintHeatmapTable(tr('Heatmap visual al resto','Return visual heatmap'), [[returnHeat.P.C, returnHeat.P.M, returnHeat.P.P],[returnHeat.M.C, returnHeat.M.M, returnHeat.M.P],[returnHeat.C.C, returnHeat.C.M, returnHeat.C.P]], returnLabels)}
+      </div>
+      <div style="margin-bottom:16px;">${analyticsPrintHeatmapTable(tr('Heatmap visual de rally','Rally visual heatmap'), [[rallyHeat.P.C, rallyHeat.P.M, rallyHeat.P.P],[rallyHeat.M.C, rallyHeat.M.M, rallyHeat.M.P],[rallyHeat.C.C, rallyHeat.C.M, rallyHeat.C.P]], returnLabels)}</div>
+      <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:12px;margin-bottom:16px;">
+        <div style="border:1px solid #cbd5e1;border-radius:14px;padding:12px;background:#fff;break-inside:avoid;">
+          <div style="font-size:13px;font-weight:800;margin-bottom:10px;">${tr('Patrones detectados','Detected patterns')}</div>
+          <table style="width:100%;border-collapse:collapse;font-size:11px;">
+            <thead><tr><th style="padding:8px;border-bottom:1px solid #cbd5e1;text-align:left;">${tr('Patrón','Pattern')}</th><th style="padding:8px;border-bottom:1px solid #cbd5e1;">x</th><th style="padding:8px;border-bottom:1px solid #cbd5e1;">%</th><th style="padding:8px;border-bottom:1px solid #cbd5e1;">${tr('Contexto','Context')}</th></tr></thead>
+            <tbody>${patternRows || `<tr><td colspan="4" style="padding:8px;">${tr('Sin patrones suficientes.','Not enough patterns.')}</td></tr>`}</tbody>
+          </table>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="border:1px solid #cbd5e1;border-radius:14px;padding:12px;background:#fff;break-inside:avoid;">
+            <div style="font-size:13px;font-weight:800;margin-bottom:10px;">${tr('Insights tácticos','Tactical insights')}</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">${insights.slice(0,5).map(item => `<div style="border:1px solid #e2e8f0;border-radius:12px;padding:10px;background:#f8fafc;"><div style="font-weight:800;margin-bottom:4px;">${escapeHtml(item.title)}</div><div style="font-size:12px;line-height:1.45;color:#334155;">${escapeHtml(item.body)}</div></div>`).join('')}</div>
+          </div>
+          <div style="border:1px solid #cbd5e1;border-radius:14px;padding:12px;background:#fff;break-inside:avoid;">
+            <div style="font-size:13px;font-weight:800;margin-bottom:10px;">${tr('Recomendaciones','Recommendations')}</div>
+            <ul style="padding-left:18px;margin:0;color:#334155;font-size:12px;line-height:1.55;">${recommendations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+          </div>
+        </div>
+      </div>
+      <div style="border:1px solid #cbd5e1;border-radius:14px;padding:12px;background:#fff;break-inside:avoid;">
+        <div style="font-size:13px;font-weight:800;margin-bottom:10px;">${tr('Puntos clave del filtro','Key filtered points')}</div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px;">
+          <thead><tr><th style="padding:8px;border-bottom:1px solid #cbd5e1;text-align:left;">#</th><th style="padding:8px;border-bottom:1px solid #cbd5e1;text-align:left;">${tr('Marcador','Score')}</th><th style="padding:8px;border-bottom:1px solid #cbd5e1;text-align:left;">${tr('Secuencia','Sequence')}</th><th style="padding:8px;border-bottom:1px solid #cbd5e1;text-align:left;">${tr('Resultado','Result')}</th></tr></thead>
+          <tbody>${pointRows}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px;color:#64748b;font-size:11px;">${tr('Exportado desde el módulo de Analíticas tácticas. Usa Imprimir → Guardar como PDF.','Exported from the Tactical Analytics module. Use Print → Save as PDF.')}</div>
+    </div>`;
+  document.body.appendChild(wrap);
+  document.body.classList.add('printing');
+  const cleanup = () => {
+    document.body.classList.remove('printing');
+    const el = document.getElementById('printAnalyticsReport');
+    if (el) el.remove();
+    window.removeEventListener('afterprint', cleanup);
+  };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
+}
+
 function analyticsRenderTabState(){
   const active = (state.ui && state.ui.analyticsTab) || "summary";
   document.querySelectorAll('#analyticsTabs .analyticsTabBtn').forEach(btn => {
@@ -3468,6 +3695,21 @@ function renderAnalytics(){
     const importantStats = importantStatsAll?.[persp] || emptyPlayerStats();
     directionsPane.innerHTML = `
       <div class="analyticsGrid analyticsGrid-2">
+        ${analyticsServeHeatmap(tr('Heatmap visual al saque','Serve visual heatmap'), serveHeat, analyticsContextLabel(context))}
+        ${analyticsMatrixHeatmap(tr('Heatmap visual al resto','Return visual heatmap'), returnHeat, analyticsContextLabel(context))}
+      </div>
+      <div class="analyticsGrid analyticsGrid-2 analyticsGapTop">
+        ${analyticsMatrixHeatmap(tr('Heatmap visual de rally','Rally visual heatmap'), rallyHeat, analyticsContextLabel(context))}
+        <div class="analyticsPanel analyticsPanelSoft">
+          <div class="analyticsPanelTitle">${tr('Lectura rápida de dirección','Direction reading')}</div>
+          <div class="analyticsNarrative">${[
+            analyticsTopDirection(filteredStats.returnDir || {}) ? `${tr('Al resto domina','On return the player favours')} ${analyticsTopDirection(filteredStats.returnDir || {}).label}.` : '',
+            analyticsTopDirection(filteredStats.strokeDir || {}) ? `${tr('En rally domina','In rally the dominant direction is')} ${analyticsTopDirection(filteredStats.strokeDir || {}).label}.` : '',
+            analyticsTopKey(filteredStats.serveTargets || {}) ? `${tr('Al saque aparece más','On serve the main location is')} ${analyticsServeName(analyticsTopKey(filteredStats.serveTargets || {}))}.` : ''
+          ].filter(Boolean).map(text => `<article class="analyticsInsightMini"><p>${escapeHtml(text)}</p></article>`).join('')}</div>
+        </div>
+      </div>
+      <div class="analyticsGrid analyticsGrid-2 analyticsGapTop">
         ${analyticsBarList(tr('Direcciones al saque','Serve directions'), filteredStats.serveTargets || {}, 'serve', Math.max(1, (filteredStats.serveTargets?.T || 0) + (filteredStats.serveTargets?.C || 0) + (filteredStats.serveTargets?.A || 0)))}
         ${analyticsBarList(tr('Direcciones al resto','Return directions'), filteredStats.returnDir || {}, 'dir', Math.max(1, (filteredStats.returnDir?.C || 0) + (filteredStats.returnDir?.M || 0) + (filteredStats.returnDir?.P || 0)))}
         ${analyticsBarList(tr('Dirección dominante en rally','Rally directions'), filteredStats.strokeDir || {}, 'dir', Math.max(1, (filteredStats.strokeDir?.C || 0) + (filteredStats.strokeDir?.M || 0) + (filteredStats.strokeDir?.P || 0)))}
@@ -3484,12 +3726,12 @@ function renderAnalytics(){
           </div>
         </div>
         <div class="analyticsPanel analyticsPanelSoft">
-          <div class="analyticsPanelTitle">${tr('Lectura rápida de dirección','Direction reading')}</div>
+          <div class="analyticsPanelTitle">${tr('Comparativa visual de presión','Pressure visual comparison')}</div>
           <div class="analyticsNarrative">${[
-            analyticsTopDirection(filteredStats.returnDir || {}) ? `${tr('Al resto domina','On return the player favours')} ${analyticsTopDirection(filteredStats.returnDir || {}).label}.` : '',
-            analyticsTopDirection(filteredStats.strokeDir || {}) ? `${tr('En rally domina','In rally the dominant direction is')} ${analyticsTopDirection(filteredStats.strokeDir || {}).label}.` : '',
-            analyticsTopKey(filteredStats.serveTargets || {}) ? `${tr('Al saque aparece más','On serve the main location is')} ${analyticsServeName(analyticsTopKey(filteredStats.serveTargets || {}))}.` : ''
-          ].filter(Boolean).map(text => `<article class="analyticsInsightMini"><p>${escapeHtml(text)}</p></article>`).join('')}</div>
+            `${tr('Filtro actual','Current filter')}: ${analyticsContextLabel(context)}.`,
+            `${tr('Puntos analizados','Points analysed')}: ${filteredPoints.length}.`,
+            `${tr('Puntos importantes detectados','Important points detected')}: ${allPoints.filter(p => analyticsContextMatch(p, persp, 'important')).length}.`
+          ].map(text => `<article class="analyticsInsightMini"><p>${escapeHtml(text)}</p></article>`).join('')}</div>
         </div>
       </div>`;
   }
@@ -5021,6 +5263,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   });
 
   on("btnAnalyticsRefresh","click", renderAnalytics);
+  on("btnAnalyticsPDF","click", exportAnalyticsPDF);
 
   // stats filters
   ["sRange","sSet","sServer","sContext","sMode","sSub"].forEach(id=>{
