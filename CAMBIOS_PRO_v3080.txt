@@ -1,0 +1,6 @@
+v3080
+- Sistema de botones actualizado al lenguaje visual Variante 4.
+- Botones de acciones del punto rediseñados: Gana verde premium, Winner azul outline, errores destructivos más elegantes.
+- Fila de casilla "Marcar punto importante" rehecha con acabado premium coherente.
+- Modal de elegir jugador ajustado con botones compactos, ver ficha outline y acciones A/B más limpias.
+- Iconos de editar/borrar y botón Cerrar del selector refinados sin tocar las bolas/iconos principales.

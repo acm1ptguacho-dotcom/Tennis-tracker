@@ -5714,7 +5714,7 @@ function renderPlayerLibrary(){
           <button class="playerIconBtn delete" type="button" data-profile-action="delete" data-profile-id="${profile.id}" aria-label="${tr('Borrar','Delete')}" title="${tr('Borrar','Delete')}">${playerDeleteIcon()}</button>
         </div>
         <div class="playerChooserBottom">
-          <button class="chip primary" type="button" data-profile-action="view" data-profile-id="${profile.id}">${tr('Ver ficha','View profile')}</button>
+          <button class="chip outline" type="button" data-profile-action="view" data-profile-id="${profile.id}">${tr('Ver ficha','View profile')}</button>
           <button class="chip" type="button" data-profile-action="assignA" data-profile-id="${profile.id}">${tr('Asignar A','Assign A')}</button>
           <button class="chip" type="button" data-profile-action="assignB" data-profile-id="${profile.id}">${tr('Asignar B','Assign B')}</button>
         </div>

@@ -2863,3 +2863,378 @@ html,body{overflow-x:hidden !important;}
   .analyticsCourtAxis span,
   .analyticsHeatCell span{ font-size:9px; }
 }
+
+
+/* ===== v3080 · sistema de botones Variante 4 ===== */
+:root{
+  --v4-radius:12px;
+  --v4-radius-lg:14px;
+  --v4-blue-border:rgba(104,176,255,.34);
+  --v4-blue-glow:rgba(72,150,255,.18);
+  --v4-green-border:rgba(214,239,112,.46);
+  --v4-green-glow:rgba(193,228,78,.20);
+  --v4-red-border:rgba(255,118,131,.34);
+  --v4-red-glow:rgba(205,76,92,.16);
+}
+
+.chip,
+.btn,
+.iconChip,
+.segTab,
+#workspaceBar.workspaceCompact .workspaceToggle,
+.finishTab,
+.finishBtn,
+.surfaceOpt,
+.playerModeBtn{
+  border-radius:var(--v4-radius) !important;
+  min-height:42px;
+  padding:0 16px !important;
+  font-weight:700 !important;
+  letter-spacing:.02em !important;
+  border:1px solid var(--v4-blue-border) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.02) 30%, rgba(4,18,34,.26) 100%),
+    linear-gradient(180deg, rgba(22,56,88,.96), rgba(8,28,47,.99)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    inset 0 0 0 1px rgba(102,154,214,.08),
+    0 10px 22px rgba(4,12,22,.22),
+    0 0 18px rgba(37,104,179,.07) !important;
+}
+
+.chip::before,
+.btn::before,
+.finishBtn::before,
+.finishTab::before,
+.segTab::before{
+  inset:1px;
+  border-radius:inherit;
+  background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 42%);
+  opacity:1;
+}
+
+.chip:hover,
+.btn:hover,
+.segTab:hover,
+.finishBtn:hover,
+.finishTab:hover,
+.surfaceOpt:hover,
+.playerModeBtn:hover,
+.playerIconBtn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(159,211,255,.40) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 0 0 1px rgba(102,154,214,.10),
+    0 14px 28px rgba(2,10,20,.26),
+    0 0 22px rgba(72,150,255,.12) !important;
+}
+
+.chip:active,
+.btn:active,
+.segTab:active,
+.finishBtn:active,
+.finishTab:active,
+.surfaceOpt:active,
+.playerModeBtn:active,
+.playerIconBtn:active{
+  transform:translateY(0);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    inset 0 0 0 1px rgba(102,154,214,.06),
+    0 8px 16px rgba(2,10,20,.22) !important;
+}
+
+.chip.primary,
+.btn.primary,
+.finishBtn.good,
+.finishTab.active,
+#workspaceBar .workspaceActions .chip.primary{
+  color:#f8fff0 !important;
+  border-color:var(--v4-green-border) !important;
+  background:
+    linear-gradient(180deg, rgba(244,255,205,.18), rgba(255,255,255,.03) 26%, rgba(92,119,20,.12) 100%),
+    linear-gradient(180deg, rgba(146,178,42,.98), rgba(103,130,28,.98)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    inset 0 0 0 1px rgba(230,246,172,.10),
+    0 12px 24px rgba(79,101,18,.24),
+    0 0 24px var(--v4-green-glow) !important;
+}
+
+.finishTab.active::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  bottom:7px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(225,244,139,0), rgba(225,244,139,.95), rgba(225,244,139,0));
+  box-shadow:0 0 12px rgba(225,244,139,.35);
+}
+
+.finishBtn.bad,
+.chip.bad,
+.chip.warn,
+.btn.warn,
+.quickBtn.warn{
+  color:#fff6f7 !important;
+  border-color:var(--v4-red-border) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02) 28%, rgba(59,14,21,.12) 100%),
+    linear-gradient(180deg, rgba(102,45,55,.96), rgba(64,24,31,.99)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 0 0 1px rgba(255,181,188,.05),
+    0 12px 24px rgba(54,17,24,.24),
+    0 0 20px var(--v4-red-glow) !important;
+}
+
+.chip.outline,
+.btn.outline,
+.finishBtn.outline,
+.segTab.outline,
+.finishTab.outline{
+  color:#edf6ff !important;
+  border-color:rgba(97,170,255,.46) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01) 34%, rgba(4,18,34,.18) 100%),
+    linear-gradient(180deg, rgba(15,43,70,.90), rgba(7,24,41,.98)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    inset 0 0 0 1px rgba(129,186,255,.08),
+    0 10px 20px rgba(4,12,22,.20),
+    0 0 18px rgba(72,150,255,.10) !important;
+}
+
+.finishMenuClose,
+.playerIconBtn,
+#btnMenu,
+#btnToolsRail,
+#btnCloseMenu{
+  border-radius:var(--v4-radius) !important;
+}
+
+.finishMenuClose{
+  border:1px solid rgba(114,175,244,.28) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02) 30%, rgba(4,18,34,.24) 100%),
+    linear-gradient(180deg, rgba(21,55,86,.94), rgba(9,30,49,.98)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    inset 0 0 0 1px rgba(102,154,214,.08),
+    0 10px 18px rgba(4,12,22,.18) !important;
+}
+
+.finishMenuTabs{
+  gap:12px !important;
+  margin:4px 0 18px !important;
+  padding-right:82px !important;
+}
+
+.finishTab,
+.segTab{
+  min-height:52px !important;
+  padding:0 24px !important;
+  font-size:15px !important;
+}
+
+.finishMenuTitle{
+  font-size:clamp(28px, 5.6vw, 44px) !important;
+  line-height:.96 !important;
+}
+
+.finishMenuSub{
+  font-size:clamp(13px, 2.1vw, 18px) !important;
+  margin-top:8px !important;
+  margin-bottom:16px !important;
+}
+
+.finishImportantRow{
+  margin:8px 0 20px !important;
+}
+
+.importantCheck{
+  width:100% !important;
+  min-height:56px !important;
+  padding:12px 16px !important;
+  gap:14px !important;
+  border-radius:16px !important;
+  border:1px solid rgba(106,167,228,.20) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02) 34%, rgba(4,18,34,.18) 100%),
+    linear-gradient(180deg, rgba(16,45,71,.88), rgba(8,27,44,.98)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 10px 20px rgba(4,12,22,.16) !important;
+}
+
+.importantCheck:hover{
+  border-color:rgba(117,183,242,.30) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 12px 24px rgba(4,12,22,.18),
+    0 0 16px rgba(72,150,255,.08) !important;
+}
+
+.importantCheck input{
+  width:28px !important;
+  height:28px !important;
+  border-radius:9px !important;
+  border:1px solid rgba(214,239,112,.42) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03) 28%, rgba(4,18,34,.18) 100%),
+    linear-gradient(180deg, rgba(18,45,69,.94), rgba(8,27,43,.98)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 8px 14px rgba(4,12,22,.14),
+    0 0 0 1px rgba(214,239,112,.06) !important;
+}
+
+.importantCheck input:checked{
+  border-color:rgba(214,239,112,.66) !important;
+  background:
+    linear-gradient(180deg, rgba(243,255,206,.18), rgba(255,255,255,.03) 22%, rgba(92,119,20,.12) 100%),
+    linear-gradient(180deg, rgba(146,178,42,.98), rgba(103,130,28,.98)) !important;
+  box-shadow:
+    0 0 0 2px rgba(214,239,112,.12),
+    0 10px 18px rgba(80,101,18,.20),
+    inset 0 1px 0 rgba(255,255,255,.18) !important;
+}
+
+.importantCheck input:checked::after{
+  left:8px !important;
+  top:4px !important;
+  width:7px !important;
+  height:13px !important;
+  border-width:0 2px 2px 0 !important;
+}
+
+.importantCheck.isChecked{
+  border-color:rgba(214,239,112,.26) !important;
+  background:
+    linear-gradient(180deg, rgba(214,239,112,.10), rgba(214,239,112,.03) 36%, rgba(4,18,34,.16) 100%),
+    linear-gradient(180deg, rgba(16,45,71,.90), rgba(8,27,44,.98)) !important;
+}
+
+.importantCheck span,
+.importantCheck strong{
+  font-size:14px !important;
+  font-weight:700 !important;
+}
+
+.finishGroupTitle{
+  margin:0 0 12px !important;
+}
+
+.finishPlayers{
+  gap:18px !important;
+}
+
+.finishPlayers .pCol{
+  border-radius:22px !important;
+  padding:16px !important;
+}
+
+.pBtns{
+  gap:10px !important;
+}
+
+.finishBtn{
+  min-height:56px !important;
+  padding:0 16px !important;
+  border-radius:14px !important;
+  font-size:clamp(15px, 1.9vw, 18px) !important;
+  font-weight:800 !important;
+  justify-content:flex-start !important;
+}
+
+.finishBtn.good,
+.finishBtn.bad,
+.finishBtn.outline{
+  text-shadow:0 1px 0 rgba(0,0,0,.18);
+}
+
+#playerChooserModal .modalHead .chip,
+#playerChooserModal .playerChooserBottom .chip{
+  border-radius:14px !important;
+}
+
+#btnClosePlayerChooser{
+  min-width:138px !important;
+  justify-content:center !important;
+}
+
+.playerChooserCard{
+  border-radius:24px !important;
+}
+
+.playerChooserTop{
+  grid-template-columns:64px minmax(0,1fr) 48px 48px !important;
+  gap:10px !important;
+}
+
+.playerChooserAvatar{
+  width:64px !important;
+  height:64px !important;
+  border-radius:16px !important;
+}
+
+.playerChooserIdentity{
+  justify-content:center !important;
+  gap:4px !important;
+}
+
+.playerChooserBottom{
+  grid-template-columns:1.02fr 1fr 1fr !important;
+  gap:8px !important;
+  margin-top:10px !important;
+}
+
+.playerChooserBottom .chip{
+  min-height:42px !important;
+  padding:0 10px !important;
+  font-size:11.5px !important;
+  line-height:1.1 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+.playerIconBtn{
+  width:48px !important;
+  height:48px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(104,176,255,.34) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 30%, rgba(4,18,34,.22) 100%),
+    linear-gradient(180deg, rgba(21,55,86,.94), rgba(8,28,47,.99)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 10px 18px rgba(4,12,22,.18),
+    0 0 14px rgba(72,150,255,.08) !important;
+}
+
+.playerIconBtn.delete{
+  border-color:var(--v4-red-border) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 30%, rgba(59,14,21,.12) 100%),
+    linear-gradient(180deg, rgba(102,45,55,.96), rgba(64,24,31,.99)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 10px 18px rgba(42,12,19,.18),
+    0 0 14px rgba(205,76,92,.08) !important;
+}
+
+@media (max-width:700px){
+  .finishMenuCard{padding:18px !important;}
+  .finishMenuTabs{padding-right:70px !important; gap:10px !important;}
+  .finishTab{min-height:48px !important; padding:0 18px !important; font-size:14px !important;}
+  .finishMenuClose{width:48px !important; height:48px !important;}
+  .finishBtn{min-height:52px !important; font-size:15px !important;}
+  .importantCheck{min-height:52px !important; padding:10px 14px !important;}
+  .importantCheck span,.importantCheck strong{font-size:13px !important;}
+  #btnClosePlayerChooser{min-width:120px !important;}
+  .playerChooserBottom .chip{min-height:38px !important; font-size:10px !important; padding:0 8px !important;}
+}
