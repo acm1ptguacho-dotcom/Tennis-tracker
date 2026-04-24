@@ -4,12 +4,13 @@
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
 
-const CACHE = "tennis-tracker-web-v2.89-exact-touch-serve-labels";
+const CACHE = "tennis-tracker-web-v3.08-metal-buttons";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=2900",
-  "./app.js?v=2900",
+  "./style.css?v=3080",
+  "./style-futuristic.css?v=3080",
+  "./app.js?v=3080",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",

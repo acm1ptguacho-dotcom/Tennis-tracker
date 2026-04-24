@@ -2864,377 +2864,379 @@ html,body{overflow-x:hidden !important;}
   .analyticsHeatCell span{ font-size:9px; }
 }
 
-
-/* ===== v3080 · sistema de botones Variante 4 ===== */
+/* ===== v3.08 premium metallic buttons for point actions ===== */
 :root{
-  --v4-radius:12px;
-  --v4-radius-lg:14px;
-  --v4-blue-border:rgba(104,176,255,.34);
-  --v4-blue-glow:rgba(72,150,255,.18);
-  --v4-green-border:rgba(214,239,112,.46);
-  --v4-green-glow:rgba(193,228,78,.20);
-  --v4-red-border:rgba(255,118,131,.34);
-  --v4-red-glow:rgba(205,76,92,.16);
+  --metal-text:#f5f8fb;
+  --metal-muted:rgba(232,241,248,.72);
+  --metal-edge:rgba(226,241,255,.24);
+  --metal-cyan:#76d7ff;
+  --metal-lime:#c9f24d;
+  --metal-red:#ff6073;
+  --metal-shadow:0 18px 38px rgba(1,8,18,.34), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(0,0,0,.42);
 }
 
-.chip,
-.btn,
-.iconChip,
-.segTab,
-#workspaceBar.workspaceCompact .workspaceToggle,
-.finishTab,
-.finishBtn,
-.surfaceOpt,
-.playerModeBtn{
-  border-radius:var(--v4-radius) !important;
-  min-height:42px;
-  padding:0 16px !important;
-  font-weight:700 !important;
-  letter-spacing:.02em !important;
-  border:1px solid var(--v4-blue-border) !important;
+.finishMenu{
   background:
-    linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.02) 30%, rgba(4,18,34,.26) 100%),
-    linear-gradient(180deg, rgba(22,56,88,.96), rgba(8,28,47,.99)) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.08),
-    inset 0 0 0 1px rgba(102,154,214,.08),
-    0 10px 22px rgba(4,12,22,.22),
-    0 0 18px rgba(37,104,179,.07) !important;
+    radial-gradient(760px 520px at 50% 18%, rgba(117,166,192,.20), transparent 64%),
+    radial-gradient(900px 680px at 50% 100%, rgba(182,219,72,.08), transparent 58%),
+    rgba(2,10,18,.72) !important;
+  backdrop-filter:blur(15px) saturate(1.1) !important;
+  -webkit-backdrop-filter:blur(15px) saturate(1.1) !important;
 }
 
-.chip::before,
-.btn::before,
-.finishBtn::before,
-.finishTab::before,
-.segTab::before{
-  inset:1px;
-  border-radius:inherit;
-  background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 42%);
-  opacity:1;
-}
-
-.chip:hover,
-.btn:hover,
-.segTab:hover,
-.finishBtn:hover,
-.finishTab:hover,
-.surfaceOpt:hover,
-.playerModeBtn:hover,
-.playerIconBtn:hover{
-  transform:translateY(-1px);
-  border-color:rgba(159,211,255,.40) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.12),
-    inset 0 0 0 1px rgba(102,154,214,.10),
-    0 14px 28px rgba(2,10,20,.26),
-    0 0 22px rgba(72,150,255,.12) !important;
-}
-
-.chip:active,
-.btn:active,
-.segTab:active,
-.finishBtn:active,
-.finishTab:active,
-.surfaceOpt:active,
-.playerModeBtn:active,
-.playerIconBtn:active{
-  transform:translateY(0);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.06),
-    inset 0 0 0 1px rgba(102,154,214,.06),
-    0 8px 16px rgba(2,10,20,.22) !important;
-}
-
-.chip.primary,
-.btn.primary,
-.finishBtn.good,
-.finishTab.active,
-#workspaceBar .workspaceActions .chip.primary{
-  color:#f8fff0 !important;
-  border-color:var(--v4-green-border) !important;
+.finishMenuCard{
+  border-radius:30px !important;
+  border:1px solid rgba(230,244,255,.22) !important;
   background:
-    linear-gradient(180deg, rgba(244,255,205,.18), rgba(255,255,255,.03) 26%, rgba(92,119,20,.12) 100%),
-    linear-gradient(180deg, rgba(146,178,42,.98), rgba(103,130,28,.98)) !important;
+    radial-gradient(760px 260px at 50% -8%, rgba(171,210,235,.18), transparent 62%),
+    radial-gradient(520px 300px at 92% 0%, rgba(202,242,77,.07), transparent 64%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.026) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(38,66,86,.92), rgba(14,35,53,.98) 44%, rgba(7,22,36,.99)) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.18),
-    inset 0 0 0 1px rgba(230,246,172,.10),
-    0 12px 24px rgba(79,101,18,.24),
-    0 0 24px var(--v4-green-glow) !important;
+    0 34px 88px rgba(0,0,0,.58),
+    0 0 0 1px rgba(255,255,255,.05),
+    inset 0 1px 0 rgba(255,255,255,.22),
+    inset 0 -1px 0 rgba(0,0,0,.42) !important;
 }
-
-.finishTab.active::after{
+.finishMenuCard::before{
+  height:3px !important;
+  top:14px !important;
+  left:28px !important;
+  right:28px !important;
+  border-radius:999px !important;
+  background:
+    linear-gradient(90deg, rgba(201,242,77,0), rgba(201,242,77,.96) 12%, rgba(118,215,255,.84) 74%, rgba(118,215,255,0)) !important;
+  box-shadow:0 0 18px rgba(201,242,77,.34), 0 0 16px rgba(118,215,255,.18) !important;
+}
+.finishMenuCard::after{
   content:"";
   position:absolute;
-  left:18px;
-  right:18px;
-  bottom:7px;
-  height:2px;
-  border-radius:999px;
-  background:linear-gradient(90deg, rgba(225,244,139,0), rgba(225,244,139,.95), rgba(225,244,139,0));
-  box-shadow:0 0 12px rgba(225,244,139,.35);
-}
-
-.finishBtn.bad,
-.chip.bad,
-.chip.warn,
-.btn.warn,
-.quickBtn.warn{
-  color:#fff6f7 !important;
-  border-color:var(--v4-red-border) !important;
+  inset:0;
+  pointer-events:none;
+  border-radius:inherit;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02) 28%, rgba(59,14,21,.12) 100%),
-    linear-gradient(180deg, rgba(102,45,55,.96), rgba(64,24,31,.99)) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.10),
-    inset 0 0 0 1px rgba(255,181,188,.05),
-    0 12px 24px rgba(54,17,24,.24),
-    0 0 20px var(--v4-red-glow) !important;
+    linear-gradient(120deg, rgba(255,255,255,.12), transparent 18%, transparent 72%, rgba(255,255,255,.055)),
+    radial-gradient(420px 140px at 24% 0%, rgba(255,255,255,.12), transparent 62%);
+  opacity:.72;
 }
+.finishMenuCard > *{ position:relative; z-index:1; }
 
-.chip.outline,
-.btn.outline,
-.finishBtn.outline,
-.segTab.outline,
-.finishTab.outline{
-  color:#edf6ff !important;
-  border-color:rgba(97,170,255,.46) !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01) 34%, rgba(4,18,34,.18) 100%),
-    linear-gradient(180deg, rgba(15,43,70,.90), rgba(7,24,41,.98)) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.07),
-    inset 0 0 0 1px rgba(129,186,255,.08),
-    0 10px 20px rgba(4,12,22,.20),
-    0 0 18px rgba(72,150,255,.10) !important;
+.finishMenuTitle{
+  color:#f7fbff !important;
+  text-shadow:0 2px 18px rgba(0,0,0,.38) !important;
+  letter-spacing:.055em !important;
 }
-
-.finishMenuClose,
-.playerIconBtn,
-#btnMenu,
-#btnToolsRail,
-#btnCloseMenu{
-  border-radius:var(--v4-radius) !important;
+.finishMenuSub{ color:rgba(231,240,248,.70) !important; }
+.finishGroupTitle,
+.advTitle{
+  color:rgba(245,249,253,.88) !important;
+  letter-spacing:.18em !important;
 }
 
 .finishMenuClose{
-  border:1px solid rgba(114,175,244,.28) !important;
+  border-radius:15px !important;
+  border:1px solid rgba(230,244,255,.24) !important;
+  color:#eef7ff !important;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02) 30%, rgba(4,18,34,.24) 100%),
-    linear-gradient(180deg, rgba(21,55,86,.94), rgba(9,30,49,.98)) !important;
+    linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.03) 38%, rgba(0,0,0,.20)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(34,54,68,.96), rgba(8,22,36,.98)) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.08),
-    inset 0 0 0 1px rgba(102,154,214,.08),
-    0 10px 18px rgba(4,12,22,.18) !important;
+    0 14px 30px rgba(1,8,18,.36),
+    inset 0 1px 0 rgba(255,255,255,.24),
+    inset 0 -1px 0 rgba(0,0,0,.45),
+    0 0 0 1px rgba(118,215,255,.05) !important;
+  transition:transform .2s cubic-bezier(.2,.85,.2,1), box-shadow .22s ease, border-color .22s ease, filter .22s ease !important;
 }
+.finishMenuClose .svgIcon{ width:24px !important; height:24px !important; filter:drop-shadow(0 2px 4px rgba(0,0,0,.38)); }
+.finishMenuClose .svgIcon line{ stroke:currentColor !important; stroke-width:2.3 !important; stroke-linecap:round !important; }
+.finishMenuClose:hover{
+  transform:translateY(-2px) !important;
+  border-color:rgba(238,248,255,.36) !important;
+  box-shadow:
+    0 18px 34px rgba(1,8,18,.46),
+    inset 0 1px 0 rgba(255,255,255,.28),
+    0 0 0 1px rgba(118,215,255,.14),
+    0 0 22px rgba(118,215,255,.13) !important;
+}
+.finishMenuClose:active{ transform:translateY(0) scale(.96) !important; }
 
 .finishMenuTabs{
-  gap:12px !important;
-  margin:4px 0 18px !important;
-  padding-right:82px !important;
-}
-
-.finishTab,
-.segTab{
-  min-height:52px !important;
-  padding:0 24px !important;
-  font-size:15px !important;
-}
-
-.finishMenuTitle{
-  font-size:clamp(28px, 5.6vw, 44px) !important;
-  line-height:.96 !important;
-}
-
-.finishMenuSub{
-  font-size:clamp(13px, 2.1vw, 18px) !important;
-  margin-top:8px !important;
-  margin-bottom:16px !important;
-}
-
-.finishImportantRow{
-  margin:8px 0 20px !important;
-}
-
-.importantCheck{
-  width:100% !important;
-  min-height:56px !important;
-  padding:12px 16px !important;
   gap:14px !important;
-  border-radius:16px !important;
-  border:1px solid rgba(106,167,228,.20) !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02) 34%, rgba(4,18,34,.18) 100%),
-    linear-gradient(180deg, rgba(16,45,71,.88), rgba(8,27,44,.98)) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.06),
-    0 10px 20px rgba(4,12,22,.16) !important;
+  border-bottom:1px solid rgba(230,244,255,.10) !important;
 }
-
-.importantCheck:hover{
-  border-color:rgba(117,183,242,.30) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.08),
-    0 12px 24px rgba(4,12,22,.18),
-    0 0 16px rgba(72,150,255,.08) !important;
-}
-
-.importantCheck input{
-  width:28px !important;
-  height:28px !important;
-  border-radius:9px !important;
-  border:1px solid rgba(214,239,112,.42) !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03) 28%, rgba(4,18,34,.18) 100%),
-    linear-gradient(180deg, rgba(18,45,69,.94), rgba(8,27,43,.98)) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.08),
-    0 8px 14px rgba(4,12,22,.14),
-    0 0 0 1px rgba(214,239,112,.06) !important;
-}
-
-.importantCheck input:checked{
-  border-color:rgba(214,239,112,.66) !important;
-  background:
-    linear-gradient(180deg, rgba(243,255,206,.18), rgba(255,255,255,.03) 22%, rgba(92,119,20,.12) 100%),
-    linear-gradient(180deg, rgba(146,178,42,.98), rgba(103,130,28,.98)) !important;
-  box-shadow:
-    0 0 0 2px rgba(214,239,112,.12),
-    0 10px 18px rgba(80,101,18,.20),
-    inset 0 1px 0 rgba(255,255,255,.18) !important;
-}
-
-.importantCheck input:checked::after{
-  left:8px !important;
-  top:4px !important;
-  width:7px !important;
-  height:13px !important;
-  border-width:0 2px 2px 0 !important;
-}
-
-.importantCheck.isChecked{
-  border-color:rgba(214,239,112,.26) !important;
-  background:
-    linear-gradient(180deg, rgba(214,239,112,.10), rgba(214,239,112,.03) 36%, rgba(4,18,34,.16) 100%),
-    linear-gradient(180deg, rgba(16,45,71,.90), rgba(8,27,44,.98)) !important;
-}
-
-.importantCheck span,
-.importantCheck strong{
-  font-size:14px !important;
-  font-weight:700 !important;
-}
-
-.finishGroupTitle{
-  margin:0 0 12px !important;
-}
-
-.finishPlayers{
-  gap:18px !important;
-}
-
-.finishPlayers .pCol{
-  border-radius:22px !important;
-  padding:16px !important;
-}
-
-.pBtns{
-  gap:10px !important;
-}
-
-.finishBtn{
-  min-height:56px !important;
-  padding:0 16px !important;
+.finishTab,
+.finishBtn,
+.advChip,
+.advBackBtn{
+  position:relative !important;
+  overflow:hidden !important;
+  isolation:isolate !important;
   border-radius:14px !important;
-  font-size:clamp(15px, 1.9vw, 18px) !important;
-  font-weight:800 !important;
-  justify-content:flex-start !important;
+  clip-path:polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+  color:var(--metal-text) !important;
+  text-shadow:0 1px 0 rgba(0,0,0,.46), 0 8px 18px rgba(0,0,0,.22) !important;
+  font-weight:850 !important;
+  letter-spacing:.018em !important;
+  border:1px solid var(--metal-edge) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.15), rgba(255,255,255,.045) 24%, rgba(0,0,0,.16) 100%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.045) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(37,61,76,.96), rgba(12,30,45,.98)) !important;
+  box-shadow:var(--metal-shadow) !important;
+  transform:translateZ(0);
+  transition:
+    transform .2s cubic-bezier(.2,.85,.2,1),
+    filter .2s ease,
+    box-shadow .22s ease,
+    border-color .22s ease,
+    background .22s ease !important;
+  -webkit-tap-highlight-color:transparent;
+}
+.finishBtn{ min-height:58px; padding:12px 16px !important; font-size:clamp(15px, 2.5vw, 18px) !important; line-height:1.05 !important; }
+.finishTab{ min-height:52px; padding:12px 18px !important; font-size:clamp(15px, 2.6vw, 18px) !important; }
+.advChip,.advBackBtn{ min-height:48px; }
+
+.finishTab::before,
+.finishBtn::before,
+.advChip::before,
+.advBackBtn::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:1px !important;
+  border-radius:inherit !important;
+  pointer-events:none !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,.03) 34%, rgba(255,255,255,0) 58%),
+    linear-gradient(90deg, rgba(255,255,255,.10), transparent 16%, transparent 84%, rgba(255,255,255,.08)) !important;
+  opacity:.76 !important;
+  z-index:-1 !important;
+}
+.finishTab::after,
+.finishBtn::after,
+.advChip::after,
+.advBackBtn::after{
+  content:"";
+  position:absolute;
+  inset:-35% -80%;
+  pointer-events:none;
+  background:linear-gradient(105deg, transparent 44%, rgba(255,255,255,.20) 50%, transparent 56%);
+  transform:translateX(-52%);
+  opacity:0;
+  transition:transform .55s cubic-bezier(.2,.8,.2,1), opacity .24s ease;
+  z-index:0;
+}
+.finishTab:hover::after,
+.finishBtn:hover::after,
+.advChip:hover::after,
+.advBackBtn:hover::after{
+  transform:translateX(52%);
+  opacity:.75;
+}
+.finishTab:hover,
+.finishBtn:hover,
+.advChip:hover,
+.advBackBtn:hover{
+  transform:translateY(-2px) !important;
+  filter:brightness(1.055) saturate(1.04) !important;
+  border-color:rgba(239,249,255,.36) !important;
+  box-shadow:
+    0 22px 42px rgba(1,8,18,.42),
+    inset 0 1px 0 rgba(255,255,255,.22),
+    inset 0 -1px 0 rgba(0,0,0,.44),
+    0 0 0 1px rgba(118,215,255,.10) !important;
+}
+.finishTab:active,
+.finishBtn:active,
+.advChip:active,
+.advBackBtn:active{
+  transform:translateY(1px) scale(.985) !important;
+  filter:brightness(.94) saturate(.98) !important;
+  box-shadow:
+    0 8px 16px rgba(1,8,18,.42),
+    inset 0 2px 8px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+.finishTab:focus-visible,
+.finishBtn:focus-visible,
+.advChip:focus-visible,
+.advBackBtn:focus-visible,
+.finishMenuClose:focus-visible,
+.importantCheck input:focus-visible{
+  outline:none !important;
+  box-shadow:
+    0 0 0 3px rgba(201,242,77,.16),
+    0 0 0 1px rgba(201,242,77,.48),
+    var(--metal-shadow) !important;
+}
+
+.finishTab.active{
+  color:#fbffef !important;
+  border-color:rgba(219,246,86,.62) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.055) 25%, rgba(79,100,18,.20) 100%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.052) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(186,214,60,.96), rgba(96,126,25,.98)) !important;
+  box-shadow:
+    0 18px 36px rgba(97,122,17,.24),
+    0 0 24px rgba(201,242,77,.22),
+    inset 0 1px 0 rgba(255,255,255,.30),
+    inset 0 -1px 0 rgba(31,46,6,.55) !important;
+}
+.finishTab.active::after{
+  left:18px !important;
+  right:18px !important;
+  bottom:4px !important;
+  height:2px !important;
+  border-radius:999px !important;
+  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(244,255,183,.95), rgba(255,255,255,0)) !important;
+  filter:drop-shadow(0 0 8px rgba(201,242,77,.46)) !important;
+  opacity:1 !important;
+  transform:none !important;
+  animation:metalActiveLine 2.5s ease-in-out infinite;
 }
 
 .finishBtn.good,
+#mGainA_n,#mGainB_n,#mGainA_a,#mGainB_a,#mVolA_a,#mVolB_a{
+  border-color:rgba(208,240,92,.45) !important;
+  color:#fbffed !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.045) 28%, rgba(79,108,15,.18) 100%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.045) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(126,153,38,.98), rgba(75,104,18,.99)) !important;
+  box-shadow:
+    0 16px 32px rgba(82,108,18,.24),
+    0 0 20px rgba(201,242,77,.12),
+    inset 0 1px 0 rgba(255,255,255,.22),
+    inset 0 -1px 0 rgba(28,45,4,.54) !important;
+}
+
 .finishBtn.bad,
-.finishBtn.outline{
-  text-shadow:0 1px 0 rgba(0,0,0,.18);
+#mDoubleFault{
+  border-color:rgba(255,96,115,.44) !important;
+  color:#fff8f8 !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.04) 26%, rgba(74,10,18,.22) 100%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.038) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(91,35,44,.99), rgba(47,15,23,.99)) !important;
+  box-shadow:
+    0 16px 32px rgba(89,12,25,.24),
+    0 0 18px rgba(255,96,115,.10),
+    inset 0 1px 0 rgba(255,255,255,.18),
+    inset 0 -1px 0 rgba(26,0,7,.58) !important;
 }
 
-#playerChooserModal .modalHead .chip,
-#playerChooserModal .playerChooserBottom .chip{
-  border-radius:14px !important;
+#mWinA_n,#mWinB_n,#mWinA_a,#mWinB_a,#mFault,
+.advChip,.advBackBtn{
+  border-color:rgba(118,215,255,.34) !important;
+  color:#f1f8ff !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.04) 28%, rgba(9,38,59,.22) 100%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.043) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(31,60,80,.98), rgba(8,27,44,.99)) !important;
+  box-shadow:
+    0 16px 32px rgba(0,14,26,.30),
+    0 0 18px rgba(118,215,255,.09),
+    inset 0 1px 0 rgba(255,255,255,.20),
+    inset 0 -1px 0 rgba(0,9,18,.58) !important;
 }
 
-#btnClosePlayerChooser{
-  min-width:138px !important;
-  justify-content:center !important;
-}
-
-.playerChooserCard{
+.finishPlayers .pCol{
   border-radius:24px !important;
-}
-
-.playerChooserTop{
-  grid-template-columns:64px minmax(0,1fr) 48px 48px !important;
-  gap:10px !important;
-}
-
-.playerChooserAvatar{
-  width:64px !important;
-  height:64px !important;
-  border-radius:16px !important;
-}
-
-.playerChooserIdentity{
-  justify-content:center !important;
-  gap:4px !important;
-}
-
-.playerChooserBottom{
-  grid-template-columns:1.02fr 1fr 1fr !important;
-  gap:8px !important;
-  margin-top:10px !important;
-}
-
-.playerChooserBottom .chip{
-  min-height:42px !important;
-  padding:0 10px !important;
-  font-size:11.5px !important;
-  line-height:1.1 !important;
-  white-space:nowrap !important;
-  overflow:hidden !important;
-  text-overflow:ellipsis !important;
-}
-
-.playerIconBtn{
-  width:48px !important;
-  height:48px !important;
-  border-radius:14px !important;
-  border:1px solid rgba(104,176,255,.34) !important;
+  border:1px solid rgba(230,244,255,.15) !important;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 30%, rgba(4,18,34,.22) 100%),
-    linear-gradient(180deg, rgba(21,55,86,.94), rgba(8,28,47,.99)) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.08),
-    0 10px 18px rgba(4,12,22,.18),
-    0 0 14px rgba(72,150,255,.08) !important;
+    radial-gradient(360px 160px at 50% 0%, rgba(118,215,255,.08), transparent 66%),
+    linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018)),
+    rgba(2,15,27,.22) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 18px 38px rgba(1,8,18,.16) !important;
+}
+.pHead .pTag{
+  border-radius:13px !important;
+  border:1px solid rgba(230,244,255,.22) !important;
+  color:#edf7ff !important;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.045) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(67,88,101,.92), rgba(20,36,50,.98)) !important;
+  box-shadow:0 10px 20px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.20), inset 0 -1px 0 rgba(0,0,0,.48) !important;
+}
+.pHead .pName{ color:#f4f8fb !important; }
+
+.finishImportantRow{ margin:10px 0 18px !important; }
+.importantCheck{
+  width:100%;
+  min-height:58px !important;
+  border-radius:15px !important;
+  padding:13px 16px !important;
+  border:1px solid rgba(230,244,255,.18) !important;
+  color:#f4f8fb !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.095), rgba(255,255,255,.026) 34%, rgba(0,0,0,.13)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.028) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(28,48,61,.90), rgba(7,22,35,.96)) !important;
+  box-shadow:0 16px 30px rgba(1,8,18,.22), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(0,0,0,.42) !important;
+  transition:transform .2s cubic-bezier(.2,.85,.2,1), box-shadow .22s ease, border-color .22s ease, filter .22s ease !important;
+}
+.importantCheck:hover{
+  transform:translateY(-1px);
+  border-color:rgba(201,242,77,.34) !important;
+  filter:brightness(1.04);
+  box-shadow:0 18px 34px rgba(1,8,18,.28), inset 0 1px 0 rgba(255,255,255,.18), 0 0 18px rgba(201,242,77,.09) !important;
+}
+.importantCheck input{
+  width:26px !important;
+  height:26px !important;
+  border-radius:8px !important;
+  border:1px solid rgba(201,242,77,.42) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.035)),
+    linear-gradient(180deg, rgba(22,39,50,.90), rgba(5,17,29,.96)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 7px 14px rgba(0,0,0,.24), 0 0 0 1px rgba(201,242,77,.08) !important;
+}
+.importantCheck input:checked{
+  border-color:rgba(201,242,77,.70) !important;
+  background:
+    linear-gradient(180deg, rgba(244,255,184,.96), rgba(134,168,37,.98)) !important;
+  box-shadow:0 0 0 3px rgba(201,242,77,.16), 0 10px 20px rgba(89,115,17,.28), inset 0 1px 0 rgba(255,255,255,.26) !important;
+}
+.importantCheck input:checked::after{
+  border-color:#06121d !important;
+  border-width:0 3px 3px 0 !important;
+}
+.importantCheck.isChecked{
+  border-color:rgba(201,242,77,.30) !important;
+  background:
+    linear-gradient(180deg, rgba(201,242,77,.12), rgba(255,255,255,.025)),
+    linear-gradient(180deg, rgba(28,48,61,.92), rgba(7,22,35,.98)) !important;
 }
 
-.playerIconBtn.delete{
-  border-color:var(--v4-red-border) !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 30%, rgba(59,14,21,.12) 100%),
-    linear-gradient(180deg, rgba(102,45,55,.96), rgba(64,24,31,.99)) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.08),
-    0 10px 18px rgba(42,12,19,.18),
-    0 0 14px rgba(205,76,92,.08) !important;
+@keyframes metalActiveLine{
+  0%,100%{ opacity:.72; transform:scaleX(.82); }
+  50%{ opacity:1; transform:scaleX(1); }
 }
 
 @media (max-width:700px){
-  .finishMenuCard{padding:18px !important;}
-  .finishMenuTabs{padding-right:70px !important; gap:10px !important;}
-  .finishTab{min-height:48px !important; padding:0 18px !important; font-size:14px !important;}
-  .finishMenuClose{width:48px !important; height:48px !important;}
-  .finishBtn{min-height:52px !important; font-size:15px !important;}
-  .importantCheck{min-height:52px !important; padding:10px 14px !important;}
-  .importantCheck span,.importantCheck strong{font-size:13px !important;}
-  #btnClosePlayerChooser{min-width:120px !important;}
-  .playerChooserBottom .chip{min-height:38px !important; font-size:10px !important; padding:0 8px !important;}
+  .finishMenuCard{ padding:20px !important; border-radius:26px !important; }
+  .finishMenuTabs{ gap:10px !important; padding-right:70px !important; }
+  .finishBtn{ min-height:54px; padding:11px 12px !important; font-size:15px !important; }
+  .finishTab{ min-height:50px; padding:10px 12px !important; }
+  .finishPlayers{ gap:12px !important; }
+  .finishPlayers .pCol{ padding:12px !important; border-radius:21px !important; }
+  .pBtns{ gap:9px !important; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .finishTab,
+  .finishBtn,
+  .advChip,
+  .advBackBtn,
+  .finishMenuClose,
+  .importantCheck,
+  .finishTab.active::after{
+    animation:none !important;
+    transition:none !important;
+  }
+  .finishTab:hover::after,
+  .finishBtn:hover::after,
+  .advChip:hover::after,
+  .advBackBtn:hover::after{ opacity:0 !important; }
 }
