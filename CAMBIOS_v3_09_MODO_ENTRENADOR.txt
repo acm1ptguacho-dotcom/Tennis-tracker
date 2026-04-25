@@ -1,0 +1,86 @@
+Tennis Direction Tracker · v3.09 · Modo Entrenador
+
+Cambios principales:
+
+1. Nuevo acceso desde la portada
+- Añadido botón "Modo entrenador" junto a Acceder, Crear cuenta y Modo demo.
+- Acceso directo a un entorno separado del modo partido.
+
+2. Modo Entrenador independiente
+- Nueva lógica appMode = coach/match.
+- El modo entrenador no utiliza marcador, juegos, puntos ni finalizar partido.
+- La pista funciona como editor táctico para crear ejercicios, patrones y diseños de entrenamiento.
+
+3. Menú lateral adaptado
+- En modo entrenador se ocultan funciones de partido y reportes.
+- Nuevas opciones específicas:
+  - Mis ejercicios
+  - Cargar ejercicio
+  - Guardar ejercicio
+  - Nuevo ejercicio
+  - Objetos y material
+  - Limpiar pista
+  - Cambiar pista
+  - Configuración
+
+4. Biblioteca "Mis ejercicios"
+- Sistema de carpetas local para organizar ejercicios.
+- Creación de carpetas.
+- Buscador por nombre, etiquetas u objetivo.
+- Cargar ejercicios guardados.
+- Duplicar ejercicios.
+- Borrar ejercicios.
+- Vista de patrones y objetos guardados en cada ejercicio.
+
+5. Guardado de ejercicios
+- Nuevo formulario de guardado con:
+  - nombre del ejercicio
+  - carpeta
+  - objetivo táctico
+  - nivel recomendado
+  - material necesario
+  - etiquetas
+  - notas del entrenador
+- Guardado local por usuario/sesión mediante localStorage.
+
+6. Patrones independientes
+- El usuario puede crear una secuencia de flechas y finalizarla como patrón.
+- Después puede crear otro patrón dentro del mismo ejercicio.
+- Los patrones guardados permanecen visibles mientras se crea uno nuevo.
+- El sistema permite empezar desde saque, saque por abajo o cualquier zona de pista usando las zonas disponibles.
+
+7. Zonas libres en ambos lados de la pista
+- En modo entrenador se desbloquean las zonas de ambos lados.
+- Se mantienen las flechas del diagrama, pero sin restricciones de lógica de partido.
+- Se puede construir cualquier ejercicio táctico libremente.
+
+8. Nuevo botón de objetos en Rail Ball
+- En modo entrenador se ocultan Marcador y Finalizar partido.
+- El botón principal abre herramientas de objetos/material.
+- Se añaden accesos rápidos para:
+  - Objetos
+  - Finalizar patrón
+  - Guardar ejercicio
+
+9. Objetos y material de entrenamiento
+- Nueva ventana de herramientas con:
+  - conos
+  - aros
+  - cesta de pelotas
+  - jugador
+  - entrenador
+  - zona objetivo
+  - flecha discontinua de desplazamiento
+  - nota de texto
+- Los objetos se colocan tocando la pista.
+- Tocar un objeto lo elimina para editar rápido.
+- Botón para borrar el último objeto añadido.
+
+10. Optimización visual
+- El modo entrenador reduce elementos innecesarios.
+- Se prioriza la pista y las herramientas tácticas.
+- Se actualizó la caché a v3.09 para forzar carga de los nuevos archivos.
+
+Notas:
+- Esta versión mantiene el modo demo/partido sin sustituirlo.
+- El modo entrenador usa almacenamiento local; cuando se conecte backend podrá sincronizarse por cuenta de entrenador.
