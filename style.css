@@ -497,6 +497,33 @@ body.coach .muted.smallHide{display:none;}
 body.coach .kpi .t{font-size:13px}
 body.coach .kpi .v{font-size:24px}
 
+/* Coach mode: hide serve target cells (T/C/W) */
+body.coach .serveCell{
+  display:none !important;
+}
+
+/* Coach mode: hide scoreboard and player names to maximise space */
+body.coach #scoreSection{
+  display:none !important;
+}
+body.coach .tvName input{
+  display:none !important;
+}
+body.coach .tvHeader,
+body.coach .tvRow{
+  display:none !important;
+}
+
+/* Preview mode: hide zone labels for a cleaner view */
+body.previewMode .zoneTxt{
+  visibility:hidden !important;
+}
+
+/* Coach mode: hide names of players in finish menu */
+body.coach .pHead .pName{
+  display:none !important;
+}
+
 /* Tap highlight vivid yellow + red outline (matches sample) */
 .zoneCell, .serveCell{position:relative; will-change:transform, box-shadow;position:relative; overflow:hidden; transform: translateZ(0);}
 .zoneCell::before, .serveCell::before{
