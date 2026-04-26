@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2890" />
-  <link rel="stylesheet" href="style-futuristic.css?v=3000" />
+<link rel="stylesheet" href="style.css?v=3090" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3090" />
 </head>
 <body>
 
@@ -30,6 +30,7 @@
       <button class="btn primary" id="btnSplashLogin" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('login')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'login')">Acceder</button>
       <button class="btn" id="btnSplashSignup" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('signup')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'signup')">Crear cuenta</button>
       <button class="btn good" id="btnSplashDemo" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('demo')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'demo')">Modo demo</button>
+      <button class="btn coachAccess" id="btnSplashCoach" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('coach')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'coach')">Modo entrenador</button>
     </div>
     <div class="splashHint">También puedes pulsar cualquier zona de la portada para continuar.</div>
     <button class="btn primary splashStart" id="btnStartApp" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('login')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'login')" data-i18n="start">Iniciar</button>
@@ -98,6 +99,7 @@
         <label class="authCheck"><input id="rememberSession" type="checkbox" checked> Recordar sesión en este dispositivo</label>
         <button class="btn primary authSubmit" id="btnLogin" type="button" onclick="return window.__tdtAuthAction && window.__tdtAuthAction('login')" ontouchend="return window.__tdtTouchAuth && window.__tdtTouchAuth(event, 'login')">Entrar en la plataforma</button>
         <button class="btn authGhost" id="btnDemoAccess" type="button" onclick="return window.__tdtAuthAction && window.__tdtAuthAction('demo')" ontouchend="return window.__tdtTouchAuth && window.__tdtTouchAuth(event, 'demo')">Entrar en modo demo</button>
+        <button class="btn coachAccess authGhost" id="btnCoachAccess" type="button" onclick="return window.__tdtAuthAction && window.__tdtAuthAction('coach')" ontouchend="return window.__tdtTouchAuth && window.__tdtTouchAuth(event, 'coach')">Entrar en modo entrenador</button>
         <div class="authFeedback" id="loginFeedback"></div>
       </div>
 
@@ -197,16 +199,24 @@
       <span data-i18n="surface">Cambiar pista</span>
     </button>
 
-    <div class="drawerDivider"></div>
-    <div class="drawerGroupLabel">Plataforma</div>
+    <div class="drawerGroupLabel coachOnly">Modo entrenador</div>
+    <button class="chip menuItem coachOnly" id="btnCoachExercises" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M7 11h10M7 15h6"/></svg><span>Mis ejercicios</span></button>
+    <button class="chip menuItem coachOnly" id="btnCoachLoadExercise" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Cargar ejercicio</span></button>
+    <button class="chip menuItem coachOnly" id="btnCoachSaveExercise" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg><span>Guardar ejercicio</span></button>
+    <button class="chip menuItem coachOnly" id="btnCoachNewExercise" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Nuevo ejercicio</span></button>
+    <button class="chip menuItem coachOnly" id="btnCoachObjects" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="17" r="3"/><rect x="12" y="4" width="8" height="8" rx="2"/><path d="M5 11l4-7 4 7z"/></svg><span>Objetos y material</span></button>
+    <button class="chip menuItem coachOnly" id="btnCoachClear" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg><span>Limpiar pista</span></button>
+
+    <div class="drawerDivider matchOnly"></div>
+    <div class="drawerGroupLabel matchOnly">Plataforma</div>
     <button class="chip menuItem" id="btnDashboardMenu" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3z"/><path d="M13 21h8V11h-8z"/><path d="M13 3h8v6h-8z"/><path d="M3 21h8v-6H3z"/></svg><span>Panel Pro</span></button>
     <button class="chip menuItem" id="btnPlayerLibraryMenu" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M17 11c1.7 0 3-1.3 3-3s-1.3-3-3-3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M17 14c2.8 0 5 2.2 5 5"/></svg><span>Jugadores</span></button>
     <button class="chip menuItem" id="btnAccountMenu" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span>Cuenta</span></button>
     <button class="chip menuItem" id="btnHelpCenter" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12" y2="17"/></svg><span>Centro de ayuda</span></button>
     <button class="chip menuItem" id="btnLegal" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7z"/><path d="M9 12l2 2 4-4"/></svg><span>Privacidad y términos</span></button>
 
-    <div class="drawerDivider"></div>
-    <div class="drawerGroupLabel" data-i18n="reports">Reportes</div>
+    <div class="drawerDivider matchOnly"></div>
+    <div class="drawerGroupLabel matchOnly" data-i18n="reports">Reportes</div>
     <button class="chip menuItem" id="btnHistory" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span data-i18n="history">Historial</span></button>
     <button class="chip menuItem" id="btnAnalytics" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span data-i18n="analytics">Analíticas</span></button>
     <button class="chip menuItem" id="btnStats" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span data-i18n="stats">Estadísticas</span></button>
@@ -318,6 +328,9 @@
           <!-- overlay flechas (direcciones) -->
           <svg id="arrowSvg" class="arrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
 
+          <!-- objetos visuales del Modo Entrenador -->
+          <div id="coachObjectsLayer" class="coachObjectsLayer" aria-hidden="true"></div>
+
           <div class="zoneLayer" id="zoneLayer"></div>
 
           <!-- nombres en el fondo (dentro del verde) -->
@@ -381,6 +394,27 @@
           <div class="quickLbl">Nuevo</div>
         </div>
 
+        <div class="quickItem coachRailOnly" id="qiCoachObjects">
+          <button class="quickBtn coachTool" id="btnCoachObjectsRail" type="button" title="Insertar objetos" aria-label="Insertar objetos">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="17" r="3"/><rect x="12" y="4" width="8" height="8" rx="2"/><path d="M5 11l4-7 4 7z"/></svg>
+          </button>
+          <div class="quickLbl">Objetos</div>
+        </div>
+
+        <div class="quickItem coachRailOnly" id="qiCoachPattern">
+          <button class="quickBtn good" id="btnCoachFinishPattern" type="button" title="Finalizar patrón" aria-label="Finalizar patrón">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h11"/><path d="M12 5l7 7-7 7"/></svg>
+          </button>
+          <div class="quickLbl">Patrón</div>
+        </div>
+
+        <div class="quickItem coachRailOnly" id="qiCoachSave">
+          <button class="quickBtn" id="btnCoachSaveRail" type="button" title="Guardar ejercicio" aria-label="Guardar ejercicio">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+          </button>
+          <div class="quickLbl">Guardar</div>
+        </div>
+
         <div class="quickItem">
           <button class="quickBtn" id="btnRotateCourt" type="button" title="Rotar pista" aria-label="Rotar pista">
             <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -388,26 +422,14 @@
           <div class="quickLbl" id="lblRotateCourt">Rotar</div>
         </div>
 
-        <!-- Herramienta de flechas: selecciona modo de dirección -->
         <div class="quickItem">
-          <button class="quickBtn" id="btnArrowTool" type="button" title="Flechas" aria-label="Flechas">
+          <button class="quickBtn" id="btnRedoPoint" type="button" title="Deshacer último punto" aria-label="Deshacer último punto">
             <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
-              <line x1="4" y1="12" x2="20" y2="12"/>
-              <polyline points="14 6 20 12 14 18"/>
+              <polyline points="11 19 2 12 11 5"/>
+              <polyline points="22 19 13 12 22 5"/>
             </svg>
           </button>
-          <div class="quickLbl">Flechas</div>
-        </div>
-
-        <!-- Vista previa del ejercicio: oculta las zonas para una vista limpia -->
-        <div class="quickItem">
-          <button class="quickBtn" id="btnPreview" type="button" title="Vista previa" aria-label="Vista previa">
-            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-          </button>
-          <div class="quickLbl">Vista previa</div>
+          <div class="quickLbl">Deshacer punto</div>
         </div>
 
         <div class="quickItem">
@@ -651,6 +673,41 @@
         <!-- se rellena por JS con previews -->
       </div>
     </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="coachSaveModal">
+  <div class="modalCard solid coachModalCard">
+    <div class="modalHead"><div><div class="modalTitle">Guardar ejercicio</div><div class="muted">Guarda patrones, objetos y notas en tu biblioteca.</div></div><button class="chip" id="btnCloseCoachSave" type="button">Cerrar</button></div>
+    <div class="modalBody coachFormGrid">
+      <label>Nombre del ejercicio<input class="input" id="coachExerciseName" placeholder="Ej: Saque abierto + derecha cruzada"></label>
+      <label>Carpeta<select class="input" id="coachExerciseFolder"></select></label>
+      <label>Objetivo táctico<input class="input" id="coachExerciseGoal" placeholder="Ej: abrir pista y dominar con derecha"></label>
+      <label>Nivel<input class="input" id="coachExerciseLevel" placeholder="Ej: Sub-12 / Avanzado / Academia"></label>
+      <label>Material<input class="input" id="coachExerciseMaterial" placeholder="Conos, aros, cesta..."></label>
+      <label>Etiquetas<input class="input" id="coachExerciseTags" placeholder="saque, resto, volea"></label>
+      <label class="coachWide">Descripción<textarea class="input" id="coachExerciseNotes" rows="4" placeholder="Explica consignas, rotaciones, repeticiones o detalles técnicos."></textarea></label>
+    </div>
+    <div class="modalFoot"><button class="btn" id="btnCoachFinishPatternSave" type="button">Finalizar patrón activo</button><button class="btn primary" id="btnDoSaveExercise" type="button">Guardar ejercicio</button></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="coachLibraryModal">
+  <div class="modalCard solid coachModalCard">
+    <div class="modalHead"><div><div class="modalTitle">Mis ejercicios</div><div class="muted" id="coachLibrarySub">Organiza y carga tus ejercicios por carpetas.</div></div><button class="chip" id="btnCloseCoachLibrary" type="button">Cerrar</button></div>
+    <div class="coachLibraryTools"><input class="input" id="coachFolderName" placeholder="Nueva carpeta"><button class="btn" id="btnAddCoachFolder" type="button">Crear carpeta</button><input class="input" id="coachExerciseSearch" placeholder="Buscar ejercicio"></div>
+    <div class="coachLibraryLayout"><div class="coachFolderList" id="coachFolderList"></div><div class="coachExerciseList" id="coachExerciseList"></div></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="coachObjectsModal">
+  <div class="modalCard solid coachModalCard">
+    <div class="modalHead"><div><div class="modalTitle">Objetos y herramientas</div><div class="muted">Selecciona una herramienta y toca la pista para colocarla.</div></div><button class="chip" id="btnCloseCoachObjects" type="button">Cerrar</button></div>
+    <div class="coachToolTabs">
+      <button class="coachToolBtn" data-coach-tool="cone" type="button">Cono</button><button class="coachToolBtn" data-coach-tool="hoop" type="button">Aro</button><button class="coachToolBtn" data-coach-tool="basket" type="button">Cesta</button><button class="coachToolBtn" data-coach-tool="player" type="button">Jugador</button><button class="coachToolBtn" data-coach-tool="coach" type="button">Entrenador</button><button class="coachToolBtn" data-coach-tool="target" type="button">Objetivo</button><button class="coachToolBtn" data-coach-tool="dash" type="button">Desplazamiento</button><button class="coachToolBtn" data-coach-tool="text" type="button">Nota</button>
+    </div>
+    <div class="coachObjectsHint"><b>Flujo recomendado:</b> crea flechas de golpeo, pulsa <b>Finalizar patrón</b>, añade objetos o desplazamientos y después crea otro patrón si lo necesitas.</div>
+    <div class="modalFoot"><button class="btn" id="btnCoachFinishPatternObjects" type="button">Finalizar patrón</button><button class="btn warn" id="btnCoachDeleteLastObject" type="button">Borrar último objeto</button><button class="btn primary" id="btnCoachSelectPatternTool" type="button">Volver a flechas</button></div>
   </div>
 </div>
 
@@ -1325,6 +1382,17 @@
       var fb2 = byId('signupFeedback'); if (fb2) fb2.textContent = 'La lógica de registro aún no se ha inicializado. Vuelve a pulsar.';
       return false;
     }
+    if (which === 'coach') {
+      if (typeof window.handleCoachAccess === 'function') return window.handleCoachAccess();
+      if (typeof window.forceEnterMainInterface === 'function') return window.forceEnterMainInterface();
+      var splashC = byId('splash'); var authC = byId('authPortal');
+      if (splashC) splashC.classList.add('hidden');
+      if (authC) authC.classList.add('hidden');
+      document.body.classList.remove('splashLock','unauth');
+      document.body.classList.add('isAuthenticated','coachMode');
+      try{ window.dispatchEvent(new Event('resize')); }catch(e){}
+      return false;
+    }
     if (which === 'demo') {
       if (typeof window.handleDemoAccess === 'function') return window.handleDemoAccess();
       if (typeof window.forceEnterMainInterface === 'function') return window.forceEnterMainInterface();
@@ -1341,6 +1409,7 @@
   function quickAccess(mode){
     try{ if (typeof window.safeInit === 'function') window.safeInit(); }catch(e){}
     if (mode === 'demo') return authAction('demo');
+    if (mode === 'coach') return authAction('coach');
     return showAuth(mode === 'signup' ? 'signup' : 'login');
   }
   function pressBinder(id, fn){
@@ -1354,12 +1423,14 @@
     pressBinder('btnSplashLogin', function(){ quickAccess('login'); });
     pressBinder('btnSplashSignup', function(){ quickAccess('signup'); });
     pressBinder('btnSplashDemo', function(){ quickAccess('demo'); });
+    pressBinder('btnSplashCoach', function(){ quickAccess('coach'); });
     pressBinder('btnStartApp', function(){ quickAccess('login'); });
     pressBinder('tabAuthLogin', function(){ switchAuth('login'); });
     pressBinder('tabAuthSignup', function(){ switchAuth('signup'); });
     pressBinder('btnLogin', function(){ authAction('login'); });
     pressBinder('btnSignup', function(){ authAction('signup'); });
     pressBinder('btnDemoAccess', function(){ authAction('demo'); });
+    pressBinder('btnCoachAccess', function(){ authAction('coach'); });
     pressBinder('btnDirectAccess', function(){ if (typeof window.handleDeveloperAccess === 'function') return window.handleDeveloperAccess(); if (typeof window.forceEnterMainInterface === 'function') return window.forceEnterMainInterface(); return authAction('demo'); });
   }
   window.__tdtSwitchAuth = switchAuth;
@@ -1377,7 +1448,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=2890"></script>
+<script src="app.js?v=3090"></script>
 
 </body>
 </html>
