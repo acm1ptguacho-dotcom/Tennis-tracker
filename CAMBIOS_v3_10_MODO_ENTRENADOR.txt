@@ -1,0 +1,64 @@
+Tennis Direction Tracker · v3.10 · Refinamiento exclusivo del Modo Entrenador
+
+Todos los cambios de esta versión están limitados al Modo Entrenador. El modo demo/partido mantiene su lógica y comportamiento original.
+
+Cambios incluidos:
+
+1. Flechas de dirección libres
+- El primer toque del usuario marca el inicio de la flecha.
+- El segundo toque marca el destino.
+- A partir de ahí, la siguiente flecha continúa desde el último destino.
+- El patrón puede empezar desde cualquier zona de la pista.
+
+2. Botón de Dirección en Rail Ball
+- Nuevo icono de dirección en el menú Rail Ball del Modo Entrenador.
+- Si el usuario está colocando objetos y quiere volver a dibujar flechas, pulsa Dirección y continúa creando el patrón.
+
+3. Eliminación de zonas de saque T/C/W en Modo Entrenador
+- Las zonas de saque quedan ocultas en Modo Entrenador.
+- Se mantienen las zonas libres de rally en ambos lados de la pista para crear patrones y ejercicios.
+
+4. Preview del ejercicio
+- En Modo Entrenador se oculta "Deshacer punto" y se añade "Preview".
+- Preview abre una ventana con una vista limpia del ejercicio sin zonas P/M/C ni zonas de selección.
+- Muestra flechas, objetos, notas y desplazamientos.
+
+5. Menú de objetos más visual
+- Las herramientas ya no son solo botones de texto.
+- Ahora cada herramienta muestra un objeto visual: cono, aro, cesta, jugador, entrenador, objetivo, desplazamiento y nota.
+
+6. Eliminación de la bola con signo +
+- En Modo Entrenador la bola flotante se oculta.
+- El menú de objetos se abre desde Rail Ball con un icono de cono naranja más visible.
+
+7. Más espacio en pista
+- En Modo Entrenador se ocultan los nombres de jugadores dentro de la pista.
+- Se gana espacio útil para patrones, objetos y desplazamientos.
+
+8. Desplazamiento con flecha blanca discontinua
+- La herramienta Desplazamiento funciona con dos toques.
+- Primer toque: inicio.
+- Segundo toque: final.
+- La flecha blanca discontinua puede ir en cualquier dirección.
+
+9. Datos del ejercicio debajo del diagrama
+- El desplegable "Datos del partido" cambia a "Datos del ejercicio" en Modo Entrenador.
+- Contiene los mismos datos que se piden al guardar: nombre, carpeta, objetivo táctico, nivel, material, etiquetas y notas.
+- Al guardar el patrón o ejercicio, esos detalles se guardan junto con el contenido.
+
+10. Notas editables
+- Al seleccionar Nota se abre la ventana para escribir el texto.
+- La nota aparece en pista.
+- Tiene una X superior derecha para eliminarla.
+- Al tocar la nota se puede editar.
+- Al mantener y arrastrar, la nota se recoloca en la pista.
+
+11. Idioma desde la pantalla inicial
+- Añadido icono de bandera arriba a la derecha en la pantalla inicial.
+- También disponible en la pantalla de acceso/crear cuenta.
+- Permite cambiar idioma desde el principio.
+
+12. Rail Ball más legible
+- En Modo Entrenador los botones de Rail Ball son más grandes.
+- Las etiquetas inferiores también aumentan ligeramente.
+- El diagrama se ajusta para dejar espacio a los botones.

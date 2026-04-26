@@ -5,6 +5,7 @@ const STORAGE_BASE_STATE = "tdt_v24_state";
 const STORAGE_BASE_MATCHES = "tdt_saved_matches_v2";
 const STORAGE_BASE_PROFILES = "tdt_player_profiles_v1";
 const STORAGE_BASE_FINISH_MODE = "tdt_finish_mode_v2";
+const STORAGE_BASE_EXERCISES = "tdt_coach_exercises_v1";
 const ACCOUNTS_KEY = "tdt_accounts_v1";
 const SESSION_KEY = "tdt_session_v1";
 
@@ -105,6 +106,38 @@ function getStateStorageKey(){ return scopedKey(STORAGE_BASE_STATE); }
 function getSavedMatchesStorageKey(){ return scopedKey(STORAGE_BASE_MATCHES); }
 function getProfilesStorageKey(){ return scopedKey(STORAGE_BASE_PROFILES); }
 function getFinishModeKey(){ return scopedKey(STORAGE_BASE_FINISH_MODE); }
+function getCoachExercisesStorageKey(){ return scopedKey(STORAGE_BASE_EXERCISES); }
+
+function createDefaultCoachState(){
+  return {
+    exerciseId: null,
+    exerciseName: "Nuevo ejercicio",
+    folderId: "root",
+    selectedFolderId: "root",
+    activeTool: "direction",
+    pendingDirectionStart: null,
+    pendingDashStart: null,
+    patterns: [],
+    objects: [],
+    goal: "",
+    level: "",
+    material: "",
+    tags: "",
+    notes: ""
+  };
+}
+function ensureCoachState(){
+  if (!state.coach || typeof state.coach !== "object") state.coach = createDefaultCoachState();
+  state.coach.patterns = Array.isArray(state.coach.patterns) ? state.coach.patterns : [];
+  state.coach.objects = Array.isArray(state.coach.objects) ? state.coach.objects : [];
+  state.coach.activeTool = state.coach.activeTool || "direction";
+  state.coach.exerciseName = state.coach.exerciseName || "Nuevo ejercicio";
+  state.coach.folderId = state.coach.folderId || "root";
+  state.coach.selectedFolderId = state.coach.selectedFolderId || state.coach.folderId || "root";
+  return state.coach;
+}
+function isCoachMode(){ return !!(state.ui && state.ui.appMode === "coach"); }
+function isCoachObjectTool(tool){ return ["cone","hoop","basket","player","coach","target","text","dash"].includes(tool); }
 
 function createDefaultState(){
   return {
@@ -138,8 +171,10 @@ function createDefaultState(){
       hideRail:false,
       surface:"hard",
       chartPlayer:"A",
-      saveLoadMode:"save"
-    }
+      saveLoadMode:"save",
+      appMode:"match"
+    },
+    coach: createDefaultCoachState()
   };
 }
 
@@ -261,6 +296,7 @@ function applyI18n(){
   document.title = "Tennis Direction Tracker";
   const flag = document.getElementById('langFlag');
   if (flag) flag.textContent = (state.lang === 'en') ? '🇬🇧' : '🇪🇸';
+  try{ updateEntryLanguageFlags(); }catch(e){}
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const k = el.getAttribute('data-i18n');
     if (!k) return;
@@ -351,7 +387,8 @@ function upgradeCloseButtons(scope=document){
   const ids = [
     'btnClosePlayers','btnCloseDashboard','btnCloseAccount','btnCloseHelp','btnCloseLegal','btnCloseOnboarding',
     'btnCloseHistory','btnClosePointViewer','btnCloseAnalytics','btnCloseStats','btnCloseCharts','btnCloseExport',
-    'btnCloseLanguage','btnCloseInfo','btnCloseSurface','btnCloseGameMode','btnCloseSaveLoad','btnCloseConfirm'
+    'btnCloseLanguage','btnCloseInfo','btnCloseSurface','btnCloseGameMode','btnCloseSaveLoad','btnCloseConfirm',
+    'btnCloseCoachSave','btnCloseCoachLibrary','btnCloseCoachObjects','btnCloseCoachPreview'
   ];
   ids.forEach(id=>{
     const el = (scope && scope.querySelector) ? scope.querySelector(`#${id}`) : null;
@@ -423,7 +460,7 @@ function load(){
     state.handed = state.handed || { A:"R", B:"R" };
     state.playerSex = state.playerSex || { A:"M", B:"M" };
     state.playerAssignments = state.playerAssignments || { A:null, B:null };
-    state.ui = state.ui || {theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false, surface:"hard", chartPlayer:"A", saveLoadMode:"save"};
+    state.ui = state.ui || {theme:"dark", coach:true, showHistoryArrows:true, hideScore:false, rotated:false, hideRail:false, surface:"hard", chartPlayer:"A", saveLoadMode:"save", appMode:"match"};
     if (typeof state.ui.showHistoryArrows === "undefined") state.ui.showHistoryArrows = true;
     if (typeof state.ui.hideScore === "undefined") state.ui.hideScore = false;
     if (typeof state.ui.rotated === "undefined") state.ui.rotated = false;
@@ -431,6 +468,8 @@ function load(){
     if (!state.ui.surface) state.ui.surface = "hard";
     if (!state.ui.chartPlayer) state.ui.chartPlayer = "A";
     if (!state.ui.saveLoadMode) state.ui.saveLoadMode = "save";
+    if (!state.ui.appMode) state.ui.appMode = "match";
+    ensureCoachState();
     if (state.point){ if (typeof state.point.important === "undefined") state.point.important = false; if (typeof state.point.importantNote === "undefined") state.point.importantNote = ""; }
   }catch(e){ console.error(e); }
 }
@@ -957,33 +996,7 @@ function recordArrow({hitter, throughEl, throughNorm=null, isServe=false}){
   if (isServe){
     from = serveOriginNorm(hitter, p.side);
   } else {
-    /*
-     * In coach mode the first directional arrow should start from the user's first tap
-     * rather than always defaulting to the baseline. To achieve this we maintain a
-     * temporary starting coordinate (state.pendingCoachStart). When the user taps
-     * the court for the first time in a new pattern the current through point is
-     * stored and the function returns early without adding an arrow. When the
-     * second tap occurs (pendingCoachStart present) that stored coordinate is
-     * used as the arrow's starting point and the arrow is recorded. Subsequent
-     * taps will continue from the end of the last arrow, matching normal logic.
-     */
-    if (state.ui && state.ui.coach){
-      if (state.pendingCoachStart){
-        // Use stored start and clear it
-        from = state.pendingCoachStart;
-        state.pendingCoachStart = null;
-      } else if (!p.arrows || p.arrows.length === 0){
-        // First tap: store through coordinate and wait for second
-        state.pendingCoachStart = { x: clamp01(through.x), y: clamp01(through.y) };
-        return;
-      } else {
-        // Subsequent arrows: start from end of last arrow
-        from = lastArrowEnd(p);
-      }
-    } else {
-      // Default behaviour outside coach mode
-      from = lastArrowEnd(p) || { x: singlesBounds().center, y: baselineY(hitter) };
-    }
+    from = lastArrowEnd(p) || { x: singlesBounds().center, y: baselineY(hitter) };
   }
 
   const opponent = other(hitter);
@@ -1123,7 +1136,8 @@ function renderLiveArrows(animate=false){
   const svg = $("#arrowSvg");
   if (!svg) return;
   const p = state.point;
-  const arrows = p && p.arrows ? p.arrows : [];
+  let arrows = p && p.arrows ? p.arrows : [];
+  if (isCoachMode()) arrows = getAllCoachArrows();
   if (!arrows || arrows.length===0){
     svg.innerHTML = arrowDefs();
     __liveArrowCountRendered = 0;
@@ -1131,7 +1145,7 @@ function renderLiveArrows(animate=false){
   }
   const animateFromIndex = (animate && arrows.length > __liveArrowCountRendered) ? __liveArrowCountRendered : null;
   __liveArrowCountRendered = arrows.length;
-  renderArrows(svg, arrows, { animateFromIndex, fadeOld:true });
+  renderArrows(svg, arrows, { animateFromIndex, fadeOld:!isCoachMode() });
 }
 
 function clearLiveArrows(){
@@ -1270,6 +1284,10 @@ function serveRequiredBox(neededSide, sideLabel){
 }
 
 function applyTapConstraints(){
+  if (isCoachMode()){
+    document.querySelectorAll(".zoneCell, .serveCell").forEach(el=> el.classList.remove("disabled","hidden"));
+    return;
+  }
   const p = state.point;
   // reset
   document.querySelectorAll(".zoneCell, .serveCell").forEach(el=>{
@@ -1316,6 +1334,15 @@ function applyTapConstraints(){
 
 function renderZonesVisibility(){
   const p = state.point;
+  if (isCoachMode()){
+    const serveTop=$("#serveTop"), serveBottom=$("#serveBottom"), rallyTop=$("#rallyTop"), rallyBottom=$("#rallyBottom");
+    if (serveTop) serveTop.classList.add("hidden");
+    if (serveBottom) serveBottom.classList.add("hidden");
+    if (rallyTop) rallyTop.classList.remove("hidden");
+    if (rallyBottom) rallyBottom.classList.remove("hidden");
+    updateServeLabelPlacement();
+    return;
+  }
   const showServe = p && p.phase==="serve";
   const serveTop=$("#serveTop"), serveBottom=$("#serveBottom");
   const rallyTop=$("#rallyTop"), rallyBottom=$("#rallyBottom");
@@ -1347,6 +1374,10 @@ function zoneCodeFromTap(side, row, col){
 }
 
 function onServeTap(side, box, target, el){
+  if (isCoachMode()){
+    handleCoachCourtToolFromElement(el, null, side);
+    return;
+  }
   if (state.matchFinished) return;
   if (!state.point) initPoint();
   if (state.point.phase !== "serve") return;
@@ -1386,6 +1417,10 @@ function onServeTap(side, box, target, el){
 }
 
 function onRallyTap(side, row, col, el, evt){
+  if (isCoachMode()){
+    handleCoachCourtToolFromElement(el, evt, side);
+    return;
+  }
   if (state.matchFinished) return;
   if (!state.point) initPoint();
   if (state.point.phase!=="rally") return;
@@ -1440,14 +1475,14 @@ function renderPoint(){
 
   const p=state.point;
   if (!p){
-    if (last) last.textContent="Último: —";
+    if (last) last.textContent = isCoachMode() ? "Inicio: toca la pista" : "Último: —";
     clearLiveArrows();
     return;
   }
 
   const tokens = p.events.map(eventTokenText);
   if (last){
-    last.textContent = tokens.length ? `Último: ${tokens[tokens.length-1]}` : "Último: —";
+    last.textContent = tokens.length ? (isCoachMode() ? `Patrón activo: ${tokens[tokens.length-1]}` : `Último: ${tokens[tokens.length-1]}`) : (isCoachMode() ? "Inicio: toca la pista" : "Último: —");
   }
 
   tokens.forEach((t,i)=>{
@@ -1545,9 +1580,7 @@ const qiF = $("#qiFinish");
   const qiR = $("#qiResume");
   (qiF ? qiF : $("#btnFinish")).classList.toggle("hidden", state.matchFinished);
   (qiR ? qiR : $("#btnResume")).classList.toggle("hidden", !state.matchFinished);
-  // Disable the preview button if there is no history (in coach mode this may simply stay enabled)
-  const _btnPrev = $("#btnPreview");
-  if (_btnPrev) _btnPrev.disabled = (state.matchPoints && state.matchPoints.length===0);
+  $("#btnRedoPoint").disabled = state.matchPoints.length===0;
 }
 
 function newMatch(){
@@ -4849,15 +4882,459 @@ function exportStatsPDF(){
   setTimeout(()=>{ try{ w.focus(); w.print(); }catch(_){ } }, 350);
 }
 
+// --- Modo Entrenador v3.10: ejercicios, patrones, objetos, preview y notas ---
+function getCoachLibrary(){
+  const fallback = { folders:[{ id:"root", name:"General", createdAt:Date.now() }], exercises:[] };
+  try{
+    const raw = localStorage.getItem(getCoachExercisesStorageKey());
+    const lib = raw ? JSON.parse(raw) : fallback;
+    lib.folders = Array.isArray(lib.folders) && lib.folders.length ? lib.folders : fallback.folders;
+    lib.exercises = Array.isArray(lib.exercises) ? lib.exercises : [];
+    if (!lib.folders.some(f=>f.id==="root")) lib.folders.unshift({ id:"root", name:"General", createdAt:Date.now() });
+    return lib;
+  }catch(e){ console.error(e); return fallback; }
+}
+function setCoachLibrary(lib){
+  try{ localStorage.setItem(getCoachExercisesStorageKey(), JSON.stringify(lib || getCoachLibrary())); }
+  catch(e){ console.error(e); toast("⚠️ No se pudo guardar la biblioteca de ejercicios"); }
+}
+function initCoachPoint(){
+  ensureCoachState();
+  state.point = { server:"A", side:"SD", phase:"rally", firstServeFault:false, important:false, events:[], arrows:[], finishDetail:null, coach:true };
+  __liveArrowCountRendered = 0;
+  renderPoint();
+  return state.point;
+}
+function setAppMode(mode){
+  state.ui = state.ui || {};
+  state.ui.appMode = mode === "coach" ? "coach" : "match";
+  if (isCoachMode()){
+    ensureCoachState();
+    if (!state.point || !state.point.coach) initCoachPoint();
+    state.ui.hideScore = true;
+  } else {
+    if (!state.point || state.point.coach) initPoint();
+    state.ui.hideScore = false;
+  }
+  applyModes();
+  persist();
+  renderAll();
+}
+function applyCoachModeUI(){
+  const coachMode = isCoachMode();
+  document.body.classList.toggle("coachMode", coachMode);
+  const wsName = document.getElementById("workspaceName");
+  const wsSub = document.getElementById("workspaceSub");
+  if (coachMode){
+    const c = ensureCoachState();
+    if (wsName) wsName.textContent = "Modo entrenador";
+    if (wsSub) wsSub.textContent = c.exerciseName || "Editor de ejercicios y patrones";
+  }
+  const title = document.querySelector(".timelineTitle");
+  if (title) title.textContent = coachMode ? "Secuencia del ejercicio" : t("seqTitle");
+  const metaSummary = document.querySelector("#matchMetaCard summary");
+  if (metaSummary) metaSummary.textContent = coachMode ? "Datos del ejercicio" : t("matchData");
+  const last = document.getElementById("lastTouch");
+  if (coachMode && last && (!state.point || !state.point.events || !state.point.events.length)) last.textContent = "Inicio: toca la pista";
+  document.querySelector(".matchMetaGrid")?.classList.toggle("hidden", coachMode);
+  document.getElementById("coachMetaGrid")?.classList.toggle("hidden", !coachMode);
+  syncCoachInlineFromState();
+  renderCoachObjects();
+  renderCoachFolderOptions();
+}
+function updateEntryLanguageFlags(){
+  const flag = (state.lang === "en") ? "🇬🇧" : "🇪🇸";
+  ["entryLangFlag","authLangFlag","langFlag"].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=flag; });
+}
+function openEntryLanguage(){ openModal("#languageModal"); return false; }
+function getAllCoachArrows(){
+  const c = ensureCoachState();
+  const saved = [];
+  (c.patterns || []).forEach(pat => (pat.arrows || []).forEach(a => saved.push(a)));
+  const live = (state.point && state.point.coach && Array.isArray(state.point.arrows)) ? state.point.arrows : [];
+  return saved.concat(live).map((a, idx)=>({ ...a, n:idx+1 }));
+}
+function syncCoachInlineFromState(){
+  if (!isCoachMode()) return;
+  const c = ensureCoachState();
+  const set=(id,v)=>{ const el=document.getElementById(id); if (el && document.activeElement !== el) el.value = v || ""; };
+  set("coachInlineName", c.exerciseName);
+  set("coachInlineGoal", c.goal);
+  set("coachInlineLevel", c.level);
+  set("coachInlineMaterial", c.material);
+  set("coachInlineTags", c.tags);
+  set("coachInlineNotes", c.notes);
+  renderCoachFolderOptions();
+  const folder = document.getElementById("coachInlineFolder");
+  if (folder && document.activeElement !== folder) folder.value = c.folderId || "root";
+}
+function syncCoachStateFromInline(){
+  const c = ensureCoachState();
+  const val=(id)=> (document.getElementById(id)?.value || "").trim();
+  const folder = document.getElementById("coachInlineFolder")?.value;
+  if (document.getElementById("coachInlineName")) c.exerciseName = val("coachInlineName") || c.exerciseName || "Nuevo ejercicio";
+  if (folder) c.folderId = folder;
+  if (document.getElementById("coachInlineGoal")) c.goal = val("coachInlineGoal");
+  if (document.getElementById("coachInlineLevel")) c.level = val("coachInlineLevel");
+  if (document.getElementById("coachInlineMaterial")) c.material = val("coachInlineMaterial");
+  if (document.getElementById("coachInlineTags")) c.tags = val("coachInlineTags");
+  if (document.getElementById("coachInlineNotes")) c.notes = val("coachInlineNotes");
+  return c;
+}
+function renderCoachFolderOptions(){
+  const lib = getCoachLibrary();
+  ["coachExerciseFolder","coachInlineFolder"].forEach(id=>{
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const current = sel.value || ensureCoachState().folderId || "root";
+    sel.innerHTML = lib.folders.map(f=>`<option value="${escapeHtml(f.id)}">${escapeHtml(f.name)}</option>`).join("");
+    sel.value = current;
+    if (!sel.value) sel.value = "root";
+  });
+}
+function normalizeCoachExerciseFromState(){
+  syncCoachStateFromInline();
+  const c = ensureCoachState();
+  return {
+    id: c.exerciseId || ("ex_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,7)),
+    name: c.exerciseName || "Nuevo ejercicio",
+    folderId: c.folderId || "root",
+    goal: c.goal || "",
+    level: c.level || "",
+    material: c.material || "",
+    tags: c.tags || "",
+    notes: c.notes || "",
+    surface: state.ui?.surface || "hard",
+    patterns: JSON.parse(JSON.stringify(c.patterns || [])),
+    objects: JSON.parse(JSON.stringify(c.objects || [])),
+    currentPoint: state.point && state.point.coach ? JSON.parse(JSON.stringify(state.point)) : null,
+    updatedAt: Date.now(),
+    createdAt: c.createdAt || Date.now()
+  };
+}
+function openCoachSave(){
+  if (!isCoachMode()) setAppMode("coach");
+  syncCoachStateFromInline();
+  const c = ensureCoachState();
+  renderCoachFolderOptions();
+  const setVal=(id,v)=>{ const el=document.getElementById(id); if (el) el.value = v || ""; };
+  setVal("coachExerciseName", c.exerciseName);
+  setVal("coachExerciseGoal", c.goal);
+  setVal("coachExerciseLevel", c.level);
+  setVal("coachExerciseMaterial", c.material);
+  setVal("coachExerciseTags", c.tags);
+  setVal("coachExerciseNotes", c.notes);
+  const folder=document.getElementById("coachExerciseFolder"); if(folder) folder.value = c.folderId || "root";
+  openModal("#coachSaveModal");
+}
+function closeCoachSave(){ closeModal("#coachSaveModal"); }
+function saveCoachExercise(){
+  if (!isCoachMode()) setAppMode("coach");
+  const c = ensureCoachState();
+  c.exerciseName = (document.getElementById("coachExerciseName")?.value || document.getElementById("coachInlineName")?.value || "").trim() || "Ejercicio sin título";
+  c.folderId = document.getElementById("coachExerciseFolder")?.value || document.getElementById("coachInlineFolder")?.value || c.folderId || "root";
+  c.goal = (document.getElementById("coachExerciseGoal")?.value || document.getElementById("coachInlineGoal")?.value || "").trim();
+  c.level = (document.getElementById("coachExerciseLevel")?.value || document.getElementById("coachInlineLevel")?.value || "").trim();
+  c.material = (document.getElementById("coachExerciseMaterial")?.value || document.getElementById("coachInlineMaterial")?.value || "").trim();
+  c.tags = (document.getElementById("coachExerciseTags")?.value || document.getElementById("coachInlineTags")?.value || "").trim();
+  c.notes = (document.getElementById("coachExerciseNotes")?.value || document.getElementById("coachInlineNotes")?.value || "").trim();
+  const lib = getCoachLibrary();
+  const ex = normalizeCoachExerciseFromState();
+  const idx = lib.exercises.findIndex(x=>x.id===ex.id);
+  if (idx >= 0) lib.exercises[idx] = { ...lib.exercises[idx], ...ex, createdAt: lib.exercises[idx].createdAt || ex.createdAt };
+  else lib.exercises.push(ex);
+  c.exerciseId = ex.id;
+  setCoachLibrary(lib);
+  syncCoachInlineFromState();
+  persist();
+  renderCoachLibrary();
+  toast("✅ Ejercicio guardado");
+  closeCoachSave();
+}
+function openCoachLibrary(){ renderCoachLibrary(); openModal("#coachLibraryModal"); }
+function closeCoachLibrary(){ closeModal("#coachLibraryModal"); }
+function renderCoachLibrary(){
+  const c = ensureCoachState();
+  const lib = getCoachLibrary();
+  const folderList = document.getElementById("coachFolderList");
+  const exerciseList = document.getElementById("coachExerciseList");
+  if (!folderList || !exerciseList) return;
+  const q = (document.getElementById("coachExerciseSearch")?.value || "").trim().toLowerCase();
+  folderList.innerHTML = lib.folders.map(f=>`<button class="coachFolderBtn ${c.selectedFolderId===f.id?'active':''}" data-folder-id="${escapeHtml(f.id)}" type="button"><span>${escapeHtml(f.name)}</span><small>${lib.exercises.filter(e=>e.folderId===f.id).length}</small></button>`).join("");
+  folderList.querySelectorAll("[data-folder-id]").forEach(btn=> btn.addEventListener("click", ()=>{ c.selectedFolderId = btn.dataset.folderId || "root"; persist(); renderCoachLibrary(); }));
+  const items = lib.exercises.filter(e => ((e.folderId || "root") === c.selectedFolderId) && (!q || (e.name||"").toLowerCase().includes(q) || (e.tags||"").toLowerCase().includes(q) || (e.goal||"").toLowerCase().includes(q))).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  exerciseList.innerHTML = items.length ? items.map(e=>`<div class="coachExerciseCard"><div><strong>${escapeHtml(e.name||'Ejercicio')}</strong><p>${escapeHtml(e.goal||'Sin objetivo táctico definido')}</p><small>${(e.patterns||[]).length} patrones · ${(e.objects||[]).length} objetos · ${new Date(e.updatedAt||Date.now()).toLocaleDateString()}</small></div><div class="coachExerciseActions"><button class="chip good" data-load-ex="${escapeHtml(e.id)}" type="button">Cargar</button><button class="chip" data-dup-ex="${escapeHtml(e.id)}" type="button">Duplicar</button><button class="chip warn" data-del-ex="${escapeHtml(e.id)}" type="button">Borrar</button></div></div>`).join("") : `<div class="muted" style="padding:14px;">No hay ejercicios en esta carpeta.</div>`;
+  exerciseList.querySelectorAll("[data-load-ex]").forEach(btn=> btn.addEventListener("click", ()=> loadCoachExercise(btn.dataset.loadEx)));
+  exerciseList.querySelectorAll("[data-dup-ex]").forEach(btn=> btn.addEventListener("click", ()=> duplicateCoachExercise(btn.dataset.dupEx)));
+  exerciseList.querySelectorAll("[data-del-ex]").forEach(btn=> btn.addEventListener("click", ()=> deleteCoachExercise(btn.dataset.delEx)));
+}
+function addCoachFolder(){
+  const input = document.getElementById("coachFolderName");
+  const name = (input?.value || "").trim();
+  if (!name){ toast("Escribe un nombre de carpeta"); return; }
+  const lib = getCoachLibrary();
+  const id = "fld_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,5);
+  lib.folders.push({ id, name, createdAt:Date.now() });
+  setCoachLibrary(lib);
+  const c=ensureCoachState(); c.selectedFolderId = id; c.folderId = id;
+  if (input) input.value = "";
+  renderCoachLibrary();
+  renderCoachFolderOptions();
+  syncCoachInlineFromState();
+}
+function loadCoachExercise(id){
+  const lib = getCoachLibrary();
+  const ex = lib.exercises.find(e=>e.id===id);
+  if (!ex){ toast("No se pudo cargar el ejercicio"); return; }
+  setAppMode("coach");
+  state.coach = {
+    ...createDefaultCoachState(),
+    exerciseId: ex.id, exerciseName: ex.name || "Ejercicio", folderId: ex.folderId || "root", selectedFolderId: ex.folderId || "root",
+    patterns: JSON.parse(JSON.stringify(ex.patterns || [])), objects: JSON.parse(JSON.stringify(ex.objects || [])),
+    goal: ex.goal || "", level: ex.level || "", material: ex.material || "", tags: ex.tags || "", notes: ex.notes || "", activeTool:"direction"
+  };
+  state.point = ex.currentPoint && ex.currentPoint.coach ? JSON.parse(JSON.stringify(ex.currentPoint)) : null;
+  if (!state.point) initCoachPoint();
+  if (ex.surface) state.ui.surface = ex.surface;
+  persist();
+  renderAll();
+  closeCoachLibrary();
+  toast("✅ Ejercicio cargado");
+}
+function duplicateCoachExercise(id){
+  const lib = getCoachLibrary();
+  const ex = lib.exercises.find(e=>e.id===id);
+  if (!ex) return;
+  const copy = { ...JSON.parse(JSON.stringify(ex)), id:"ex_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,7), name:(ex.name||"Ejercicio")+" · copia", createdAt:Date.now(), updatedAt:Date.now() };
+  lib.exercises.push(copy);
+  setCoachLibrary(lib);
+  renderCoachLibrary();
+  toast("Ejercicio duplicado");
+}
+function deleteCoachExercise(id){
+  const lib = getCoachLibrary();
+  lib.exercises = lib.exercises.filter(e=>e.id!==id);
+  setCoachLibrary(lib);
+  renderCoachLibrary();
+  toast("Ejercicio borrado");
+}
+function newCoachExercise(){
+  setAppMode("coach");
+  state.coach = createDefaultCoachState();
+  initCoachPoint();
+  persist();
+  renderAll();
+  toast("Nuevo ejercicio");
+}
+function clearCoachCourt(){
+  const c=ensureCoachState();
+  c.patterns = [];
+  c.objects = [];
+  c.pendingDirectionStart = null;
+  c.pendingDashStart = null;
+  initCoachPoint();
+  persist();
+  renderAll();
+  toast("Pista limpia");
+}
+function openCoachObjects(){ if (!isCoachMode()) setAppMode("coach"); openModal("#coachObjectsModal"); }
+function closeCoachObjects(){ closeModal("#coachObjectsModal"); }
+function setCoachTool(tool){
+  const c = ensureCoachState();
+  c.activeTool = tool || "direction";
+  c.pendingDashStart = null;
+  document.querySelectorAll(".coachToolBtn").forEach(b=> b.classList.toggle("active", b.dataset.coachTool === c.activeTool));
+  document.getElementById("btnCoachDirection")?.classList.toggle("active", c.activeTool === "direction");
+  persist();
+  if (c.activeTool === "direction") toast("Flecha de dirección: toca inicio y después destino");
+  else if (c.activeTool === "dash") toast("Desplazamiento: primer toque inicio, segundo toque final");
+  else toast("Toca la pista para colocar: " + coachToolLabel(c.activeTool));
+}
+function coachToolLabel(tool){ return ({ cone:"Cono", hoop:"Aro", basket:"Cesta", player:"Jugador", coach:"Entrenador", target:"Objetivo", dash:"Desplazamiento", text:"Nota", direction:"Dirección" })[tool] || "Objeto"; }
+function coachPointFromEvent(evt, el){ return evt ? pointNormFromEvent(evt, el || document.getElementById("court")) : centerNormFromEl(el); }
+function handleCoachDirectionTap(pt, hitter="A"){
+  const c = ensureCoachState();
+  if (!state.point || !state.point.coach) initCoachPoint();
+  if (!c.pendingDirectionStart){
+    c.pendingDirectionStart = { x:clamp01(pt.x), y:clamp01(pt.y), hitter };
+    state.point.events.push({type:"coachStart", player:hitter, code:"Inicio", meta:{touch:pt, coach:true}});
+    renderPoint();
+    persist();
+    toast("Inicio de flecha marcado");
+    return false;
+  }
+  const from = c.pendingDirectionStart;
+  const p = state.point;
+  p.arrows = Array.isArray(p.arrows) ? p.arrows : [];
+  const n = p.arrows.length + 1;
+  const a = { n, hitter: hitter || from.hitter || "A", from:{x:clamp01(from.x), y:clamp01(from.y)}, through:{x:clamp01(pt.x), y:clamp01(pt.y)}, to:{x:clamp01(pt.x), y:clamp01(pt.y)}, coach:true };
+  p.arrows.push(a);
+  p.events.push({type:"coachArrow", player:a.hitter, code:`Flecha ${n}`, meta:{from:a.from,to:a.to,coach:true}});
+  c.pendingDirectionStart = { x:clamp01(pt.x), y:clamp01(pt.y), hitter:a.hitter };
+  renderPoint();
+  renderLiveArrows(true);
+  persist();
+  return true;
+}
+function handleCoachToolAtPoint(pt, hitter="A"){
+  const c = ensureCoachState();
+  const tool = c.activeTool || "direction";
+  if (tool === "direction" || tool === "pattern") return handleCoachDirectionTap(pt, hitter);
+  if (tool === "dash"){
+    if (!c.pendingDashStart){ c.pendingDashStart = {x:clamp01(pt.x), y:clamp01(pt.y)}; persist(); toast("Inicio de desplazamiento marcado"); return true; }
+    c.objects.push({ id:"dash_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,5), type:"dashLine", x:c.pendingDashStart.x, y:c.pendingDashStart.y, x2:clamp01(pt.x), y2:clamp01(pt.y), label:"Desplazamiento", createdAt:Date.now() });
+    c.pendingDashStart = null;
+    renderCoachObjects(); persist(); toast("Desplazamiento añadido"); return true;
+  }
+  addCoachObject(tool, pt);
+  return true;
+}
+function handleCoachCourtToolFromElement(el, evt, side="top"){
+  if (!isCoachMode()) return false;
+  const pt = evt ? pointNormFromEvent(evt, el) : centerNormFromEl(el);
+  const hitter = side === "bottom" ? "B" : "A";
+  return handleCoachToolAtPoint(pt, hitter);
+}
+function handleCoachCourtFreeClick(evt){
+  if (!isCoachMode()) return;
+  const c = ensureCoachState();
+  if (!isCoachObjectTool(c.activeTool) && c.activeTool !== "direction" && c.activeTool !== "pattern") return;
+  if (evt.target.closest && evt.target.closest('.zoneCell,.serveCell,.coachObject,.coachDashLine')) return;
+  const court = document.getElementById('court');
+  if (!court) return;
+  const cr = court.getBoundingClientRect();
+  let x = (evt.clientX - cr.left) / Math.max(1, cr.width);
+  let y = (evt.clientY - cr.top) / Math.max(1, cr.height);
+  if (state.ui && state.ui.rotated){ x = 1-x; y = 1-y; }
+  handleCoachToolAtPoint({ x:clamp01(x), y:clamp01(y) }, y > .5 ? "B" : "A");
+}
+function addCoachObject(type, pt){
+  const c = ensureCoachState();
+  let label = coachToolLabel(type);
+  if (type === "text") label = prompt("Texto de la nota", "Nota") || "Nota";
+  c.objects.push({ id:"obj_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,5), type, label, x:clamp01(pt.x), y:clamp01(pt.y), createdAt:Date.now() });
+  renderCoachObjects();
+  persist();
+}
+function renderCoachObjects(){
+  const layer = document.getElementById("coachObjectsLayer");
+  if (!isCoachMode()) { if (layer) layer.innerHTML = ""; return; }
+  renderCoachObjectsInto("coachObjectsLayer", false);
+}
+function renderCoachObjectsInto(layerId, preview=false){
+  const layer = document.getElementById(layerId);
+  if (!layer) return;
+  const c = ensureCoachState();
+  layer.innerHTML = "";
+  (c.objects || []).forEach((obj, idx)=>{
+    if (obj.type === "dashLine"){
+      const el = document.createElement("div");
+      el.className = "coachDashLine";
+      const dx = (clamp01(obj.x2)-clamp01(obj.x));
+      const dy = (clamp01(obj.y2)-clamp01(obj.y));
+      const len = Math.hypot(dx,dy)*100;
+      const ang = Math.atan2(dy,dx)*180/Math.PI;
+      el.style.left = (clamp01(obj.x)*100)+"%";
+      el.style.top = (clamp01(obj.y)*100)+"%";
+      el.style.width = Math.max(6,len)+"%";
+      el.style.transform = `rotate(${ang}deg)`;
+      el.innerHTML = `<span></span>`;
+      if (!preview) el.addEventListener("click", (e)=>{ e.stopPropagation(); removeCoachObject(obj.id); });
+      layer.appendChild(el);
+      return;
+    }
+    const el = document.createElement(obj.type === "text" ? "div" : "button");
+    if (obj.type !== "text") el.type = "button";
+    el.className = "coachObject coachObject-" + (obj.type || "cone");
+    el.style.left = (clamp01(obj.x) * 100) + "%";
+    el.style.top = (clamp01(obj.y) * 100) + "%";
+    el.innerHTML = coachObjectMarkup(obj, idx, preview);
+    el.title = obj.label || coachToolLabel(obj.type);
+    if (!preview){
+      if (obj.type === "text") wireCoachNoteObject(el, obj);
+      else el.addEventListener("click", (e)=>{ e.stopPropagation(); removeCoachObject(obj.id); });
+    }
+    layer.appendChild(el);
+  });
+}
+function coachObjectMarkup(obj, idx, preview=false){
+  const t = obj.type || "cone";
+  if (t === "cone") return `<span class="coneShape"></span>`;
+  if (t === "hoop") return `<span class="hoopShape"></span>`;
+  if (t === "basket") return `<span class="basketShape">●</span>`;
+  if (t === "player") return `<span class="personShape">J</span>`;
+  if (t === "coach") return `<span class="personShape coach">E</span>`;
+  if (t === "target") return `<span class="targetShape"></span>`;
+  if (t === "text") return `<div class="noteShape"><span>${escapeHtml(obj.label || 'Nota')}</span>${preview ? '' : '<button class="noteDelete" type="button" aria-label="Eliminar nota">×</button>'}</div>`;
+  return `<span>${idx+1}</span>`;
+}
+function wireCoachNoteObject(el, obj){
+  let start=null, moved=false;
+  const onMove=(e)=>{
+    if(!start) return;
+    const court=document.getElementById('court'); if(!court) return;
+    const cr=court.getBoundingClientRect();
+    const dx=e.clientX-start.x0, dy=e.clientY-start.y0;
+    if(Math.hypot(dx,dy)>5) moved=true;
+    let x=(e.clientX-cr.left)/Math.max(1,cr.width), y=(e.clientY-cr.top)/Math.max(1,cr.height);
+    if(state.ui && state.ui.rotated){ x=1-x; y=1-y; }
+    obj.x=clamp01(x); obj.y=clamp01(y);
+    el.style.left=(obj.x*100)+'%'; el.style.top=(obj.y*100)+'%';
+  };
+  const onUp=(e)=>{ if(start){ document.removeEventListener('pointermove',onMove); document.removeEventListener('pointerup',onUp); persist(); setTimeout(()=>{start=null; moved=false;},0); } };
+  el.querySelector('.noteDelete')?.addEventListener('click',(e)=>{e.stopPropagation(); removeCoachObject(obj.id);});
+  el.addEventListener('pointerdown',(e)=>{ if(e.target.closest('.noteDelete')) return; e.preventDefault(); e.stopPropagation(); start={x0:e.clientX,y0:e.clientY}; moved=false; document.addEventListener('pointermove',onMove); document.addEventListener('pointerup',onUp); });
+  el.addEventListener('click',(e)=>{ e.stopPropagation(); if(moved) return; const txt=prompt('Editar nota', obj.label || 'Nota'); if(txt!==null){ obj.label=txt || 'Nota'; renderCoachObjects(); persist(); } });
+}
+function removeCoachObject(id){
+  const c = ensureCoachState();
+  c.objects = (c.objects || []).filter(o=>o.id!==id);
+  renderCoachObjects();
+  persist();
+}
+function deleteLastCoachObject(){
+  const c = ensureCoachState();
+  if (c.objects && c.objects.length){ c.objects.pop(); renderCoachObjects(); persist(); toast("Objeto borrado"); }
+}
+function coachFinalizePattern(){
+  if (!isCoachMode()) return;
+  syncCoachStateFromInline();
+  const c = ensureCoachState();
+  const p = state.point;
+  if (!p || !p.arrows || !p.arrows.length){ toast("No hay patrón activo"); return; }
+  const id = "pat_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,5);
+  c.patterns.push({ id, name:"Patrón " + (c.patterns.length + 1), events:JSON.parse(JSON.stringify(p.events || [])), arrows:JSON.parse(JSON.stringify(p.arrows || [])), details:{ name:c.exerciseName, goal:c.goal, level:c.level, material:c.material, tags:c.tags, notes:c.notes }, createdAt:Date.now() });
+  initCoachPoint();
+  c.pendingDirectionStart = null;
+  persist();
+  renderAll();
+  toast("Patrón guardado en el ejercicio");
+}
+function openCoachPreview(){
+  if (!isCoachMode()) return;
+  renderCoachPreview();
+  openModal("#coachPreviewModal");
+}
+function closeCoachPreview(){ closeModal("#coachPreviewModal"); }
+function renderCoachPreview(){
+  const svg = document.getElementById("coachPreviewSvg");
+  if (svg) renderArrows(svg, getAllCoachArrows(), { animateFromIndex:null, fadeOld:false });
+  const sub = document.getElementById("coachPreviewSub");
+  if (sub){ const c=ensureCoachState(); sub.textContent = `${c.exerciseName || 'Ejercicio'} · ${(c.patterns||[]).length} patrones · ${(c.objects||[]).length} objetos`; }
+  renderCoachObjectsInto("coachPreviewObjects", true);
+}
+
 // Modos eliminados de la UI: dejamos un único modo estable
 // - Tema: oscuro
 // - Layout: entrenador (coach)
 function applyModes(){
-  if (!state.ui) state.ui = { theme:"dark", coach:true };
+  if (!state.ui) state.ui = { theme:"dark", coach:true, appMode:"match" };
   state.ui.theme = "dark";
   state.ui.coach = true;
+  if (!state.ui.appMode) state.ui.appMode = "match";
   document.body.classList.remove("light");
   document.body.classList.add("coach");
+  applyCoachModeUI();
 }
 
 let __menuOpen = false;
@@ -4932,15 +5409,6 @@ function applyRailVisibility(){
     b.setAttribute("aria-label", isHidden ? "Mostrar herramientas" : "Ocultar herramientas");
     b.title = isHidden ? "Mostrar herramientas" : "Ocultar herramientas";
   }
-}
-
-// Toggle preview mode: hides zone labels and other non-essential UI to show a clean diagram of the current exercise.
-function togglePreview(){
-  state.ui = state.ui || {};
-  state.ui.preview = !state.ui.preview;
-  document.body.classList.toggle("previewMode", !!state.ui.preview);
-  // Persist preview state to local storage so it stays in sync when reloading.
-  persist();
 }
 function toggleRailVisibility(){
   state.ui.hideRail = !state.ui.hideRail;
@@ -5084,6 +5552,7 @@ function renderAll(){
   syncTopbarHeight();
   applyI18n();
   applySurface();
+  applyCoachModeUI();
   renderMeta();
   applyScoreVisibility();
   applyRailVisibility();
@@ -5091,10 +5560,12 @@ function renderAll(){
   renderCourtNames();
   renderScore();
   renderPoint();
+  renderCoachObjects();
   updateWorkspaceBar();
   renderDashboard();
   renderPlayerLibrary();
   renderAccountModal();
+  applyCoachModeUI();
 }
 
 function wire(){
@@ -5109,7 +5580,7 @@ function wire(){
   on("nameB","change", ()=>{ state.names.B=$("#nameB").value||"Jugador B"; persist(); renderAll(); });
 
   // controls
-  on("btnNew","click", ()=> openConfirm("Nuevo partido", "Se reiniciará el marcador y el historial del partido actual.", ()=>{ newMatch(); toast("✅ Nuevo partido"); }));
+  on("btnNew","click", ()=>{ if (isCoachMode()) openConfirm("Nuevo ejercicio", "Se limpiará la pista del ejercicio actual.", ()=> newCoachExercise()); else openConfirm("Nuevo partido", "Se reiniciará el marcador y el historial del partido actual.", ()=>{ newMatch(); toast("✅ Nuevo partido"); }); });
   on("btnFinish","click", ()=> openConfirm("Finalizar partido", "¿Quieres finalizar el partido? Podrás reanudarlo desde el botón Reanudar.", ()=>{ finishMatch(); }));
   on("btnResume","click", ()=> openConfirm("Reanudar partido", "¿Quieres reanudar el partido?", ()=>{ resumeMatch(); }));
 
@@ -5130,12 +5601,24 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnLoadMatch","click", ()=>openFromMenu(()=>openSaveLoad("load")));
   on("btnGameMode","click", ()=>openFromMenu(openGameMode));
   on("btnSurface","click", ()=>openFromMenu(openSurface));
+  on("btnCoachExercises","click", ()=>openFromMenu(openCoachLibrary));
+  on("btnCoachLoadExercise","click", ()=>openFromMenu(openCoachLibrary));
+  on("btnCoachSaveExercise","click", ()=>openFromMenu(openCoachSave));
+  on("btnCoachNewExercise","click", ()=>openFromMenu(()=>openConfirm("Nuevo ejercicio", "Se limpiará la pista del ejercicio actual.", ()=>newCoachExercise())));
+  on("btnCoachObjects","click", ()=>openFromMenu(openCoachObjects));
+  on("btnCoachClear","click", ()=>openFromMenu(()=>openConfirm("Limpiar pista", "Se borrarán patrones y objetos del ejercicio actual.", ()=>clearCoachCourt())));
   on("btnLanguage","click", ()=>openFromMenu(()=>openModal("#languageModal")));
+  on("btnSplashLanguage","click", openEntryLanguage);
+  on("btnAuthLanguage","click", openEntryLanguage);
   on("btnInfo","click", ()=>openFromMenu(()=>openModal("#infoModal")));
   on("btnBackHome","click", ()=>openFromMenu(()=>{ showSplashAgain(); }));
   on("btnCloseSurface","click", closeSurface);
   on("btnCloseLanguage","click", ()=>closeModal("#languageModal"));
   on("btnCloseInfo","click", ()=>closeModal("#infoModal"));
+  on("btnCloseCoachSave","click", closeCoachSave);
+  on("btnCloseCoachLibrary","click", closeCoachLibrary);
+  on("btnCloseCoachObjects","click", closeCoachObjects);
+  on("btnCloseCoachPreview","click", closeCoachPreview);
   on("btnLangES","click", ()=>{ closeModal("#languageModal"); setLanguage("es"); });
   on("btnLangEN","click", ()=>{ closeModal("#languageModal"); setLanguage("en"); });
 
@@ -5149,16 +5632,24 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnEyeScore","click", toggleScoreVisibility);
   on("btnToolsRail","click", toggleRailVisibility);
   on("btnRotateCourt","click", toggleRotation);
-
-  // Coach/preview tools in quick rail
-  on("btnPreview","click", togglePreview);
-  on("btnArrowTool","click", ()=>{
-    // when selecting the arrow tool we set a helper flag; subsequent taps will record directional arrows
-    state.ui = state.ui || {};
-    state.ui.tool = "arrow";
-    // Provide simple feedback via toast
-    toast("Herramienta de flechas activada");
+  on("btnCoachObjectsRail","click", openCoachObjects);
+  on("btnCoachDirection","click", ()=>setCoachTool("direction"));
+  on("btnCoachFinishPattern","click", coachFinalizePattern);
+  on("btnCoachPreview","click", openCoachPreview);
+  on("btnCoachSaveRail","click", openCoachSave);
+  on("btnDoSaveExercise","click", saveCoachExercise);
+  on("btnCoachFinishPatternSave","click", coachFinalizePattern);
+  on("btnCoachFinishPatternObjects","click", coachFinalizePattern);
+  on("btnCoachDeleteLastObject","click", deleteLastCoachObject);
+  on("btnCoachSelectPatternTool","click", ()=>setCoachTool("direction"));
+  on("btnAddCoachFolder","click", addCoachFolder);
+  on("coachExerciseSearch","input", renderCoachLibrary);
+  ["coachInlineName","coachInlineFolder","coachInlineGoal","coachInlineLevel","coachInlineMaterial","coachInlineTags","coachInlineNotes"].forEach(id=>{
+    on(id,"input", ()=>{ syncCoachStateFromInline(); persist(); updateWorkspaceBar(); });
+    on(id,"change", ()=>{ syncCoachStateFromInline(); persist(); updateWorkspaceBar(); });
   });
+  document.querySelectorAll(".coachToolBtn").forEach(btn=> btn.addEventListener("click", ()=>{ setCoachTool(btn.dataset.coachTool || "direction"); closeCoachObjects(); }));
+  document.getElementById("court")?.addEventListener("click", handleCoachCourtFreeClick);
 
   on("btnCloseHistory","click", closeHistory);
   on("btnClosePointViewer","click", closePointViewer);
@@ -5184,7 +5675,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // (Eliminado) Tema y modo normal
 
 // cerrar menú al elegir una opción (las acciones que viven dentro del menú)
-["btnSaveMatch","btnLoadMatch","btnGameMode","btnSurface","btnLanguage","btnInfo","btnBackHome","btnHistory","btnAnalytics","btnStats","btnCharts","btnExport","btnDashboardMenu","btnPlayerLibraryMenu","btnAccountMenu","btnHelpCenter","btnLegal"].forEach(id=>{
+["btnSaveMatch","btnLoadMatch","btnGameMode","btnSurface","btnLanguage","btnInfo","btnBackHome","btnHistory","btnAnalytics","btnStats","btnCharts","btnExport","btnDashboardMenu","btnPlayerLibraryMenu","btnAccountMenu","btnHelpCenter","btnLegal","btnCoachExercises","btnCoachLoadExercise","btnCoachSaveExercise","btnCoachNewExercise","btnCoachObjects","btnCoachClear"].forEach(id=>{
   const el = $("#"+id);
   if (el) el.addEventListener("click", ()=>setMenuOpen(false));
 });
@@ -5213,7 +5704,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
 
 
   // finish ball menu
-  on("finishBall","click", toggleFinishMenu);
+  on("finishBall","click", ()=>{ if (!isCoachMode()) toggleFinishMenu(); });
   on("finishMenuClose","click", ()=>{ closeFinishMenu(); closeAdvStep2(); });
   on("pointImportantChk","change", (e)=>{
     if (!state.point) initPoint();
@@ -5292,7 +5783,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // quick actions
   on("btnUndo","click", undo);
   on("btnResetPoint","click", resetPoint);
-  // Eliminado: deshacer punto. Este botón fue reemplazado por Vista previa en el modo entrenador.
+  on("btnRedoPoint","click", redoLastPoint);
   on("btnReplay","click", replayCurrentPoint);
 
   // history filters
@@ -5332,7 +5823,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnPDFStats","click", exportStatsPDF);
 
   // close modals clicking outside
-  ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal"].forEach(mid=>{
+  ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal","coachSaveModal","coachLibraryModal","coachObjectsModal","coachPreviewModal"].forEach(mid=>{
     const m = $("#"+mid);
     if (!m) return;
     m.addEventListener("click", (e)=>{
@@ -5353,7 +5844,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // keyboard shortcuts
   window.addEventListener("keydown", (e)=>{
     if (e.key==="Escape"){
-      ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal","finishMenu"].forEach(id=>{
+      ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal","coachSaveModal","coachLibraryModal","coachObjectsModal","coachPreviewModal","finishMenu"].forEach(id=>{
         const el=$("#"+id);
         if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
       });
@@ -6089,6 +6580,7 @@ async function handleSignup(){
   setSession({ uid:account.id, name:account.name, email:account.email, plan:account.plan, remember:true }, true);
   setFeedback("signupFeedback", "Cuenta creada correctamente.", "success");
   activateUserContext(true);
+  setAppMode("match");
 }
 async function handleLogin(){
   const email = ($("#loginEmail")?.value || "").trim().toLowerCase();
@@ -6102,11 +6594,19 @@ async function handleLogin(){
   setSession({ uid:account.id, name:account.name, email:account.email, plan:account.plan, remember }, remember);
   setFeedback("loginFeedback", "Acceso correcto.", "success");
   activateUserContext(false);
+  setAppMode("match");
   maybeOpenOnboarding(false);
 }
 function handleDemoAccess(){
   setSession({ uid:"__demo__", name:"Demo Coach", email:"demo@local", plan:"Demo", isDemo:true, remember:false }, false);
   activateUserContext(false);
+  setAppMode("match");
+}
+function handleCoachAccess(){
+  setSession({ uid:"__coach__", name:"Modo Entrenador", email:"coach@local", plan:"Coach Studio", isDemo:true, isCoach:true, remember:false }, false);
+  activateUserContext(false);
+  setAppMode("coach");
+  return true;
 }
 function handleLogout(){
   openConfirm("Cerrar sesión", "Se cerrará la cuenta actual en este dispositivo.", ()=>{
@@ -6145,6 +6645,7 @@ function initProfessionalShell(){
   $("#btnLogin")?.addEventListener("click", handleLogin);
   $("#btnSignup")?.addEventListener("click", handleSignup);
   $("#btnDemoAccess")?.addEventListener("click", handleDemoAccess);
+  $("#btnCoachAccess")?.addEventListener("click", handleCoachAccess);
   $("#btnDirectAccess")?.addEventListener("click", handleDeveloperAccess);
   ["loginEmail","loginPassword"].forEach(id=> $("#"+id)?.addEventListener("keydown", (e)=>{ if (e.key === "Enter") handleLogin(); }));
   ["signupName","signupEmail","signupPassword"].forEach(id=> $("#"+id)?.addEventListener("keydown", (e)=>{ if (e.key === "Enter") handleSignup(); }));
@@ -6222,20 +6723,24 @@ function initProfessionalShell(){
 let __postSplashAction = null;
 
 function afterSplashStart(){
-  if (isAuthenticated()){
-    hideAuthPortal();
-    updateWorkspaceBar();
-    maybeOpenOnboarding(false);
-    return;
-  }
-
-  if (__postSplashAction === "demo"){
+  if (__postSplashAction === "demo" || __postSplashAction === "coach"){
     const action = __postSplashAction;
     __postSplashAction = null;
     if (action === "demo"){
       handleDemoAccess();
       return;
     }
+    if (action === "coach"){
+      handleCoachAccess();
+      return;
+    }
+  }
+
+  if (isAuthenticated()){
+    hideAuthPortal();
+    updateWorkspaceBar();
+    maybeOpenOnboarding(false);
+    return;
   }
 
   showAuthPortal();
@@ -6300,6 +6805,8 @@ function initSplash(){
   const btnLogin = document.getElementById("btnSplashLogin");
   const btnSignup = document.getElementById("btnSplashSignup");
   const btnDemo = document.getElementById("btnSplashDemo");
+  const btnCoach = document.getElementById("btnSplashCoach");
+  const btnSplashLang = document.getElementById("btnSplashLanguage");
   if (!splash || !btn) return;
 
   document.body.classList.add("splashLock");
@@ -6316,7 +6823,7 @@ function initSplash(){
 
   splash.addEventListener("click", (e)=>{
     const target = e.target;
-    if (target === btn || target === btnLogin || target === btnSignup || target === btnDemo) return;
+    if (target === btn || target === btnLogin || target === btnSignup || target === btnDemo || target === btnCoach || target === btnSplashLang) return;
     leaveSplash("login");
   });
 
@@ -6324,6 +6831,8 @@ function initSplash(){
   btnLogin?.addEventListener("click", ()=> leaveSplash("login"));
   btnSignup?.addEventListener("click", ()=> leaveSplash("signup"));
   btnDemo?.addEventListener("click", ()=> leaveSplash("demo"));
+  btnCoach?.addEventListener("click", ()=> leaveSplash("coach"));
+  btnSplashLang?.addEventListener("click", openEntryLanguage);
 }
 
 function showSplashAgain(){
@@ -6390,6 +6899,8 @@ window.setSession = setSession;
 window.handleLogin = handleLogin;
 window.handleSignup = handleSignup;
 window.handleDemoAccess = handleDemoAccess;
+window.handleCoachAccess = handleCoachAccess;
+window.openEntryLanguage = openEntryLanguage;
 window.handleDeveloperAccess = handleDeveloperAccess;
 window.forceEnterMainInterface = forceEnterMainInterface;
 if (document.readyState === "loading") {
