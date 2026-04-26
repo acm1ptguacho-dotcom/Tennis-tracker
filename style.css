@@ -1418,8 +1418,8 @@ body.light .drawerDivider{ background: rgba(10,22,55,.12); }
   pointer-events:auto;
 }
 .quickBtn{
-  width: 56px;
-  height: 56px;
+  width: 46px;
+  height: 46px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.14);
   background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
@@ -1503,9 +1503,9 @@ body.light .drawerDivider{ background: rgba(10,22,55,.12); }
   gap: 6px;
 }
 .quickLbl{
-  width: 88px;
+  width: 78px;
   text-align:center;
-  font-size: 12px;
+  font-size: 10px;
   line-height: 1.05;
   letter-spacing: .02em;
   font-weight: 800;
@@ -6381,86 +6381,3 @@ h1,h2,h3,h4,h5,h6,
 .courtRail{ position:relative; z-index:1; }
 .courtRail{ background:transparent !important; box-shadow:none !important; }
 .quickLbl{ text-shadow:0 2px 8px rgba(0,0,0,.22); }
-
-
-/* Language switch button at top of splash */
-.langSwitch{
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  z-index: 50;
-  color: var(--text);
-  line-height: 1;
-}
-.langSwitch .flagIcon{ font-size:20px; }
-
-/* Half court mode: clip the bottom half of the court and overlays */
-body.halfCourt .courtSurface,
-body.halfCourt .arrowSvg,
-body.halfCourt #zoneLayer{
-  clip-path: inset(0 0 50% 0);
-}
-
-/* Court notes: draggable annotations on the court */
-.courtNote{
-  position: absolute;
-  transform: translate(-50%, -50%);
-  background: rgba(255,255,255,0.85);
-  color: #000;
-  padding: 4px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  line-height: 1.2;
-  max-width: 150px;
-  word-break: break-word;
-  z-index: 50;
-  box-shadow: 0 2px 6px rgba(0,0,0,.3);
-}
-.courtNote .closeBtn{
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #f33;
-  color: #fff;
-  font-size: 12px;
-  line-height: 16px;
-  text-align: center;
-  cursor: pointer;
-}
-.courtNote.dragging{ opacity: 0.8; }
-
-
-/* Half-court layout adjustments */
-body.halfCourt .courtWrap.courtRow{
-  /* stack rail on top of court */
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr;
-  gap: 12px;
-  align-items: stretch;
-}
-body.halfCourt .courtRail{
-  width: 100% !important;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  grid-row: 1;
-  grid-column: 1;
-  padding: 6px 0;
-}
-body.halfCourt .courtWrap.courtRow .court{
-  grid-row: 2;
-  grid-column: 1;
-  max-width: none;
-  width: 100%;
-}
-
-body.halfCourt .baselineName{ display:none !important; }

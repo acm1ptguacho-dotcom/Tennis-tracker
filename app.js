@@ -4942,118 +4942,9 @@ function togglePreview(){
   // Persist preview state to local storage so it stays in sync when reloading.
   persist();
 }
-
-// Toggle court size: full or half. When halfCourt is true, only show top half of the court.
-function toggleCourtSize(){
-  state.ui = state.ui || {};
-  state.ui.halfCourt = !state.ui.halfCourt;
-  applyCourtSize();
-  persist();
-}
-function applyCourtSize(){
-  const half = !!(state.ui && state.ui.halfCourt);
-  document.body.classList.toggle("halfCourt", half);
-  const btn = document.getElementById("btnCourtSizeToggle");
-  if (btn){
-    const span = btn.querySelector("span");
-    if (span){ span.textContent = half ? "Pista completa" : "Media pista"; }
-    const label = half ? "Mostrar pista completa" : "Mostrar media pista";
-    btn.setAttribute("aria-label", label);
-    btn.title = label;
-  }
-}
-
-// Toggle language between Spanish and English from splash button.
-function toggleLanguage(){
-  const html = document.documentElement;
-  const current = html.getAttribute('lang') || 'es';
-  const next = current.toLowerCase().startsWith('es') ? 'en' : 'es';
-  setLanguage(next);
-  const btn = document.getElementById('btnLangTop');
-  if (btn){
-    const span = btn.querySelector('.flagIcon');
-    if (span){ span.textContent = next === 'es' ? '🇪🇸' : '🇬🇧'; }
-  }
-}
-
-// Placeholder for sharing pattern via WhatsApp.
-function sharePattern(){
-  toast("Compartir patrón en WhatsApp no está disponible en esta demo");
-}
-
-// Activate note tool: ask for text then wait for court click to place it.
-function activateNoteTool(){
-  const text = prompt('Escribe una nota:');
-  if (!text) return;
-  state.ui = state.ui || {};
-  state.ui.tool = 'note';
-  state.ui.noteText = text;
-  toast('Toca en la pista para colocar la nota');
-}
-
-// Create note at click location on court
-function createNoteAt(ev){
-  const cs = document.getElementById('courtSurface');
-  if (!cs) return;
-  const rect = cs.getBoundingClientRect();
-  const cx = (ev.clientX !== undefined ? ev.clientX : (ev.touches && ev.touches[0].clientX));
-  const cy = (ev.clientY !== undefined ? ev.clientY : (ev.touches && ev.touches[0].clientY));
-  if (cx === undefined || cy === undefined) return;
-  const xPerc = (cx - rect.left) / rect.width;
-  const yPerc = (cy - rect.top) / rect.height;
-  const note = document.createElement('div');
-  note.className = 'courtNote';
-  note.appendChild(document.createTextNode(state.ui.noteText || ''));
-  const cb = document.createElement('div');
-  cb.className = 'closeBtn';
-  cb.textContent = '×';
-  cb.addEventListener('click', function(e){ e.stopPropagation(); note.remove(); });
-  note.appendChild(cb);
-  note.addEventListener('dblclick', function(e){
-    e.stopPropagation();
-    const current = note.childNodes[0].nodeValue;
-    const newText = prompt('Editar nota:', current || '');
-    if (newText !== null){ note.childNodes[0].nodeValue = newText; }
-  });
-  let dragging = false; let startX, startY;
-  note.addEventListener('mousedown', function(e){
-    dragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    e.stopPropagation();
-    note.classList.add('dragging');
-    function move(e2){
-      if (!dragging) return;
-      const dx = e2.clientX - startX;
-      const dy = e2.clientY - startY;
-      startX = e2.clientX;
-      startY = e2.clientY;
-      const leftPx = note.offsetLeft + dx;
-      const topPx = note.offsetTop + dy;
-      const percentX = leftPx / rect.width * 100;
-      const percentY = topPx / rect.height * 100;
-      note.style.left = percentX + '%';
-      note.style.top = percentY + '%';
-    }
-    function up(){
-      dragging = false;
-      note.classList.remove('dragging');
-      document.removeEventListener('mousemove', move);
-      document.removeEventListener('mouseup', up);
-    }
-    document.addEventListener('mousemove', move);
-    document.addEventListener('mouseup', up);
-  });
-  note.style.left = (xPerc * 100) + '%';
-  note.style.top = (yPerc * 100) + '%';
-  cs.appendChild(note);
-}
-
-
 function toggleRailVisibility(){
   state.ui.hideRail = !state.ui.hideRail;
   applyRailVisibility();
-  applyCourtSize();
   persist();
 }
 
@@ -5196,7 +5087,6 @@ function renderAll(){
   renderMeta();
   applyScoreVisibility();
   applyRailVisibility();
-  applyCourtSize();
   applyRotation();
   renderCourtNames();
   renderScore();
@@ -5269,17 +5159,6 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
     // Provide simple feedback via toast
     toast("Herramienta de flechas activada");
   });
-on("btnObjects","click", ()=>{
-  toast("Herramienta de objetos activada (próximamente)");
-  state.ui = state.ui || {};
-  state.ui.tool = "objects";
-});
-on("btnCourtSizeToggle","click", toggleCourtSize);
-on("btnSharePattern","click", sharePattern);
-on("btnLangTop","click", toggleLanguage);
-// Note tool may live under objects menu; still attach listener if exists
-on("btnNoteTool","click", activateNoteTool);
-
 
   on("btnCloseHistory","click", closeHistory);
   on("btnClosePointViewer","click", closePointViewer);
@@ -6521,19 +6400,3 @@ if (document.readyState === "loading") {
 window.addEventListener("pageshow", ()=>{
   try{ if (window.__tdtBindEntryFallback) window.__tdtBindEntryFallback(); }catch(e){}
 });
-
-// Listen for clicks on the court surface to place notes when note tool is active
-(function(){
-  document.addEventListener('click', function(ev){
-    const cs = document.getElementById('courtSurface');
-    if (!cs) return;
-    if (!state || !state.ui) return;
-    if (state.ui.tool === 'note' && state.ui.noteText){
-      if (cs.contains(ev.target)){
-        createNoteAt(ev);
-        state.ui.tool = null;
-        state.ui.noteText = null;
-      }
-    }
-  }, true);
-})();

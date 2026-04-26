@@ -15,10 +15,7 @@
 
 <div class="splash" id="splash" aria-label="Tennis Direction Tracker">
   <div class="splashInner">
-    
-<!-- Selector de idioma en la portada: permite cambiar entre ES/EN desde el inicio -->
-<button class="langSwitch" id="btnLangTop" type="button" title="Cambiar idioma"><span class="flagIcon">🇪🇸</span></button>
-<img class="splashLogo" src="assets/logo.png" alt="Tennis Direction Tracker">
+    <img class="splashLogo" src="assets/logo.png" alt="Tennis Direction Tracker">
     <div class="splashCopy">
       <span class="splashEyebrow">PLATAFORMA PROFESIONAL DE TRACKING Y ANÁLISIS</span>
       <h1>Registra. Analiza. Mejora.</h1>
@@ -199,21 +196,6 @@
       </svg>
       <span data-i18n="surface">Cambiar pista</span>
     </button>
-<button class="chip menuItem" id="btnCourtSizeToggle" type="button">
-  <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
-    <rect x="4" y="6" width="16" height="4"></rect>
-    <rect x="4" y="14" width="16" height="4"></rect>
-  </svg>
-  <span>Pista completa</span>
-</button>
-<button class="chip menuItem" id="btnSharePattern" type="button">
-  <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M17.5 10.5L21 7l-3.5-3.5" fill="none" stroke="currentColor"/>
-    <path d="M3 7v10a2 2 0 0 0 2 2h14" fill="none" stroke="currentColor"/>
-    <path d="M7 17l-4-4 4-4" fill="none" stroke="currentColor"/>
-  </svg>
-  <span>Enviar patrón</span>
-</button>
 
     <div class="drawerDivider"></div>
     <div class="drawerGroupLabel">Plataforma</div>
@@ -416,16 +398,6 @@
           </button>
           <div class="quickLbl">Flechas</div>
         </div>
-<!-- Herramienta de objetos: abre menú de objetos -->
-<div class="quickItem">
-  <button class="quickBtn" id="btnObjects" type="button" title="Objetos" aria-label="Objetos">
-    <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
-      <polygon points="12,3 4,21 20,21" />
-    </svg>
-  </button>
-  <div class="quickLbl">Objetos</div>
-</div>
-
 
         <!-- Vista previa del ejercicio: oculta las zonas para una vista limpia -->
         <div class="quickItem">
@@ -461,17 +433,16 @@
       <aside class="timelineSide" id="timelineSide" aria-label="Timeline del rally">
         <div class="metaCard" id="matchMetaCard">
           <details class="metaDetails">
-            <summary Datos del ejercicio</summary>
-            
-<div class="metaGrid">
-  <label>Nombre<input class="input" id="metaExerciseName" placeholder="Ej: Saque abierto + derecha cruzada" /></label>
-  <label>Objetivo<input class="input" id="metaObjective" placeholder="Objetivo táctico" /></label>
-  <label>Nivel<input class="input" id="metaLevel" placeholder="Nivel (Sub-12 / Avanzado)" /></label>
-  <label>Material<input class="input" id="metaMaterial" placeholder="Material (conos, aros, cesta...)" /></label>
-  <label>Etiquetas<input class="input" id="metaTags" placeholder="Etiquetas (saque, volea)" /></label>
-  <label>Descripción<textarea class="input" id="metaDescription" rows="3" placeholder="Descripción o consignas"></textarea></label>
-</div>
-<div class="muted" style="margin-top:8px;">Si lo dejas vacío, no se guardará información extra.</div>
+            <summary data-i18n="matchData">Datos del partido</summary>
+            <div class="metaGrid">
+              <label>Evento / Torneo<input class="input" id="metaEvent" placeholder="Ej: Entrenamiento / Torneo" /></label>
+              <label>Lugar<input class="input" id="metaVenue" placeholder="Ciudad / Club" /></label>
+              <label>Fecha<input class="input" id="metaDate" type="date" /></label>
+              <label>Hora<input class="input" id="metaTime" type="time" /></label>
+              <label>Condiciones<input class="input" id="metaConditions" placeholder="Ej: viento / indoor" /></label>
+              <label>Notas<textarea class="input" id="metaNotes" rows="3" placeholder="Notas rápidas del partido"></textarea></label>
+            </div>
+            <div class="muted" style="margin-top:8px;">Si lo dejas vacío, no se guardará información extra.</div>
           </details>
         </div>
 
