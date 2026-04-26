@@ -1,0 +1,43 @@
+# Cambios v3.13 · Modo entrenador avanzado
+
+Implementado sobre la versión v3.12 de media pista.
+
+## 1. Media pista con mejor encuadre
+- La media pista ya no se corta exactamente en la red.
+- Se deja margen visible por encima de la red.
+- Se reduce el verde lateral mediante recorte del diagrama.
+- Se mantiene más fondo útil para colocar objetos en la zona inferior.
+- El cambio entre mitad inferior y mitad superior usa transición suave.
+
+## 2. Desplazamientos como flechas numeradas
+- El desplazamiento deja de ser un objeto independiente.
+- Ahora funciona como una flecha de dos toques, igual que Dirección.
+- Es blanca, discontinua y con número visible.
+- Dirección y Desplazamiento comparten una única secuencia numérica.
+
+## 3. Escalera mejorada
+- Escalera más larga y con más boxes.
+- Por defecto aparece horizontal, paralela a la red.
+- Añadido botón de rotación sobre la propia escalera para alternar horizontal/vertical.
+
+## 4. Nueva lógica pista completa / media pista
+- En modo entrenador, el botón del menú derecho ya no oculta Rail Ball.
+- El botón activa/desactiva media pista.
+- Rail Ball permanece disponible en modo entrenador.
+- Añadido botón flotante dentro del diagrama para cambiar entre media pista inferior y superior.
+
+## 5. Preview mejor ajustado
+- Ajustado el tamaño de la pista dentro de la ventana de preview.
+- La pista mantiene proporción completa y encaja mejor en altura y anchura.
+
+## 6. Preview con reproducción animada
+- Añadido botón Play en el preview.
+- Al abrir el preview se reproduce la secuencia automáticamente.
+- Los objetos quedan fijos durante la reproducción.
+- Solo se animan flechas de dirección y desplazamiento.
+
+## 7. Rail Ball y limpieza de botones
+- Botones de Rail Ball aumentados aproximadamente un 50% en modo entrenador.
+- Recortado el verde lateral del diagrama en modo entrenador.
+- Eliminado el botón de reiniciar del Rail Ball en modo entrenador.
+- Renombrados los botones superiores como Menú izquierdo y Menú derecho.

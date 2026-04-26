@@ -3430,3 +3430,291 @@ body.coachMode .coachObject-ladder .ladderShape{
   body.coachMode.coachHalfCourt .courtWrap.courtRow .court,
   body.coachMode.coachHalfCourt #court{max-width:100%!important;}
 }
+
+
+/* ===== v3.13 Coach upgrades: media pista con margen, desplazamientos numerados, rail grande y preview animado ===== */
+body.coachMode{
+  --coach-rail-btn: clamp(92px, 13vw, 112px);
+  --coach-rail-icon: clamp(38px, 5.6vw, 52px);
+  --coach-rail-w: calc(var(--coach-rail-btn) + 20px);
+  --coach-crop-x: 7%;
+}
+body.coachMode #btnMenu{ --menu-name:"Menú izquierdo"; }
+body.coachMode #btnToolsRail.isActive{
+  border-color:rgba(201,255,74,.62)!important;
+  box-shadow:0 0 24px rgba(201,255,74,.18), inset 0 1px 0 rgba(255,255,255,.18)!important;
+}
+body.coachMode #qiResetPoint{display:none!important;}
+body.coachMode .courtWrap.courtRow .court,
+body.coachMode #court{
+  max-width:calc(100vw - var(--coach-rail-w) - 14px)!important;
+}
+body.coachMode #courtSurface{
+  left:calc(-1 * var(--coach-crop-x))!important;
+  right:calc(-1 * var(--coach-crop-x))!important;
+  width:auto!important;
+}
+
+/* Desplazamientos: flecha blanca discontinua con el mismo número de secuencia que dirección */
+.arrowSvg .arrowLine.dash{
+  stroke:#fff!important;
+  stroke-linecap:round;
+  filter:drop-shadow(0 0 10px rgba(255,255,255,.72)) drop-shadow(0 0 22px rgba(125,205,255,.45))!important;
+}
+.arrowSvg .arrowNumCircle.dash{
+  fill:rgba(4,15,24,.68)!important;
+  stroke:#fff!important;
+  filter:drop-shadow(0 0 10px rgba(255,255,255,.62))!important;
+}
+
+/* Escalera más larga: doble de boxes, por defecto horizontal/paralela a red, con botón de rotación */
+body.coachMode .coachObject-ladder{
+  width:190px!important;
+  height:64px!important;
+  overflow:visible!important;
+}
+body.coachMode .ladderShape{
+  width:168px!important;
+  height:44px!important;
+  transform:none!important;
+  background:
+    linear-gradient(0deg, #10151b 0 5px, transparent 5px calc(100% - 5px), #10151b calc(100% - 5px) 100%),
+    repeating-linear-gradient(90deg, transparent 0 13px, #ffd84d 13px 17px, transparent 17px 26px)!important;
+  filter:drop-shadow(0 0 10px rgba(255,216,77,.38)) drop-shadow(0 9px 11px rgba(0,0,0,.40))!important;
+}
+body.coachMode .coachObject-ladder .ladderShape{
+  transform:none!important;
+}
+body.coachMode .coachObject-ladder.ladderVertical .ladderShape{
+  transform:rotate(90deg)!important;
+}
+.ladderRotateBtn{
+  position:absolute;
+  right:-9px;
+  top:-15px;
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.42);
+  background:linear-gradient(180deg,rgba(42,76,101,.96),rgba(8,24,37,.96));
+  color:#fff;
+  font-weight:1000;
+  font-size:15px;
+  display:grid;
+  place-items:center;
+  box-shadow:0 8px 18px rgba(0,0,0,.35), 0 0 12px rgba(201,255,74,.18);
+  pointer-events:auto;
+  cursor:pointer;
+}
+body.coachMode .coachObject-ladder.ladderVertical{
+  width:72px!important;
+  height:196px!important;
+}
+
+/* Media pista como zoom: margen sobre la red, laterales verdes recortados y fondo inferior visible */
+body.coachMode.coachHalfCourt .courtWrap.courtRow{
+  grid-template-rows:auto auto!important;
+}
+body.coachMode.coachHalfCourt .courtRail .quickItem{
+  width:124px!important;
+  min-width:124px!important;
+  max-width:124px!important;
+  flex:0 0 124px!important;
+}
+body.coachMode.coachHalfCourt .courtRail .quickBtn{
+  width:105px!important;
+  height:105px!important;
+  min-width:105px!important;
+  min-height:105px!important;
+  border-radius:28px!important;
+}
+body.coachMode.coachHalfCourt .courtRail .quickBtn .svgIcon{
+  width:50px!important;
+  height:50px!important;
+}
+body.coachMode.coachHalfCourt .courtRail .quickLbl{
+  width:124px!important;
+  max-width:124px!important;
+  font-size:13px!important;
+}
+body.coachMode.coachHalfCourt .courtWrap.courtRow .court,
+body.coachMode.coachHalfCourt #court{
+  aspect-ratio:9 / 9!important;
+  max-width:min(100%, 700px)!important;
+  border-radius:30px!important;
+  overflow:hidden!important;
+}
+body.coachMode.coachHalfCourt #courtSurface{
+  left:-7%!important;
+  right:-7%!important;
+  height:166.6667%!important;
+  transition:top .58s cubic-bezier(.18,.84,.24,1), transform .58s cubic-bezier(.18,.84,.24,1)!important;
+  will-change:top,transform;
+}
+body.coachMode.coachHalfCourt.coachHalfBottom #courtSurface{
+  top:-66.6667%!important;
+  bottom:auto!important;
+}
+body.coachMode.coachHalfCourt.coachHalfTop #courtSurface{
+  top:0!important;
+  bottom:auto!important;
+}
+.coachHalfSwitch{
+  position:absolute;
+  z-index:16;
+  width:44px;
+  height:44px;
+  border-radius:15px;
+  border:1px solid rgba(255,255,255,.34);
+  background:linear-gradient(180deg,rgba(41,75,99,.96),rgba(7,25,40,.96));
+  color:#fff;
+  font-weight:1000;
+  font-size:25px;
+  line-height:1;
+  display:grid;
+  place-items:center;
+  box-shadow:0 10px 24px rgba(0,0,0,.36), 0 0 18px rgba(116,197,255,.20), inset 0 1px 0 rgba(255,255,255,.16);
+  pointer-events:auto;
+  cursor:pointer;
+  transition:transform .24s ease, opacity .24s ease, top .42s ease, bottom .42s ease;
+}
+.coachHalfSwitch[hidden]{display:none!important;}
+.coachHalfSwitch.toTop{
+  top:12px;
+  right:12px;
+  bottom:auto;
+}
+.coachHalfSwitch.toBottom{
+  right:12px;
+  bottom:12px;
+  top:auto;
+}
+.coachHalfSwitch:active{transform:scale(.94);}
+
+/* Preview: encaje limpio de pista completa, objetos fijos y botón Play */
+.coachPreviewActions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+}
+body.coachMode .coachPreviewCard{
+  max-width:min(760px,calc(100vw - 18px))!important;
+  max-height:94vh!important;
+}
+body.coachMode #coachPreviewModal .coachPreviewStage{
+  display:grid!important;
+  place-items:center!important;
+  padding:10px 14px 18px!important;
+  overflow:hidden!important;
+}
+body.coachMode .coachPreviewCourt{
+  position:relative!important;
+  width:min(92vw, 430px, calc((100vh - 190px) * .5))!important;
+  aspect-ratio:9 / 18!important;
+  height:auto!important;
+  max-height:calc(100vh - 190px)!important;
+  margin:auto!important;
+  border-radius:24px!important;
+  overflow:hidden!important;
+}
+body.coachMode .coachPreviewCourt img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+}
+body.coachMode .coachPreviewCourt .arrowSvg,
+body.coachMode .coachPreviewCourt .coachObjectsLayer{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+}
+
+/* Ajustes móviles para que el aumento del rail no rompa el ancho disponible */
+@media(max-width:700px){
+  body.coachMode{
+    --coach-rail-btn:88px;
+    --coach-rail-icon:40px;
+    --coach-rail-w:106px;
+  }
+  body.coachMode .quickBtn{
+    width:88px!important;
+    height:88px!important;
+    min-width:88px!important;
+    min-height:88px!important;
+  }
+  body.coachMode .quickBtn .svgIcon{
+    width:40px!important;
+    height:40px!important;
+  }
+  body.coachMode .quickItem{
+    width:104px!important;
+    min-width:104px!important;
+  }
+  body.coachMode .courtWrap.courtRow .court,
+  body.coachMode #court{
+    max-width:calc(100vw - var(--coach-rail-w) - 8px)!important;
+  }
+  body.coachMode.coachHalfCourt .courtRail .quickItem{
+    width:116px!important;
+    min-width:116px!important;
+    max-width:116px!important;
+    flex-basis:116px!important;
+  }
+  body.coachMode.coachHalfCourt .courtRail .quickBtn{
+    width:98px!important;
+    height:98px!important;
+    min-width:98px!important;
+    min-height:98px!important;
+  }
+  body.coachMode.coachHalfCourt .courtRail .quickBtn .svgIcon{
+    width:46px!important;
+    height:46px!important;
+  }
+  body.coachMode.coachHalfCourt .courtRail .quickLbl{
+    width:116px!important;
+    max-width:116px!important;
+  }
+  body.coachMode .coachObject-ladder{
+    width:168px!important;
+    height:58px!important;
+  }
+  body.coachMode .ladderShape{
+    width:148px!important;
+    height:40px!important;
+  }
+  body.coachMode .coachObject-ladder.ladderVertical{
+    width:64px!important;
+    height:172px!important;
+  }
+  .coachHalfSwitch{
+    width:40px;
+    height:40px;
+    border-radius:14px;
+    font-size:23px;
+  }
+  body.coachMode .coachPreviewCourt{
+    width:min(92vw, calc((100vh - 178px) * .5))!important;
+    max-height:calc(100vh - 178px)!important;
+  }
+}
+@media(max-width:390px){
+  body.coachMode{
+    --coach-rail-btn:80px;
+    --coach-rail-icon:36px;
+    --coach-rail-w:96px;
+  }
+  body.coachMode .quickBtn{
+    width:80px!important;
+    height:80px!important;
+    min-width:80px!important;
+    min-height:80px!important;
+  }
+  body.coachMode .quickItem{
+    width:96px!important;
+    min-width:96px!important;
+  }
+}

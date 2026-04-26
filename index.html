@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3120" />
-  <link rel="stylesheet" href="style-futuristic.css?v=3120" />
+<link rel="stylesheet" href="style.css?v=3130" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3130" />
 </head>
 <body>
 
@@ -141,7 +141,7 @@
   <!-- TOP: menú + nombres + marcador (todo en la misma vista) -->
   <header class="topbar topbarInline">
     <div class="topbarRow">
-      <button class="chip iconChip" id="btnMenu" type="button" aria-label="Abrir menú">
+      <button class="chip iconChip" id="btnMenu" type="button" aria-label="Menú izquierdo" title="Menú izquierdo">
         <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
 
@@ -150,7 +150,7 @@
       </div>
 
       <!-- Botón para mostrar/ocultar la barra lateral de acciones (modo full-screen) -->
-      <button class="chip iconChip" id="btnToolsRail" type="button" aria-label="Ocultar herramientas" title="Ocultar/mostrar herramientas">
+      <button class="chip iconChip" id="btnToolsRail" type="button" aria-label="Menú derecho" title="Menú derecho">
         <svg class="svgIcon toolsOn" viewBox="0 0 24 24" aria-hidden="true">
           <line x1="4" y1="6" x2="20" y2="6"/>
           <circle cx="9" cy="6" r="2" fill="currentColor"/>
@@ -339,6 +339,7 @@
           <div class="baselineName baselineTop" id="baselineTop">Jugador B</div>
           <div class="baselineName baselineBottom" id="baselineBottom">Jugador A</div>
         </div>
+        <button id="btnCoachHalfSwitch" class="coachHalfSwitch" type="button" hidden aria-label="Ver media pista superior">↑</button>
 <!-- botón de acciones (confirmar / finalizar punto) -->
         <button id="finishBall" class="tennisBall inCourt fab" type="button" aria-label="Acciones del punto">✓</button>
       </div>
@@ -458,7 +459,7 @@
           <div class="quickLbl">Deshacer golpe</div>
         </div>
 
-        <div class="quickItem">
+        <div class="quickItem" id="qiResetPoint">
           <button class="quickBtn" id="btnResetPoint" type="button" title="Reiniciar punto" aria-label="Reiniciar punto">
             <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.13 3.36L1 14"/></svg>
           </button>
@@ -746,8 +747,8 @@
 
 <div class="modal hidden" id="coachPreviewModal">
   <div class="modalCard solid coachModalCard coachPreviewCard">
-    <div class="modalHead"><div><div class="modalTitle">Preview del ejercicio</div><div class="muted" id="coachPreviewSub">Vista limpia sin zonas de selección.</div></div><button class="chip" id="btnCloseCoachPreview" type="button">Cerrar</button></div>
-    <div class="coachPreviewStage"><div class="coachPreviewCourt" id="coachPreviewCourt"><img src="assets/court_top_view.png" alt="preview pista"><svg id="coachPreviewSvg" class="arrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg><div id="coachPreviewObjects" class="coachObjectsLayer previewObjects"></div></div></div>
+    <div class="modalHead"><div><div class="modalTitle">Preview del ejercicio</div><div class="muted" id="coachPreviewSub">Vista limpia sin zonas de selección.</div></div><div class="coachPreviewActions"><button class="chip good" id="btnCoachPreviewPlay" type="button">▶ Play</button><button class="chip" id="btnCloseCoachPreview" type="button">Cerrar</button></div></div>
+    <div class="coachPreviewStage"><div class="coachPreviewCourt" id="coachPreviewCourt"><img id="coachPreviewImg" src="assets/court_top_view.png" alt="preview pista"><svg id="coachPreviewSvg" class="arrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg><div id="coachPreviewObjects" class="coachObjectsLayer previewObjects"></div></div></div>
   </div>
 </div>
 
@@ -1490,7 +1491,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3120"></script>
+<script src="app.js?v=3130"></script>
 
 </body>
 </html>
