@@ -2953,3 +2953,266 @@ body.coachMode .court{transform:scale(.985);transform-origin:center top;}
 .coachObjectsHint{margin:0 18px 16px;padding:14px;border-radius:18px;border:1px solid rgba(201,255,74,.22);background:rgba(10,26,38,.7);color:rgba(235,246,255,.84);line-height:1.45;}
 .coachPreviewStage{padding:16px;}.coachPreviewCourt{position:relative;width:min(540px,86vw);margin:auto;border-radius:22px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.12);}.coachPreviewCourt img{display:block;width:100%;height:auto;}.coachPreviewCourt .arrowSvg{position:absolute;inset:0;width:100%;height:100%;}.coachPreviewCourt .coachObjectsLayer{position:absolute;inset:0;}
 @media(max-width:700px){body.coachMode .quickBtn{width:64px!important;height:64px!important;min-width:64px!important}.coachFormGrid,.coachLibraryTools,.coachLibraryLayout{grid-template-columns:1fr}.coachToolTabs{grid-template-columns:repeat(2,minmax(0,1fr))}.coachExerciseCard{align-items:stretch;flex-direction:column}.coachExerciseActions{justify-content:flex-start}.entryLangBtn{width:48px;height:48px;right:14px}.coachObject{width:34px;height:34px}}
+
+/* ===== v3.11 Coach-only refinements: rail, preview/tools scroll, ladder, basket, precise layout ===== */
+body.coachMode{
+  --coach-rail-w: 88px;
+  --coach-rail-btn: 74px;
+  --coach-rail-icon: 35px;
+}
+body.coachMode .diagramGrid{
+  grid-template-columns:1fr !important;
+  width:100% !important;
+  max-width:100% !important;
+  gap:12px !important;
+  align-items:start !important;
+  overflow:hidden !important;
+}
+body.coachMode .timelineSide{
+  grid-column:1 !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  margin:0 auto !important;
+}
+body.coachMode .courtWrap.courtRow{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) var(--coach-rail-w) !important;
+  gap:8px !important;
+  width:100% !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+  align-items:start !important;
+  box-sizing:border-box !important;
+}
+body.coachMode .courtWrap.courtRow .court,
+body.coachMode #court{
+  width:100% !important;
+  max-width:calc(100vw - var(--coach-rail-w) - 18px) !important;
+  min-width:0 !important;
+  transform:none !important;
+}
+body.coachMode .courtRail{
+  width:var(--coach-rail-w)!important;
+  min-width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  gap:15px!important;
+  padding:8px 6px!important;
+  justify-content:flex-start!important;
+  align-items:center!important;
+  overflow:visible!important;
+}
+body.coachMode .quickItem{
+  width:var(--coach-rail-w)!important;
+  gap:5px!important;
+}
+body.coachMode .quickBtn{
+  width:var(--coach-rail-btn)!important;
+  height:var(--coach-rail-btn)!important;
+  min-width:var(--coach-rail-btn)!important;
+  min-height:var(--coach-rail-btn)!important;
+  border-radius:22px!important;
+}
+body.coachMode .quickBtn .svgIcon{
+  width:var(--coach-rail-icon)!important;
+  height:var(--coach-rail-icon)!important;
+}
+body.coachMode .quickLbl{
+  width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  font-size:12px!important;
+  line-height:1.05!important;
+  letter-spacing:.09em!important;
+  white-space:normal!important;
+}
+body.coachMode.railHidden .diagramGrid{
+  grid-template-columns:1fr !important;
+  width:100% !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+}
+body.coachMode.railHidden .courtWrap.courtRow{
+  grid-template-columns:1fr !important;
+  gap:0 !important;
+  padding-left:0 !important;
+  padding-right:0 !important;
+  width:100% !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+}
+body.coachMode.railHidden .courtRail{
+  display:none !important;
+  width:0 !important;
+  min-width:0 !important;
+  max-width:0 !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+body.coachMode.railHidden .courtWrap.courtRow .court,
+body.coachMode.railHidden #court{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  margin:0 auto !important;
+}
+body.coachMode.railHidden .timelineSide,
+body.coachMode.railHidden .metaCard,
+body.coachMode.railHidden .timelineCard{
+  width:100% !important;
+  max-width:100% !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  box-sizing:border-box !important;
+}
+body.coachMode .coachModalCard{
+  display:flex !important;
+  flex-direction:column !important;
+  max-height:calc(100svh - 18px) !important;
+  overflow:hidden !important;
+}
+body.coachMode .coachModalCard .modalHead{
+  flex:0 0 auto !important;
+  padding:12px 14px !important;
+  gap:10px !important;
+}
+body.coachMode .coachModalCard .modalTitle{
+  font-size:clamp(20px, 4.9vw, 28px) !important;
+  line-height:1.05 !important;
+  letter-spacing:.015em !important;
+}
+body.coachMode .coachModalCard .modalHead .chip,
+body.coachMode .coachModalCard #btnCloseCoachObjects,
+body.coachMode .coachModalCard #btnCloseCoachPreview{
+  min-height:38px !important;
+  height:38px !important;
+  padding:0 12px !important;
+  border-radius:14px !important;
+  font-size:12px !important;
+}
+body.coachMode #coachObjectsModal .coachToolTabs,
+body.coachMode #coachPreviewModal .coachPreviewStage{
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+}
+body.coachMode #coachObjectsModal .coachToolTabs{
+  max-height:calc(100svh - 190px) !important;
+  padding:12px !important;
+  gap:10px !important;
+}
+body.coachMode #coachObjectsModal .coachObjectsHint{
+  margin:0 12px 10px !important;
+  padding:10px 12px !important;
+  font-size:12px !important;
+}
+body.coachMode #coachObjectsModal .modalFoot{
+  flex:0 0 auto !important;
+  padding:10px 12px !important;
+}
+body.coachMode #coachPreviewModal .coachPreviewStage{
+  max-height:calc(100svh - 116px) !important;
+  padding:10px 12px 16px !important;
+}
+body.coachMode .coachPreviewCourt{
+  width:min(520px, 92vw) !important;
+}
+body.coachMode .coachToolTabs{
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+}
+body.coachMode .coachToolBtn{
+  min-height:88px !important;
+  padding:9px 6px !important;
+}
+body.coachMode .coachToolBtn small{
+  font-size:10px !important;
+}
+/* realistic ball basket inspired by a raised wire cart */
+.basketShape{
+  position:relative !important;
+  width:42px !important;
+  height:40px !important;
+  display:block !important;
+  border:2px solid #1b2027 !important;
+  border-radius:5px 5px 8px 8px !important;
+  background:
+    repeating-linear-gradient(90deg, rgba(12,16,22,.98) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(0deg, rgba(12,16,22,.88) 0 2px, transparent 2px 9px),
+    radial-gradient(circle at 24% 32%, #e7ff55 0 4px, transparent 4.7px),
+    radial-gradient(circle at 50% 30%, #dfff4d 0 4px, transparent 4.7px),
+    radial-gradient(circle at 74% 34%, #efff69 0 4px, transparent 4.7px),
+    radial-gradient(circle at 34% 58%, #dfff4d 0 4px, transparent 4.7px),
+    radial-gradient(circle at 62% 60%, #f0ff61 0 4px, transparent 4.7px),
+    linear-gradient(180deg, rgba(248,255,116,.84), rgba(188,221,39,.94)) !important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.24), inset 0 0 8px rgba(0,0,0,.16), 0 8px 18px rgba(0,0,0,.34) !important;
+}
+.basketShape::before{
+  content:"";
+  position:absolute;
+  left:6px;
+  right:6px;
+  top:13px;
+  height:7px;
+  border-radius:2px;
+  background:#0e151e;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12);
+}
+.basketShape::after{
+  content:"";
+  position:absolute;
+  left:5px;
+  right:5px;
+  bottom:-31px;
+  height:31px;
+  background:
+    linear-gradient(74deg, transparent 0 38%, #11171f 39% 45%, transparent 46% 100%),
+    linear-gradient(106deg, transparent 0 54%, #11171f 55% 61%, transparent 62% 100%),
+    linear-gradient(90deg, transparent 0 45%, #11171f 46% 54%, transparent 55% 100%);
+  opacity:.98;
+}
+.basketShape i{
+  position:absolute;
+  inset:4px;
+  border-radius:4px;
+  background:
+    radial-gradient(circle at 23% 24%, #f1ff63 0 4px, transparent 4.6px),
+    radial-gradient(circle at 48% 22%, #e4ff56 0 4px, transparent 4.6px),
+    radial-gradient(circle at 73% 28%, #f3ff75 0 4px, transparent 4.6px),
+    radial-gradient(circle at 36% 52%, #e7ff5c 0 4px, transparent 4.6px),
+    radial-gradient(circle at 64% 57%, #f1ff63 0 4px, transparent 4.6px);
+  pointer-events:none;
+}
+.ladderShape{
+  position:relative;
+  width:52px;
+  height:30px;
+  display:block;
+  border-left:4px solid #ffe870;
+  border-right:4px solid #ffe870;
+  background:repeating-linear-gradient(90deg, transparent 0 9px, #ffe870 9px 12px, transparent 12px 18px);
+  transform:rotate(-12deg);
+  filter:drop-shadow(0 0 8px rgba(255,232,112,.42));
+}
+.coachObject-ladder{
+  width:70px !important;
+  height:44px !important;
+}
+.coachObject-basket{
+  width:58px !important;
+  height:72px !important;
+}
+.coachObject-basket .basketShape{
+  transform:scale(.95);
+}
+@media(max-width:700px){
+  body.coachMode{--coach-rail-w:86px;--coach-rail-btn:72px;--coach-rail-icon:34px;}
+  body.coachMode .diagramArea{padding-left:2px!important;padding-right:2px!important;overflow:hidden!important;}
+  body.coachMode .courtWrap.courtRow{gap:7px!important;}
+  body.coachMode .courtWrap.courtRow .court,
+  body.coachMode #court{max-width:calc(100vw - var(--coach-rail-w) - 13px)!important;}
+  body.coachMode.railHidden .courtWrap.courtRow .court,
+  body.coachMode.railHidden #court{max-width:100%!important;}
+  body.coachMode .coachToolTabs{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  body.coachMode .quickLbl{font-size:11.5px!important;}
+}
+@media(max-width:390px){
+  body.coachMode{--coach-rail-w:82px;--coach-rail-btn:68px;--coach-rail-icon:32px;}
+}

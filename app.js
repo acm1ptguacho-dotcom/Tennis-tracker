@@ -137,7 +137,7 @@ function ensureCoachState(){
   return state.coach;
 }
 function isCoachMode(){ return !!(state.ui && state.ui.appMode === "coach"); }
-function isCoachObjectTool(tool){ return ["cone","hoop","basket","player","coach","target","text","dash"].includes(tool); }
+function isCoachObjectTool(tool){ return ["cone","hoop","basket","ladder","player","coach","target","text","dash"].includes(tool); }
 
 function createDefaultState(){
   return {
@@ -4882,7 +4882,7 @@ function exportStatsPDF(){
   setTimeout(()=>{ try{ w.focus(); w.print(); }catch(_){ } }, 350);
 }
 
-// --- Modo Entrenador v3.10: ejercicios, patrones, objetos, preview y notas ---
+// --- Modo Entrenador v3.11: ejercicios, patrones, objetos, preview y notas ---
 function getCoachLibrary(){
   const fallback = { folders:[{ id:"root", name:"General", createdAt:Date.now() }], exercises:[] };
   try{
@@ -5150,8 +5150,29 @@ function setCoachTool(tool){
   else if (c.activeTool === "dash") toast("Desplazamiento: primer toque inicio, segundo toque final");
   else toast("Toca la pista para colocar: " + coachToolLabel(c.activeTool));
 }
-function coachToolLabel(tool){ return ({ cone:"Cono", hoop:"Aro", basket:"Cesta", player:"Jugador", coach:"Entrenador", target:"Objetivo", dash:"Desplazamiento", text:"Nota", direction:"Dirección" })[tool] || "Objeto"; }
+function coachToolLabel(tool){ return ({ cone:"Cono", hoop:"Aro", basket:"Cesta", ladder:"Escalera", player:"Jugador", coach:"Entrenador", target:"Objetivo", dash:"Desplazamiento", text:"Nota", direction:"Dirección" })[tool] || "Objeto"; }
 function coachPointFromEvent(evt, el){ return evt ? pointNormFromEvent(evt, el || document.getElementById("court")) : centerNormFromEl(el); }
+function coachPointFromCourtEvent(evt){
+  const court = document.getElementById("court");
+  if (!court || !evt) return { x:.5, y:.5 };
+  const cr = court.getBoundingClientRect();
+  let x = (evt.clientX - cr.left) / Math.max(1, cr.width);
+  let y = (evt.clientY - cr.top) / Math.max(1, cr.height);
+  if (state.ui && state.ui.rotated){ x = 1 - x; y = 1 - y; }
+  return { x:clamp01(x), y:clamp01(y) };
+}
+function handleCoachPrecisePointerDown(evt){
+  if (!isCoachMode()) return;
+  const c = ensureCoachState();
+  const tool = c.activeTool || "direction";
+  if (!isCoachObjectTool(tool) && tool !== "direction" && tool !== "pattern") return;
+  if (evt.target && evt.target.closest && evt.target.closest('.coachObject,.coachDashLine,.noteDelete')) return;
+  const pt = coachPointFromCourtEvent(evt);
+  window.__coachPreciseHandledAt = Date.now();
+  evt.preventDefault();
+  evt.stopPropagation();
+  handleCoachToolAtPoint(pt, pt.y > .5 ? "B" : "A");
+}
 function handleCoachDirectionTap(pt, hitter="A"){
   const c = ensureCoachState();
   if (!state.point || !state.point.coach) initCoachPoint();
@@ -5191,12 +5212,13 @@ function handleCoachToolAtPoint(pt, hitter="A"){
 }
 function handleCoachCourtToolFromElement(el, evt, side="top"){
   if (!isCoachMode()) return false;
-  const pt = evt ? pointNormFromEvent(evt, el) : centerNormFromEl(el);
+  const pt = evt ? coachPointFromCourtEvent(evt) : centerNormFromEl(el);
   const hitter = side === "bottom" ? "B" : "A";
   return handleCoachToolAtPoint(pt, hitter);
 }
 function handleCoachCourtFreeClick(evt){
   if (!isCoachMode()) return;
+  if (window.__coachPreciseHandledAt && Date.now() - window.__coachPreciseHandledAt < 450) return;
   const c = ensureCoachState();
   if (!isCoachObjectTool(c.activeTool) && c.activeTool !== "direction" && c.activeTool !== "pattern") return;
   if (evt.target.closest && evt.target.closest('.zoneCell,.serveCell,.coachObject,.coachDashLine')) return;
@@ -5261,7 +5283,8 @@ function coachObjectMarkup(obj, idx, preview=false){
   const t = obj.type || "cone";
   if (t === "cone") return `<span class="coneShape"></span>`;
   if (t === "hoop") return `<span class="hoopShape"></span>`;
-  if (t === "basket") return `<span class="basketShape">●</span>`;
+  if (t === "basket") return `<span class="basketShape"><i></i></span>`;
+  if (t === "ladder") return `<span class="ladderShape"></span>`;
   if (t === "player") return `<span class="personShape">J</span>`;
   if (t === "coach") return `<span class="personShape coach">E</span>`;
   if (t === "target") return `<span class="targetShape"></span>`;
@@ -5649,6 +5672,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
     on(id,"change", ()=>{ syncCoachStateFromInline(); persist(); updateWorkspaceBar(); });
   });
   document.querySelectorAll(".coachToolBtn").forEach(btn=> btn.addEventListener("click", ()=>{ setCoachTool(btn.dataset.coachTool || "direction"); closeCoachObjects(); }));
+  document.getElementById("court")?.addEventListener("pointerdown", handleCoachPrecisePointerDown, true);
   document.getElementById("court")?.addEventListener("click", handleCoachCourtFreeClick);
 
   on("btnCloseHistory","click", closeHistory);

@@ -1,0 +1,39 @@
+Tennis Direction Tracker · v3.11 · Ajustes SOLO Modo Entrenador
+
+Cambios aplicados únicamente bajo body.coachMode:
+
+1. Corrección del Rail Ball al ocultar/mostrar
+- El layout del modo entrenador ahora fuerza una sola columna para pista + datos.
+- Cuando se oculta el rail, la pista usa el ancho disponible sin desplazar el bloque de Datos del ejercicio hacia un lateral.
+- Se evita el desbordamiento horizontal del diagrama en móvil.
+
+2. Rail Ball más legible
+- Botones del rail en modo entrenador aumentados.
+- Iconos más grandes.
+- Texto inferior más grande y más fácil de leer.
+- El diagrama se ajusta para dejar espacio real al rail.
+
+3. Precisión de flechas y desplazamientos
+- Nuevo cálculo de coordenadas desde la pista completa en pointerdown.
+- El segundo toque de la flecha blanca discontinua ahora usa la coordenada exacta de la pista, no el centro ni el cálculo indirecto de una zona.
+- Se evita el doble registro por click posterior.
+
+4. Menú de objetos
+- Añadida herramienta Escalera de footwork.
+- La escalera se puede insertar en la pista como objeto visual.
+- Se mantiene la lógica de herramientas solo en modo entrenador.
+
+5. Ventanas con scroll y más compactas
+- Objetos y herramientas ahora tiene scroll vertical en móvil.
+- Preview ahora tiene scroll vertical.
+- Títulos reducidos.
+- Botones de cerrar reducidos para ahorrar espacio.
+
+6. Cesta más realista
+- Rediseño visual de la cesta inspirado en una cesta real elevada con pelotas.
+- Incluye rejilla, pelotas interiores y patas visuales.
+
+Notas:
+- No se ha modificado el modo demo.
+- Todas las nuevas reglas CSS están limitadas a body.coachMode.
+- Caché actualizada a v3.11.
