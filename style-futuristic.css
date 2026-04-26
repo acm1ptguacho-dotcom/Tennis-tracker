@@ -3718,3 +3718,161 @@ body.coachMode .coachPreviewCourt .coachObjectsLayer{
     min-width:96px!important;
   }
 }
+
+/* ===== v3.14 Coach corrections: rail full/half sizing, clean court frame, preview pause, grid toggle ===== */
+body.coachMode{
+  --coach-rail-btn: clamp(98px, 22vw, 122px);
+  --coach-rail-icon: clamp(44px, 10vw, 56px);
+  --coach-rail-w: calc(var(--coach-rail-btn) + 14px);
+}
+body.coachMode .courtWrap.courtRow::before{
+  display:none!important;
+}
+body.coachMode .courtWrap.courtRow{
+  gap:4px!important;
+  padding:4px 2px 6px!important;
+  overflow:visible!important;
+}
+body.coachMode .courtRail{
+  width:var(--coach-rail-w)!important;
+  min-width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  padding:4px 2px 6px!important;
+  gap:12px!important;
+  justify-content:flex-start!important;
+  align-items:center!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  max-height:calc(100dvh - 116px)!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  scrollbar-width:none!important;
+}
+body.coachMode .courtRail::-webkit-scrollbar{display:none!important;}
+body.coachMode .quickItem{
+  width:var(--coach-rail-w)!important;
+  min-width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+}
+body.coachMode .quickBtn{
+  width:var(--coach-rail-btn)!important;
+  height:var(--coach-rail-btn)!important;
+  min-width:var(--coach-rail-btn)!important;
+  min-height:var(--coach-rail-btn)!important;
+  border-radius:28px!important;
+}
+body.coachMode .quickBtn .svgIcon{
+  width:var(--coach-rail-icon)!important;
+  height:var(--coach-rail-icon)!important;
+}
+body.coachMode .quickLbl{
+  width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  font-size:12px!important;
+  line-height:1.02!important;
+  letter-spacing:.08em!important;
+}
+body.coachMode .courtWrap.courtRow .court,
+body.coachMode #court{
+  max-width:calc(100vw - var(--coach-rail-w) - 8px)!important;
+}
+body.coachMode .coachHalfSwitch{
+  z-index:80!important;
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+  user-select:none!important;
+}
+body.coachMode .menuItem.active,
+body.coachMode #btnCoachToggleGrid.active{
+  border-color:rgba(201,255,74,.56)!important;
+  box-shadow:0 0 22px rgba(201,255,74,.15), inset 0 1px 0 rgba(255,255,255,.16)!important;
+}
+body.coachMode .coachPreviewActions #btnCoachPreviewPause:disabled,
+body.coachMode .coachPreviewActions #btnCoachPreviewPlay:disabled{
+  opacity:.54!important;
+  cursor:not-allowed!important;
+}
+
+/* En media pista los botones vuelven al tamaño compacto anterior. */
+body.coachMode.coachHalfCourt .courtRail{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  max-height:none!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  gap:10px!important;
+  padding:4px 4px 8px!important;
+}
+body.coachMode.coachHalfCourt .courtRail .quickItem{
+  width:82px!important;
+  min-width:82px!important;
+  max-width:82px!important;
+  flex:0 0 82px!important;
+  gap:5px!important;
+}
+body.coachMode.coachHalfCourt .courtRail .quickBtn{
+  width:70px!important;
+  height:70px!important;
+  min-width:70px!important;
+  min-height:70px!important;
+  border-radius:22px!important;
+}
+body.coachMode.coachHalfCourt .courtRail .quickBtn .svgIcon{
+  width:34px!important;
+  height:34px!important;
+}
+body.coachMode.coachHalfCourt .courtRail .quickLbl{
+  width:82px!important;
+  max-width:82px!important;
+  font-size:12px!important;
+  line-height:1.02!important;
+}
+body.coachMode.coachHalfCourt .courtWrap.courtRow .court,
+body.coachMode.coachHalfCourt #court{
+  max-width:min(100%, 700px)!important;
+}
+@media(max-width:700px){
+  body.coachMode{
+    --coach-rail-btn:102px;
+    --coach-rail-icon:48px;
+    --coach-rail-w:116px;
+  }
+  body.coachMode .courtWrap.courtRow{
+    gap:3px!important;
+    padding-left:1px!important;
+    padding-right:1px!important;
+  }
+  body.coachMode .courtWrap.courtRow .court,
+  body.coachMode #court{
+    max-width:calc(100vw - var(--coach-rail-w) - 4px)!important;
+  }
+  body.coachMode.coachHalfCourt .courtRail .quickItem{
+    width:82px!important;
+    min-width:82px!important;
+    max-width:82px!important;
+    flex-basis:82px!important;
+  }
+  body.coachMode.coachHalfCourt .courtRail .quickBtn{
+    width:70px!important;
+    height:70px!important;
+    min-width:70px!important;
+    min-height:70px!important;
+  }
+  body.coachMode.coachHalfCourt .courtRail .quickBtn .svgIcon{
+    width:34px!important;
+    height:34px!important;
+  }
+  body.coachMode.coachHalfCourt .courtRail .quickLbl{
+    width:82px!important;
+    max-width:82px!important;
+    font-size:11.5px!important;
+  }
+}
+@media(max-width:390px){
+  body.coachMode{
+    --coach-rail-btn:94px;
+    --coach-rail-icon:44px;
+    --coach-rail-w:106px;
+  }
+}

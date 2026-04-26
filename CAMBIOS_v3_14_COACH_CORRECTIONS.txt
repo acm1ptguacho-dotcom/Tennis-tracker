@@ -1,0 +1,33 @@
+Tennis Direction Tracker · v3.14 Coach Corrections
+
+Cambios aplicados:
+
+1. Botón de flecha en media pista
+- Corregido el problema de interacción: ahora el botón de cambio de mitad no se interpreta como toque sobre el diagrama.
+- Se añadió protección en pointerdown/click y mayor prioridad visual/táctil.
+
+2. Rail Ball / menú derecho
+- En media pista los botones vuelven al tamaño compacto anterior.
+- En pista completa los botones del rail se agrandan para aprovechar el espacio lateral.
+- Se limpia el marco visual del courtWrap en modo entrenador para evitar capas/rectángulos superpuestos alrededor del diagrama.
+- El rail completo ahora puede desplazarse verticalmente si no caben todos los botones en pantallas pequeñas.
+
+3. Preview / reproducción
+- El preview ya no empieza a reproducirse automáticamente.
+- Antes de pulsar Play se muestra la secuencia completa.
+- Añadido botón Pause.
+- Play reproduce las flechas en bucle.
+- Pause detiene la secuencia en el punto actual.
+- Los objetos permanecen fijos durante toda la reproducción.
+
+4. Deshacer patrón completo
+- Añadido botón “Deshacer patrón” en el rail del modo entrenador.
+- Elimina el último patrón completo guardado en el ejercicio.
+
+5. Cuadrícula P/C/M
+- La cuadrícula P/C/M queda oculta por defecto en modo entrenador.
+- Añadido control en el menú izquierdo para mostrar u ocultar la cuadrícula.
+
+6. Caché
+- Actualizada la versión de archivos a v3140.
+- Actualizado el service worker a v3.14 para evitar cargar recursos antiguos.

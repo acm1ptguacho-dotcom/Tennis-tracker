@@ -117,6 +117,7 @@ function createDefaultCoachState(){
     activeTool: "direction",
     courtMode: "full",
     halfView: "bottom",
+    showGrid: false,
     pendingDirectionStart: null,
     pendingDashStart: null,
     patterns: [],
@@ -138,6 +139,7 @@ function ensureCoachState(){
   state.coach.selectedFolderId = state.coach.selectedFolderId || state.coach.folderId || "root";
   state.coach.courtMode = state.coach.courtMode === "half" ? "half" : "full";
   state.coach.halfView = state.coach.halfView === "top" ? "top" : "bottom";
+  state.coach.showGrid = !!state.coach.showGrid;
   return state.coach;
 }
 function isCoachMode(){ return !!(state.ui && state.ui.appMode === "coach"); }
@@ -1363,11 +1365,13 @@ function applyTapConstraints(){
 function renderZonesVisibility(){
   const p = state.point;
   if (isCoachMode()){
+    const c = ensureCoachState();
+    const showGrid = !!c.showGrid;
     const serveTop=$("#serveTop"), serveBottom=$("#serveBottom"), rallyTop=$("#rallyTop"), rallyBottom=$("#rallyBottom");
     if (serveTop) serveTop.classList.add("hidden");
     if (serveBottom) serveBottom.classList.add("hidden");
-    if (rallyTop) rallyTop.classList.remove("hidden");
-    if (rallyBottom) rallyBottom.classList.remove("hidden");
+    if (rallyTop) rallyTop.classList.toggle("hidden", !showGrid);
+    if (rallyBottom) rallyBottom.classList.toggle("hidden", !showGrid);
     updateServeLabelPlacement();
     return;
   }
@@ -4956,6 +4960,8 @@ function applyCoachModeUI(){
   document.body.classList.toggle("coachHalfCourt", halfActive);
   document.body.classList.toggle("coachHalfTop", !!(halfActive && coachState.halfView === "top"));
   document.body.classList.toggle("coachHalfBottom", !!(halfActive && coachState.halfView !== "top"));
+  document.body.classList.toggle("coachGridVisible", !!(coachMode && coachState && coachState.showGrid));
+  updateCoachGridButton();
   const wsName = document.getElementById("workspaceName");
   const wsSub = document.getElementById("workspaceSub");
   if (coachMode){
@@ -5050,6 +5056,7 @@ function normalizeCoachExerciseFromState(){
     surface: state.ui?.surface || "hard",
     courtMode: c.courtMode || "full",
     halfView: c.halfView || "bottom",
+    showGrid: !!c.showGrid,
     patterns: JSON.parse(JSON.stringify(c.patterns || [])),
     objects: JSON.parse(JSON.stringify(c.objects || [])),
     currentPoint: state.point && state.point.coach ? JSON.parse(JSON.stringify(state.point)) : null,
@@ -5136,7 +5143,7 @@ function loadCoachExercise(id){
     ...createDefaultCoachState(),
     exerciseId: ex.id, exerciseName: ex.name || "Ejercicio", folderId: ex.folderId || "root", selectedFolderId: ex.folderId || "root",
     patterns: JSON.parse(JSON.stringify(ex.patterns || [])), objects: JSON.parse(JSON.stringify(ex.objects || [])),
-    goal: ex.goal || "", level: ex.level || "", material: ex.material || "", tags: ex.tags || "", notes: ex.notes || "", activeTool:"direction", courtMode: ex.courtMode === "half" ? "half" : "full", halfView: ex.halfView === "top" ? "top" : "bottom"
+    goal: ex.goal || "", level: ex.level || "", material: ex.material || "", tags: ex.tags || "", notes: ex.notes || "", activeTool:"direction", courtMode: ex.courtMode === "half" ? "half" : "full", halfView: ex.halfView === "top" ? "top" : "bottom", showGrid: !!ex.showGrid
   };
   state.point = ex.currentPoint && ex.currentPoint.coach ? JSON.parse(JSON.stringify(ex.currentPoint)) : null;
   if (!state.point) initCoachPoint();
@@ -5211,7 +5218,7 @@ function handleCoachPrecisePointerDown(evt){
   const c = ensureCoachState();
   const tool = c.activeTool || "direction";
   if (!isCoachObjectTool(tool) && tool !== "direction" && tool !== "pattern") return;
-  if (evt.target && evt.target.closest && evt.target.closest('.coachObject,.coachDashLine,.noteDelete')) return;
+  if (evt.target && evt.target.closest && evt.target.closest('.coachObject,.coachDashLine,.noteDelete,.coachHalfSwitch,.quickBtn,.chip,.menuItem')) return;
   const pt = coachPointFromCourtEvent(evt);
   window.__coachPreciseHandledAt = Date.now();
   evt.preventDefault();
@@ -5284,7 +5291,7 @@ function handleCoachCourtFreeClick(evt){
   if (window.__coachPreciseHandledAt && Date.now() - window.__coachPreciseHandledAt < 450) return;
   const c = ensureCoachState();
   if (!isCoachObjectTool(c.activeTool) && c.activeTool !== "direction" && c.activeTool !== "pattern") return;
-  if (evt.target.closest && evt.target.closest('.zoneCell,.serveCell,.coachObject,.coachDashLine')) return;
+  if (evt.target.closest && evt.target.closest('.zoneCell,.serveCell,.coachObject,.coachDashLine,.coachHalfSwitch,.quickBtn,.chip,.menuItem')) return;
   const court = document.getElementById('court');
   if (!court) return;
   const cr = court.getBoundingClientRect();
@@ -5414,11 +5421,11 @@ function coachFinalizePattern(){
 }
 function openCoachPreview(){
   if (!isCoachMode()) return;
+  pauseCoachPreviewSequence(true);
   renderCoachPreview();
   openModal("#coachPreviewModal");
-  setTimeout(()=>playCoachPreviewSequence(), 280);
 }
-function closeCoachPreview(){ closeModal("#coachPreviewModal"); }
+function closeCoachPreview(){ pauseCoachPreviewSequence(true); closeModal("#coachPreviewModal"); }
 function renderCoachPreview(){
   const img = document.getElementById("coachPreviewImg");
   if (img) img.src = surfaceById(state.ui?.surface || "hard").img;
@@ -5427,12 +5434,52 @@ function renderCoachPreview(){
   const sub = document.getElementById("coachPreviewSub");
   if (sub){ const c=ensureCoachState(); sub.textContent = `${c.exerciseName || 'Ejercicio'} · ${(c.patterns||[]).length} patrones · ${(c.objects||[]).length} objetos`; }
   renderCoachObjectsInto("coachPreviewObjects", true);
+  setCoachPreviewPlaybackUI();
+}
+let __coachPreviewTimer = null;
+let __coachPreviewPlaying = false;
+let __coachPreviewIndex = 0;
+
+function setCoachPreviewPlaybackUI(){
+  const play = document.getElementById("btnCoachPreviewPlay");
+  const pause = document.getElementById("btnCoachPreviewPause");
+  if (play){
+    play.textContent = __coachPreviewPlaying ? "↻ Reproduciendo" : "▶ Play";
+    play.disabled = !!__coachPreviewPlaying;
+  }
+  if (pause){
+    pause.disabled = !__coachPreviewPlaying;
+    pause.textContent = "⏸ Pause";
+  }
+}
+function pauseCoachPreviewSequence(showFull=false){
+  if (__coachPreviewTimer){ clearTimeout(__coachPreviewTimer); __coachPreviewTimer = null; }
+  __coachPreviewPlaying = false;
+  setCoachPreviewPlaybackUI();
+  if (showFull){
+    const svg = document.getElementById("coachPreviewSvg");
+    if (svg) renderArrows(svg, getAllCoachArrows(), { animateFromIndex:null, fadeOld:false });
+  }
 }
 function playCoachPreviewSequence(){
   const svg = document.getElementById("coachPreviewSvg");
   const arrows = getAllCoachArrows();
   if (!svg || !arrows.length){ toast("No hay flechas para reproducir"); return; }
-  replayArrowsIn(svg, arrows, { speed:1, baseDelay:560 });
+  if (__coachPreviewTimer){ clearTimeout(__coachPreviewTimer); __coachPreviewTimer = null; }
+  __coachPreviewPlaying = true;
+  __coachPreviewIndex = 0;
+  setCoachPreviewPlaybackUI();
+  const delay = 560;
+  const loop = ()=>{
+    if (!__coachPreviewPlaying) return;
+    const idx = __coachPreviewIndex;
+    renderArrows(svg, arrows.slice(0, idx + 1), { animateFromIndex:idx, fadeOld:false, highlightIndex:idx });
+    __coachPreviewIndex = (idx + 1) % arrows.length;
+    const nextDelay = (__coachPreviewIndex === 0) ? delay * 1.45 : delay;
+    __coachPreviewTimer = setTimeout(loop, nextDelay);
+  };
+  svg.innerHTML = arrowDefs();
+  loop();
 }
 
 // Modos eliminados de la UI: dejamos un único modo estable
@@ -5549,6 +5596,38 @@ function updateCoachHalfSwitch(){
   btn.setAttribute("aria-label", label);
   btn.title = label;
   btn.textContent = show && c.halfView === "top" ? "↓" : "↑";
+}
+function updateCoachGridButton(){
+  const btn = document.getElementById("btnCoachToggleGrid");
+  const label = document.getElementById("coachGridLabel");
+  if (!btn || !isCoachMode()) return;
+  const visible = !!ensureCoachState().showGrid;
+  btn.classList.toggle("active", visible);
+  btn.setAttribute("aria-pressed", visible ? "true" : "false");
+  btn.title = visible ? "Ocultar cuadrícula" : "Mostrar cuadrícula";
+  if (label) label.textContent = visible ? "Ocultar cuadrícula" : "Mostrar cuadrícula";
+}
+function toggleCoachGrid(){
+  if (!isCoachMode()) return;
+  const c = ensureCoachState();
+  c.showGrid = !c.showGrid;
+  document.body.classList.toggle("coachGridVisible", !!c.showGrid);
+  updateCoachGridButton();
+  renderZonesVisibility();
+  applyTapConstraints();
+  persist();
+}
+function undoLastCoachPattern(){
+  if (!isCoachMode()) return;
+  const c = ensureCoachState();
+  if (c.patterns && c.patterns.length){
+    c.patterns.pop();
+    renderAll();
+    persist();
+    toast("Último patrón completo deshecho");
+    return;
+  }
+  toast("No hay patrones completos para deshacer");
 }
 function applyRailVisibility(){
   const coach = isCoachMode();
@@ -5789,7 +5868,11 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCloseCoachObjects","click", closeCoachObjects);
   on("btnCloseCoachPreview","click", closeCoachPreview);
   on("btnCoachPreviewPlay","click", playCoachPreviewSequence);
+  on("btnCoachPreviewPause","click", ()=>pauseCoachPreviewSequence(false));
   on("btnCoachHalfSwitch","click", toggleCoachHalfView);
+  on("btnCoachHalfSwitch","pointerdown", (e)=>{ e.stopPropagation(); });
+  on("btnCoachToggleGrid","click", ()=>openFromMenu(toggleCoachGrid));
+  on("btnCoachUndoPattern","click", undoLastCoachPattern);
   on("btnLangES","click", ()=>{ closeModal("#languageModal"); setLanguage("es"); });
   on("btnLangEN","click", ()=>{ closeModal("#languageModal"); setLanguage("en"); });
 

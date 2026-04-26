@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3130" />
-  <link rel="stylesheet" href="style-futuristic.css?v=3130" />
+<link rel="stylesheet" href="style.css?v=3140" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3140" />
 </head>
 <body>
 
@@ -208,6 +208,7 @@
     <button class="chip menuItem coachOnly" id="btnCoachNewExercise" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Nuevo ejercicio</span></button>
     <button class="chip menuItem coachOnly" id="btnCoachObjects" type="button"><svg class="svgIcon coneIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l6 16H6z"/><path d="M7 19h10"/><path d="M9.2 13h5.6"/></svg><span>Objetos y material</span></button>
     <button class="chip menuItem coachOnly" id="btnCoachCourtMode" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="12" x2="20" y2="12"/><path d="M8 12v9M16 12v9"/></svg><span id="coachCourtModeLabel">Media pista</span></button>
+    <button class="chip menuItem coachOnly" id="btnCoachToggleGrid" type="button" aria-pressed="false"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="4" y1="16" x2="20" y2="16"/><line x1="10" y1="4" x2="10" y2="20"/><line x1="16" y1="4" x2="16" y2="20"/></svg><span id="coachGridLabel">Mostrar cuadrícula</span></button>
     <button class="chip menuItem coachOnly" id="btnCoachClear" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg><span>Limpiar pista</span></button>
 
     <div class="drawerDivider matchOnly"></div>
@@ -416,6 +417,13 @@
             <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h11"/><path d="M12 5l7 7-7 7"/></svg>
           </button>
           <div class="quickLbl">Patrón</div>
+        </div>
+
+        <div class="quickItem coachRailOnly" id="qiCoachUndoPattern">
+          <button class="quickBtn" id="btnCoachUndoPattern" type="button" title="Deshacer último patrón" aria-label="Deshacer último patrón">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="14 9 9 4 4 9"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+          </button>
+          <div class="quickLbl">Deshacer patrón</div>
         </div>
 
         <div class="quickItem coachRailOnly" id="qiCoachPreview">
@@ -747,7 +755,7 @@
 
 <div class="modal hidden" id="coachPreviewModal">
   <div class="modalCard solid coachModalCard coachPreviewCard">
-    <div class="modalHead"><div><div class="modalTitle">Preview del ejercicio</div><div class="muted" id="coachPreviewSub">Vista limpia sin zonas de selección.</div></div><div class="coachPreviewActions"><button class="chip good" id="btnCoachPreviewPlay" type="button">▶ Play</button><button class="chip" id="btnCloseCoachPreview" type="button">Cerrar</button></div></div>
+    <div class="modalHead"><div><div class="modalTitle">Preview del ejercicio</div><div class="muted" id="coachPreviewSub">Vista limpia sin zonas de selección.</div></div><div class="coachPreviewActions"><button class="chip good" id="btnCoachPreviewPlay" type="button">▶ Play</button><button class="chip" id="btnCoachPreviewPause" type="button" disabled>⏸ Pause</button><button class="chip" id="btnCloseCoachPreview" type="button">Cerrar</button></div></div>
     <div class="coachPreviewStage"><div class="coachPreviewCourt" id="coachPreviewCourt"><img id="coachPreviewImg" src="assets/court_top_view.png" alt="preview pista"><svg id="coachPreviewSvg" class="arrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg><div id="coachPreviewObjects" class="coachObjectsLayer previewObjects"></div></div></div>
   </div>
 </div>
@@ -1491,7 +1499,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3130"></script>
+<script src="app.js?v=3140"></script>
 
 </body>
 </html>
