@@ -115,6 +115,7 @@ function createDefaultCoachState(){
     folderId: "root",
     selectedFolderId: "root",
     activeTool: "direction",
+    courtMode: "full",
     pendingDirectionStart: null,
     pendingDashStart: null,
     patterns: [],
@@ -134,9 +135,11 @@ function ensureCoachState(){
   state.coach.exerciseName = state.coach.exerciseName || "Nuevo ejercicio";
   state.coach.folderId = state.coach.folderId || "root";
   state.coach.selectedFolderId = state.coach.selectedFolderId || state.coach.folderId || "root";
+  state.coach.courtMode = state.coach.courtMode === "half" ? "half" : "full";
   return state.coach;
 }
 function isCoachMode(){ return !!(state.ui && state.ui.appMode === "coach"); }
+function isCoachHalfCourt(){ return isCoachMode() && ensureCoachState().courtMode === "half"; }
 function isCoachObjectTool(tool){ return ["cone","hoop","basket","ladder","player","coach","target","text","dash"].includes(tool); }
 
 function createDefaultState(){
@@ -4922,13 +4925,24 @@ function setAppMode(mode){
 }
 function applyCoachModeUI(){
   const coachMode = isCoachMode();
+  const coachState = coachMode ? ensureCoachState() : null;
   document.body.classList.toggle("coachMode", coachMode);
+  document.body.classList.toggle("coachHalfCourt", !!(coachMode && coachState && coachState.courtMode === "half"));
   const wsName = document.getElementById("workspaceName");
   const wsSub = document.getElementById("workspaceSub");
   if (coachMode){
-    const c = ensureCoachState();
-    if (wsName) wsName.textContent = "Modo entrenador";
+    const c = coachState || ensureCoachState();
+    if (wsName) wsName.textContent = c.courtMode === "half" ? "Modo entrenador · media pista" : "Modo entrenador";
     if (wsSub) wsSub.textContent = c.exerciseName || "Editor de ejercicios y patrones";
+  }
+  const modeLabel = document.getElementById("coachCourtModeLabel");
+  if (modeLabel && coachMode) modeLabel.textContent = (coachState && coachState.courtMode === "half") ? "Pista completa" : "Media pista";
+  const modeBtn = document.getElementById("btnCoachCourtMode");
+  if (modeBtn && coachMode){
+    const half = coachState && coachState.courtMode === "half";
+    modeBtn.title = half ? "Volver a pista completa" : "Activar media pista";
+    modeBtn.setAttribute("aria-label", modeBtn.title);
+    modeBtn.classList.toggle("active", half);
   }
   const title = document.querySelector(".timelineTitle");
   if (title) title.textContent = coachMode ? "Secuencia del ejercicio" : t("seqTitle");
@@ -5005,6 +5019,7 @@ function normalizeCoachExerciseFromState(){
     tags: c.tags || "",
     notes: c.notes || "",
     surface: state.ui?.surface || "hard",
+    courtMode: c.courtMode || "full",
     patterns: JSON.parse(JSON.stringify(c.patterns || [])),
     objects: JSON.parse(JSON.stringify(c.objects || [])),
     currentPoint: state.point && state.point.coach ? JSON.parse(JSON.stringify(state.point)) : null,
@@ -5091,7 +5106,7 @@ function loadCoachExercise(id){
     ...createDefaultCoachState(),
     exerciseId: ex.id, exerciseName: ex.name || "Ejercicio", folderId: ex.folderId || "root", selectedFolderId: ex.folderId || "root",
     patterns: JSON.parse(JSON.stringify(ex.patterns || [])), objects: JSON.parse(JSON.stringify(ex.objects || [])),
-    goal: ex.goal || "", level: ex.level || "", material: ex.material || "", tags: ex.tags || "", notes: ex.notes || "", activeTool:"direction"
+    goal: ex.goal || "", level: ex.level || "", material: ex.material || "", tags: ex.tags || "", notes: ex.notes || "", activeTool:"direction", courtMode: ex.courtMode === "half" ? "half" : "full"
   };
   state.point = ex.currentPoint && ex.currentPoint.coach ? JSON.parse(JSON.stringify(ex.currentPoint)) : null;
   if (!state.point) initCoachPoint();
@@ -5158,6 +5173,7 @@ function coachPointFromCourtEvent(evt){
   const cr = court.getBoundingClientRect();
   let x = (evt.clientX - cr.left) / Math.max(1, cr.width);
   let y = (evt.clientY - cr.top) / Math.max(1, cr.height);
+  if (isCoachHalfCourt()) y = .5 + (y * .5);
   if (state.ui && state.ui.rotated){ x = 1 - x; y = 1 - y; }
   return { x:clamp01(x), y:clamp01(y) };
 }
@@ -5423,6 +5439,18 @@ function toggleScoreVisibility(){
   persist();
 }
 
+function toggleCoachCourtMode(){
+  if (!isCoachMode()) return;
+  const c = ensureCoachState();
+  c.courtMode = c.courtMode === "half" ? "full" : "half";
+  c.pendingDirectionStart = null;
+  c.pendingDashStart = null;
+  applyCoachModeUI();
+  renderLiveArrows(false);
+  renderCoachObjects();
+  persist();
+  toast(c.courtMode === "half" ? "Media pista activada" : "Pista completa activada");
+}
 function applyRailVisibility(){
   document.body.classList.toggle("railHidden", !!state.ui.hideRail);
   const b = $("#btnToolsRail");
@@ -5629,6 +5657,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCoachSaveExercise","click", ()=>openFromMenu(openCoachSave));
   on("btnCoachNewExercise","click", ()=>openFromMenu(()=>openConfirm("Nuevo ejercicio", "Se limpiará la pista del ejercicio actual.", ()=>newCoachExercise())));
   on("btnCoachObjects","click", ()=>openFromMenu(openCoachObjects));
+  on("btnCoachCourtMode","click", ()=>openFromMenu(toggleCoachCourtMode));
   on("btnCoachClear","click", ()=>openFromMenu(()=>openConfirm("Limpiar pista", "Se borrarán patrones y objetos del ejercicio actual.", ()=>clearCoachCourt())));
   on("btnLanguage","click", ()=>openFromMenu(()=>openModal("#languageModal")));
   on("btnSplashLanguage","click", openEntryLanguage);
@@ -5699,7 +5728,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // (Eliminado) Tema y modo normal
 
 // cerrar menú al elegir una opción (las acciones que viven dentro del menú)
-["btnSaveMatch","btnLoadMatch","btnGameMode","btnSurface","btnLanguage","btnInfo","btnBackHome","btnHistory","btnAnalytics","btnStats","btnCharts","btnExport","btnDashboardMenu","btnPlayerLibraryMenu","btnAccountMenu","btnHelpCenter","btnLegal","btnCoachExercises","btnCoachLoadExercise","btnCoachSaveExercise","btnCoachNewExercise","btnCoachObjects","btnCoachClear"].forEach(id=>{
+["btnSaveMatch","btnLoadMatch","btnGameMode","btnSurface","btnLanguage","btnInfo","btnBackHome","btnHistory","btnAnalytics","btnStats","btnCharts","btnExport","btnDashboardMenu","btnPlayerLibraryMenu","btnAccountMenu","btnHelpCenter","btnLegal","btnCoachExercises","btnCoachLoadExercise","btnCoachSaveExercise","btnCoachNewExercise","btnCoachObjects","btnCoachCourtMode","btnCoachClear"].forEach(id=>{
   const el = $("#"+id);
   if (el) el.addEventListener("click", ()=>setMenuOpen(false));
 });

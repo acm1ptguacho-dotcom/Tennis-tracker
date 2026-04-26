@@ -3216,3 +3216,217 @@ body.coachMode .coachToolBtn small{
 @media(max-width:390px){
   body.coachMode{--coach-rail-w:82px;--coach-rail-btn:68px;--coach-rail-icon:32px;}
 }
+
+/* ===== v3.12 Coach-only: pista completa/media pista + objetos realistas ===== */
+body.coachMode.coachHalfCourt .diagramGrid{
+  grid-template-columns:minmax(0,1fr)!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow:visible!important;
+}
+body.coachMode.coachHalfCourt .courtWrap.courtRow{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:auto auto!important;
+  gap:10px!important;
+  padding:8px!important;
+  overflow:visible!important;
+  align-items:start!important;
+}
+body.coachMode.coachHalfCourt .courtRail{
+  grid-column:1!important;
+  grid-row:1!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:auto!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+  padding:4px 4px 8px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  scrollbar-width:none;
+}
+body.coachMode.coachHalfCourt .courtRail::-webkit-scrollbar{display:none;}
+body.coachMode.coachHalfCourt .courtRail .quickItem{
+  width:82px!important;
+  min-width:82px!important;
+  max-width:82px!important;
+  flex:0 0 82px!important;
+  gap:5px!important;
+}
+body.coachMode.coachHalfCourt .courtRail .quickBtn{
+  width:70px!important;
+  height:70px!important;
+  min-width:70px!important;
+  min-height:70px!important;
+  border-radius:22px!important;
+}
+body.coachMode.coachHalfCourt .courtRail .quickBtn .svgIcon{
+  width:34px!important;
+  height:34px!important;
+}
+body.coachMode.coachHalfCourt .courtRail .quickLbl{
+  width:82px!important;
+  max-width:82px!important;
+  font-size:12.5px!important;
+  line-height:1.05!important;
+  letter-spacing:.08em!important;
+}
+body.coachMode.coachHalfCourt .courtWrap.courtRow .court,
+body.coachMode.coachHalfCourt #court{
+  grid-column:1!important;
+  grid-row:2!important;
+  width:100%!important;
+  max-width:min(100%, 680px)!important;
+  min-width:0!important;
+  aspect-ratio:9 / 9!important;
+  justify-self:center!important;
+  margin:0 auto!important;
+  overflow:hidden!important;
+}
+body.coachMode.coachHalfCourt #courtSurface{
+  inset:auto 0 auto 0!important;
+  top:-100%!important;
+  bottom:auto!important;
+  height:200%!important;
+  transform-origin:50% 75%!important;
+}
+body.coachMode.coachHalfCourt #courtImg{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+}
+body.coachMode.coachHalfCourt #rallyTop,
+body.coachMode.coachHalfCourt #serveTop,
+body.coachMode.coachHalfCourt #serveBottom,
+body.coachMode.coachHalfCourt .serveGrid,
+body.coachMode.coachHalfCourt .serveCell,
+body.coachMode.coachHalfCourt .serveLabels,
+body.coachMode.coachHalfCourt .serveLabel{
+  display:none!important;
+}
+body.coachMode.coachHalfCourt #btnCoachCourtMode{
+  border-color:rgba(201,255,74,.48)!important;
+  box-shadow:0 0 22px rgba(201,255,74,.14), inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+body.coachMode.coachHalfCourt .timelineSide{
+  grid-column:1!important;
+  width:100%!important;
+  max-width:100%!important;
+}
+
+/* Cesta realista: carro elevado con bolas y estructura negra */
+body.coachMode .basketShape{
+  position:relative!important;
+  width:52px!important;
+  height:46px!important;
+  display:block!important;
+  border:3px solid #10151b!important;
+  border-radius:4px 4px 7px 7px!important;
+  background:
+    radial-gradient(circle at 19% 26%, #f3ff65 0 5px, transparent 5.8px),
+    radial-gradient(circle at 42% 20%, #e7ff54 0 5px, transparent 5.8px),
+    radial-gradient(circle at 66% 28%, #f2ff69 0 5px, transparent 5.8px),
+    radial-gradient(circle at 84% 42%, #dfff46 0 5px, transparent 5.8px),
+    radial-gradient(circle at 30% 55%, #eeff5e 0 5px, transparent 5.8px),
+    radial-gradient(circle at 55% 58%, #dfff4d 0 5px, transparent 5.8px),
+    radial-gradient(circle at 77% 68%, #f3ff6b 0 5px, transparent 5.8px),
+    linear-gradient(180deg, rgba(250,255,134,.88), rgba(181,210,34,.96))!important;
+  box-shadow:0 2px 0 rgba(255,255,255,.28) inset, 0 14px 24px rgba(0,0,0,.42)!important;
+  transform:perspective(140px) rotateX(5deg);
+}
+body.coachMode .basketShape::before{
+  content:"";
+  position:absolute;
+  inset:-3px;
+  border-radius:inherit;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 7px, #111821 7px 9px, transparent 9px 13px),
+    repeating-linear-gradient(0deg, transparent 0 8px, rgba(17,24,33,.96) 8px 10px, transparent 10px 14px);
+  border-top:3px solid #111821;
+  border-left:2px solid #111821;
+  border-right:2px solid #111821;
+  pointer-events:none;
+  mix-blend-mode:multiply;
+  opacity:.92;
+}
+body.coachMode .basketShape::after{
+  content:"";
+  position:absolute;
+  left:-12px;
+  right:-12px;
+  bottom:-52px;
+  height:54px;
+  pointer-events:none;
+  background:
+    linear-gradient(72deg, transparent 0 35%, #151a20 36% 41%, transparent 42% 100%),
+    linear-gradient(108deg, transparent 0 59%, #151a20 60% 65%, transparent 66% 100%),
+    linear-gradient(88deg, transparent 0 48%, #151a20 49% 53%, transparent 54% 100%),
+    linear-gradient(0deg, transparent 0 86%, #151a20 87% 94%, transparent 95% 100%);
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.38));
+}
+body.coachMode .basketShape i{
+  position:absolute;
+  left:8px;
+  right:8px;
+  top:17px;
+  height:9px;
+  border-radius:2px;
+  background:#111821!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.10), 0 -11px 0 -6px rgba(17,24,33,.78)!important;
+  pointer-events:none;
+  z-index:2;
+}
+body.coachMode .coachObject-basket{
+  width:72px!important;
+  height:102px!important;
+}
+body.coachMode .coachObject-basket .basketShape{
+  transform:translateY(-20px) scale(.92) perspective(140px) rotateX(5deg)!important;
+}
+
+/* Escalera de footwork realista: cintas negras y peldaños amarillos */
+body.coachMode .ladderShape{
+  position:relative!important;
+  width:78px!important;
+  height:38px!important;
+  display:block!important;
+  border:0!important;
+  background:
+    linear-gradient(0deg, #10151b 0 4px, transparent 4px calc(100% - 4px), #10151b calc(100% - 4px) 100%),
+    repeating-linear-gradient(90deg, transparent 0 10px, #ffd84d 10px 15px, transparent 15px 24px)!important;
+  border-radius:3px!important;
+  transform:rotate(-10deg)!important;
+  filter:drop-shadow(0 0 8px rgba(255,216,77,.34)) drop-shadow(0 8px 10px rgba(0,0,0,.38))!important;
+}
+body.coachMode .ladderShape::before,
+body.coachMode .ladderShape::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  height:4px;
+  background:#10151b;
+  border-radius:999px;
+}
+body.coachMode .ladderShape::before{top:0;}
+body.coachMode .ladderShape::after{bottom:0;}
+body.coachMode .coachObject-ladder{
+  width:92px!important;
+  height:54px!important;
+}
+body.coachMode .coachObject-ladder .ladderShape{
+  transform:rotate(-12deg) scale(1.08)!important;
+}
+
+@media(max-width:700px){
+  body.coachMode.coachHalfCourt .diagramArea{padding-left:4px!important;padding-right:4px!important;}
+  body.coachMode.coachHalfCourt .courtWrap.courtRow{padding:6px!important;gap:8px!important;}
+  body.coachMode.coachHalfCourt .courtWrap.courtRow .court,
+  body.coachMode.coachHalfCourt #court{max-width:100%!important;}
+}

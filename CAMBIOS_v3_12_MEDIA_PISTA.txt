@@ -1,0 +1,20 @@
+Tennis Direction Tracker · v3.12 · Modo Entrenador
+
+Cambios aplicados solo al Modo Entrenador:
+
+1. Nueva función en el menú: Pista completa / Media pista.
+- Por defecto el editor abre en pista completa.
+- Desde el menú se puede activar Media pista.
+- En Media pista, el diagrama se recorta desde la red hasta el fondo de pista para ganar zoom.
+- Al activar Media pista, el rail ball pasa a la parte superior para aprovechar mejor el ancho de pantalla.
+- En Media pista, las direcciones y objetos se colocan dentro de esa mitad visible.
+- El botón del menú cambia automáticamente entre "Media pista" y "Pista completa".
+
+2. Rediseño visual de objetos.
+- Cesta rediseñada como carro elevado con estructura negra, bolas visibles y patas largas, inspirada en la imagen enviada.
+- Escalera de footwork rediseñada como escalera plana de agilidad con cintas negras y peldaños amarillos.
+
+3. Corrección interna.
+- Ajuste del cálculo de coordenadas en Media pista para que los toques del usuario correspondan a la zona visible ampliada.
+- Se mantiene intacto el Modo Demo/partido.
+- Caché actualizada a v3.12.
