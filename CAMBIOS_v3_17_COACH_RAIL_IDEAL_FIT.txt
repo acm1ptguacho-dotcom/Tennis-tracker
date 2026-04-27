@@ -1,0 +1,6 @@
+v3.17 Coach Rail Ideal Fit
+
+- Reducido el tamaño de los botones del Rail Ball en pista completa al tamaño marcado como ideal.
+- Mantiene los botones compactos en media pista sin cambios.
+- Ajustado el ancho del rail, iconos y breakpoints móviles para evitar desbordes y mantener proporción visual.
+- Actualizado cache busting y service worker a v3.17.

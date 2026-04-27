@@ -3988,11 +3988,11 @@ body.coachMode #courtSurface .coachObjectsLayer{
 @keyframes coachLadderPop{from{opacity:0}to{opacity:1}}
 body.coachMode .coachObject-ladder{animation:coachLadderPop .18s ease both!important;}
 
-/* ===== v3.16 Coach rail fit: full-court buttons use max size without overflowing rail ===== */
+/* ===== v3.17 Coach rail fit: full-court buttons reduced to the requested ideal size ===== */
 body.coachMode:not(.coachHalfCourt){
-  /* Punto medio entre v3.14 y v3.15: grandes, pero dentro del rail en móvil. */
-  --coach-rail-btn: clamp(96px, 22vw, 112px);
-  --coach-rail-icon: clamp(44px, 9.6vw, 54px);
+  /* Botones grandes, pero ya no gigantes: tamaño visual ajustado al rail marcado. */
+  --coach-rail-btn: clamp(82px, 20vw, 94px);
+  --coach-rail-icon: clamp(38px, 8.8vw, 46px);
   --coach-rail-w: calc(var(--coach-rail-btn) + 12px);
 }
 body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow{
@@ -4046,8 +4046,8 @@ body.coachMode:not(.coachHalfCourt) #court{
 }
 @media(max-width:700px){
   body.coachMode:not(.coachHalfCourt){
-    --coach-rail-btn: clamp(96px, 26vw, 104px);
-    --coach-rail-icon: clamp(44px, 12vw, 50px);
+    --coach-rail-btn: clamp(82px, 22vw, 90px);
+    --coach-rail-icon: clamp(38px, 10vw, 44px);
     --coach-rail-w: calc(var(--coach-rail-btn) + 10px);
   }
   body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow{
@@ -4059,8 +4059,8 @@ body.coachMode:not(.coachHalfCourt) #court{
 }
 @media(max-width:390px){
   body.coachMode:not(.coachHalfCourt){
-    --coach-rail-btn: clamp(92px, 25vw, 100px);
-    --coach-rail-icon: clamp(42px, 11vw, 48px);
+    --coach-rail-btn: clamp(78px, 22vw, 86px);
+    --coach-rail-icon: clamp(36px, 10vw, 42px);
     --coach-rail-w: calc(var(--coach-rail-btn) + 10px);
   }
 }
