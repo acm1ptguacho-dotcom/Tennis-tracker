@@ -4064,3 +4064,63 @@ body.coachMode:not(.coachHalfCourt) #court{
     --coach-rail-w: calc(var(--coach-rail-btn) + 10px);
   }
 }
+
+/* ===== v3.18 Coach rail correction: full-court buttons slightly smaller than half-court ===== */
+body.coachMode:not(.coachHalfCourt){
+  /* Referencia: media pista usa 70px. En pista completa quedan un poco más pequeños. */
+  --coach-rail-btn:66px;
+  --coach-rail-icon:32px;
+  --coach-rail-w:78px;
+}
+body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow{
+  grid-template-columns:minmax(0,1fr) var(--coach-rail-w)!important;
+  gap:4px!important;
+}
+body.coachMode:not(.coachHalfCourt) .courtRail{
+  width:var(--coach-rail-w)!important;
+  min-width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  padding:4px 2px 8px!important;
+  gap:11px!important;
+  align-items:center!important;
+  overflow-x:hidden!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickItem{
+  width:var(--coach-rail-w)!important;
+  min-width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  flex:0 0 var(--coach-rail-w)!important;
+  gap:5px!important;
+  align-items:center!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickBtn{
+  width:var(--coach-rail-btn)!important;
+  height:var(--coach-rail-btn)!important;
+  min-width:var(--coach-rail-btn)!important;
+  min-height:var(--coach-rail-btn)!important;
+  max-width:var(--coach-rail-btn)!important;
+  max-height:var(--coach-rail-btn)!important;
+  border-radius:21px!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickBtn .svgIcon{
+  width:var(--coach-rail-icon)!important;
+  height:var(--coach-rail-icon)!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickLbl{
+  width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  font-size:10.6px!important;
+  line-height:1.04!important;
+  letter-spacing:.075em!important;
+}
+body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow .court,
+body.coachMode:not(.coachHalfCourt) #court{
+  max-width:calc(100vw - var(--coach-rail-w) - 8px)!important;
+}
+@media(max-width:390px){
+  body.coachMode:not(.coachHalfCourt){
+    --coach-rail-btn:64px;
+    --coach-rail-icon:31px;
+    --coach-rail-w:76px;
+  }
+}

@@ -1,0 +1,6 @@
+# v3.18 Coach Rail Smaller Than Half
+
+- Ajustado el tamaño de los botones Rail Ball en pista completa para que sean un poco más pequeños que los botones de Rail Ball en media pista.
+- Media pista se mantiene sin cambios.
+- Rail lateral reajustado en ancho, separación, iconos y etiquetas para que los botones no salgan del área disponible.
+- Actualizada la versión de caché a v3.18.

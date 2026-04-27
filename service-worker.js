@@ -4,13 +4,13 @@
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
 
-const CACHE = "tennis-tracker-web-v3.17-coach-rail-ideal-fit";
+const CACHE = "tennis-tracker-web-v3.18-coach-rail-smaller-than-half";
 const CORE = [
   "./",
   "./index.html",
   "./style.css?v=3150",
-  "./style-futuristic.css?v=3150",
-  "./app.js?v=3150",
+  "./style-futuristic.css?v=3180",
+  "./app.js?v=3180",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",
