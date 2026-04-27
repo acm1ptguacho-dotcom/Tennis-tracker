@@ -4,7 +4,7 @@
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
 
-const CACHE = "tennis-tracker-web-v3.15-coach-refinements";
+const CACHE = "tennis-tracker-web-v3.16-coach-rail-fit";
 const CORE = [
   "./",
   "./index.html",

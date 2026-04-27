@@ -3987,3 +3987,80 @@ body.coachMode #courtSurface .coachObjectsLayer{
 }
 @keyframes coachLadderPop{from{opacity:0}to{opacity:1}}
 body.coachMode .coachObject-ladder{animation:coachLadderPop .18s ease both!important;}
+
+/* ===== v3.16 Coach rail fit: full-court buttons use max size without overflowing rail ===== */
+body.coachMode:not(.coachHalfCourt){
+  /* Punto medio entre v3.14 y v3.15: grandes, pero dentro del rail en móvil. */
+  --coach-rail-btn: clamp(96px, 22vw, 112px);
+  --coach-rail-icon: clamp(44px, 9.6vw, 54px);
+  --coach-rail-w: calc(var(--coach-rail-btn) + 12px);
+}
+body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow{
+  grid-template-columns:minmax(0,1fr) var(--coach-rail-w)!important;
+  gap:4px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+body.coachMode:not(.coachHalfCourt) .courtRail{
+  width:var(--coach-rail-w)!important;
+  min-width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  padding:3px 2px 8px!important;
+  gap:12px!important;
+  overflow-x:hidden!important;
+  box-sizing:border-box!important;
+  align-items:center!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickItem{
+  width:var(--coach-rail-w)!important;
+  min-width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  box-sizing:border-box!important;
+  align-items:center!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickBtn{
+  width:var(--coach-rail-btn)!important;
+  height:var(--coach-rail-btn)!important;
+  min-width:var(--coach-rail-btn)!important;
+  min-height:var(--coach-rail-btn)!important;
+  max-width:calc(var(--coach-rail-w) - 8px)!important;
+  max-height:calc(var(--coach-rail-w) - 8px)!important;
+  border-radius:28px!important;
+  box-sizing:border-box!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickBtn .svgIcon{
+  width:var(--coach-rail-icon)!important;
+  height:var(--coach-rail-icon)!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickLbl{
+  width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  box-sizing:border-box!important;
+  font-size:12px!important;
+  line-height:1.02!important;
+  letter-spacing:.08em!important;
+}
+body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow .court,
+body.coachMode:not(.coachHalfCourt) #court{
+  max-width:calc(100vw - var(--coach-rail-w) - 8px)!important;
+}
+@media(max-width:700px){
+  body.coachMode:not(.coachHalfCourt){
+    --coach-rail-btn: clamp(96px, 26vw, 104px);
+    --coach-rail-icon: clamp(44px, 12vw, 50px);
+    --coach-rail-w: calc(var(--coach-rail-btn) + 10px);
+  }
+  body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow{
+    gap:3px!important;
+  }
+  body.coachMode:not(.coachHalfCourt) .quickBtn{
+    border-radius:26px!important;
+  }
+}
+@media(max-width:390px){
+  body.coachMode:not(.coachHalfCourt){
+    --coach-rail-btn: clamp(92px, 25vw, 100px);
+    --coach-rail-icon: clamp(42px, 11vw, 48px);
+    --coach-rail-w: calc(var(--coach-rail-btn) + 10px);
+  }
+}

@@ -1,0 +1,6 @@
+v3.16 - Ajuste de tamaño del Rail Ball en pista completa
+
+- Reducido el tamaño máximo de los botones del Rail Ball en pista completa para que no salgan del ancho del rail.
+- Conservado el tamaño compacto del Rail Ball en media pista.
+- Ajustado el ancho del rail, el gap, el padding y el max-width de los botones para que el diseño use el máximo tamaño posible sin romper el encaje del diagrama.
+- Actualizado el parámetro de caché del CSS y la versión del service worker.
