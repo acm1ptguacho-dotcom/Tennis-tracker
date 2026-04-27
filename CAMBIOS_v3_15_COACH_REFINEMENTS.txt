@@ -1,0 +1,21 @@
+Tennis Direction Tracker — v3.15 Coach Refinements
+
+Cambios aplicados:
+1. Rail Ball en pista completa:
+   - Botones del Rail Ball agrandados solo en pista completa.
+   - En media pista se conserva el tamaño compacto anterior.
+   - Se aprovecha mejor el espacio lateral disponible sin modificar la lógica de media pista.
+
+2. Escalera:
+   - El punto donde pulsa el usuario ahora actúa como inicio/esquina izquierda de la escalera.
+   - La escalera horizontal nace desde ese punto hacia la derecha.
+   - Al rotar a vertical, conserva el mismo punto de inicio y pivota desde esa esquina, no desde el centro.
+   - Se sustituyó la rotación visual centrada por una orientación vertical real del dibujo.
+
+3. Precisión de pulsación en pista:
+   - La conversión de coordenadas ahora usa el tamaño y posición reales de courtSurface renderizado.
+   - Mejora la precisión con pista recortada, media pista, zoom visual y offsets CSS.
+   - También se aplicó la misma lógica al arrastre de notas.
+
+4. Caché:
+   - Versionado actualizado a v3150 para forzar carga limpia de CSS/JS.

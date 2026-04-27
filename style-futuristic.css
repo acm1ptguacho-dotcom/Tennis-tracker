@@ -3876,3 +3876,114 @@ body.coachMode.coachHalfCourt #court{
     --coach-rail-w:106px;
   }
 }
+
+/* ===== v3.15 Coach refinements: full-court rail size, ladder pivot, touch precision ===== */
+body.coachMode:not(.coachHalfCourt){
+  --coach-rail-btn: clamp(112px, 27vw, 132px);
+  --coach-rail-icon: clamp(52px, 12vw, 62px);
+  --coach-rail-w: calc(var(--coach-rail-btn) + 18px);
+}
+body.coachMode:not(.coachHalfCourt) .courtRail{
+  width:var(--coach-rail-w)!important;
+  min-width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  align-items:center!important;
+  padding:2px 2px 8px!important;
+  gap:14px!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickItem{
+  width:var(--coach-rail-w)!important;
+  min-width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickBtn{
+  width:var(--coach-rail-btn)!important;
+  height:var(--coach-rail-btn)!important;
+  min-width:var(--coach-rail-btn)!important;
+  min-height:var(--coach-rail-btn)!important;
+  border-radius:30px!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickBtn .svgIcon{
+  width:var(--coach-rail-icon)!important;
+  height:var(--coach-rail-icon)!important;
+}
+body.coachMode:not(.coachHalfCourt) .quickLbl{
+  width:var(--coach-rail-w)!important;
+  max-width:var(--coach-rail-w)!important;
+  font-size:12.4px!important;
+  line-height:1.02!important;
+}
+body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow{
+  grid-template-columns:minmax(0,1fr) var(--coach-rail-w)!important;
+  gap:2px!important;
+}
+body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow .court,
+body.coachMode:not(.coachHalfCourt) #court{
+  max-width:calc(100vw - var(--coach-rail-w) - 5px)!important;
+}
+@media(max-width:700px){
+  body.coachMode:not(.coachHalfCourt){
+    --coach-rail-btn: 112px;
+    --coach-rail-icon: 54px;
+    --coach-rail-w: 126px;
+  }
+}
+@media(max-width:390px){
+  body.coachMode:not(.coachHalfCourt){
+    --coach-rail-btn: 104px;
+    --coach-rail-icon: 50px;
+    --coach-rail-w: 118px;
+  }
+}
+
+/* La escalera usa el toque como esquina/inicio izquierdo y rota desde ese mismo punto. */
+body.coachMode .coachObject-ladder{
+  transform:translate(0,0)!important;
+  transform-origin:0 0!important;
+  width:190px!important;
+  height:64px!important;
+  justify-items:start!important;
+  align-items:start!important;
+}
+body.coachMode .coachObject-ladder .ladderShape{
+  width:168px!important;
+  height:44px!important;
+  margin:0!important;
+  transform:none!important;
+  transform-origin:0 0!important;
+  background:
+    linear-gradient(0deg, #10151b 0 5px, transparent 5px calc(100% - 5px), #10151b calc(100% - 5px) 100%),
+    repeating-linear-gradient(90deg, transparent 0 13px, #ffd84d 13px 17px, transparent 17px 26px)!important;
+}
+body.coachMode .coachObject-ladder.ladderVertical{
+  width:64px!important;
+  height:190px!important;
+  transform:translate(0,0)!important;
+  transform-origin:0 0!important;
+}
+body.coachMode .coachObject-ladder.ladderVertical .ladderShape{
+  width:44px!important;
+  height:168px!important;
+  transform:none!important;
+  background:
+    linear-gradient(90deg, #10151b 0 5px, transparent 5px calc(100% - 5px), #10151b calc(100% - 5px) 100%),
+    repeating-linear-gradient(0deg, transparent 0 13px, #ffd84d 13px 17px, transparent 17px 26px)!important;
+}
+body.coachMode .coachObject-ladder .ladderRotateBtn{
+  right:-10px!important;
+  top:-14px!important;
+}
+body.coachMode .coachObject-ladder.ladderVertical .ladderRotateBtn{
+  right:-12px!important;
+  top:-14px!important;
+}
+
+/* El layer mantiene la misma geometría que la imagen real renderizada para que el tap sea exacto. */
+body.coachMode #courtSurface .arrowSvg,
+body.coachMode #courtSurface .coachObjectsLayer{
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+}
+@keyframes coachLadderPop{from{opacity:0}to{opacity:1}}
+body.coachMode .coachObject-ladder{animation:coachLadderPop .18s ease both!important;}

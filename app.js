@@ -5205,13 +5205,22 @@ function setCoachTool(tool){
 }
 function coachToolLabel(tool){ return ({ cone:"Cono", hoop:"Aro", basket:"Cesta", ladder:"Escalera", player:"Jugador", coach:"Entrenador", target:"Objetivo", dash:"Desplazamiento", text:"Nota", direction:"Dirección" })[tool] || "Objeto"; }
 function coachPointFromEvent(evt, el){ return evt ? pointNormFromEvent(evt, el || document.getElementById("court")) : centerNormFromEl(el); }
-function coachPointFromCourtEvent(evt){
+function coachPointFromClient(clientX, clientY){
+  const surface = document.getElementById("courtSurface");
   const court = document.getElementById("court");
-  if (!court || !evt) return { x:.5, y:.5 };
-  const cr = court.getBoundingClientRect();
-  let x = (evt.clientX - cr.left) / Math.max(1, cr.width);
-  let y = (evt.clientY - cr.top) / Math.max(1, cr.height);
-  return coachViewportToCourtNorm(x, y);
+  const el = surface || court;
+  if (!el) return { x:.5, y:.5 };
+  const r = el.getBoundingClientRect();
+  let x = (clientX - r.left) / Math.max(1, r.width);
+  let y = (clientY - r.top) / Math.max(1, r.height);
+  if (state.ui && state.ui.rotated){ x = 1 - x; y = 1 - y; }
+  return { x:clamp01(x), y:clamp01(y) };
+}
+function coachPointFromCourtEvent(evt){
+  if (!evt) return { x:.5, y:.5 };
+  // Precisión real: medimos contra el courtSurface renderizado, no contra el contenedor.
+  // Así el toque coincide con el objeto aunque la pista esté recortada, ampliada o en media pista.
+  return coachPointFromClient(evt.clientX, evt.clientY);
 }
 function handleCoachPrecisePointerDown(evt){
   if (!isCoachMode()) return;
@@ -5292,12 +5301,7 @@ function handleCoachCourtFreeClick(evt){
   const c = ensureCoachState();
   if (!isCoachObjectTool(c.activeTool) && c.activeTool !== "direction" && c.activeTool !== "pattern") return;
   if (evt.target.closest && evt.target.closest('.zoneCell,.serveCell,.coachObject,.coachDashLine,.coachHalfSwitch,.quickBtn,.chip,.menuItem')) return;
-  const court = document.getElementById('court');
-  if (!court) return;
-  const cr = court.getBoundingClientRect();
-  let x = (evt.clientX - cr.left) / Math.max(1, cr.width);
-  let y = (evt.clientY - cr.top) / Math.max(1, cr.height);
-  const pt = coachViewportToCourtNorm(x, y);
+  const pt = coachPointFromCourtEvent(evt);
   handleCoachToolAtPoint(pt, pt.y > .5 ? "B" : "A");
 }
 function addCoachObject(type, pt){
@@ -5305,7 +5309,10 @@ function addCoachObject(type, pt){
   let label = coachToolLabel(type);
   if (type === "text") label = prompt("Texto de la nota", "Nota") || "Nota";
   const obj = { id:"obj_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,5), type, label, x:clamp01(pt.x), y:clamp01(pt.y), createdAt:Date.now() };
-  if (type === "ladder") obj.orientation = "horizontal";
+  if (type === "ladder") {
+    obj.orientation = "horizontal";
+    obj.anchor = "startCorner"; // el toque es el inicio/esquina izquierda de la escalera
+  }
   c.objects.push(obj);
   renderCoachObjects();
   persist();
@@ -5381,13 +5388,10 @@ function wireCoachNoteObject(el, obj){
   let start=null, moved=false;
   const onMove=(e)=>{
     if(!start) return;
-    const court=document.getElementById('court'); if(!court) return;
-    const cr=court.getBoundingClientRect();
     const dx=e.clientX-start.x0, dy=e.clientY-start.y0;
     if(Math.hypot(dx,dy)>5) moved=true;
-    let x=(e.clientX-cr.left)/Math.max(1,cr.width), y=(e.clientY-cr.top)/Math.max(1,cr.height);
-    if(state.ui && state.ui.rotated){ x=1-x; y=1-y; }
-    obj.x=clamp01(x); obj.y=clamp01(y);
+    const pt = coachPointFromClient(e.clientX, e.clientY);
+    obj.x=pt.x; obj.y=pt.y;
     el.style.left=(obj.x*100)+'%'; el.style.top=(obj.y*100)+'%';
   };
   const onUp=(e)=>{ if(start){ document.removeEventListener('pointermove',onMove); document.removeEventListener('pointerup',onUp); persist(); setTimeout(()=>{start=null; moved=false;},0); } };
