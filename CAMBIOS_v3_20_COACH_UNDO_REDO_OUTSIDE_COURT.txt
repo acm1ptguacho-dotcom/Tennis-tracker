@@ -1,0 +1,7 @@
+v3.20 - Coach undo/redo fuera del diagrama
+
+- Reubicados los botones globales Deshacer/Rehacer fuera del diagrama de pista.
+- Los botones quedan debajo del court y antes de la barra de datos del ejercicio.
+- Ajustado el grid de modo entrenador para pista completa y media pista.
+- Se mantiene la lógica global de historial para objetos, flechas, desplazamientos, patrones y limpieza.
+- Actualizada la versión de caché del service worker.

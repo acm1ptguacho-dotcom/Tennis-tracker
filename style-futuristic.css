@@ -4236,3 +4236,121 @@ body.coachMode.coachHalfCourt .coachHistoryBtn{
   .coachHistoryControls{bottom:4.2%;}
   .coachHistoryBtn{border-radius:20px;}
 }
+
+
+/* ===== v3.20 Coach undo/redo fuera de la pista =====
+   Los controles globales ya no se colocan encima del court.
+   Quedan debajo del diagrama y antes de la barra de datos del ejercicio. */
+body.coachMode .courtWrap.courtRow .court,
+body.coachMode #court{
+  grid-area:coachCourt!important;
+}
+
+body.coachMode .courtRail{
+  grid-area:coachRail!important;
+}
+
+body.coachMode .coachHistoryControls{
+  position:relative!important;
+  z-index:42!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  grid-area:coachHistory!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:2px auto 4px!important;
+  padding:0 0 2px!important;
+  display:none;
+  align-items:center!important;
+  justify-content:center!important;
+  pointer-events:auto!important;
+  filter:drop-shadow(0 13px 20px rgba(0,0,0,.26))!important;
+}
+
+body.coachMode .coachHistoryControls.coachOnly{
+  display:flex!important;
+}
+
+body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow{
+  grid-template-columns:minmax(0,1fr) var(--coach-rail-w)!important;
+  grid-template-rows:auto auto!important;
+  grid-template-areas:
+    "coachCourt coachRail"
+    "coachHistory coachRail"!important;
+  row-gap:8px!important;
+  align-items:start!important;
+}
+
+body.coachMode:not(.coachHalfCourt) .coachHistoryControls{
+  gap:clamp(18px, 6.4vw, 42px)!important;
+}
+
+body.coachMode:not(.coachHalfCourt) .coachHistoryBtn{
+  width:clamp(68px, 16.5vw, 86px)!important;
+  height:clamp(52px, 13.5vw, 68px)!important;
+  border-radius:22px!important;
+}
+
+body.coachMode:not(.coachHalfCourt) .coachHistoryBtn .svgIcon{
+  width:clamp(27px, 7vw, 36px)!important;
+  height:clamp(27px, 7vw, 36px)!important;
+}
+
+body.coachMode.coachHalfCourt .courtWrap.courtRow{
+  grid-template-columns:1fr!important;
+  grid-template-rows:auto auto auto!important;
+  grid-template-areas:
+    "coachRail"
+    "coachCourt"
+    "coachHistory"!important;
+  row-gap:9px!important;
+}
+
+body.coachMode.coachHalfCourt .coachHistoryControls{
+  grid-column:1!important;
+  grid-row:3!important;
+  gap:clamp(16px, 8vw, 42px)!important;
+  margin:0 auto 4px!important;
+}
+
+body.coachMode.coachHalfCourt .coachHistoryBtn{
+  width:clamp(66px, 18vw, 84px)!important;
+  height:clamp(52px, 14vw, 66px)!important;
+  border-radius:21px!important;
+}
+
+@media(max-width:390px){
+  body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow{
+    row-gap:7px!important;
+  }
+  body.coachMode .coachHistoryControls{
+    margin-top:0!important;
+    margin-bottom:3px!important;
+  }
+  body.coachMode .coachHistoryBtn span{
+    font-size:8px!important;
+  }
+}
+
+/* v3.20.1 - compatibilidad con rail oculto: undo/redo sigue fuera de la pista */
+body.coachMode.railHidden:not(.coachHalfCourt) .courtWrap.courtRow{
+  grid-template-columns:1fr!important;
+  grid-template-rows:auto auto!important;
+  grid-template-areas:
+    "coachCourt"
+    "coachHistory"!important;
+}
+body.coachMode.railHidden:not(.coachHalfCourt) .courtWrap.courtRow .court,
+body.coachMode.railHidden:not(.coachHalfCourt) #court{
+  max-width:100%!important;
+}
+body.coachMode.railHidden.coachHalfCourt .courtWrap.courtRow{
+  grid-template-columns:1fr!important;
+  grid-template-rows:auto auto!important;
+  grid-template-areas:
+    "coachCourt"
+    "coachHistory"!important;
+}
