@@ -1,0 +1,11 @@
+Tennis Direction Tracker Web v3.21
+
+- Añadido modo de colocación para entrenador: Libre, Alineado y Preciso.
+- Modo Alineado: guías magnéticas y snap suave con objetos existentes.
+- Modo Preciso: rejilla invisible para colocar objetos de forma simétrica.
+- Añadidas plantillas rápidas de conos: fila horizontal, fila vertical, fila diagonal, zigzag, cuadrado y circuito.
+- Tocar una plantilla y después la pista crea automáticamente la serie organizada.
+- Añadida selección de objetos tocando elementos ya colocados.
+- Añadidas acciones de organización: alinear horizontal, alinear vertical, distribuir horizontal, distribuir vertical, quitar selección y borrar selección.
+- Añadida señal visual de selección y guías luminosas temporales al hacer snap.
+- Actualizada caché del service worker a v3.21.

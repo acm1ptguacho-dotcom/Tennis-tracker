@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3150" />
-  <link rel="stylesheet" href="style-futuristic.css?v=3200" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3210" />
 </head>
 <body>
 
@@ -746,20 +746,58 @@
 </div>
 
 <div class="modal hidden" id="coachObjectsModal">
-  <div class="modalCard solid coachModalCard">
-    <div class="modalHead"><div><div class="modalTitle">Objetos y herramientas</div><div class="muted">Selecciona una herramienta y toca la pista para colocarla.</div></div><button class="chip" id="btnCloseCoachObjects" type="button">Cerrar</button></div>
-    <div class="coachToolTabs">
-      <button class="coachToolBtn" data-coach-tool="cone" type="button"><span class="toolIcon coneShape"></span><small>Cono</small></button>
-      <button class="coachToolBtn" data-coach-tool="hoop" type="button"><span class="toolIcon hoopShape"></span><small>Aro</small></button>
-      <button class="coachToolBtn" data-coach-tool="basket" type="button"><span class="toolIcon basketShape"><i></i></span><small>Cesta</small></button>
-      <button class="coachToolBtn" data-coach-tool="player" type="button"><span class="toolIcon personShape">J</span><small>Jugador</small></button>
-      <button class="coachToolBtn" data-coach-tool="coach" type="button"><span class="toolIcon personShape coach">E</span><small>Entrenador</small></button>
-      <button class="coachToolBtn" data-coach-tool="target" type="button"><span class="toolIcon targetShape"></span><small>Objetivo</small></button>
-      <button class="coachToolBtn" data-coach-tool="dash" type="button"><span class="toolIcon dashToolIcon">⇢</span><small>Desplazamiento</small></button>
-      <button class="coachToolBtn" data-coach-tool="ladder" type="button"><span class="toolIcon ladderShape"></span><small>Escalera</small></button>
-      <button class="coachToolBtn" data-coach-tool="text" type="button"><span class="toolIcon noteToolIcon">Nota</span><small>Nota</small></button>
-    </div>
-    <div class="coachObjectsHint"><b>Flujo recomendado:</b> dirección para flechas de golpeo, desplazamiento para flechas blancas discontinuas, objetos para material y notas.</div>
+  <div class="modalCard solid coachModalCard coachObjectsModalCard">
+    <div class="modalHead"><div><div class="modalTitle">Objetos y herramientas</div><div class="muted">Coloca material con ayuda de alineación, plantillas y organización rápida.</div></div><button class="chip" id="btnCloseCoachObjects" type="button">Cerrar</button></div>
+
+    <section class="coachObjectsSection">
+      <div class="coachSectionHead"><strong>Modo colocación</strong><span>Controla la precisión al tocar la pista</span></div>
+      <div class="coachPlacementModes" role="group" aria-label="Modo de colocación de objetos">
+        <button class="coachPlacementBtn" data-placement-mode="free" type="button"><b>Libre</b><small>Sin ayuda</small></button>
+        <button class="coachPlacementBtn active" data-placement-mode="aligned" type="button"><b>Alineado</b><small>Guías magnéticas</small></button>
+        <button class="coachPlacementBtn" data-placement-mode="precise" type="button"><b>Preciso</b><small>Rejilla invisible</small></button>
+      </div>
+    </section>
+
+    <section class="coachObjectsSection">
+      <div class="coachSectionHead"><strong>Objetos</strong><span>Selecciona y toca la pista</span></div>
+      <div class="coachToolTabs">
+        <button class="coachToolBtn" data-coach-tool="cone" type="button"><span class="toolIcon coneShape"></span><small>Cono</small></button>
+        <button class="coachToolBtn" data-coach-tool="hoop" type="button"><span class="toolIcon hoopShape"></span><small>Aro</small></button>
+        <button class="coachToolBtn" data-coach-tool="basket" type="button"><span class="toolIcon basketShape"><i></i></span><small>Cesta</small></button>
+        <button class="coachToolBtn" data-coach-tool="player" type="button"><span class="toolIcon personShape">J</span><small>Jugador</small></button>
+        <button class="coachToolBtn" data-coach-tool="coach" type="button"><span class="toolIcon personShape coach">E</span><small>Entrenador</small></button>
+        <button class="coachToolBtn" data-coach-tool="target" type="button"><span class="toolIcon targetShape"></span><small>Objetivo</small></button>
+        <button class="coachToolBtn" data-coach-tool="dash" type="button"><span class="toolIcon dashToolIcon">⇢</span><small>Desplazamiento</small></button>
+        <button class="coachToolBtn" data-coach-tool="ladder" type="button"><span class="toolIcon ladderShape"></span><small>Escalera</small></button>
+        <button class="coachToolBtn" data-coach-tool="text" type="button"><span class="toolIcon noteToolIcon">Nota</span><small>Nota</small></button>
+      </div>
+    </section>
+
+    <section class="coachObjectsSection">
+      <div class="coachSectionHead"><strong>Plantillas rápidas</strong><span>Crea series simétricas de conos con un toque</span></div>
+      <div class="coachTemplateGrid">
+        <button class="coachTemplateBtn" data-coach-template="rowH" type="button"><b>·····</b><small>Fila horizontal</small></button>
+        <button class="coachTemplateBtn" data-coach-template="rowV" type="button"><b>⋮</b><small>Fila vertical</small></button>
+        <button class="coachTemplateBtn" data-coach-template="rowD" type="button"><b>╲</b><small>Fila diagonal</small></button>
+        <button class="coachTemplateBtn" data-coach-template="zigzag" type="button"><b>⌁</b><small>Zigzag</small></button>
+        <button class="coachTemplateBtn" data-coach-template="square" type="button"><b>□</b><small>Cuadrado</small></button>
+        <button class="coachTemplateBtn" data-coach-template="circuit" type="button"><b>↻</b><small>Circuito</small></button>
+      </div>
+    </section>
+
+    <section class="coachObjectsSection coachSelectionPanel">
+      <div class="coachSectionHead"><strong>Organizar selección</strong><span id="coachSelectionCount">Toca objetos en la pista para seleccionarlos</span></div>
+      <div class="coachAlignActions">
+        <button class="chip coachSelectionAction" id="btnCoachAlignHorizontal" data-min-selection="2" type="button">Alinear H</button>
+        <button class="chip coachSelectionAction" id="btnCoachAlignVertical" data-min-selection="2" type="button">Alinear V</button>
+        <button class="chip coachSelectionAction" id="btnCoachDistributeHorizontal" data-min-selection="3" type="button">Distribuir H</button>
+        <button class="chip coachSelectionAction" id="btnCoachDistributeVertical" data-min-selection="3" type="button">Distribuir V</button>
+        <button class="chip" id="btnCoachClearSelection" type="button">Quitar selección</button>
+        <button class="chip warn coachSelectionAction" id="btnCoachDeleteSelection" data-min-selection="1" type="button">Borrar selección</button>
+      </div>
+    </section>
+
+    <div class="coachObjectsHint"><b>Nuevo flujo:</b> usa Alineado para colocar conos rectos, Preciso para rejilla invisible y Plantillas para filas, zigzag, cuadrados o circuitos. Toca objetos ya colocados para seleccionarlos y organizarlos.</div>
     <div class="modalFoot"><button class="btn" id="btnCoachFinishPatternObjects" type="button">Finalizar patrón</button><button class="btn warn" id="btnCoachDeleteLastObject" type="button">Borrar último objeto</button><button class="btn primary" id="btnCoachSelectPatternTool" type="button">Volver a flechas</button></div>
   </div>
 </div>
@@ -1510,7 +1548,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3200"></script>
+<script src="app.js?v=3210"></script>
 
 </body>
 </html>

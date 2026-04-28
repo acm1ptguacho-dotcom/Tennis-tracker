@@ -4354,3 +4354,199 @@ body.coachMode.railHidden.coachHalfCourt .courtWrap.courtRow{
     "coachCourt"
     "coachHistory"!important;
 }
+
+/* v3.21 - colocación asistida, plantillas rápidas y organización de objetos */
+.coachObjectsModalCard{
+  max-height:min(92vh, 880px)!important;
+  overflow:auto!important;
+}
+.coachObjectsSection{
+  margin:12px 0 0;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:20px;
+  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(4,14,24,.22));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+.coachSectionHead{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 0 10px;
+  color:#f5fbff;
+}
+.coachSectionHead strong{
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+.coachSectionHead span{
+  font-size:11px;
+  color:rgba(236,246,255,.66);
+  text-align:right;
+  line-height:1.25;
+}
+.coachPlacementModes,
+.coachTemplateGrid,
+.coachAlignActions{
+  display:grid;
+  gap:9px;
+}
+.coachPlacementModes{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.coachTemplateGrid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.coachAlignActions{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.coachPlacementBtn,
+.coachTemplateBtn{
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:17px;
+  background:linear-gradient(180deg,rgba(58,93,116,.66),rgba(8,23,37,.88));
+  color:#f6fbff;
+  min-height:62px;
+  padding:9px 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 8px 18px rgba(0,0,0,.22);
+  text-transform:uppercase;
+  letter-spacing:.075em;
+}
+.coachPlacementBtn b,
+.coachTemplateBtn b{
+  font-size:12px;
+  line-height:1;
+}
+.coachTemplateBtn b{
+  font-size:22px;
+  letter-spacing:.02em;
+  color:#fff;
+  text-shadow:0 0 12px rgba(205,245,255,.28);
+}
+.coachPlacementBtn small,
+.coachTemplateBtn small{
+  font-size:9px;
+  color:rgba(240,248,255,.74);
+  line-height:1.12;
+}
+.coachPlacementBtn.active,
+.coachTemplateBtn.active,
+.coachPlacementBtn:active,
+.coachTemplateBtn:active{
+  border-color:rgba(201,255,74,.70);
+  box-shadow:0 0 18px rgba(201,255,74,.17),inset 0 1px 0 rgba(255,255,255,.18);
+}
+.coachSelectionPanel .chip{
+  min-height:36px;
+  border-radius:13px;
+  font-size:10px;
+  white-space:nowrap;
+}
+.coachSelectionAction:disabled{
+  opacity:.42;
+  filter:grayscale(.45);
+  pointer-events:none;
+}
+.coachObjectsHint{
+  margin-top:12px!important;
+}
+.coachObject.isSelected{
+  outline:2px solid rgba(201,255,74,.92)!important;
+  outline-offset:4px;
+  box-shadow:0 0 0 6px rgba(201,255,74,.14),0 0 24px rgba(201,255,74,.36)!important;
+  z-index:9!important;
+}
+.coachObject.isSelected::after{
+  content:"";
+  position:absolute;
+  right:-7px;
+  top:-7px;
+  width:13px;
+  height:13px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#d9ff63,#83d61e);
+  border:2px solid rgba(5,20,31,.92);
+  box-shadow:0 0 10px rgba(201,255,74,.48);
+}
+.coachAlignGuide{
+  position:absolute;
+  z-index:7;
+  pointer-events:none;
+  background:rgba(201,255,74,.82);
+  box-shadow:0 0 12px rgba(201,255,74,.45),0 0 26px rgba(90,210,255,.18);
+  opacity:.96;
+}
+.coachAlignGuide.vertical{
+  top:0;
+  bottom:0;
+  width:1.5px;
+  transform:translateX(-50%);
+}
+.coachAlignGuide.horizontal{
+  left:0;
+  right:0;
+  height:1.5px;
+  transform:translateY(-50%);
+}
+.coachSnapPulse{
+  position:absolute;
+  z-index:8;
+  pointer-events:none;
+  width:26px;
+  height:26px;
+  border-radius:999px;
+  border:2px solid rgba(201,255,74,.82);
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 18px rgba(201,255,74,.38);
+  animation:coachSnapPulse .9s ease-out forwards;
+}
+@keyframes coachSnapPulse{
+  0%{opacity:.95; transform:translate(-50%,-50%) scale(.55)}
+  100%{opacity:0; transform:translate(-50%,-50%) scale(1.65)}
+}
+body.coachMode .coachToolTabs{
+  gap:8px!important;
+}
+body.coachMode .coachObjectsModalCard .coachToolBtn{
+  min-height:82px!important;
+}
+@media(max-width:520px){
+  .coachObjectsModalCard{max-height:89vh!important;}
+  .coachPlacementModes,
+  .coachTemplateGrid,
+  .coachAlignActions{gap:7px;}
+  .coachAlignActions{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .coachPlacementBtn,.coachTemplateBtn{min-height:56px;border-radius:15px;}
+  .coachTemplateBtn b{font-size:20px;}
+  .coachSectionHead{align-items:flex-start;flex-direction:column;gap:3px;}
+  .coachSectionHead span{text-align:left;}
+}
+
+/* v3.21.1 - modal de objetos con scroll completo para nuevas secciones */
+body.coachMode #coachObjectsModal .coachObjectsModalCard{
+  max-height:calc(100svh - 18px)!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+body.coachMode #coachObjectsModal .coachToolTabs{
+  max-height:none!important;
+  overflow:visible!important;
+}
+body.coachMode #coachObjectsModal .coachObjectsSection .coachToolTabs{
+  padding:0!important;
+}
+body.coachMode #coachObjectsModal .modalFoot{
+  position:sticky;
+  bottom:0;
+  z-index:3;
+  background:linear-gradient(180deg,rgba(9,25,39,.82),rgba(5,16,27,.98));
+  border-top:1px solid rgba(255,255,255,.08);
+}
