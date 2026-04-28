@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3150" />
-  <link rel="stylesheet" href="style-futuristic.css?v=3180" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3190" />
 </head>
 <body>
 
@@ -340,6 +340,16 @@
           <div class="baselineName baselineTop" id="baselineTop">Jugador B</div>
           <div class="baselineName baselineBottom" id="baselineBottom">Jugador A</div>
         </div>
+        <div class="coachHistoryControls coachOnly" id="coachHistoryControls" aria-label="Deshacer y rehacer acciones del ejercicio">
+          <button class="coachHistoryBtn" id="btnCoachGlobalUndo" type="button" title="Deshacer acción" aria-label="Deshacer acción">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M5 12h8.5a5.5 5.5 0 1 1 0 11H11"/></svg>
+            <span>Deshacer</span>
+          </button>
+          <button class="coachHistoryBtn" id="btnCoachGlobalRedo" type="button" title="Rehacer acción" aria-label="Rehacer acción">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 7 5 5-5 5"/><path d="M19 12h-8.5a5.5 5.5 0 1 0 0 11H13"/></svg>
+            <span>Rehacer</span>
+          </button>
+        </div>
         <button id="btnCoachHalfSwitch" class="coachHalfSwitch" type="button" hidden aria-label="Ver media pista superior">↑</button>
 <!-- botón de acciones (confirmar / finalizar punto) -->
         <button id="finishBall" class="tennisBall inCourt fab" type="button" aria-label="Acciones del punto">✓</button>
@@ -457,7 +467,7 @@
           <div class="quickLbl">Deshacer punto</div>
         </div>
 
-        <div class="quickItem">
+        <div class="quickItem" id="qiUndoShot">
           <button class="quickBtn" id="btnUndo" type="button" title="Deshacer último golpe" aria-label="Deshacer último golpe">
             <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
               <polyline points="14 9 9 4 4 9"/>
@@ -1499,7 +1509,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3180"></script>
+<script src="app.js?v=3190"></script>
 
 </body>
 </html>

@@ -1,0 +1,8 @@
+# v3.19 - Coach: ajuste de diagrama + deshacer/rehacer global
+
+- Se ajustó el layout del diagrama en modo entrenador para equilibrar mejor el margen izquierdo y derecho respecto al rail lateral.
+- Se añadieron dos botones globales debajo del diagrama: Deshacer y Rehacer.
+- Los botones funcionan en pista completa y media pista.
+- La lógica de deshacer/rehacer cubre acciones del editor de ejercicios: flechas de dirección, flechas de desplazamiento, objetos, notas, rotación/borrado de objetos, limpieza de pista y finalización de patrones.
+- Se ocultaron los botones antiguos de deshacer del rail derecho en modo entrenador para evitar duplicidad.
+- Se actualizó la versión de caché del service worker y los query params de app.js/style-futuristic.css.

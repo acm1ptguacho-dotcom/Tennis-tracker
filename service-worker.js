@@ -4,13 +4,13 @@
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
 
-const CACHE = "tennis-tracker-web-v3.18-coach-rail-smaller-than-half";
+const CACHE = "tennis-tracker-web-v3.19-coach-undo-redo-layout";
 const CORE = [
   "./",
   "./index.html",
   "./style.css?v=3150",
-  "./style-futuristic.css?v=3180",
-  "./app.js?v=3180",
+  "./style-futuristic.css?v=3190",
+  "./app.js?v=3190",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",

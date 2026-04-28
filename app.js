@@ -122,6 +122,8 @@ function createDefaultCoachState(){
     pendingDashStart: null,
     patterns: [],
     objects: [],
+    undoStack: [],
+    redoStack: [],
     goal: "",
     level: "",
     material: "",
@@ -133,6 +135,8 @@ function ensureCoachState(){
   if (!state.coach || typeof state.coach !== "object") state.coach = createDefaultCoachState();
   state.coach.patterns = Array.isArray(state.coach.patterns) ? state.coach.patterns : [];
   state.coach.objects = Array.isArray(state.coach.objects) ? state.coach.objects : [];
+  state.coach.undoStack = Array.isArray(state.coach.undoStack) ? state.coach.undoStack : [];
+  state.coach.redoStack = Array.isArray(state.coach.redoStack) ? state.coach.redoStack : [];
   state.coach.activeTool = state.coach.activeTool || "direction";
   state.coach.exerciseName = state.coach.exerciseName || "Nuevo ejercicio";
   state.coach.folderId = state.coach.folderId || "root";
@@ -4990,6 +4994,7 @@ function applyCoachModeUI(){
   syncCoachInlineFromState();
   renderCoachObjects();
   renderCoachFolderOptions();
+  updateCoachHistoryButtons();
 }
 function updateEntryLanguageFlags(){
   const flag = (state.lang === "en") ? "🇬🇧" : "🇪🇸";
@@ -5002,6 +5007,95 @@ function getAllCoachArrows(){
   (c.patterns || []).forEach(pat => (pat.arrows || []).forEach(a => saved.push(a)));
   const live = (state.point && state.point.coach && Array.isArray(state.point.arrows)) ? state.point.arrows : [];
   return saved.concat(live).map((a, idx)=>({ ...a, n:idx+1 }));
+}
+
+function cloneCoachData(value){
+  return JSON.parse(JSON.stringify(value == null ? null : value));
+}
+function createEmptyCoachPoint(){
+  return { server:"A", side:"SD", phase:"rally", firstServeFault:false, important:false, events:[], arrows:[], finishDetail:null, coach:true };
+}
+function coachSnapshotPayload(){
+  const c = ensureCoachState();
+  const { undoStack, redoStack, ...coachPayload } = c;
+  return {
+    coach: cloneCoachData(coachPayload),
+    point: (state.point && state.point.coach) ? cloneCoachData(state.point) : createEmptyCoachPoint()
+  };
+}
+function trimCoachHistory(stack){
+  if (!Array.isArray(stack)) return [];
+  const max = 80;
+  return stack.length > max ? stack.slice(stack.length - max) : stack;
+}
+function recordCoachHistory(){
+  if (!isCoachMode()) return;
+  const c = ensureCoachState();
+  c.undoStack = Array.isArray(c.undoStack) ? c.undoStack : [];
+  c.redoStack = [];
+  c.undoStack.push(coachSnapshotPayload());
+  c.undoStack = trimCoachHistory(c.undoStack);
+  updateCoachHistoryButtons();
+}
+function restoreCoachSnapshot(snapshot, undoStack, redoStack){
+  if (!snapshot) return;
+  const nextCoach = Object.assign(createDefaultCoachState(), cloneCoachData(snapshot.coach || {}));
+  nextCoach.undoStack = Array.isArray(undoStack) ? undoStack : [];
+  nextCoach.redoStack = Array.isArray(redoStack) ? redoStack : [];
+  state.coach = nextCoach;
+  state.point = snapshot.point ? cloneCoachData(snapshot.point) : createEmptyCoachPoint();
+  if (!state.point || !state.point.coach) state.point = createEmptyCoachPoint();
+  __liveArrowCountRendered = 0;
+  persist();
+  renderAll();
+}
+function undoCoachAction(){
+  if (!isCoachMode()) return;
+  const c = ensureCoachState();
+  c.undoStack = Array.isArray(c.undoStack) ? c.undoStack : [];
+  c.redoStack = Array.isArray(c.redoStack) ? c.redoStack : [];
+  if (!c.undoStack.length){
+    updateCoachHistoryButtons();
+    toast("No hay acciones para deshacer");
+    return;
+  }
+  const current = coachSnapshotPayload();
+  const previous = c.undoStack.pop();
+  c.redoStack.push(current);
+  c.redoStack = trimCoachHistory(c.redoStack);
+  restoreCoachSnapshot(previous, c.undoStack, c.redoStack);
+  toast("Acción deshecha");
+}
+function redoCoachAction(){
+  if (!isCoachMode()) return;
+  const c = ensureCoachState();
+  c.undoStack = Array.isArray(c.undoStack) ? c.undoStack : [];
+  c.redoStack = Array.isArray(c.redoStack) ? c.redoStack : [];
+  if (!c.redoStack.length){
+    updateCoachHistoryButtons();
+    toast("No hay acciones para rehacer");
+    return;
+  }
+  const current = coachSnapshotPayload();
+  const next = c.redoStack.pop();
+  c.undoStack.push(current);
+  c.undoStack = trimCoachHistory(c.undoStack);
+  restoreCoachSnapshot(next, c.undoStack, c.redoStack);
+  toast("Acción rehecha");
+}
+function updateCoachHistoryButtons(){
+  const c = state.coach || {};
+  const canUndo = !!(Array.isArray(c.undoStack) && c.undoStack.length);
+  const canRedo = !!(Array.isArray(c.redoStack) && c.redoStack.length);
+  const setBtn = (id, enabled)=>{
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.disabled = !enabled;
+    btn.classList.toggle("isDisabled", !enabled);
+    btn.setAttribute("aria-disabled", enabled ? "false" : "true");
+  };
+  setBtn("btnCoachGlobalUndo", canUndo);
+  setBtn("btnCoachGlobalRedo", canRedo);
 }
 function syncCoachInlineFromState(){
   if (!isCoachMode()) return;
@@ -5180,6 +5274,7 @@ function newCoachExercise(){
 }
 function clearCoachCourt(){
   const c=ensureCoachState();
+  recordCoachHistory();
   c.patterns = [];
   c.objects = [];
   c.pendingDirectionStart = null;
@@ -5227,7 +5322,7 @@ function handleCoachPrecisePointerDown(evt){
   const c = ensureCoachState();
   const tool = c.activeTool || "direction";
   if (!isCoachObjectTool(tool) && tool !== "direction" && tool !== "pattern") return;
-  if (evt.target && evt.target.closest && evt.target.closest('.coachObject,.coachDashLine,.noteDelete,.coachHalfSwitch,.quickBtn,.chip,.menuItem')) return;
+  if (evt.target && evt.target.closest && evt.target.closest('.coachObject,.coachDashLine,.noteDelete,.coachHalfSwitch,.coachHistoryBtn,.quickBtn,.chip,.menuItem')) return;
   const pt = coachPointFromCourtEvent(evt);
   window.__coachPreciseHandledAt = Date.now();
   evt.preventDefault();
@@ -5237,6 +5332,7 @@ function handleCoachPrecisePointerDown(evt){
 function handleCoachDirectionTap(pt, hitter="A"){
   const c = ensureCoachState();
   if (!state.point || !state.point.coach) initCoachPoint();
+  recordCoachHistory();
   if (!c.pendingDirectionStart){
     c.pendingDirectionStart = { x:clamp01(pt.x), y:clamp01(pt.y), hitter };
     state.point.events.push({type:"coachStart", player:hitter, code:"Inicio", meta:{touch:pt, coach:true}});
@@ -5264,6 +5360,7 @@ function handleCoachToolAtPoint(pt, hitter="A"){
   if (tool === "direction" || tool === "pattern") return handleCoachDirectionTap(pt, hitter);
   if (tool === "dash"){
     if (!state.point || !state.point.coach) initCoachPoint();
+    recordCoachHistory();
     if (!c.pendingDashStart){
       c.pendingDashStart = {x:clamp01(pt.x), y:clamp01(pt.y), hitter};
       state.point.events.push({type:"coachDashStart", player:hitter, code:"Inicio desplazamiento", meta:{touch:pt, coach:true}});
@@ -5300,7 +5397,7 @@ function handleCoachCourtFreeClick(evt){
   if (window.__coachPreciseHandledAt && Date.now() - window.__coachPreciseHandledAt < 450) return;
   const c = ensureCoachState();
   if (!isCoachObjectTool(c.activeTool) && c.activeTool !== "direction" && c.activeTool !== "pattern") return;
-  if (evt.target.closest && evt.target.closest('.zoneCell,.serveCell,.coachObject,.coachDashLine,.coachHalfSwitch,.quickBtn,.chip,.menuItem')) return;
+  if (evt.target.closest && evt.target.closest('.zoneCell,.serveCell,.coachObject,.coachDashLine,.coachHalfSwitch,.coachHistoryBtn,.quickBtn,.chip,.menuItem')) return;
   const pt = coachPointFromCourtEvent(evt);
   handleCoachToolAtPoint(pt, pt.y > .5 ? "B" : "A");
 }
@@ -5313,6 +5410,7 @@ function addCoachObject(type, pt){
     obj.orientation = "horizontal";
     obj.anchor = "startCorner"; // el toque es el inicio/esquina izquierda de la escalera
   }
+  recordCoachHistory();
   c.objects.push(obj);
   renderCoachObjects();
   persist();
@@ -5362,6 +5460,7 @@ function renderCoachObjectsInto(layerId, preview=false){
         el.querySelector(".ladderRotateBtn")?.addEventListener("click", (e)=>{
           e.preventDefault();
           e.stopPropagation();
+          recordCoachHistory();
           obj.orientation = obj.orientation === "vertical" ? "horizontal" : "vertical";
           renderCoachObjects();
           persist();
@@ -5385,29 +5484,33 @@ function coachObjectMarkup(obj, idx, preview=false){
   return `<span>${idx+1}</span>`;
 }
 function wireCoachNoteObject(el, obj){
-  let start=null, moved=false;
+  let start=null, moved=false, historyRecorded=false;
   const onMove=(e)=>{
     if(!start) return;
     const dx=e.clientX-start.x0, dy=e.clientY-start.y0;
-    if(Math.hypot(dx,dy)>5) moved=true;
+    if(Math.hypot(dx,dy)>5){
+      moved=true;
+      if(!historyRecorded){ recordCoachHistory(); historyRecorded=true; }
+    }
     const pt = coachPointFromClient(e.clientX, e.clientY);
     obj.x=pt.x; obj.y=pt.y;
     el.style.left=(obj.x*100)+'%'; el.style.top=(obj.y*100)+'%';
   };
-  const onUp=(e)=>{ if(start){ document.removeEventListener('pointermove',onMove); document.removeEventListener('pointerup',onUp); persist(); setTimeout(()=>{start=null; moved=false;},0); } };
+  const onUp=(e)=>{ if(start){ document.removeEventListener('pointermove',onMove); document.removeEventListener('pointerup',onUp); if(moved) persist(); setTimeout(()=>{start=null; moved=false; historyRecorded=false;},0); } };
   el.querySelector('.noteDelete')?.addEventListener('click',(e)=>{e.stopPropagation(); removeCoachObject(obj.id);});
   el.addEventListener('pointerdown',(e)=>{ if(e.target.closest('.noteDelete')) return; e.preventDefault(); e.stopPropagation(); start={x0:e.clientX,y0:e.clientY}; moved=false; document.addEventListener('pointermove',onMove); document.addEventListener('pointerup',onUp); });
-  el.addEventListener('click',(e)=>{ e.stopPropagation(); if(moved) return; const txt=prompt('Editar nota', obj.label || 'Nota'); if(txt!==null){ obj.label=txt || 'Nota'; renderCoachObjects(); persist(); } });
+  el.addEventListener('click',(e)=>{ e.stopPropagation(); if(moved) return; const txt=prompt('Editar nota', obj.label || 'Nota'); if(txt!==null){ recordCoachHistory(); obj.label=txt || 'Nota'; renderCoachObjects(); persist(); } });
 }
 function removeCoachObject(id){
   const c = ensureCoachState();
+  recordCoachHistory();
   c.objects = (c.objects || []).filter(o=>o.id!==id);
   renderCoachObjects();
   persist();
 }
 function deleteLastCoachObject(){
   const c = ensureCoachState();
-  if (c.objects && c.objects.length){ c.objects.pop(); renderCoachObjects(); persist(); toast("Objeto borrado"); }
+  if (c.objects && c.objects.length){ recordCoachHistory(); c.objects.pop(); renderCoachObjects(); persist(); toast("Objeto borrado"); }
 }
 function coachFinalizePattern(){
   if (!isCoachMode()) return;
@@ -5415,6 +5518,7 @@ function coachFinalizePattern(){
   const c = ensureCoachState();
   const p = state.point;
   if (!p || !p.arrows || !p.arrows.length){ toast("No hay patrón activo"); return; }
+  recordCoachHistory();
   const id = "pat_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,5);
   c.patterns.push({ id, name:"Patrón " + (c.patterns.length + 1), events:JSON.parse(JSON.stringify(p.events || [])), arrows:JSON.parse(JSON.stringify(p.arrows || [])), details:{ name:c.exerciseName, goal:c.goal, level:c.level, material:c.material, tags:c.tags, notes:c.notes }, createdAt:Date.now() });
   initCoachPoint();
@@ -5625,6 +5729,7 @@ function undoLastCoachPattern(){
   if (!isCoachMode()) return;
   const c = ensureCoachState();
   if (c.patterns && c.patterns.length){
+    recordCoachHistory();
     c.patterns.pop();
     renderAll();
     persist();
@@ -5877,6 +5982,8 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCoachHalfSwitch","pointerdown", (e)=>{ e.stopPropagation(); });
   on("btnCoachToggleGrid","click", ()=>openFromMenu(toggleCoachGrid));
   on("btnCoachUndoPattern","click", undoLastCoachPattern);
+  on("btnCoachGlobalUndo","click", undoCoachAction);
+  on("btnCoachGlobalRedo","click", redoCoachAction);
   on("btnLangES","click", ()=>{ closeModal("#languageModal"); setLanguage("es"); });
   on("btnLangEN","click", ()=>{ closeModal("#languageModal"); setLanguage("en"); });
 
