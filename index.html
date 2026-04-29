@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3150" />
-  <link rel="stylesheet" href="style-futuristic.css?v=3250" />
+<link rel="stylesheet" href="style.css?v=3260" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3260" />
 </head>
 <body>
 
@@ -594,47 +594,35 @@
     <div class="finishGroup" id="finishRallyGroup">
       <div class="finishGroupTitle">Finalizar punto</div>
 
-      <div class="finishPlayers" id="finishPlayers">
-        <div class="pCol" data-p="A">
-          <div class="pHead">
+      <div class="finishStep finishPlayerStep" id="finishPlayerStep">
+        <div class="finishStepTitle" id="finishWhoTitle">¿Quién finaliza el punto?</div>
+        <div class="finishPlayerCards" id="finishPlayerCards">
+          <button class="finishPlayerCard" id="finishSelectA" type="button" data-player="A">
             <span class="pTag">A</span>
             <span class="pName" id="finishNameA">Jugador A</span>
-          </div>
-
-          <div class="pBtns onlyNormal">
-            <button class="finishBtn bad" id="mUeA_n" type="button">Error no forzado</button>
-            <button class="finishBtn good" id="mGainA_n" type="button">Gana</button>
-            <button class="finishBtn good" id="mWinA_n" type="button">Winner</button>
-          </div>
-
-          <div class="pBtns onlyAdvanced">
-            <button class="finishBtn bad" id="mUeA_a" type="button">Error no forzado</button>
-            <button class="finishBtn bad" id="mFeA_a" type="button">Error forzado</button>
-            <button class="finishBtn good" id="mGainA_a" type="button">Gana</button>
-            <button class="finishBtn good" id="mWinA_a" type="button">Winner</button>
-            <button class="finishBtn good" id="mVolA_a" type="button">Volea</button>
-          </div>
-        </div>
-
-        <div class="pCol" data-p="B">
-          <div class="pHead">
+          </button>
+          <button class="finishPlayerCard" id="finishSelectB" type="button" data-player="B">
             <span class="pTag">B</span>
             <span class="pName" id="finishNameB">Jugador B</span>
-          </div>
+          </button>
+        </div>
+      </div>
 
-          <div class="pBtns onlyNormal">
-            <button class="finishBtn bad" id="mUeB_n" type="button">Error no forzado</button>
-            <button class="finishBtn good" id="mGainB_n" type="button">Gana</button>
-            <button class="finishBtn good" id="mWinB_n" type="button">Winner</button>
+      <div class="finishStep finishResultStep hidden" id="finishResultStep">
+        <div class="finishSelectedBar">
+          <div>
+            <span class="finishSelectedKicker" id="finishSelectedKicker">Jugador seleccionado</span>
+            <strong id="finishSelectedPlayer">—</strong>
           </div>
-
-          <div class="pBtns onlyAdvanced">
-            <button class="finishBtn bad" id="mUeB_a" type="button">Error no forzado</button>
-            <button class="finishBtn bad" id="mFeB_a" type="button">Error forzado</button>
-            <button class="finishBtn good" id="mGainB_a" type="button">Gana</button>
-            <button class="finishBtn good" id="mWinB_a" type="button">Winner</button>
-            <button class="finishBtn good" id="mVolB_a" type="button">Volea</button>
-          </div>
+          <button class="finishChangePlayer" id="finishChangePlayer" type="button">Cambiar jugador</button>
+        </div>
+        <div class="finishStepTitle" id="finishHowTitle">¿Cómo finaliza el punto?</div>
+        <div class="finishActionGrid" id="finishActionGrid">
+          <button class="finishBtn bad" id="mStepUE" type="button">Error no forzado</button>
+          <button class="finishBtn bad onlyAdvanced" id="mStepFE" type="button">Error forzado</button>
+          <button class="finishBtn good" id="mStepGain" type="button">Gana</button>
+          <button class="finishBtn good" id="mStepWinner" type="button">Winner</button>
+          <button class="finishBtn good onlyAdvanced" id="mStepVolley" type="button">Volea</button>
         </div>
       </div>
     </div>
@@ -1577,7 +1565,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3250"></script>
+<script src="app.js?v=3260"></script>
 
 </body>
 </html>

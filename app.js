@@ -644,13 +644,17 @@ function applyI18n(){
   setTxt('#tabNormal', tr('Normal','Normal'));
   setTxt('#tabAdvanced', tr('Avanzado','Advanced'));
   setTxt('.finishMenuTitle', tr('Acciones del punto','Point actions'));
-  setTxt('#finishMenuSub', tr('Selecciona una opción (se cierra automáticamente)','Choose an option (closes automatically)'));
+  setTxt('#finishMenuSub', tr('Primero elige jugador y después la acción.','Choose the player first, then the action.'));
   setTxt('#pointImportantLabel', tr('Marcar punto importante','Mark point as important'));
   setTxt('#finishServeGroup .finishGroupTitle', tr('Saque','Serve'));
   setTxt('#mFault', tr('Falta','Fault'));
   setTxt('#mDoubleFault', tr('Doble falta','Double fault'));
   setTxt('#finishRallyGroup .finishGroupTitle', tr('Finalizar punto','Finish point'));
-  [['#mUeA_n', tr('Error no forzado','Unforced error')], ['#mGainA_n', tr('Gana','Wins')], ['#mWinA_n','Winner'], ['#mUeA_a', tr('Error no forzado','Unforced error')], ['#mFeA_a', tr('Error forzado','Forced error')], ['#mGainA_a', tr('Gana','Wins')], ['#mWinA_a','Winner'], ['#mVolA_a', tr('Volea','Volley')], ['#mUeB_n', tr('Error no forzado','Unforced error')], ['#mGainB_n', tr('Gana','Wins')], ['#mWinB_n','Winner'], ['#mUeB_a', tr('Error no forzado','Unforced error')], ['#mFeB_a', tr('Error forzado','Forced error')], ['#mGainB_a', tr('Gana','Wins')], ['#mWinB_a','Winner'], ['#mVolB_a', tr('Volea','Volley')]].forEach(([sel,txt])=>setTxt(sel,txt));
+  setTxt('#finishWhoTitle', tr('¿Quién finaliza el punto?','Who finishes the point?'));
+  setTxt('#finishHowTitle', tr('¿Cómo finaliza el punto?','How does the point finish?'));
+  setTxt('#finishSelectedKicker', tr('Jugador seleccionado','Selected player'));
+  setTxt('#finishChangePlayer', tr('Cambiar jugador','Change player'));
+  [['#mStepUE', tr('Error no forzado','Unforced error')], ['#mStepFE', tr('Error forzado','Forced error')], ['#mStepGain', tr('Gana','Wins')], ['#mStepWinner','Winner'], ['#mStepVolley', tr('Volea','Volley')]].forEach(([sel,txt])=>setTxt(sel,txt));
   setTxt('#btnPlayerLibraryMenu span', tr('Jugadores','Players'));
   setTxt('#btnAccountMenu span', tr('Cuenta','Account'));
   setTxt('#btnHelpCenter span', tr('Centro de ayuda','Help center'));
@@ -2869,6 +2873,7 @@ function openFinishMenu(){
   setFinishMode(finishMode);
   refreshFinishMenuMode();
   syncFinishImportantUI();
+  resetFinishPlayerFlow();
   const m=$("#finishMenu");
   if (!m) return;
   m.classList.remove("hidden");
@@ -2894,6 +2899,7 @@ let finishMode = (()=>{
 })();
 
 let pendingFinish = null; // { kind:"UE"|"FE"|"WINNER", offender:"A"|"B", winner:"A"|"B", reason:string }
+let finishSelectedPlayer = null;
 
 const ADV_STROKES = [
   { key:"FH", label:"Derecha" },
@@ -2913,6 +2919,43 @@ const ADV_WINNERS = [
   {key:"DROP", label:"Dejada"},
 ];
 
+function resetFinishPlayerFlow(){
+  finishSelectedPlayer = null;
+  const playerStep = $("#finishPlayerStep");
+  const resultStep = $("#finishResultStep");
+  if (playerStep) playerStep.classList.remove("hidden");
+  if (resultStep) resultStep.classList.add("hidden");
+  document.querySelectorAll(".finishPlayerCard.isSelected").forEach(el=>el.classList.remove("isSelected"));
+  const selected = $("#finishSelectedPlayer");
+  if (selected) selected.textContent = "—";
+}
+
+function selectFinishPlayer(player){
+  finishSelectedPlayer = player;
+  const playerStep = $("#finishPlayerStep");
+  const resultStep = $("#finishResultStep");
+  if (playerStep) playerStep.classList.add("hidden");
+  if (resultStep) resultStep.classList.remove("hidden");
+  document.querySelectorAll(".finishPlayerCard").forEach(el=>{
+    el.classList.toggle("isSelected", el.getAttribute("data-player") === player);
+  });
+  const selected = $("#finishSelectedPlayer");
+  if (selected) selected.textContent = playerName(player);
+}
+
+function finishSelectedAction(action){
+  if (!finishSelectedPlayer){
+    toast(state.lang==="en" ? "Choose a player first" : "Elige primero un jugador");
+    return false;
+  }
+  if (action === "UE") return finishAction("UE", finishSelectedPlayer);
+  if (action === "FE") return finishAction("FE", finishSelectedPlayer);
+  if (action === "GAIN") return finishGain(finishSelectedPlayer);
+  if (action === "WINNER") return finishAction("WINNER", finishSelectedPlayer);
+  if (action === "VOLLEY") return finishVolley(finishSelectedPlayer);
+  return false;
+}
+
 function setFinishMode(mode){
   finishMode = mode;
   try { localStorage.setItem(getFinishModeKey(), mode); } catch(e){}
@@ -2929,6 +2972,7 @@ function setFinishMode(mode){
     fm.classList.toggle("modeNormal", mode==="normal");
     fm.classList.toggle("modeAdvanced", mode==="advanced");
   }
+  resetFinishPlayerFlow();
   closeAdvStep2();
 }
 
@@ -6509,6 +6553,8 @@ function renderCourtNames(){
   const fB = $("#finishNameB");
   if (fA) fA.textContent = nameA;
   if (fB) fB.textContent = nameB;
+  const fSel = $("#finishSelectedPlayer");
+  if (fSel && finishSelectedPlayer) fSel.textContent = playerName(finishSelectedPlayer);
 }
 
 function renderMeta(){
@@ -6792,28 +6838,15 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   bindMenu("mFault", ()=> fault());
   bindMenu("mDoubleFault", ()=> doubleFault());
 
-  // End point actions inside menu (re-designed)
-  // NORMAL
-  bindMenu("mUeA_n", ()=> finishAction("UE","A"));
-  bindMenu("mGainA_n", ()=> finishGain("A"));
-  bindMenu("mWinA_n", ()=> finishAction("WINNER","A"));
-
-  bindMenu("mUeB_n", ()=> finishAction("UE","B"));
-  bindMenu("mGainB_n", ()=> finishGain("B"));
-  bindMenu("mWinB_n", ()=> finishAction("WINNER","B"));
-
-  // ADVANCED
-  bindMenu("mUeA_a", ()=> finishAction("UE","A"));
-  bindMenu("mFeA_a", ()=> finishAction("FE","A"));
-  bindMenu("mGainA_a", ()=> finishGain("A"));
-  bindMenu("mWinA_a", ()=> finishAction("WINNER","A"));
-  bindMenu("mVolA_a", ()=> finishVolley("A"));
-
-  bindMenu("mUeB_a", ()=> finishAction("UE","B"));
-  bindMenu("mFeB_a", ()=> finishAction("FE","B"));
-  bindMenu("mGainB_a", ()=> finishGain("B"));
-  bindMenu("mWinB_a", ()=> finishAction("WINNER","B"));
-  bindMenu("mVolB_a", ()=> finishVolley("B"));
+  // End point actions inside menu: Mockup B flow (choose player, then action)
+  on("finishSelectA", "click", ()=> selectFinishPlayer("A"));
+  on("finishSelectB", "click", ()=> selectFinishPlayer("B"));
+  on("finishChangePlayer", "click", resetFinishPlayerFlow);
+  bindMenu("mStepUE", ()=> finishSelectedAction("UE"));
+  bindMenu("mStepFE", ()=> finishSelectedAction("FE"));
+  bindMenu("mStepGain", ()=> finishSelectedAction("GAIN"));
+  bindMenu("mStepWinner", ()=> finishSelectedAction("WINNER"));
+  bindMenu("mStepVolley", ()=> finishSelectedAction("VOLLEY"));
 
   // quick actions
   on("btnUndo","click", undo);

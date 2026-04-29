@@ -1,0 +1,11 @@
+v3.26 - Rediseño menú de acciones del punto (Mockup B)
+
+- Rediseñado el menú de modo demo para elegir primero el jugador que finaliza el punto.
+- Después de seleccionar Jugador A o Jugador B, se muestra un segundo paso con las acciones disponibles.
+- Se elimina la duplicidad visual de botones para ambos jugadores en pantalla.
+- Se mantienen los modos Normal y Avanzado.
+- En Normal aparecen: Error no forzado, Gana y Winner.
+- En Avanzado aparecen también Error forzado y Volea.
+- Botón Cambiar jugador para volver al primer paso.
+- Mejoras visuales: menos saturación, tarjetas más compactas, más jerarquía y mejor adaptación móvil.
+- Actualizada caché del service worker a v3.26.
