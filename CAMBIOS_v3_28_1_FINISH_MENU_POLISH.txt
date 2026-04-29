@@ -1,0 +1,8 @@
+v3.28.1 - Ajuste premium fino del menú Finalizar punto
+
+- Refinado visual del modal de acciones del punto.
+- Botones de resultado con icono lateral, subtítulo táctico y colores menos agresivos.
+- Cabecera, tabs Normal/Avanzado y botón cerrar con estilo más metálico/premium.
+- Mejor jerarquía visual para jugador seleccionado y acciones.
+- Ajustes responsive para iPhone/Safari.
+- Cache del service worker actualizada a v3.28.1.

@@ -5263,3 +5263,277 @@ body.coachMode.coachHalfCourt #courtSurface{
     font-size:19px!important;
   }
 }
+
+/* ===== v3.28.1 - ajuste premium fino del menú Finalizar punto ===== */
+.finishMenu{
+  background:
+    radial-gradient(900px 520px at 50% 12%, rgba(109,198,255,.18), transparent 58%),
+    radial-gradient(620px 460px at 50% 88%, rgba(190,232,55,.10), transparent 60%),
+    rgba(2,8,18,.76)!important;
+  backdrop-filter:blur(18px) saturate(1.12)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(1.12)!important;
+}
+.finishMenuCard{
+  border-radius:30px!important;
+  padding:18px 18px 20px!important;
+  border:1px solid rgba(172,214,255,.18)!important;
+  background:
+    linear-gradient(180deg, rgba(76,122,154,.20), rgba(11,32,52,.92) 28%, rgba(5,15,29,.98) 100%),
+    radial-gradient(680px 280px at 24% 0%, rgba(92,205,255,.20), transparent 62%)!important;
+  box-shadow:
+    0 34px 92px rgba(0,0,0,.66),
+    0 0 0 1px rgba(255,255,255,.06),
+    inset 0 1px 0 rgba(255,255,255,.16)!important;
+}
+.finishMenuCard::before{
+  left:22px!important;
+  right:22px!important;
+  top:13px!important;
+  height:3px!important;
+  background:linear-gradient(90deg, #bcea38 0%, #60d8ff 58%, rgba(96,216,255,.30) 100%)!important;
+  box-shadow:0 0 18px rgba(96,216,255,.32), 0 0 16px rgba(188,234,56,.18)!important;
+}
+.finishMenuClose{
+  right:16px!important;
+  top:18px!important;
+  width:50px!important;
+  height:50px!important;
+  border-radius:18px!important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05) 36%, rgba(15,43,67,.52) 100%),
+    linear-gradient(180deg, rgba(43,86,117,.92), rgba(16,43,66,.96))!important;
+  border-color:rgba(208,232,255,.18)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 14px 28px rgba(0,0,0,.34)!important;
+}
+.finishMenuTabs{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:10px!important;
+  padding:10px 76px 12px 0!important;
+  margin:6px 0 8px!important;
+}
+.finishTab{
+  min-height:48px!important;
+  border-radius:18px!important;
+  font-size:16px!important;
+  letter-spacing:.01em!important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.035) 32%, rgba(8,28,46,.34) 100%),
+    linear-gradient(180deg, rgba(31,72,102,.72), rgba(9,31,51,.94))!important;
+}
+.finishTab.active{
+  color:#f8fff1!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.18)!important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.07) 28%, rgba(105,132,24,.12) 100%),
+    linear-gradient(180deg, #bfe83a 0%, #9bc229 100%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.30), 0 16px 28px rgba(151,194,34,.23), 0 0 20px rgba(188,234,56,.18)!important;
+}
+.finishMenuTitle{
+  font-size:clamp(27px, 7.2vw, 40px)!important;
+  letter-spacing:-.025em!important;
+  margin:12px 0 4px!important;
+  text-shadow:0 10px 26px rgba(0,0,0,.32)!important;
+}
+.finishMenuSub{
+  font-size:14px!important;
+  color:rgba(226,240,255,.66)!important;
+  margin-bottom:12px!important;
+}
+.finishImportantRow{
+  margin:0 0 12px!important;
+}
+.importantCheck{
+  min-height:52px!important;
+  border-radius:18px!important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.026)),
+    rgba(16,44,67,.42)!important;
+  border:1px solid rgba(152,213,255,.15)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09)!important;
+}
+.importantCheck::before{
+  border-radius:14px!important;
+}
+.importantCheck.isChecked{
+  border-color:rgba(190,232,55,.36)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 0 0 1px rgba(190,232,55,.08), 0 10px 26px rgba(190,232,55,.08)!important;
+}
+.finishGroupTitle{
+  font-size:19px!important;
+  letter-spacing:.22em!important;
+  color:rgba(220,235,250,.78)!important;
+  margin:12px 0 10px!important;
+}
+.finishStep{
+  padding:15px!important;
+  border-radius:25px!important;
+  border-color:rgba(122,205,255,.16)!important;
+  background:
+    radial-gradient(460px 240px at 0% 0%, rgba(92,202,255,.13), transparent 66%),
+    linear-gradient(180deg, rgba(255,255,255,.065), rgba(5,20,35,.24))!important;
+}
+.finishStepTitle{
+  font-size:18px!important;
+  color:rgba(241,248,255,.92)!important;
+}
+.finishPlayerCard{
+  position:relative!important;
+  overflow:hidden!important;
+  min-height:98px!important;
+  border-radius:24px!important;
+  border-color:rgba(166,218,255,.17)!important;
+  background:
+    radial-gradient(220px 130px at 10% 0%, rgba(107,207,255,.18), transparent 64%),
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.032) 34%, rgba(6,23,39,.34) 100%)!important;
+}
+.finishPlayerCard::before{
+  content:"";
+  position:absolute;
+  inset:1px;
+  border-radius:inherit;
+  background:linear-gradient(180deg, rgba(255,255,255,.09), transparent 43%);
+  pointer-events:none;
+  opacity:.9;
+}
+.finishPlayerCard::after{
+  content:"";
+  position:absolute;
+  left:0;
+  top:18px;
+  bottom:18px;
+  width:3px;
+  border-radius:999px;
+  background:linear-gradient(180deg, rgba(98,216,255,.72), rgba(190,232,55,.78));
+  opacity:.55;
+}
+.finishPlayerCard.isSelected,
+.finishPlayerCard:hover{
+  border-color:rgba(190,232,55,.38)!important;
+  box-shadow:0 18px 34px rgba(0,0,0,.30), 0 0 0 1px rgba(190,232,55,.08), inset 0 1px 0 rgba(255,255,255,.18)!important;
+}
+.finishPlayerAvatar,
+.finishSelectedAvatar{
+  border-radius:17px!important;
+  background:
+    radial-gradient(130% 120% at 30% 0%, rgba(255,255,255,.24), transparent 45%),
+    linear-gradient(180deg, rgba(87,141,176,.54), rgba(18,47,72,.74))!important;
+}
+.finishSelectedBar{
+  border-color:rgba(121,205,255,.20)!important;
+  background:
+    radial-gradient(300px 120px at 12% 0%, rgba(97,212,255,.16), transparent 64%),
+    linear-gradient(180deg, rgba(255,255,255,.075), rgba(8,27,44,.34))!important;
+}
+#finishSelectedPlayer{
+  font-size:22px!important;
+  color:#f5fbff!important;
+}
+.finishChangePlayer{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.04)),
+    linear-gradient(180deg, rgba(37,79,105,.88), rgba(17,45,67,.94))!important;
+  border-color:rgba(171,222,255,.18)!important;
+}
+.finishActionGrid .finishBtn{
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  min-height:68px!important;
+  padding:11px 20px 10px 74px!important;
+  border-radius:22px!important;
+  overflow:hidden!important;
+  font-size:20px!important;
+  line-height:1.05!important;
+  text-align:left!important;
+}
+.finishActionGrid .finishBtn::before,
+#finishServeGroup .finishBtn::before{
+  content:"";
+  position:absolute;
+  left:18px;
+  top:50%;
+  width:38px;
+  height:38px;
+  border-radius:15px;
+  transform:translateY(-50%);
+  display:grid;
+  place-items:center;
+  color:rgba(255,255,255,.92);
+  font-size:15px;
+  font-weight:1000;
+  letter-spacing:.02em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 9px 18px rgba(0,0,0,.18);
+  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.045));
+  opacity:1!important;
+}
+.finishActionGrid .finishBtn::after{
+  position:relative!important;
+  margin-top:4px;
+  font-family:Inter, system-ui, sans-serif;
+  font-size:10px;
+  line-height:1;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  opacity:.68;
+  pointer-events:none;
+}
+#mStepUE::before{content:"E"!important;background:linear-gradient(180deg, rgba(231,130,150,.38), rgba(94,40,58,.72))!important;}
+#mStepFE::before{content:"F"!important;background:linear-gradient(180deg, rgba(225,140,129,.38), rgba(92,45,48,.72))!important;}
+#mStepGain::before{content:"+"!important;background:linear-gradient(180deg, rgba(128,240,194,.38), rgba(28,121,105,.72))!important;}
+#mStepWinner::before{content:"W"!important;background:linear-gradient(180deg, rgba(199,239,94,.40), rgba(95,139,37,.75))!important;}
+#mStepVolley::before{content:"V"!important;background:linear-gradient(180deg, rgba(108,203,255,.40), rgba(34,105,153,.74))!important;}
+#mStepUE::after{content:"Decisión no forzada";}
+#mStepFE::after{content:"Error provocado";}
+#mStepGain::after{content:"Punto ganado";}
+#mStepWinner::after{content:"Golpe definitivo";}
+#mStepVolley::after{content:"Cierre en la red";}
+.finishActionGrid .finishBtn.bad{
+  color:#fff7f8!important;
+  border-color:rgba(222,123,143,.22)!important;
+  background:
+    radial-gradient(260px 140px at 0% 0%, rgba(242,133,155,.14), transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.04) 25%, rgba(82,25,45,.18) 100%),
+    linear-gradient(180deg, rgba(93,48,68,.96), rgba(56,28,43,.98))!important;
+}
+#mStepGain,
+#mStepWinner,
+#mStepVolley{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 16px 30px rgba(2,12,21,.22)!important;
+}
+.finishActionGrid .finishBtn:active{
+  transform:translateY(1px) scale(.992)!important;
+}
+.advStep2{
+  border-radius:24px!important;
+  border:1px solid rgba(121,205,255,.16)!important;
+  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(6,22,37,.30))!important;
+  padding:15px!important;
+}
+.advTitle{
+  font-size:22px!important;
+  letter-spacing:-.01em!important;
+}
+.advChip{
+  min-height:52px!important;
+  border-radius:17px!important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.035)),
+    linear-gradient(180deg, rgba(35,83,111,.86), rgba(14,43,67,.95))!important;
+  border-color:rgba(168,222,255,.16)!important;
+}
+@media(max-width:520px){
+  .finishMenuCard{padding:16px 15px 18px!important;border-radius:27px!important;}
+  .finishMenuTabs{padding-right:68px!important;gap:8px!important;}
+  .finishTab{min-height:45px!important;font-size:15px!important;}
+  .finishMenuTitle{font-size:clamp(25px, 7.7vw, 34px)!important;}
+  .finishStep{padding:13px!important;border-radius:23px!important;}
+  .finishPlayerCards{gap:10px!important;}
+  .finishPlayerCard{min-height:90px!important;padding:12px!important;}
+  .finishPlayerCard .pName{font-size:19px!important;}
+  .finishActionGrid .finishBtn{min-height:64px!important;padding-left:68px!important;font-size:18px!important;}
+  .finishActionGrid .finishBtn::before{left:16px;width:36px;height:36px;border-radius:14px;}
+  .finishActionGrid .finishBtn::after{font-size:9px;letter-spacing:.13em;}
+}
