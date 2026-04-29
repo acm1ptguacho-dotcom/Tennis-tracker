@@ -4896,3 +4896,86 @@ body.coachMode .coachPreviewCourt .coachObject-text .noteShape{
   transform:scale(var(--coach-object-scale, 1));
   transform-origin:center center;
 }
+
+/* ===== v3.25 - corrección estructural de la card de pista en modo entrenador =====
+   Evita que el panel verde sea recortado por el grid/rail derecho y fuerza las
+   cuatro esquinas redondeadas con el mismo radio visual. */
+body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow{
+  grid-template-columns:minmax(0,1fr) var(--coach-rail-w)!important;
+  grid-template-rows:auto auto!important;
+  grid-template-areas:
+    "coachCourt coachRail"
+    "coachHistory coachRail"!important;
+  column-gap:10px!important;
+  row-gap:8px!important;
+  padding:4px 6px 8px 8px!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+  align-items:start!important;
+}
+
+body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow .court,
+body.coachMode:not(.coachHalfCourt) #court{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  justify-self:stretch!important;
+  margin:0!important;
+  border-radius:30px!important;
+  overflow:hidden!important;
+  clip-path:inset(0 round 30px)!important;
+  -webkit-mask-image:-webkit-radial-gradient(white, black)!important;
+  box-sizing:border-box!important;
+  isolation:isolate!important;
+}
+
+body.coachMode:not(.coachHalfCourt) #courtSurface{
+  inset:0!important;
+  left:0!important;
+  right:0!important;
+  top:0!important;
+  bottom:0!important;
+  width:100%!important;
+  height:100%!important;
+  overflow:hidden!important;
+  border-radius:inherit!important;
+  clip-path:inset(0 round 30px)!important;
+}
+
+body.coachMode:not(.coachHalfCourt) #courtImg{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+  border-radius:inherit!important;
+}
+
+body.coachMode:not(.coachHalfCourt) .court::before,
+body.coachMode:not(.coachHalfCourt) .court::after{
+  border-radius:inherit!important;
+  clip-path:inset(0 round 30px)!important;
+}
+
+body.coachMode:not(.coachHalfCourt) .courtRail{
+  grid-area:coachRail!important;
+  margin-left:0!important;
+}
+
+body.coachMode:not(.coachHalfCourt) .coachHistoryControls{
+  grid-area:coachHistory!important;
+  width:100%!important;
+}
+
+@media(max-width:430px){
+  body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow{
+    column-gap:8px!important;
+    padding-left:6px!important;
+    padding-right:5px!important;
+  }
+  body.coachMode:not(.coachHalfCourt) .courtWrap.courtRow .court,
+  body.coachMode:not(.coachHalfCourt) #court,
+  body.coachMode:not(.coachHalfCourt) #courtSurface{
+    border-radius:28px!important;
+    clip-path:inset(0 round 28px)!important;
+  }
+}

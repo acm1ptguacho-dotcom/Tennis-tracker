@@ -1,0 +1,9 @@
+Versión v3.25 - Corrección visual del contenedor de pista en modo entrenador
+
+- Rehecha la card de pista completa como bloque independiente dentro del grid.
+- El court ya no puede invadir ni quedar recortado por el rail derecho.
+- Forzado border-radius uniforme en las cuatro esquinas del panel verde.
+- Añadido clip-path y máscara segura para Safari/iPhone.
+- El fondo de pista se ajusta a la card con object-fit cover y clipping interno.
+- Aumentado ligeramente el espacio entre pista y rail derecho.
+- Actualizada caché del service worker.
