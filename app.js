@@ -5342,7 +5342,15 @@ function recordCoachHistory(){
 }
 function restoreCoachSnapshot(snapshot, undoStack, redoStack){
   if (!snapshot) return;
+  const currentCoach = state.coach || {};
+  const currentCourtMode = currentCoach.courtMode === "half" ? "half" : "full";
+  const currentHalfView = currentCoach.halfView === "top" ? "top" : "bottom";
+  const currentShowGrid = !!currentCoach.showGrid;
   const nextCoach = Object.assign(createDefaultCoachState(), cloneCoachData(snapshot.coach || {}));
+  // El historial deshace acciones del ejercicio, no la vista actual. Así se evita que Undo/Redo cambie automáticamente entre pista completa y media pista.
+  nextCoach.courtMode = currentCourtMode;
+  nextCoach.halfView = currentHalfView;
+  nextCoach.showGrid = currentShowGrid;
   nextCoach.undoStack = Array.isArray(undoStack) ? undoStack : [];
   nextCoach.redoStack = Array.isArray(redoStack) ? redoStack : [];
   state.coach = nextCoach;
@@ -5639,6 +5647,15 @@ function setCoachObjectSizePreset(preset){
 function updateCoachSizeUI(){
   const c = ensureCoachState();
   document.querySelectorAll(".coachSizePresetBtn").forEach(btn=>btn.classList.toggle("active", btn.dataset.objectSize === c.objectSizePreset));
+  const sizeSummary = document.getElementById("coachSizeSummary");
+  if (sizeSummary){
+    const sizeNames = {
+      small: tr("S · pequeño", "S · small"),
+      medium: tr("M · medio", "M · medium"),
+      large: tr("L · grande", "L · large")
+    };
+    sizeSummary.textContent = sizeNames[c.objectSizePreset || "medium"] || sizeNames.medium;
+  }
   const selected = getSelectedCoachObjects();
   const count = selected.length;
   const label = document.getElementById("coachSelectedSizeValue");
@@ -5676,14 +5693,23 @@ function setCoachPlacementMode(mode){
   if (!isCoachMode()) setAppMode("coach");
   const c = ensureCoachState();
   c.placementMode = ["free","aligned","precise"].includes(mode) ? mode : "aligned";
-  document.querySelectorAll(".coachPlacementBtn").forEach(btn=>btn.classList.toggle("active", btn.dataset.placementMode === c.placementMode));
+  updateCoachPlacementUI();
   persist();
-  const msg = c.placementMode === "free" ? "Colocación libre activada" : c.placementMode === "precise" ? "Colocación precisa activada" : "Colocación alineada activada";
+  const msg = c.placementMode === "free" ? tr("Colocación libre activada", "Free placement enabled") : c.placementMode === "precise" ? tr("Colocación precisa activada", "Precise placement enabled") : tr("Colocación alineada activada", "Aligned placement enabled");
   toast(msg);
 }
 function updateCoachPlacementUI(){
   const c = ensureCoachState();
   document.querySelectorAll(".coachPlacementBtn").forEach(btn=>btn.classList.toggle("active", btn.dataset.placementMode === c.placementMode));
+  const placementSummary = document.getElementById("coachPlacementSummary");
+  if (placementSummary){
+    const labels = {
+      free: tr("Libre · sin ayuda", "Free · no assist"),
+      aligned: tr("Alineado · guías magnéticas", "Aligned · magnetic guides"),
+      precise: tr("Preciso · rejilla invisible", "Precise · invisible grid")
+    };
+    placementSummary.textContent = labels[c.placementMode || "aligned"] || labels.aligned;
+  }
   updateCoachSelectionUI();
   updateCoachSizeUI();
 }
@@ -5838,6 +5864,12 @@ function updateCoachSelectionUI(){
   const label = document.getElementById("coachSelectionCount");
   if (label) label.textContent = count ? (count + (isEn() ? " selected" : " seleccionados")) : tr("Toca objetos en la pista para seleccionarlos", "Tap objects on the court to select them");
   document.querySelectorAll(".coachSelectionAction").forEach(btn=>btn.disabled = count < Number(btn.dataset.minSelection || 1));
+  const railDelete = document.getElementById("btnCoachDeleteSelectedRail");
+  if (railDelete){
+    railDelete.disabled = count < 1;
+    railDelete.classList.toggle("isDisabled", count < 1);
+    railDelete.setAttribute("aria-disabled", count < 1 ? "true" : "false");
+  }
   updateCoachSizeUI();
 }
 function alignCoachSelected(axis){
@@ -6211,6 +6243,18 @@ function deleteLastCoachObject(){
   const c = ensureCoachState();
   if (c.objects && c.objects.length){ recordCoachHistory(); c.objects.pop(); renderCoachObjects(); persist(); toast("Objeto borrado"); }
 }
+function handleCoachDirectionRailClick(){
+  if (!isCoachMode()) setAppMode("coach");
+  const c = ensureCoachState();
+  const hasActivePattern = !!(state.point && state.point.coach && Array.isArray(state.point.arrows) && state.point.arrows.length);
+  if (c.activeTool === "direction" && hasActivePattern){
+    coachFinalizePattern();
+    setCoachTool("direction");
+    return;
+  }
+  setCoachTool("direction");
+}
+
 function coachFinalizePattern(){
   if (!isCoachMode()) return;
   syncCoachStateFromInline();
@@ -6701,14 +6745,13 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnToolsRail","click", toggleRailVisibility);
   on("btnRotateCourt","click", toggleRotation);
   on("btnCoachObjectsRail","click", openCoachObjects);
-  on("btnCoachDirection","click", ()=>setCoachTool("direction"));
-  on("btnCoachFinishPattern","click", coachFinalizePattern);
+  on("btnCoachDirection","click", handleCoachDirectionRailClick);
+  on("btnCoachDeleteSelectedRail","click", deleteCoachSelectedObjects);
   on("btnCoachPreview","click", openCoachPreview);
   on("btnCoachSaveRail","click", openCoachSave);
   on("btnDoSaveExercise","click", saveCoachExercise);
   on("btnCoachFinishPatternSave","click", coachFinalizePattern);
-  on("btnCoachFinishPatternObjects","click", coachFinalizePattern);
-  on("btnCoachDeleteLastObject","click", deleteLastCoachObject);
+    on("btnCoachDeleteLastObject","click", deleteLastCoachObject);
   on("btnCoachSelectPatternTool","click", ()=>setCoachTool("direction"));
   document.querySelectorAll(".coachPlacementBtn").forEach(btn=> btn.addEventListener("click", ()=>setCoachPlacementMode(btn.dataset.placementMode || "aligned")));
   document.querySelectorAll(".coachSizePresetBtn").forEach(btn=> btn.addEventListener("click", ()=>setCoachObjectSizePreset(btn.dataset.objectSize || "medium")));

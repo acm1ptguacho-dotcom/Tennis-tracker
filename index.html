@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3260" />
-  <link rel="stylesheet" href="style-futuristic.css?v=3260" />
+<link rel="stylesheet" href="style.css?v=3270" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3270" />
 </head>
 <body>
 
@@ -218,9 +218,6 @@
     <button class="chip menuItem coachOnly" id="btnCoachExercises" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M7 11h10M7 15h6"/></svg><span>Mis ejercicios</span></button>
     <button class="chip menuItem coachOnly" id="btnCoachLoadExercise" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Cargar ejercicio</span></button>
     <button class="chip menuItem coachOnly" id="btnCoachSaveExercise" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg><span>Guardar ejercicio</span></button>
-    <button class="chip menuItem coachOnly" id="btnCoachNewExercise" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Nuevo ejercicio</span></button>
-    <button class="chip menuItem coachOnly" id="btnCoachObjects" type="button"><svg class="svgIcon coneIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l6 16H6z"/><path d="M7 19h10"/><path d="M9.2 13h5.6"/></svg><span>Objetos y material</span></button>
-    <button class="chip menuItem coachOnly" id="btnCoachCourtMode" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="12" x2="20" y2="12"/><path d="M8 12v9M16 12v9"/></svg><span id="coachCourtModeLabel">Media pista</span></button>
     <button class="chip menuItem coachOnly" id="btnCoachToggleGrid" type="button" aria-pressed="false"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="4" y1="16" x2="20" y2="16"/><line x1="10" y1="4" x2="10" y2="20"/><line x1="16" y1="4" x2="16" y2="20"/></svg><span id="coachGridLabel">Mostrar cuadrícula</span></button>
     <button class="chip menuItem coachOnly" id="btnCoachClear" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg><span>Limpiar pista</span></button>
 
@@ -436,11 +433,11 @@
           <div class="quickLbl">Dirección</div>
         </div>
 
-        <div class="quickItem coachRailOnly" id="qiCoachPattern">
-          <button class="quickBtn good" id="btnCoachFinishPattern" type="button" title="Finalizar patrón" aria-label="Finalizar patrón">
-            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h11"/><path d="M12 5l7 7-7 7"/></svg>
+        <div class="quickItem coachRailOnly" id="qiCoachDeleteSelected">
+          <button class="quickBtn warn" id="btnCoachDeleteSelectedRail" type="button" title="Borrar objeto seleccionado" aria-label="Borrar objeto seleccionado">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
           </button>
-          <div class="quickLbl">Patrón</div>
+          <div class="quickLbl">Borrar</div>
         </div>
 
         <div class="quickItem coachRailOnly" id="qiCoachUndoPattern">
@@ -750,23 +747,23 @@
   <div class="modalCard solid coachModalCard coachObjectsModalCard">
     <div class="modalHead"><div><div class="modalTitle">Objetos y herramientas</div><div class="muted">Coloca material con ayuda de alineación, plantillas y organización rápida.</div></div><button class="chip" id="btnCloseCoachObjects" type="button">Cerrar</button></div>
 
-    <section class="coachObjectsSection">
-      <div class="coachSectionHead"><strong>Modo colocación</strong><span>Controla la precisión al tocar la pista</span></div>
+    <details class="coachObjectsDropdown" id="coachPlacementDetails">
+      <summary><span><b>Modo colocación</b><small id="coachPlacementSummary">Alineado · guías magnéticas</small></span><i>⌄</i></summary>
       <div class="coachPlacementModes" role="group" aria-label="Modo de colocación de objetos">
         <button class="coachPlacementBtn" data-placement-mode="free" type="button"><b>Libre</b><small>Sin ayuda</small></button>
         <button class="coachPlacementBtn active" data-placement-mode="aligned" type="button"><b>Alineado</b><small>Guías magnéticas</small></button>
         <button class="coachPlacementBtn" data-placement-mode="precise" type="button"><b>Preciso</b><small>Rejilla invisible</small></button>
       </div>
-    </section>
+    </details>
 
-    <section class="coachObjectsSection coachSizePanel">
-      <div class="coachSectionHead"><strong>Tamaño de objetos</strong><span>Se aplica a los nuevos objetos</span></div>
+    <details class="coachObjectsDropdown coachSizePanel" id="coachSizeDetails">
+      <summary><span><b>Tamaño de objetos</b><small id="coachSizeSummary">M · medio</small></span><i>⌄</i></summary>
       <div class="coachSizePresets" role="group" aria-label="Tamaño de objetos nuevos">
         <button class="coachSizePresetBtn" data-object-size="small" type="button"><b>S</b><small>Pequeño</small></button>
         <button class="coachSizePresetBtn active" data-object-size="medium" type="button"><b>M</b><small>Medio</small></button>
         <button class="coachSizePresetBtn" data-object-size="large" type="button"><b>L</b><small>Grande</small></button>
       </div>
-    </section>
+    </details>
 
     <section class="coachObjectsSection">
       <div class="coachSectionHead"><strong>Objetos</strong><span>Selecciona y toca la pista</span></div>
@@ -815,7 +812,7 @@
     </section>
 
     <div class="coachObjectsHint"><b>Nuevo flujo:</b> usa Alineado para colocar conos rectos, Preciso para rejilla invisible y Plantillas para filas, zigzag, cuadrados o circuitos. Toca objetos ya colocados para seleccionarlos, cambiar su tamaño y organizarlos.</div>
-    <div class="modalFoot"><button class="btn" id="btnCoachFinishPatternObjects" type="button">Finalizar patrón</button><button class="btn warn" id="btnCoachDeleteLastObject" type="button">Borrar último objeto</button><button class="btn primary" id="btnCoachSelectPatternTool" type="button">Volver a flechas</button></div>
+    <div class="modalFoot"><button class="btn warn" id="btnCoachDeleteLastObject" type="button">Borrar último objeto</button><button class="btn primary" id="btnCoachSelectPatternTool" type="button">Volver a flechas</button></div>
   </div>
 </div>
 
@@ -1565,7 +1562,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3260"></script>
+<script src="app.js?v=3270"></script>
 
 </body>
 </html>

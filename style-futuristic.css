@@ -4979,3 +4979,86 @@ body.coachMode:not(.coachHalfCourt) .coachHistoryControls{
     clip-path:inset(0 round 28px)!important;
   }
 }
+
+/* ===== v3.27 - menú de objetos compacto y rail simplificado ===== */
+.coachObjectsDropdown{
+  margin:10px 0 0;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(4,14,24,.22));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  overflow:hidden;
+}
+.coachObjectsDropdown summary{
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  cursor:pointer;
+  color:#f5fbff;
+  user-select:none;
+}
+.coachObjectsDropdown summary::-webkit-details-marker{display:none;}
+.coachObjectsDropdown summary b{
+  display:block;
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  line-height:1.05;
+}
+.coachObjectsDropdown summary small{
+  display:block;
+  margin-top:4px;
+  font-size:11px;
+  color:rgba(236,246,255,.66);
+  line-height:1.15;
+}
+.coachObjectsDropdown summary i{
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  font-style:normal;
+  color:#eaffff;
+  background:linear-gradient(180deg,rgba(53,86,108,.72),rgba(6,20,33,.88));
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+  transition:transform .2s ease;
+}
+.coachObjectsDropdown[open] summary i{transform:rotate(180deg);}
+.coachObjectsDropdown .coachPlacementModes,
+.coachObjectsDropdown .coachSizePresets{
+  padding:0 12px 12px;
+}
+body.coachMode #coachObjectsModal .coachObjectsModalCard{
+  max-height:min(90vh, 840px)!important;
+}
+body.coachMode #coachObjectsModal .coachObjectsSection:first-of-type{
+  margin-top:12px;
+}
+#btnCoachDeleteSelectedRail.warn{
+  border-color:rgba(255,116,116,.42)!important;
+  box-shadow:0 0 18px rgba(255,85,85,.10), inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+#btnCoachDeleteSelectedRail.warn:active,
+#btnCoachDeleteSelectedRail.warn.active{
+  border-color:rgba(255,125,125,.72)!important;
+  box-shadow:0 0 22px rgba(255,85,85,.18), inset 0 1px 0 rgba(255,255,255,.18)!important;
+}
+@media(max-width:520px){
+  .coachObjectsDropdown summary{padding:11px 12px;}
+  .coachObjectsDropdown summary b{font-size:12px;}
+  .coachObjectsDropdown summary small{font-size:10px;}
+  .coachObjectsDropdown .coachPlacementModes,
+  .coachObjectsDropdown .coachSizePresets{gap:7px;padding:0 10px 10px;}
+  .coachObjectsDropdown .coachPlacementBtn,
+  .coachObjectsDropdown .coachSizePresetBtn{min-height:52px;border-radius:14px;}
+}
+body.coachMode .quickBtn.isDisabled,
+body.coachMode .quickBtn:disabled{
+  opacity:.42!important;
+  filter:grayscale(.55)!important;
+}

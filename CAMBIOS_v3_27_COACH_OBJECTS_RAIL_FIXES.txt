@@ -1,0 +1,11 @@
+Tennis Direction Tracker Web v3.27
+
+Cambios modo entrenador:
+- Panel de Objetos optimizado: Modo colocación pasa a ser desplegable.
+- Panel de Objetos optimizado: Tamaño de objetos pasa a ser desplegable.
+- Prioridad visual para la sección de Objetos y Plantillas rápidas.
+- Rail derecho: el antiguo botón Patrón se sustituye por Borrar objeto seleccionado.
+- Botón Dirección: si ya hay un patrón activo y se pulsa de nuevo, guarda el patrón y deja listo el siguiente.
+- Undo/Redo ya no cambia automáticamente entre pista completa y media pista; conserva la vista actual.
+- Eliminadas del menú lateral izquierdo de entrenador las opciones Nuevo ejercicio, Objetos y Media pista, porque ya están en el rail.
+- Caché actualizada a v3.27.
