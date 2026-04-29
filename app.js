@@ -119,6 +119,7 @@ function createDefaultCoachState(){
     halfView: "bottom",
     showGrid: false,
     placementMode: "aligned",
+    objectSizePreset: "medium",
     pendingTemplate: null,
     selectedObjectIds: [],
     pendingDirectionStart: null,
@@ -148,6 +149,7 @@ function ensureCoachState(){
   state.coach.halfView = state.coach.halfView === "top" ? "top" : "bottom";
   state.coach.showGrid = !!state.coach.showGrid;
   state.coach.placementMode = ["free","aligned","precise"].includes(state.coach.placementMode) ? state.coach.placementMode : "aligned";
+  state.coach.objectSizePreset = ["small","medium","large"].includes(state.coach.objectSizePreset) ? state.coach.objectSizePreset : "medium";
   state.coach.pendingTemplate = state.coach.pendingTemplate || null;
   state.coach.selectedObjectIds = Array.isArray(state.coach.selectedObjectIds) ? state.coach.selectedObjectIds : [];
   return state.coach;
@@ -531,7 +533,19 @@ const TDT_TEXT_TRANSLATIONS = {
   "Distribuir vertical":"Distribute vertical",
   "Quitar selección":"Clear selection",
   "Borrar selección":"Delete selection",
-  "Toca objetos en la pista para seleccionarlos":"Tap objects on the court to select them"
+  "Toca objetos en la pista para seleccionarlos":"Tap objects on the court to select them",
+  "Tamaño de objetos":"Object size",
+  "Se aplica a los nuevos objetos":"Applies to new objects",
+  "Pequeño":"Small",
+  "Medio":"Medium",
+  "Grande":"Large",
+  "Tamaño seleccionado":"Selected size",
+  "Igualar tamaño":"Match size",
+  "Toca objetos ya colocados para seleccionarlos, cambiar su tamaño y organizarlos.":"Tap placed objects to select, resize and organize them.",
+  "Tamaño para nuevos objetos:":"Size for new objects:",
+  "Tamaño igualado":"Size matched",
+  "Selecciona un objeto":"Select an object",
+  "Varios":"Mixed"
 };
 const TDT_TEXT_TRANSLATIONS_REV = Object.fromEntries(Object.entries(TDT_TEXT_TRANSLATIONS).map(([k,v])=>[v,k]));
 function translateLooseString(value){
@@ -5396,6 +5410,7 @@ function normalizeCoachExerciseFromState(){
     courtMode: c.courtMode || "full",
     halfView: c.halfView || "bottom",
     showGrid: !!c.showGrid,
+    objectSizePreset: c.objectSizePreset || "medium",
     patterns: JSON.parse(JSON.stringify(c.patterns || [])),
     objects: JSON.parse(JSON.stringify(c.objects || [])),
     currentPoint: state.point && state.point.coach ? JSON.parse(JSON.stringify(state.point)) : null,
@@ -5482,7 +5497,7 @@ function loadCoachExercise(id){
     ...createDefaultCoachState(),
     exerciseId: ex.id, exerciseName: ex.name || "Ejercicio", folderId: ex.folderId || "root", selectedFolderId: ex.folderId || "root",
     patterns: JSON.parse(JSON.stringify(ex.patterns || [])), objects: JSON.parse(JSON.stringify(ex.objects || [])),
-    goal: ex.goal || "", level: ex.level || "", material: ex.material || "", tags: ex.tags || "", notes: ex.notes || "", activeTool:"direction", courtMode: ex.courtMode === "half" ? "half" : "full", halfView: ex.halfView === "top" ? "top" : "bottom", showGrid: !!ex.showGrid
+    goal: ex.goal || "", level: ex.level || "", material: ex.material || "", tags: ex.tags || "", notes: ex.notes || "", activeTool:"direction", courtMode: ex.courtMode === "half" ? "half" : "full", halfView: ex.halfView === "top" ? "top" : "bottom", showGrid: !!ex.showGrid, objectSizePreset: ["small","medium","large"].includes(ex.objectSizePreset) ? ex.objectSizePreset : "medium"
   };
   state.point = ex.currentPoint && ex.currentPoint.coach ? JSON.parse(JSON.stringify(ex.currentPoint)) : null;
   if (!state.point) initCoachPoint();
@@ -5548,6 +5563,71 @@ function setCoachTool(tool){
 }
 function coachToolLabel(tool){ return ({ cone:"Cono", hoop:"Aro", basket:"Cesta", ladder:"Escalera", player:"Jugador", coach:"Entrenador", target:"Objetivo", dash:"Desplazamiento", text:"Nota", direction:"Dirección", template:"Plantilla" })[tool] || "Objeto"; }
 
+const COACH_OBJECT_SIZE_PRESETS = { small:0.75, medium:1, large:1.15 };
+function coachObjectSizeBounds(type){
+  return type === "ladder" ? { min:0.45, max:1.20 } : { min:0.50, max:1.60 };
+}
+function getCoachDefaultObjectSize(type){
+  const c = ensureCoachState();
+  let scale = COACH_OBJECT_SIZE_PRESETS[c.objectSizePreset || "medium"] || 1;
+  // La escalera parte de una escala ligeramente más contenida para no dominar la pista.
+  if (type === "ladder") scale = Math.min(scale, 1.05);
+  return clampCoachObjectSize(type, scale);
+}
+function clampCoachObjectSize(type, value){
+  const b = coachObjectSizeBounds(type);
+  const n = Number(value);
+  return Math.max(b.min, Math.min(b.max, Number.isFinite(n) ? n : 1));
+}
+function getCoachObjectSize(obj){
+  if (!obj) return 1;
+  return clampCoachObjectSize(obj.type, obj.size == null ? 1 : obj.size);
+}
+function setCoachObjectSizePreset(preset){
+  if (!isCoachMode()) setAppMode("coach");
+  const c = ensureCoachState();
+  c.objectSizePreset = ["small","medium","large"].includes(preset) ? preset : "medium";
+  updateCoachSizeUI();
+  persist();
+  const names = { small: tr("Pequeño", "Small"), medium: tr("Medio", "Medium"), large: tr("Grande", "Large") };
+  toast(tr("Tamaño para nuevos objetos: ", "Size for new objects: ") + (names[c.objectSizePreset] || names.medium));
+}
+function updateCoachSizeUI(){
+  const c = ensureCoachState();
+  document.querySelectorAll(".coachSizePresetBtn").forEach(btn=>btn.classList.toggle("active", btn.dataset.objectSize === c.objectSizePreset));
+  const selected = getSelectedCoachObjects();
+  const count = selected.length;
+  const label = document.getElementById("coachSelectedSizeValue");
+  if (label){
+    if (!count) label.textContent = "—";
+    else {
+      const values = selected.map(o=>Math.round(getCoachObjectSize(o)*100));
+      const allSame = values.every(v=>v === values[0]);
+      label.textContent = allSame ? (values[0] + "%") : tr("Varios", "Mixed");
+    }
+  }
+  document.querySelectorAll(".coachSizeSelectionAction").forEach(btn=>btn.disabled = count < Number(btn.dataset.minSelection || 1));
+}
+function changeCoachSelectedObjectSize(delta){
+  const selected = getSelectedCoachObjects();
+  if (!selected.length){ toast(tr("Selecciona un objeto", "Select an object")); return; }
+  recordCoachHistory();
+  selected.forEach(o=>{ o.size = clampCoachObjectSize(o.type, getCoachObjectSize(o) + delta); });
+  renderCoachObjects();
+  updateCoachSizeUI();
+  persist();
+}
+function equalizeCoachSelectedObjectSize(){
+  const selected = getSelectedCoachObjects();
+  if (selected.length < 2){ toast(tr("Selecciona al menos 2 objetos", "Select at least 2 objects")); return; }
+  const base = getCoachObjectSize(selected[0]);
+  recordCoachHistory();
+  selected.forEach(o=>{ o.size = clampCoachObjectSize(o.type, base); });
+  renderCoachObjects();
+  updateCoachSizeUI();
+  persist();
+  toast(tr("Tamaño igualado", "Size matched"));
+}
 function setCoachPlacementMode(mode){
   if (!isCoachMode()) setAppMode("coach");
   const c = ensureCoachState();
@@ -5561,6 +5641,7 @@ function updateCoachPlacementUI(){
   const c = ensureCoachState();
   document.querySelectorAll(".coachPlacementBtn").forEach(btn=>btn.classList.toggle("active", btn.dataset.placementMode === c.placementMode));
   updateCoachSelectionUI();
+  updateCoachSizeUI();
 }
 function coachSnapStep(){ return isCoachHalfCourt() ? 0.04 : 0.05; }
 function coachSnapToGridValue(v, step){ return clamp01(Math.round(clamp01(v) / step) * step); }
@@ -5675,7 +5756,7 @@ function placeCoachTemplate(template, pt){
   recordCoachHistory();
   const now = Date.now();
   pts.forEach((p, idx)=>{
-    c.objects.push({ id:"obj_"+now.toString(36)+"_"+idx+"_"+Math.random().toString(36).slice(2,5), type:"cone", label:"Cono", x:p.x, y:p.y, template:label, createdAt:now+idx });
+    c.objects.push({ id:"obj_"+now.toString(36)+"_"+idx+"_"+Math.random().toString(36).slice(2,5), type:"cone", label:"Cono", x:p.x, y:p.y, size:getCoachDefaultObjectSize("cone"), template:label, createdAt:now+idx });
   });
   c.pendingTemplate = null;
   c.activeTool = "cone";
@@ -5713,6 +5794,7 @@ function updateCoachSelectionUI(){
   const label = document.getElementById("coachSelectionCount");
   if (label) label.textContent = count ? (count + (isEn() ? " selected" : " seleccionados")) : tr("Toca objetos en la pista para seleccionarlos", "Tap objects on the court to select them");
   document.querySelectorAll(".coachSelectionAction").forEach(btn=>btn.disabled = count < Number(btn.dataset.minSelection || 1));
+  updateCoachSizeUI();
 }
 function alignCoachSelected(axis){
   const selected = getSelectedCoachObjects();
@@ -5865,7 +5947,7 @@ function addCoachObject(type, pt){
   let label = coachToolLabel(type);
   if (type === "text") label = prompt("Texto de la nota", "Nota") || "Nota";
   const snapped = coachSnapPoint(pt, { type });
-  const obj = { id:"obj_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,5), type, label, x:clamp01(snapped.point.x), y:clamp01(snapped.point.y), createdAt:Date.now() };
+  const obj = { id:"obj_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,5), type, label, x:clamp01(snapped.point.x), y:clamp01(snapped.point.y), size:getCoachDefaultObjectSize(type), createdAt:Date.now() };
   if (type === "ladder") {
     obj.orientation = "horizontal";
     obj.anchor = "startCorner"; // el toque es el inicio/esquina izquierda de la escalera
@@ -5910,6 +5992,7 @@ function renderCoachObjectsInto(layerId, preview=false){
     el.className = "coachObject coachObject-" + (obj.type || "cone") + (obj.type === "ladder" && obj.orientation === "vertical" ? " ladderVertical" : "") + (isSelected ? " isSelected" : "");
     el.style.left = (clamp01(obj.x) * 100) + "%";
     el.style.top = (clamp01(obj.y) * 100) + "%";
+    el.style.setProperty("--coach-object-scale", getCoachObjectSize(obj));
     el.innerHTML = coachObjectMarkup(obj, idx, preview);
     el.title = obj.label || coachToolLabel(obj.type);
     if (!preview){
@@ -6582,6 +6665,10 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCoachDeleteLastObject","click", deleteLastCoachObject);
   on("btnCoachSelectPatternTool","click", ()=>setCoachTool("direction"));
   document.querySelectorAll(".coachPlacementBtn").forEach(btn=> btn.addEventListener("click", ()=>setCoachPlacementMode(btn.dataset.placementMode || "aligned")));
+  document.querySelectorAll(".coachSizePresetBtn").forEach(btn=> btn.addEventListener("click", ()=>setCoachObjectSizePreset(btn.dataset.objectSize || "medium")));
+  on("btnCoachSizeMinus","click", ()=>changeCoachSelectedObjectSize(-0.05));
+  on("btnCoachSizePlus","click", ()=>changeCoachSelectedObjectSize(0.05));
+  on("btnCoachEqualizeSize","click", equalizeCoachSelectedObjectSize);
   document.querySelectorAll(".coachTemplateBtn").forEach(btn=> btn.addEventListener("click", ()=>setCoachTemplate(btn.dataset.coachTemplate || "rowH")));
   on("btnCoachAlignHorizontal","click", ()=>alignCoachSelected("h"));
   on("btnCoachAlignVertical","click", ()=>alignCoachSelected("v"));

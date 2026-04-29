@@ -1,0 +1,8 @@
+v3.24 - Control ideal de tamaño de objetos
+
+- Añadido selector global S/M/L para el tamaño de nuevos objetos en modo entrenador.
+- Añadidos controles individuales + / - para cambiar el tamaño de objetos seleccionados en pasos del 5%.
+- Añadida acción Igualar tamaño para seleccionar varios objetos y dejarlos con la misma escala.
+- Cada objeto guarda su escala propia, incluyendo plantillas de conos, escalera, aros, cesta, jugador, entrenador, objetivo y notas.
+- Rango protegido: objetos normales 50%-160%; escalera 45%-120% para evitar proporciones excesivas.
+- Actualizada caché del service worker a v3.24.

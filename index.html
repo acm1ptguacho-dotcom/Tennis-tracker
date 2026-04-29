@@ -771,6 +771,15 @@
       </div>
     </section>
 
+    <section class="coachObjectsSection coachSizePanel">
+      <div class="coachSectionHead"><strong>Tamaño de objetos</strong><span>Se aplica a los nuevos objetos</span></div>
+      <div class="coachSizePresets" role="group" aria-label="Tamaño de objetos nuevos">
+        <button class="coachSizePresetBtn" data-object-size="small" type="button"><b>S</b><small>Pequeño</small></button>
+        <button class="coachSizePresetBtn active" data-object-size="medium" type="button"><b>M</b><small>Medio</small></button>
+        <button class="coachSizePresetBtn" data-object-size="large" type="button"><b>L</b><small>Grande</small></button>
+      </div>
+    </section>
+
     <section class="coachObjectsSection">
       <div class="coachSectionHead"><strong>Objetos</strong><span>Selecciona y toca la pista</span></div>
       <div class="coachToolTabs">
@@ -800,6 +809,13 @@
 
     <section class="coachObjectsSection coachSelectionPanel">
       <div class="coachSectionHead"><strong>Organizar selección</strong><span id="coachSelectionCount">Toca objetos en la pista para seleccionarlos</span></div>
+      <div class="coachSelectedSizeControls" aria-label="Ajustar tamaño de objetos seleccionados">
+        <span class="coachSelectedSizeLabel">Tamaño seleccionado</span>
+        <button class="chip coachSizeSelectionAction" id="btnCoachSizeMinus" data-min-selection="1" type="button">−</button>
+        <strong id="coachSelectedSizeValue">—</strong>
+        <button class="chip coachSizeSelectionAction" id="btnCoachSizePlus" data-min-selection="1" type="button">+</button>
+        <button class="chip coachSizeSelectionAction" id="btnCoachEqualizeSize" data-min-selection="2" type="button">Igualar tamaño</button>
+      </div>
       <div class="coachAlignActions">
         <button class="chip coachSelectionAction" id="btnCoachAlignHorizontal" data-min-selection="2" type="button">Alinear H</button>
         <button class="chip coachSelectionAction" id="btnCoachAlignVertical" data-min-selection="2" type="button">Alinear V</button>
@@ -810,7 +826,7 @@
       </div>
     </section>
 
-    <div class="coachObjectsHint"><b>Nuevo flujo:</b> usa Alineado para colocar conos rectos, Preciso para rejilla invisible y Plantillas para filas, zigzag, cuadrados o circuitos. Toca objetos ya colocados para seleccionarlos y organizarlos.</div>
+    <div class="coachObjectsHint"><b>Nuevo flujo:</b> usa Alineado para colocar conos rectos, Preciso para rejilla invisible y Plantillas para filas, zigzag, cuadrados o circuitos. Toca objetos ya colocados para seleccionarlos, cambiar su tamaño y organizarlos.</div>
     <div class="modalFoot"><button class="btn" id="btnCoachFinishPatternObjects" type="button">Finalizar patrón</button><button class="btn warn" id="btnCoachDeleteLastObject" type="button">Borrar último objeto</button><button class="btn primary" id="btnCoachSelectPatternTool" type="button">Volver a flechas</button></div>
   </div>
 </div>
