@@ -2919,6 +2919,39 @@ const ADV_WINNERS = [
   {key:"DROP", label:"Dejada"},
 ];
 
+function renderFinishPlayerVisuals(){
+  ["A","B"].forEach(side=>{
+    const card = document.querySelector(`.finishPlayerCard[data-player="${side}"]`);
+    if (!card) return;
+    const avatar = card.querySelector('.finishPlayerAvatar');
+    const name = card.querySelector('.pName');
+    const tag = card.querySelector('.pTag');
+    const profile = getAssignedProfile(side);
+    if (avatar){
+      avatar.innerHTML = playerAvatarMarkup(side);
+      avatar.classList.toggle('hasPhoto', !!(profile && profile.photoData));
+    }
+    if (name) name.textContent = playerName(side);
+    if (tag) tag.textContent = side;
+  });
+  const selAvatar = $("#finishSelectedAvatar");
+  const selPlayer = finishSelectedPlayer;
+  if (selAvatar){
+    if (selPlayer){
+      const profile = getAssignedProfile(selPlayer);
+      selAvatar.innerHTML = playerAvatarMarkup(selPlayer);
+      selAvatar.classList.toggle('hasPhoto', !!(profile && profile.photoData));
+      selAvatar.classList.remove('isEmpty');
+    } else {
+      selAvatar.innerHTML = '<span>—</span>';
+      selAvatar.classList.remove('hasPhoto');
+      selAvatar.classList.add('isEmpty');
+    }
+  }
+  const selected = $("#finishSelectedPlayer");
+  if (selected) selected.textContent = selPlayer ? playerName(selPlayer) : "—";
+}
+
 function resetFinishPlayerFlow(){
   finishSelectedPlayer = null;
   const playerStep = $("#finishPlayerStep");
@@ -2926,8 +2959,7 @@ function resetFinishPlayerFlow(){
   if (playerStep) playerStep.classList.remove("hidden");
   if (resultStep) resultStep.classList.add("hidden");
   document.querySelectorAll(".finishPlayerCard.isSelected").forEach(el=>el.classList.remove("isSelected"));
-  const selected = $("#finishSelectedPlayer");
-  if (selected) selected.textContent = "—";
+  renderFinishPlayerVisuals();
 }
 
 function selectFinishPlayer(player){
@@ -2939,8 +2971,7 @@ function selectFinishPlayer(player){
   document.querySelectorAll(".finishPlayerCard").forEach(el=>{
     el.classList.toggle("isSelected", el.getAttribute("data-player") === player);
   });
-  const selected = $("#finishSelectedPlayer");
-  if (selected) selected.textContent = playerName(player);
+  renderFinishPlayerVisuals();
 }
 
 function finishSelectedAction(action){
@@ -5922,10 +5953,9 @@ function coachPointFromClient(clientX, clientY){
   const el = surface || court;
   if (!el) return { x:.5, y:.5 };
   const r = el.getBoundingClientRect();
-  let x = (clientX - r.left) / Math.max(1, r.width);
-  let y = (clientY - r.top) / Math.max(1, r.height);
-  if (state.ui && state.ui.rotated){ x = 1 - x; y = 1 - y; }
-  return { x:clamp01(x), y:clamp01(y) };
+  const x = (clientX - r.left) / Math.max(1, r.width);
+  const y = (clientY - r.top) / Math.max(1, r.height);
+  return coachViewportToCourtNorm(x, y);
 }
 function coachPointFromCourtEvent(evt){
   if (!evt) return { x:.5, y:.5 };
@@ -6597,8 +6627,7 @@ function renderCourtNames(){
   const fB = $("#finishNameB");
   if (fA) fA.textContent = nameA;
   if (fB) fB.textContent = nameB;
-  const fSel = $("#finishSelectedPlayer");
-  if (fSel && finishSelectedPlayer) fSel.textContent = playerName(finishSelectedPlayer);
+  renderFinishPlayerVisuals();
 }
 
 function renderMeta(){
@@ -7548,11 +7577,14 @@ function updateWorkspaceBar(){
   const session = getSession();
   const profiles = getPlayerProfiles();
   const matches = getSavedMatches();
+  const bar = $("#workspaceBar");
   const workspaceName = $("#workspaceName");
   const workspaceSub = $("#workspaceSub");
   const players = $("#workspacePlayers");
   const saved = $("#workspaceMatches");
   const points = $("#workspacePoints");
+  const hideInDemo = !!(session && session.isDemo);
+  if (bar) bar.classList.toggle("hidden", hideInDemo);
   if (workspaceName) workspaceName.textContent = session?.name || "Modo local";
   if (workspaceSub) workspaceSub.textContent = isAuthenticated() ? `${session?.plan || "Local"} · ${session?.email || "sin email"}` : "Accede para separar jugadores y partidos por cuenta";
   if (players) players.textContent = String(profiles.length);

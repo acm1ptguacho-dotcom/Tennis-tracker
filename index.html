@@ -595,21 +595,24 @@
         <div class="finishStepTitle" id="finishWhoTitle">¿Quién finaliza el punto?</div>
         <div class="finishPlayerCards" id="finishPlayerCards">
           <button class="finishPlayerCard" id="finishSelectA" type="button" data-player="A">
-            <span class="pTag">A</span>
-            <span class="pName" id="finishNameA">Jugador A</span>
+            <span class="finishPlayerAvatar" id="finishAvatarA" aria-hidden="true"></span>
+            <span class="finishPlayerMeta"><span class="pTag">A</span><span class="pName" id="finishNameA">Jugador A</span></span>
           </button>
           <button class="finishPlayerCard" id="finishSelectB" type="button" data-player="B">
-            <span class="pTag">B</span>
-            <span class="pName" id="finishNameB">Jugador B</span>
+            <span class="finishPlayerAvatar" id="finishAvatarB" aria-hidden="true"></span>
+            <span class="finishPlayerMeta"><span class="pTag">B</span><span class="pName" id="finishNameB">Jugador B</span></span>
           </button>
         </div>
       </div>
 
       <div class="finishStep finishResultStep hidden" id="finishResultStep">
         <div class="finishSelectedBar">
-          <div>
-            <span class="finishSelectedKicker" id="finishSelectedKicker">Jugador seleccionado</span>
-            <strong id="finishSelectedPlayer">—</strong>
+          <div class="finishSelectedIdentity">
+            <span class="finishSelectedAvatar isEmpty" id="finishSelectedAvatar" aria-hidden="true"><span>—</span></span>
+            <div>
+              <span class="finishSelectedKicker" id="finishSelectedKicker">Jugador seleccionado</span>
+              <strong id="finishSelectedPlayer">—</strong>
+            </div>
           </div>
           <button class="finishChangePlayer" id="finishChangePlayer" type="button">Cambiar jugador</button>
         </div>

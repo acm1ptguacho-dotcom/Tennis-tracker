@@ -5062,3 +5062,204 @@ body.coachMode .quickBtn:disabled{
   opacity:.42!important;
   filter:grayscale(.55)!important;
 }
+
+
+/* ===== v3.28 - demo cleanup, finish menu polish, coach half-court fixes ===== */
+#workspaceBar.hidden{display:none!important;}
+
+/* Half-court geometry: preserve rounded edges and clip overlays cleanly */
+body.coachMode.coachHalfCourt .courtWrap.courtRow .court,
+body.coachMode.coachHalfCourt #court{
+  border-radius:30px!important;
+  overflow:hidden!important;
+  clip-path:inset(0 round 30px)!important;
+  -webkit-mask-image:-webkit-radial-gradient(white, black)!important;
+  isolation:isolate!important;
+}
+body.coachMode.coachHalfCourt #courtSurface,
+body.coachMode.coachHalfCourt #courtImg,
+body.coachMode.coachHalfCourt .court::before,
+body.coachMode.coachHalfCourt .court::after{
+  border-radius:inherit!important;
+  clip-path:inset(0 round 30px)!important;
+}
+body.coachMode.coachHalfCourt #courtSurface{
+  overflow:hidden!important;
+}
+
+/* Finish menu visual refresh */
+.finishPlayerCards{
+  gap:14px!important;
+}
+.finishPlayerCard{
+  min-height:104px!important;
+  justify-content:flex-start!important;
+  padding:16px 18px!important;
+  gap:14px!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(240px 120px at 15% 0%, rgba(98,192,255,.18), transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.035) 35%, rgba(9,27,43,.20) 100%)!important;
+}
+.finishPlayerCard .pTag{
+  width:36px!important;
+  height:36px!important;
+  border-radius:13px!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  font-size:18px!important;
+  font-weight:1000!important;
+  color:rgba(231,242,255,.92)!important;
+  background:linear-gradient(180deg, rgba(121,191,255,.20), rgba(255,255,255,.06))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14)!important;
+}
+.finishPlayerMeta{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  gap:8px!important;
+}
+.finishPlayerCard .pName{
+  font-size:24px!important;
+  line-height:1!important;
+}
+.finishPlayerAvatar,
+.finishSelectedAvatar{
+  width:54px;
+  height:54px;
+  min-width:54px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  color:#f3fbff;
+  border:1px solid rgba(255,255,255,.14);
+  background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(20,56,83,.34));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 10px 22px rgba(4,12,22,.20);
+}
+.finishPlayerAvatar svg,
+.finishSelectedAvatar svg{
+  width:66%;
+  height:66%;
+}
+.finishPlayerAvatar img,
+.finishSelectedAvatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.finishPlayerAvatar.hasPhoto,
+.finishSelectedAvatar.hasPhoto{
+  background:none!important;
+}
+.finishSelectedBar{
+  align-items:center!important;
+  gap:14px!important;
+  padding:14px 16px!important;
+  border-radius:22px!important;
+  border:1px solid rgba(157,220,255,.20)!important;
+  background:
+    radial-gradient(320px 140px at 10% 0%, rgba(103,202,255,.16), transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(9,26,42,.32))!important;
+}
+.finishSelectedIdentity{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.finishSelectedAvatar.isEmpty{
+  color:rgba(234,242,255,.62);
+}
+.finishSelectedAvatar.isEmpty span{
+  font-size:24px;
+  font-weight:1000;
+  line-height:1;
+}
+.finishChangePlayer{
+  min-height:50px;
+  padding:0 18px!important;
+  border-radius:16px!important;
+}
+.finishStepTitle{
+  margin:0 0 14px!important;
+}
+.finishActionGrid{
+  gap:12px!important;
+}
+.finishActionGrid .finishBtn{
+  min-height:64px!important;
+  justify-content:flex-start!important;
+  padding:0 20px!important;
+  border-radius:20px!important;
+  font-size:20px!important;
+  letter-spacing:-.01em!important;
+  text-align:left!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 14px 26px rgba(3,10,20,.22)!important;
+}
+.finishActionGrid .finishBtn.bad,
+#finishServeGroup .finishBtn.bad{
+  border-color:rgba(229,118,138,.24)!important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.04) 26%, rgba(68,24,44,.16) 100%),
+    linear-gradient(180deg, rgba(99,51,76,.96), rgba(70,33,51,.98))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 14px 28px rgba(53,17,27,.24)!important;
+}
+#mStepGain,
+#mStepWinner,
+#mStepVolley,
+#finishServeGroup .finishBtn:not(.bad){
+  color:#f7fff6!important;
+}
+#mStepGain{
+  border-color:rgba(127,237,187,.28)!important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04) 25%, rgba(19,94,86,.20) 100%),
+    linear-gradient(180deg, rgba(48,160,133,.98), rgba(25,118,101,.98))!important;
+}
+#mStepWinner{
+  border-color:rgba(166,232,120,.30)!important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04) 25%, rgba(70,110,28,.18) 100%),
+    linear-gradient(180deg, rgba(133,182,55,.98), rgba(95,138,35,.98))!important;
+}
+#mStepVolley{
+  border-color:rgba(109,198,255,.30)!important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04) 25%, rgba(21,76,118,.18) 100%),
+    linear-gradient(180deg, rgba(55,144,196,.98), rgba(28,101,149,.98))!important;
+}
+@media (max-width:520px){
+  .finishPlayerCard{
+    min-height:94px!important;
+    padding:14px!important;
+    flex-direction:row!important;
+    align-items:center!important;
+  }
+  .finishPlayerAvatar,
+  .finishSelectedAvatar{
+    width:48px;
+    height:48px;
+    min-width:48px;
+    border-radius:16px;
+  }
+  .finishPlayerCard .pName{
+    font-size:20px!important;
+  }
+  .finishSelectedBar{
+    align-items:flex-start!important;
+    flex-direction:column!important;
+  }
+  .finishSelectedIdentity{
+    width:100%;
+  }
+  .finishChangePlayer{
+    width:100%;
+    max-width:none!important;
+  }
+  .finishActionGrid .finishBtn{
+    min-height:60px!important;
+    font-size:19px!important;
+  }
+}
