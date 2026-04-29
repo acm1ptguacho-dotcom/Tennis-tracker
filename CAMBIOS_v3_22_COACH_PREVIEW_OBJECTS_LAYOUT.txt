@@ -1,0 +1,11 @@
+v3.22 - Modo entrenador: iconos pista, preview compacto y objetos arrastrables
+
+- Sustituido el icono superior derecho en modo entrenador por dos iconos contextuales:
+  · Pista completa: icono para cambiar a media pista.
+  · Media pista: icono para volver a pista completa.
+- Optimizado el modal Preview: un solo botón Play/Pause y botón X separado para cerrar.
+- Ampliada la separación de plantillas rápidas de conos: filas, diagonales, zigzag, cuadrados y circuitos con más aire entre conos.
+- Reducido ligeramente el tamaño visual de los conos sobre la pista y preview.
+- Todos los objetos del modo entrenador son arrastrables y reposicionables, incluyendo conos, aros, cestas, escalera, jugadores, entrenador, objetivo y notas.
+- El arrastre respeta la colocación Libre/Alineado/Preciso y mantiene deshacer/rehacer global.
+- Actualizada caché del service worker a v3.22.

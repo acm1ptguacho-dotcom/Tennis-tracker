@@ -4550,3 +4550,98 @@ body.coachMode #coachObjectsModal .modalFoot{
   background:linear-gradient(180deg,rgba(9,25,39,.82),rgba(5,16,27,.98));
   border-top:1px solid rgba(255,255,255,.08);
 }
+
+/* ===== v3.22 - iconos de cambio pista, preview compacto y objetos arrastrables ===== */
+#btnToolsRail .coachCourtIcon{display:none;}
+body.coachMode #btnToolsRail .toolsOn,
+body.coachMode #btnToolsRail .toolsOff{display:none!important;}
+body.coachMode:not(.coachHalfCourt) #btnToolsRail .coachToHalf{display:block!important;}
+body.coachMode.coachHalfCourt #btnToolsRail .coachToFull{display:block!important;}
+body.coachMode #btnToolsRail .coachCourtIcon{
+  width:30px!important;
+  height:30px!important;
+  stroke:#f4fbff!important;
+  stroke-width:1.75!important;
+  fill:none!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+  filter:drop-shadow(0 0 8px rgba(115,211,255,.38));
+}
+body.coachMode #btnToolsRail .coachCourtIcon .courtFocus{
+  fill:rgba(201,255,74,.24)!important;
+  stroke:rgba(201,255,74,.92)!important;
+  stroke-width:1.2!important;
+  filter:drop-shadow(0 0 6px rgba(201,255,74,.44));
+}
+body.coachMode #btnToolsRail .coachCourtIcon .courtExpand{
+  stroke:rgba(201,255,74,.96)!important;
+  stroke-width:1.8!important;
+}
+body.coachMode #btnToolsRail.isActive{
+  border-color:rgba(201,255,74,.68)!important;
+}
+
+body.coachMode .coachPreviewCard .modalHead{
+  align-items:flex-start!important;
+  gap:8px!important;
+}
+body.coachMode .coachPreviewActions{
+  flex-wrap:nowrap!important;
+  gap:8px!important;
+  margin-left:auto!important;
+}
+body.coachMode .coachPreviewActions .chip{
+  min-width:0!important;
+  white-space:nowrap!important;
+}
+body.coachMode .coachPreviewActions #btnCoachPreviewPlay{
+  width:auto!important;
+  min-width:82px!important;
+  padding:0 14px!important;
+}
+body.coachMode .coachPreviewActions #btnCoachPreviewPlay.isPause{
+  border-color:rgba(255,211,82,.62)!important;
+  box-shadow:0 0 18px rgba(255,211,82,.16), inset 0 1px 0 rgba(255,255,255,.18)!important;
+}
+body.coachMode .coachPreviewActions .coachPreviewCloseX,
+body.coachMode .coachModalCard #btnCloseCoachPreview.coachPreviewCloseX{
+  width:44px!important;
+  min-width:44px!important;
+  height:40px!important;
+  min-height:40px!important;
+  padding:0!important;
+  border-radius:16px!important;
+  font-size:30px!important;
+  line-height:1!important;
+  font-weight:900!important;
+}
+@media(max-width:520px){
+  body.coachMode .coachPreviewCard .modalHead{padding:10px 12px!important;}
+  body.coachMode .coachPreviewCard .modalTitle{font-size:clamp(20px, 5.2vw, 25px)!important;}
+  body.coachMode .coachPreviewCard .modalHead .muted{font-size:11px!important;line-height:1.25!important;}
+  body.coachMode .coachPreviewActions #btnCoachPreviewPlay{min-width:74px!important;height:36px!important;min-height:36px!important;font-size:11px!important;padding:0 10px!important;}
+  body.coachMode .coachPreviewActions .coachPreviewCloseX,
+  body.coachMode .coachModalCard #btnCloseCoachPreview.coachPreviewCloseX{width:38px!important;min-width:38px!important;height:36px!important;min-height:36px!important;font-size:27px!important;}
+}
+
+/* Conos un poco más pequeños en pista y preview para que las plantillas respiren. */
+body.coachMode .coachObject:not(.coachObject-ladder):not(.coachObject-basket){
+  width:32px!important;
+  height:32px!important;
+}
+body.coachMode .coachObject .coneShape,
+body.coachMode .previewObjects .coneShape{
+  border-left-width:10px!important;
+  border-right-width:10px!important;
+  border-bottom-width:24px!important;
+  filter:drop-shadow(0 0 6px rgba(255,145,30,.38))!important;
+}
+body.coachMode .coachObject .coneShape::after,
+body.coachMode .previewObjects .coneShape::after{
+  left:-12px!important;
+  top:20px!important;
+  width:24px!important;
+  height:4px!important;
+}
+body.coachMode .coachObject{cursor:grab!important;}
+body.coachMode .coachObject:active{cursor:grabbing!important;}

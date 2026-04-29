@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3150" />
-  <link rel="stylesheet" href="style-futuristic.css?v=3210" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3220" />
 </head>
 <body>
 
@@ -167,6 +167,19 @@
           <line x1="4" y1="18" x2="20" y2="18"/>
           <circle cx="11" cy="18" r="2" fill="currentColor"/>
           <line x1="5" y1="19" x2="19" y2="5"/>
+        </svg>
+        <svg class="svgIcon coachCourtIcon coachToHalf" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="6" y="3" width="12" height="18" rx="2.2"/>
+          <line x1="6" y1="12" x2="18" y2="12"/>
+          <path d="M9 12v7M15 12v7"/>
+          <rect class="courtFocus" x="7.7" y="12.9" width="8.6" height="6.2" rx=".8"/>
+        </svg>
+        <svg class="svgIcon coachCourtIcon coachToFull" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="6" y="3" width="12" height="18" rx="2.2"/>
+          <line x1="6" y1="12" x2="18" y2="12"/>
+          <path d="M9 5v14M15 5v14"/>
+          <path class="courtExpand" d="M4 9V5h4M20 15v4h-4"/>
+          <path class="courtExpand" d="M4 5l4 4M20 19l-4-4"/>
         </svg>
       </button>
     </div>
@@ -804,7 +817,7 @@
 
 <div class="modal hidden" id="coachPreviewModal">
   <div class="modalCard solid coachModalCard coachPreviewCard">
-    <div class="modalHead"><div><div class="modalTitle">Preview del ejercicio</div><div class="muted" id="coachPreviewSub">Vista limpia sin zonas de selección.</div></div><div class="coachPreviewActions"><button class="chip good" id="btnCoachPreviewPlay" type="button">▶ Play</button><button class="chip" id="btnCoachPreviewPause" type="button" disabled>⏸ Pause</button><button class="chip" id="btnCloseCoachPreview" type="button">Cerrar</button></div></div>
+    <div class="modalHead"><div><div class="modalTitle">Preview del ejercicio</div><div class="muted" id="coachPreviewSub">Vista limpia sin zonas de selección.</div></div><div class="coachPreviewActions"><button class="chip good" id="btnCoachPreviewPlay" type="button">▶ Play</button><button class="chip coachPreviewCloseX" id="btnCloseCoachPreview" type="button" aria-label="Cerrar preview">×</button></div></div>
     <div class="coachPreviewStage"><div class="coachPreviewCourt" id="coachPreviewCourt"><img id="coachPreviewImg" src="assets/court_top_view.png" alt="preview pista"><svg id="coachPreviewSvg" class="arrowSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg><div id="coachPreviewObjects" class="coachObjectsLayer previewObjects"></div></div></div>
   </div>
 </div>
@@ -1548,7 +1561,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3210"></script>
+<script src="app.js?v=3220"></script>
 
 </body>
 </html>
