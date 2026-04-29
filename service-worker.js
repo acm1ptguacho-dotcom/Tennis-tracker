@@ -4,13 +4,13 @@
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
 
-const CACHE = "tennis-tracker-web-v3.22-coach-preview-objects-layout";
+const CACHE = "tennis-tracker-web-v3.23-coach-object-scale-i18n";
 const CORE = [
   "./",
   "./index.html",
   "./style.css?v=3150",
-  "./style-futuristic.css?v=3220",
-  "./app.js?v=3220",
+  "./style-futuristic.css?v=3230",
+  "./app.js?v=3230",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",

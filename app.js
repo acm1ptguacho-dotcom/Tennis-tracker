@@ -280,6 +280,32 @@ const I18N = {
     analytics: "Analíticas",
     stats: "Estadísticas",
     export: "Exportar",
+    score: "Marcador",
+    finish: "Finalizar",
+    resume: "Reanudar",
+    newItem: "Nuevo",
+    objects: "Objetos",
+    direction: "Dirección",
+    pattern: "Patrón",
+    undoPattern: "Deshacer patrón",
+    preview: "Preview",
+    save: "Guardar",
+    rotate: "Rotar",
+    undoPoint: "Deshacer punto",
+    undoShot: "Deshacer golpe",
+    reset: "Reiniciar",
+    undo: "Deshacer",
+    redo: "Rehacer",
+    exerciseData: "Datos del ejercicio",
+    exerciseSequence: "Secuencia del ejercicio",
+    coachMode: "Modo entrenador",
+    coachModeHalf: "Modo entrenador · media pista",
+    exerciseEditor: "Editor de ejercicios y patrones",
+    fullCourt: "Pista completa",
+    halfCourt: "Media pista",
+    backToFullCourt: "Volver a pista completa",
+    activateHalfCourt: "Activar media pista",
+    startTapCourt: "Inicio: toca la pista",
     hard: "Dura",
     clay: "Tierra batida",
     grass: "Césped",
@@ -308,6 +334,32 @@ const I18N = {
     analytics: "Analytics",
     stats: "Stats",
     export: "Export",
+    score: "Score",
+    finish: "Finish",
+    resume: "Resume",
+    newItem: "New",
+    objects: "Objects",
+    direction: "Direction",
+    pattern: "Pattern",
+    undoPattern: "Undo pattern",
+    preview: "Preview",
+    save: "Save",
+    rotate: "Rotate",
+    undoPoint: "Undo point",
+    undoShot: "Undo shot",
+    reset: "Reset",
+    undo: "Undo",
+    redo: "Redo",
+    exerciseData: "Exercise details",
+    exerciseSequence: "Exercise sequence",
+    coachMode: "Coach mode",
+    coachModeHalf: "Coach mode · half court",
+    exerciseEditor: "Exercise and pattern editor",
+    fullCourt: "Full court",
+    halfCourt: "Half court",
+    backToFullCourt: "Back to full court",
+    activateHalfCourt: "Activate half court",
+    startTapCourt: "Start: tap the court",
     hard: "Hard",
     clay: "Clay",
     grass: "Grass",
@@ -321,9 +373,194 @@ function t(key){
 function setLanguage(lang){
   state.lang = (lang === "en") ? "en" : "es";
   persist();
-  applyI18n();
   renderAll();
+  applyI18n();
+  try{ window.dispatchEvent(new Event("resize")); }catch(e){}
+  return false;
 }
+function toggleLanguage(){
+  return setLanguage((state.lang || "es") === "en" ? "es" : "en");
+}
+
+const TDT_TEXT_TRANSLATIONS = {
+  "PLATAFORMA PROFESIONAL DE TRACKING Y ANÁLISIS":"PROFESSIONAL TRACKING AND ANALYTICS PLATFORM",
+  "Registra. Analiza. Mejora.":"Track. Analyze. Improve.",
+  "Una experiencia premium para entrenadores, academias y jugadores que necesitan datos claros, historial y decisiones de entrenamiento mejor fundamentadas.":"A premium experience for coaches, academies and players who need clear data, history and better-informed training decisions.",
+  "Tracking punto a punto":"Point-by-point tracking",
+  "Perfiles de jugador":"Player profiles",
+  "Informes premium":"Premium reports",
+  "Acceder":"Sign in",
+  "Crear cuenta":"Create account",
+  "Modo demo":"Demo mode",
+  "Modo entrenador":"Coach mode",
+  "También puedes pulsar cualquier zona de la portada para continuar.":"You can also tap anywhere on the cover to continue.",
+  "Convierte el tracking en una plataforma con imagen profesional.":"Turn tracking into a professional-looking platform.",
+  "Esta versión añade acceso de usuario local, onboarding, biblioteca de jugadores, panel ejecutivo y una presentación comercial más potente dentro de la propia web.":"This version adds local user access, onboarding, a player library, an executive dashboard and a stronger commercial presentation within the web app.",
+  "Operativa clara":"Clear workflow",
+  "Acceso de entrenador, sesiones separadas por usuario y datos organizados por cuenta.":"Coach access, user-separated sessions and account-organized data.",
+  "Más valor para el cliente":"More value for the client",
+  "Perfiles de jugador, objetivos, debilidades, fortalezas y recomendaciones rápidas.":"Player profiles, goals, weaknesses, strengths and quick recommendations.",
+  "Imagen premium":"Premium image",
+  "Presentación, pricing visual, ayuda, privacidad y una experiencia más sólida y moderna.":"Presentation, visual pricing, help, privacy and a more solid, modern experience.",
+  "Entrenador individual":"Individual coach",
+  "Tracking, analíticas, exportación y biblioteca básica de jugadores.":"Tracking, analytics, export and a basic player library.",
+  "Para academias y staffs":"For academies and staffs",
+  "Más contexto, mejor onboarding y una experiencia más preparada para comercializar.":"More context, better onboarding and an experience more ready for commercialization.",
+  "Escalable":"Scalable",
+  "Base ideal para después conectar backend, suscripciones y base de datos real.":"Ideal base to later connect a backend, subscriptions and a real database.",
+  "Centro de ayuda":"Help center",
+  "Privacidad y términos":"Privacy and terms",
+  "Contraseña":"Password",
+  "Tu contraseña":"Your password",
+  "Recordar sesión en este dispositivo":"Remember session on this device",
+  "Entrar en la plataforma":"Enter the platform",
+  "Entrar en modo demo":"Enter demo mode",
+  "Entrar en modo entrenador":"Enter coach mode",
+  "Nombre profesional":"Professional name",
+  "Nombre del entrenador o academia":"Coach or academy name",
+  "Mínimo 8 caracteres":"Minimum 8 characters",
+  "Plan visual":"Visual plan",
+  "Crear cuenta y entrar":"Create account and enter",
+  "Esta versión funciona sin backend.":"This version works without a backend.",
+  "Las cuentas, perfiles y partidos quedan guardados en este dispositivo por usuario. Es una base muy útil para demo, validación comercial y preparación del siguiente paso con base de datos real.":"Accounts, profiles and matches are saved on this device per user. It is a useful base for demos, commercial validation and preparing the next step with a real database.",
+  "Acceso técnico a la interfaz":"Technical access to the interface",
+  "Solo para revisión interna si el acceso local falla.":"Only for internal review if local access fails.",
+  "Menú":"Menu",
+  "Acciones":"Actions",
+  "Reportes":"Reports",
+  "Configuración":"Settings",
+  "Guardar partido":"Save match",
+  "Cargar partido":"Load match",
+  "Modo de juego":"Game mode",
+  "Cambiar pista":"Change court",
+  "Idioma":"Language",
+  "Volver":"Back",
+  "Cerrar":"Close",
+  "Aplicar":"Apply",
+  "Iniciar":"Start",
+  "Datos del partido":"Match details",
+  "Secuencia del punto":"Point sequence",
+  "Secuencia del ejercicio":"Exercise sequence",
+  "Último:":"Last:",
+  "Gráficos":"Charts",
+  "Historial":"History",
+  "Analíticas":"Analytics",
+  "Estadísticas":"Stats",
+  "Exportar":"Export",
+  "Marcador":"Score",
+  "Finalizar":"Finish",
+  "Reanudar":"Resume",
+  "Nuevo":"New",
+  "Objetos":"Objects",
+  "Dirección":"Direction",
+  "Patrón":"Pattern",
+  "Deshacer patrón":"Undo pattern",
+  "Preview":"Preview",
+  "Guardar":"Save",
+  "Rotar":"Rotate",
+  "Deshacer punto":"Undo point",
+  "Deshacer golpe":"Undo shot",
+  "Reiniciar":"Reset",
+  "Deshacer":"Undo",
+  "Rehacer":"Redo",
+  "Datos del ejercicio":"Exercise details",
+  "Objetos y material":"Objects and equipment",
+  "Flecha de dirección":"Direction arrow",
+  "Finalizar patrón":"Finish pattern",
+  "Deshacer último patrón":"Undo last pattern",
+  "Preview ejercicio":"Exercise preview",
+  "Guardar ejercicio":"Save exercise",
+  "Rotar pista":"Rotate court",
+  "Deshacer acción":"Undo action",
+  "Rehacer acción":"Redo action",
+  "Nuevo ejercicio":"New exercise",
+  "Se limpiará la pista del ejercicio actual.":"The current exercise court will be cleared.",
+  "Nuevo partido":"New match",
+  "Se reiniciará el marcador y el historial del partido actual.":"The score and history of the current match will be reset.",
+  "Finalizar partido":"Finish match",
+  "¿Quieres finalizar el partido? Podrás reanudarlo desde el botón Reanudar.":"Do you want to finish the match? You can resume it from the Resume button.",
+  "Reanudar partido":"Resume match",
+  "¿Quieres reanudar el partido?":"Do you want to resume the match?",
+  "Limpiar pista":"Clear court",
+  "Se borrarán patrones y objetos del ejercicio actual.":"Patterns and objects from the current exercise will be deleted.",
+  "Biblioteca de jugadores":"Player library",
+  "Guarda perfiles y asígnalos a A o B":"Save profiles and assign them to A or B",
+  "Elegir jugador":"Choose player",
+  "Selecciona un perfil ya guardado y asígnalo a A o B.":"Select a saved profile and assign it to A or B.",
+  "Nuevo jugador":"New player",
+  "Crea un perfil nuevo con datos técnicos, fortalezas y notas.":"Create a new profile with technical data, strengths and notes.",
+  "Nombre":"Name",
+  "Edad o categoría":"Age or category",
+  "Mano hábil":"Dominant hand",
+  "Sexo":"Sex",
+  "Objetivo principal":"Main goal",
+  "Fortalezas":"Strengths",
+  "Debilidades":"Weaknesses",
+  "Notas del entrenador":"Coach notes",
+  "Guardar perfil":"Save profile",
+  "Nuevo perfil":"New profile",
+  "Foto / ficha técnica":"Photo / technical profile",
+  "Añade una imagen del jugador para identificarlo rápido en su perfil.":"Add a player image to identify them quickly in their profile.",
+  "Subir foto":"Upload photo",
+  "Quitar":"Remove",
+  "Toca una ficha para ver, editar, borrar o asignar.":"Tap a card to view, edit, delete or assign.",
+  "Cuenta y workspace":"Account and workspace",
+  "Estado del acceso actual":"Current access status",
+  "Ver onboarding":"View onboarding",
+  "Cerrar sesión":"Log out",
+  "Cómo sacar partido a la plataforma":"How to get the most from the platform",
+  "Bienvenido al modo profesional":"Welcome to professional mode",
+  "Checklist recomendada para empezar bien":"Recommended checklist to start well",
+  "Ir a jugadores":"Go to players",
+  "Entendido":"Got it",
+  "Colocación":"Placement",
+  "Libre":"Free",
+  "Alineado":"Aligned",
+  "Preciso":"Precise",
+  "Plantillas rápidas":"Quick templates",
+  "Fila horizontal":"Horizontal row",
+  "Fila vertical":"Vertical row",
+  "Fila diagonal":"Diagonal row",
+  "Zigzag":"Zigzag",
+  "Cuadrado":"Square",
+  "Circuito":"Circuit",
+  "Organizar selección":"Organize selection",
+  "Alinear horizontal":"Align horizontal",
+  "Alinear vertical":"Align vertical",
+  "Distribuir horizontal":"Distribute horizontal",
+  "Distribuir vertical":"Distribute vertical",
+  "Quitar selección":"Clear selection",
+  "Borrar selección":"Delete selection",
+  "Toca objetos en la pista para seleccionarlos":"Tap objects on the court to select them"
+};
+const TDT_TEXT_TRANSLATIONS_REV = Object.fromEntries(Object.entries(TDT_TEXT_TRANSLATIONS).map(([k,v])=>[v,k]));
+function translateLooseString(value){
+  if (value == null) return value;
+  const raw = String(value);
+  const trimmed = raw.trim();
+  if (!trimmed) return raw;
+  const dict = isEn() ? TDT_TEXT_TRANSLATIONS : TDT_TEXT_TRANSLATIONS_REV;
+  const next = dict[trimmed];
+  if (!next) return raw;
+  return raw.replace(trimmed, next);
+}
+function applyLooseI18n(){
+  const selector = 'button, span, div, strong, small, p, h1, h2, h3, label, summary, option, article, li, textarea, input';
+  document.querySelectorAll(selector).forEach(el=>{
+    if (!el || el.children.length > 0) return;
+    const current = el.textContent;
+    const translated = translateLooseString(current);
+    if (translated !== current) el.textContent = translated;
+  });
+  ['placeholder','title','aria-label','alt'].forEach(attr=>{
+    document.querySelectorAll('['+attr+']').forEach(el=>{
+      const current = el.getAttribute(attr);
+      const translated = translateLooseString(current);
+      if (translated !== current) el.setAttribute(attr, translated);
+    });
+  });
+}
+
 function applyI18n(){
   document.documentElement.lang = state.lang || "es";
   document.title = "Tennis Direction Tracker";
@@ -410,6 +647,7 @@ function applyI18n(){
   const optF = document.querySelector('#profileSex option[value="F"]'); if (optF) optF.textContent = tr('Mujer','Female');
   const optR = document.querySelector('#profileHand option[value="R"]'); if (optR) optR.textContent = tr('Diestro','Right-handed');
   const optL = document.querySelector('#profileHand option[value="L"]'); if (optL) optL.textContent = tr('Zurdo','Left-handed');
+  try{ applyLooseI18n(); }catch(e){ console.warn('Loose i18n failed', e); }
   upgradeCloseButtons();
 }
 
@@ -4961,6 +5199,7 @@ function setAppMode(mode){
   applyModes();
   persist();
   renderAll();
+  try{ applyLooseI18n(); }catch(e){ console.warn('Loose i18n failed', e); }
 }
 function applyCoachModeUI(){
   const coachMode = isCoachMode();
@@ -4976,25 +5215,25 @@ function applyCoachModeUI(){
   const wsSub = document.getElementById("workspaceSub");
   if (coachMode){
     const c = coachState || ensureCoachState();
-    if (wsName) wsName.textContent = c.courtMode === "half" ? "Modo entrenador · media pista" : "Modo entrenador";
-    if (wsSub) wsSub.textContent = c.exerciseName || "Editor de ejercicios y patrones";
+    if (wsName) wsName.textContent = c.courtMode === "half" ? t("coachModeHalf") : t("coachMode");
+    if (wsSub) wsSub.textContent = c.exerciseName || t("exerciseEditor");
   }
   const modeLabel = document.getElementById("coachCourtModeLabel");
-  if (modeLabel && coachMode) modeLabel.textContent = (coachState && coachState.courtMode === "half") ? "Pista completa" : "Media pista";
+  if (modeLabel && coachMode) modeLabel.textContent = (coachState && coachState.courtMode === "half") ? t("fullCourt") : t("halfCourt");
   updateCoachHalfSwitch();
   const modeBtn = document.getElementById("btnCoachCourtMode");
   if (modeBtn && coachMode){
     const half = coachState && coachState.courtMode === "half";
-    modeBtn.title = half ? "Volver a pista completa" : "Activar media pista";
+    modeBtn.title = half ? t("backToFullCourt") : t("activateHalfCourt");
     modeBtn.setAttribute("aria-label", modeBtn.title);
     modeBtn.classList.toggle("active", half);
   }
   const title = document.querySelector(".timelineTitle");
-  if (title) title.textContent = coachMode ? "Secuencia del ejercicio" : t("seqTitle");
+  if (title) title.textContent = coachMode ? t("exerciseSequence") : t("seqTitle");
   const metaSummary = document.querySelector("#matchMetaCard summary");
-  if (metaSummary) metaSummary.textContent = coachMode ? "Datos del ejercicio" : t("matchData");
+  if (metaSummary) metaSummary.textContent = coachMode ? t("exerciseData") : t("matchData");
   const last = document.getElementById("lastTouch");
-  if (coachMode && last && (!state.point || !state.point.events || !state.point.events.length)) last.textContent = "Inicio: toca la pista";
+  if (coachMode && last && (!state.point || !state.point.events || !state.point.events.length)) last.textContent = t("startTapCourt");
   document.querySelector(".matchMetaGrid")?.classList.toggle("hidden", coachMode);
   document.getElementById("coachMetaGrid")?.classList.toggle("hidden", !coachMode);
   syncCoachInlineFromState();
@@ -5006,7 +5245,7 @@ function updateEntryLanguageFlags(){
   const flag = (state.lang === "en") ? "🇬🇧" : "🇪🇸";
   ["entryLangFlag","authLangFlag","langFlag"].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=flag; });
 }
-function openEntryLanguage(){ openModal("#languageModal"); return false; }
+function openEntryLanguage(){ return toggleLanguage(); }
 function getAllCoachArrows(){
   const c = ensureCoachState();
   const saved = [];
@@ -5413,8 +5652,8 @@ function fitCoachTemplatePoints(points){
 function makeCoachTemplatePoints(template, origin){
   const o = {x:clamp01(origin.x), y:clamp01(origin.y)};
   // Separación amplia: deja aproximadamente un cono libre entre conos en móvil.
-  const sx = isCoachHalfCourt() ? 0.13 : 0.115;
-  const sy = isCoachHalfCourt() ? 0.115 : 0.098;
+  const sx = isCoachHalfCourt() ? 0.17 : 0.145;
+  const sy = isCoachHalfCourt() ? 0.145 : 0.122;
   let pts = [];
   if (template === "rowH") pts = [-2,-1,0,1,2].map(i=>({x:o.x+i*sx,y:o.y}));
   else if (template === "rowV") pts = [-2,-1,0,1,2].map(i=>({x:o.x,y:o.y+i*sy}));
@@ -5472,7 +5711,7 @@ function updateCoachSelectionUI(){
   c.selectedObjectIds = (c.selectedObjectIds || []).filter(id=>validIds.has(id));
   const count = c.selectedObjectIds.length;
   const label = document.getElementById("coachSelectionCount");
-  if (label) label.textContent = count ? (count + " seleccionados") : "Toca objetos en la pista para seleccionarlos";
+  if (label) label.textContent = count ? (count + (isEn() ? " selected" : " seleccionados")) : tr("Toca objetos en la pista para seleccionarlos", "Tap objects on the court to select them");
   document.querySelectorAll(".coachSelectionAction").forEach(btn=>btn.disabled = count < Number(btn.dataset.minSelection || 1));
 }
 function alignCoachSelected(axis){
@@ -5661,7 +5900,7 @@ function renderCoachObjectsInto(layerId, preview=false){
       el.style.width = Math.max(6,len)+"%";
       el.style.transform = `rotate(${ang}deg)`;
       el.innerHTML = `<span></span>`;
-      if (!preview) el.addEventListener("click", (e)=>{ e.stopPropagation(); removeCoachObject(obj.id); });
+      if (!preview) wireCoachDraggableDashLine(el, obj);
       layer.appendChild(el);
       return;
     }
@@ -5715,6 +5954,54 @@ function editCoachTextObject(obj){
     persist();
   }
 }
+
+function wireCoachDraggableDashLine(el, obj){
+  let start=null, moved=false, historyRecorded=false;
+  const minMove = 5;
+  const cleanup=()=>{
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onCancel);
+  };
+  const apply=()=>{
+    const dx = (clamp01(obj.x2)-clamp01(obj.x));
+    const dy = (clamp01(obj.y2)-clamp01(obj.y));
+    const len = Math.hypot(dx,dy)*100;
+    const ang = Math.atan2(dy,dx)*180/Math.PI;
+    el.style.left = (clamp01(obj.x)*100)+"%";
+    el.style.top = (clamp01(obj.y)*100)+"%";
+    el.style.width = Math.max(6,len)+"%";
+    el.style.transform = `rotate(${ang}deg)`;
+  };
+  const onMove=(e)=>{
+    if(!start) return;
+    const dxPx=e.clientX-start.x0, dyPx=e.clientY-start.y0;
+    if(Math.hypot(dxPx,dyPx)>minMove){
+      moved=true;
+      if(!historyRecorded){ recordCoachHistory(); historyRecorded=true; }
+      const p0 = coachPointFromClient(start.x0, start.y0);
+      const p1 = coachPointFromClient(e.clientX, e.clientY);
+      const dx = p1.x - p0.x, dy = p1.y - p0.y;
+      obj.x=clamp01(start.ox + dx); obj.y=clamp01(start.oy + dy);
+      obj.x2=clamp01(start.ox2 + dx); obj.y2=clamp01(start.oy2 + dy);
+      apply();
+    }
+  };
+  const finish=()=>{ if(moved){ persist(); } };
+  const onUp=(e)=>{ if(!start) return; cleanup(); try{ el.releasePointerCapture && el.releasePointerCapture(start.pointerId); }catch(_){} if(moved){ e&&e.preventDefault&&e.preventDefault(); finish(); } else { removeCoachObject(obj.id); } setTimeout(()=>{start=null;moved=false;historyRecorded=false;},0); };
+  const onCancel=()=>{ if(!start) return; cleanup(); finish(); setTimeout(()=>{start=null;moved=false;historyRecorded=false;},0); };
+  el.addEventListener('pointerdown',(e)=>{
+    e.preventDefault(); e.stopPropagation();
+    start={x0:e.clientX,y0:e.clientY,pointerId:e.pointerId,ox:clamp01(obj.x),oy:clamp01(obj.y),ox2:clamp01(obj.x2),oy2:clamp01(obj.y2)};
+    moved=false; historyRecorded=false;
+    try{ el.setPointerCapture && el.setPointerCapture(e.pointerId); }catch(_){}
+    document.addEventListener('pointermove',onMove,{passive:false});
+    document.addEventListener('pointerup',onUp,{passive:false});
+    document.addEventListener('pointercancel',onCancel,{passive:false});
+  });
+  el.addEventListener('click',(e)=>{ e.preventDefault(); e.stopPropagation(); });
+}
+
 function wireCoachDraggableObject(el, obj, options={}){
   let start=null, moved=false, historyRecorded=false;
   const minMove = 5;
@@ -6252,8 +6539,8 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCoachCourtMode","click", ()=>openFromMenu(toggleCoachCourtMode));
   on("btnCoachClear","click", ()=>openFromMenu(()=>openConfirm("Limpiar pista", "Se borrarán patrones y objetos del ejercicio actual.", ()=>clearCoachCourt())));
   on("btnLanguage","click", ()=>openFromMenu(()=>openModal("#languageModal")));
-  on("btnSplashLanguage","click", openEntryLanguage);
-  on("btnAuthLanguage","click", openEntryLanguage);
+  on("btnSplashLanguage","click", toggleLanguage);
+  on("btnAuthLanguage","click", toggleLanguage);
   on("btnInfo","click", ()=>openFromMenu(()=>openModal("#infoModal")));
   on("btnBackHome","click", ()=>openFromMenu(()=>{ showSplashAgain(); }));
   on("btnCloseSurface","click", closeSurface);
@@ -7562,6 +7849,8 @@ window.handleSignup = handleSignup;
 window.handleDemoAccess = handleDemoAccess;
 window.handleCoachAccess = handleCoachAccess;
 window.openEntryLanguage = openEntryLanguage;
+window.setLanguage = setLanguage;
+window.toggleTdtLanguage = toggleLanguage;
 window.handleDeveloperAccess = handleDeveloperAccess;
 window.forceEnterMainInterface = forceEnterMainInterface;
 if (document.readyState === "loading") {

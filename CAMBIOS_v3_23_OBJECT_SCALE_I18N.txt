@@ -1,0 +1,11 @@
+Tennis Direction Tracker Web v3.23
+
+Cambios aplicados:
+- Reducción proporcional de objetos del modo entrenador para que no se vean sobredimensionados respecto a la pista.
+- Ajuste especial de escalera, cesta, conos, aros, objetivos, jugador y entrenador.
+- Mayor separación en plantillas rápidas de conos: filas, diagonal, zigzag, cuadrado y circuito.
+- Corrección del cambio de idioma desde los iconos de bandera: ahora cambia de forma inmediata al pulsar, sin esperar a entrar en otro modo ni pulsar otros botones.
+- Ampliada la traducción ES/EN en textos estáticos, botones del rail, datos del ejercicio, modo entrenador, splash, acceso y controles principales.
+- Los textos dinámicos principales del modo entrenador ahora respetan el idioma seleccionado.
+- Se mantiene el arrastre de objetos y se añade compatibilidad de arrastre para líneas de desplazamiento antiguas si existen como objeto.
+- Actualizada la caché del service worker a v3.23.

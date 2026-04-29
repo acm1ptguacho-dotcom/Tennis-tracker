@@ -4645,3 +4645,110 @@ body.coachMode .previewObjects .coneShape::after{
 }
 body.coachMode .coachObject{cursor:grab!important;}
 body.coachMode .coachObject:active{cursor:grabbing!important;}
+
+/* ===== v3.23 - proporción realista de objetos y ajuste fino responsive ===== */
+body.coachMode{
+  --coach-object-regular: 28px;
+  --coach-cone-w: 18px;
+  --coach-cone-h: 22px;
+  --coach-ladder-w: clamp(92px, 24vw, 118px);
+  --coach-ladder-h: clamp(28px, 7.4vw, 34px);
+  --coach-basket-scale: .72;
+}
+body.coachMode .coachObject:not(.coachObject-ladder):not(.coachObject-basket):not(.coachObject-text){
+  width:var(--coach-object-regular)!important;
+  height:var(--coach-object-regular)!important;
+}
+body.coachMode .coachObject .coneShape,
+body.coachMode .previewObjects .coneShape,
+body.coachMode .coachPreviewCourt .coneShape{
+  border-left-width:calc(var(--coach-cone-w) / 2)!important;
+  border-right-width:calc(var(--coach-cone-w) / 2)!important;
+  border-bottom-width:var(--coach-cone-h)!important;
+  filter:drop-shadow(0 0 5px rgba(255,145,30,.36))!important;
+}
+body.coachMode .coachObject .coneShape::after,
+body.coachMode .previewObjects .coneShape::after,
+body.coachMode .coachPreviewCourt .coneShape::after{
+  left:calc(var(--coach-cone-w) / -2 - 2px)!important;
+  top:calc(var(--coach-cone-h) - 4px)!important;
+  width:calc(var(--coach-cone-w) + 4px)!important;
+  height:3px!important;
+}
+body.coachMode .coachObject .hoopShape,
+body.coachMode .coachPreviewCourt .hoopShape{
+  width:25px!important;
+  height:25px!important;
+  border-width:3px!important;
+}
+body.coachMode .coachObject .targetShape,
+body.coachMode .coachPreviewCourt .targetShape{
+  width:27px!important;
+  height:27px!important;
+  border-width:2px!important;
+}
+body.coachMode .coachObject .personShape,
+body.coachMode .coachPreviewCourt .personShape{
+  width:28px!important;
+  height:28px!important;
+  font-size:13px!important;
+}
+body.coachMode .coachObject-ladder{
+  width:calc(var(--coach-ladder-w) + 16px)!important;
+  height:calc(var(--coach-ladder-h) + 12px)!important;
+  overflow:visible!important;
+  transform:translate(0,0)!important;
+}
+body.coachMode .coachObject-ladder .ladderShape,
+body.coachMode .coachPreviewCourt .coachObject-ladder .ladderShape{
+  width:var(--coach-ladder-w)!important;
+  height:var(--coach-ladder-h)!important;
+  margin:0!important;
+  background:
+    linear-gradient(0deg, #10151b 0 4px, transparent 4px calc(100% - 4px), #10151b calc(100% - 4px) 100%),
+    repeating-linear-gradient(90deg, transparent 0 9px, #ffd84d 9px 13px, transparent 13px 20px)!important;
+  filter:drop-shadow(0 0 7px rgba(255,216,77,.34)) drop-shadow(0 7px 9px rgba(0,0,0,.34))!important;
+}
+body.coachMode .coachObject-ladder.ladderVertical{
+  width:calc(var(--coach-ladder-h) + 12px)!important;
+  height:calc(var(--coach-ladder-w) + 16px)!important;
+}
+body.coachMode .coachObject-ladder.ladderVertical .ladderShape,
+body.coachMode .coachPreviewCourt .coachObject-ladder.ladderVertical .ladderShape{
+  width:var(--coach-ladder-h)!important;
+  height:var(--coach-ladder-w)!important;
+  background:
+    linear-gradient(90deg, #10151b 0 4px, transparent 4px calc(100% - 4px), #10151b calc(100% - 4px) 100%),
+    repeating-linear-gradient(0deg, transparent 0 9px, #ffd84d 9px 13px, transparent 13px 20px)!important;
+}
+body.coachMode .coachObject-ladder .ladderRotateBtn{
+  width:24px!important;
+  height:24px!important;
+  right:-8px!important;
+  top:-13px!important;
+  font-size:13px!important;
+}
+body.coachMode .coachObject-basket{
+  width:48px!important;
+  height:70px!important;
+}
+body.coachMode .coachObject-basket .basketShape,
+body.coachMode .coachPreviewCourt .coachObject-basket .basketShape{
+  transform:translateY(-14px) scale(var(--coach-basket-scale)) perspective(140px) rotateX(5deg)!important;
+  transform-origin:center top!important;
+}
+body.coachMode .coachObject.isSelected::after{
+  width:10px!important;
+  height:10px!important;
+  right:-5px!important;
+  top:-5px!important;
+}
+@media(max-width:390px){
+  body.coachMode{
+    --coach-object-regular:26px;
+    --coach-cone-w:16px;
+    --coach-cone-h:20px;
+    --coach-ladder-w:92px;
+    --coach-ladder-h:28px;
+  }
+}
