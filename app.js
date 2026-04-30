@@ -6016,8 +6016,15 @@ function coachPointFromClient(clientX, clientY){
   const el = surface || court;
   if (!el) return { x:.5, y:.5 };
   const r = el.getBoundingClientRect();
-  const x = (clientX - r.left) / Math.max(1, r.width);
-  const y = (clientY - r.top) / Math.max(1, r.height);
+  // Apply zoom factor: divide by current zoom to map screen coords back to unscaled court
+  let x = (clientX - r.left) / Math.max(1, r.width);
+  let y = (clientY - r.top) / Math.max(1, r.height);
+  // Correct for coach zoom scaling
+  const zoom = (typeof window.__coachZoom === "number" && window.__coachZoom > 0) ? window.__coachZoom : 1;
+  if (zoom !== 1){
+    x /= zoom;
+    y /= zoom;
+  }
   return coachViewportToCourtNorm(x, y);
 }
 function coachPointFromCourtEvent(evt){
@@ -6037,6 +6044,56 @@ function handleCoachPrecisePointerDown(evt){
   evt.preventDefault();
   evt.stopPropagation();
   handleCoachToolAtPoint(pt, pt.y > .5 ? "B" : "A");
+}
+
+// ====================
+// Zoom de pista en modo entrenador
+// Gestiona un factor de zoom global que se aplica a la superficie de la pista para
+// permitir acercar/alejar sin afectar a la posición lógica de los objetos. Las
+// coordenadas recogidas del ratón o del dedo se corrigen en coachPointFromClient.
+
+window.__coachZoom = 1;
+
+function initCoachZoom(){
+  const zoomInBtn = document.getElementById("btnCoachZoomIn");
+  const zoomOutBtn = document.getElementById("btnCoachZoomOut");
+  const surface = document.getElementById("courtSurface");
+  // Aplica la escala actual a la superficie de la pista
+  function updateCoachZoomUI(){
+    const cs = document.getElementById("courtSurface");
+    if (!cs) return;
+    const z = (typeof window.__coachZoom === "number" && window.__coachZoom > 0) ? window.__coachZoom : 1;
+    cs.style.transform = `scale(${z})`;
+    cs.style.transformOrigin = "center center";
+  }
+  window.coachZoomIn = function(){
+    const maxZ = 2.5;
+    window.__coachZoom = Math.min(maxZ, (window.__coachZoom || 1) + 0.1);
+    updateCoachZoomUI();
+  };
+  window.coachZoomOut = function(){
+    const minZ = 0.5;
+    window.__coachZoom = Math.max(minZ, (window.__coachZoom || 1) - 0.1);
+    updateCoachZoomUI();
+  };
+  if (zoomInBtn) zoomInBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    coachZoomIn();
+  });
+  if (zoomOutBtn) zoomOutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    coachZoomOut();
+  });
+  // Gestor de rueda del ratón para zoom
+  if (surface){
+    surface.addEventListener("wheel", (e) => {
+      if (!isCoachMode()) return;
+      e.preventDefault();
+      const delta = e.deltaY || e.wheelDelta || 0;
+      if (delta > 0) coachZoomOut(); else coachZoomIn();
+    }, {passive:false});
+  }
+  updateCoachZoomUI();
 }
 function handleCoachDirectionTap(pt, hitter="A"){
   const c = ensureCoachState();
@@ -8083,6 +8140,11 @@ function init(){
   renderAll();
   initSplash();
   registerSW();
+
+  // Inicializar controles de zoom para modo entrenador
+  try{
+    if (typeof initCoachZoom === "function") initCoachZoom();
+  }catch(e){ console.error("initCoachZoom error", e); }
 }
 
 let __tdtSafeBooted = false;

@@ -3528,6 +3528,46 @@ body.coachMode .coachObject-ladder.ladderVertical{
 body.coachMode.coachHalfCourt .courtWrap.courtRow{
   grid-template-rows:auto auto!important;
 }
+
+/* Zoom de pista en modo entrenador */
+/* Contenedor de los botones de zoom */
+.coachZoomControls{
+  position:absolute;
+  top:50%;
+  right:8px;
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  z-index:15;
+}
+/* Solo mostrar en modo entrenador */
+body:not(.coachMode) .coachZoomControls{display:none!important;}
+/* Estilo de los botones de zoom */
+.coachZoomControls .coachZoomBtn{
+  width:48px;
+  height:48px;
+  min-width:48px;
+  min-height:48px;
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.4);
+  background:linear-gradient(180deg,rgba(28,44,59,.96),rgba(10,22,34,.96));
+  box-shadow:0 6px 12px rgba(0,0,0,.45), 0 0 10px rgba(201,255,74,.18);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+}
+.coachZoomControls .coachZoomBtn:hover{
+  box-shadow:0 0 14px rgba(201,255,74,.45), 0 0 18px rgba(201,255,74,.25);
+}
+.coachZoomControls .coachZoomBtn .svgIcon{
+  width:22px;
+  height:22px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:2;
+}
 body.coachMode.coachHalfCourt .courtRail .quickItem{
   width:124px!important;
   min-width:124px!important;
