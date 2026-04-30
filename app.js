@@ -654,7 +654,7 @@ function applyI18n(){
   setTxt('#finishHowTitle', tr('¿Cómo finaliza el punto?','How does the point finish?'));
   setTxt('#finishSelectedKicker', tr('Jugador seleccionado','Selected player'));
   setTxt('#finishChangePlayer', tr('Cambiar jugador','Change player'));
-  [['#mStepUE', tr('Error no forzado','Unforced error')], ['#mStepFE', tr('Error forzado','Forced error')], ['#mStepGain', tr('Gana','Wins')], ['#mStepWinner','Winner'], ['#mStepVolley', tr('Volea','Volley')]].forEach(([sel,txt])=>setTxt(sel,txt));
+  [['#mStepUE', tr('Error no forzado','Unforced error')], ['#mStepFE', tr('Error forzado\nError provocado','Forced error')], ['#mStepGain', tr('Gana','Wins')], ['#mStepWinner','Winner'], ['#mStepVolley', tr('Volea','Volley')]].forEach(([sel,txt])=>setTxt(sel,txt));
   setTxt('#btnPlayerLibraryMenu span', tr('Jugadores','Players'));
   setTxt('#btnAccountMenu span', tr('Cuenta','Account'));
   setTxt('#btnHelpCenter span', tr('Centro de ayuda','Help center'));
@@ -5833,9 +5833,11 @@ function fitCoachTemplatePoints(points){
 }
 function makeCoachTemplatePoints(template, origin){
   const o = {x:clamp01(origin.x), y:clamp01(origin.y)};
-  // Separación amplia: deja aproximadamente un cono libre entre conos en móvil.
-  const sx = isCoachHalfCourt() ? 0.17 : 0.145;
-  const sy = isCoachHalfCourt() ? 0.145 : 0.122;
+  // Separación reducida: distancia más corta entre conos para mantener proporción con la pista.
+  // Se reducen los valores originales de 0.17/0.145 y 0.145/0.122 para que las filas de conos
+  // queden más compactas y no rompan la lógica visual de la pista.
+  const sx = isCoachHalfCourt() ? 0.12 : 0.095;
+  const sy = isCoachHalfCourt() ? 0.10 : 0.08;
   let pts = [];
   if (template === "rowH") pts = [-2,-1,0,1,2].map(i=>({x:o.x+i*sx,y:o.y}));
   else if (template === "rowV") pts = [-2,-1,0,1,2].map(i=>({x:o.x,y:o.y+i*sy}));

@@ -3282,7 +3282,9 @@ body.coachMode.coachHalfCourt #court{
   grid-column:1!important;
   grid-row:2!important;
   width:100%!important;
-  max-width:min(100%, 680px)!important;
+  /* Ajuste de anchura en media pista: usar el 100% del espacio disponible para que el área verde tenga la
+     misma proporción que en pista completa y así evitar que los objetos se desplacen al cambiar de vista. */
+  max-width:100%!important;
   min-width:0!important;
   aspect-ratio:9 / 9!important;
   justify-self:center!important;
@@ -5092,10 +5094,14 @@ body.coachMode.coachHalfCourt #courtSurface{
   gap:14px!important;
 }
 .finishPlayerCard{
-  min-height:104px!important;
+  /* Ajuste del diseño de las tarjetas de jugador: en vertical con letra, foto y nombre */
+  min-height:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
   justify-content:flex-start!important;
-  padding:16px 18px!important;
-  gap:14px!important;
+  padding:16px!important;
+  gap:10px!important;
   border-radius:24px!important;
   background:
     radial-gradient(240px 120px at 15% 0%, rgba(98,192,255,.18), transparent 58%),
@@ -5112,16 +5118,18 @@ body.coachMode.coachHalfCourt #courtSurface{
   color:rgba(231,242,255,.92)!important;
   background:linear-gradient(180deg, rgba(121,191,255,.20), rgba(255,255,255,.06))!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.14)!important;
+
+  /* Añadir margen inferior para separar la letra de la imagen */
+  margin-bottom:2px!important;
 }
 .finishPlayerMeta{
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:flex-start!important;
-  gap:8px!important;
+  /* El contenedor meta ya no se usa en la nueva disposición vertical */
+  display:none!important;
 }
 .finishPlayerCard .pName{
   font-size:24px!important;
-  line-height:1!important;
+  line-height:1.1!important;
+  text-align:center!important;
 }
 .finishPlayerAvatar,
 .finishSelectedAvatar{
@@ -5187,6 +5195,12 @@ body.coachMode.coachHalfCourt #courtSurface{
 }
 .finishActionGrid{
   gap:12px!important;
+
+  /* Permitir desplazamiento vertical para las opciones de finalización de punto.
+     Limita la altura del contenedor para que no sobrepase la pantalla en móvil
+     y activa scroll si hay más botones de los que caben en el panel. */
+  max-height:40vh;
+  overflow-y:auto;
 }
 .finishActionGrid .finishBtn{
   min-height:64px!important;
@@ -5531,7 +5545,7 @@ body.coachMode.coachHalfCourt #courtSurface{
   .finishMenuTitle{font-size:clamp(25px, 7.7vw, 34px)!important;}
   .finishStep{padding:13px!important;border-radius:23px!important;}
   .finishPlayerCards{gap:10px!important;}
-  .finishPlayerCard{min-height:90px!important;padding:12px!important;}
+  .finishPlayerCard{min-height:auto!important;padding:12px!important;}
   .finishPlayerCard .pName{font-size:19px!important;}
   .finishActionGrid .finishBtn{min-height:64px!important;padding-left:68px!important;font-size:18px!important;}
   .finishActionGrid .finishBtn::before{left:16px;width:36px;height:36px;border-radius:14px;}

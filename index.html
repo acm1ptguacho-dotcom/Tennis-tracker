@@ -595,12 +595,14 @@
         <div class="finishStepTitle" id="finishWhoTitle">¿Quién finaliza el punto?</div>
         <div class="finishPlayerCards" id="finishPlayerCards">
           <button class="finishPlayerCard" id="finishSelectA" type="button" data-player="A">
+            <span class="pTag">A</span>
             <span class="finishPlayerAvatar" id="finishAvatarA" aria-hidden="true"></span>
-            <span class="finishPlayerMeta"><span class="pTag">A</span><span class="pName" id="finishNameA">Jugador A</span></span>
+            <span class="pName" id="finishNameA">Jugador A</span>
           </button>
           <button class="finishPlayerCard" id="finishSelectB" type="button" data-player="B">
+            <span class="pTag">B</span>
             <span class="finishPlayerAvatar" id="finishAvatarB" aria-hidden="true"></span>
-            <span class="finishPlayerMeta"><span class="pTag">B</span><span class="pName" id="finishNameB">Jugador B</span></span>
+            <span class="pName" id="finishNameB">Jugador B</span>
           </button>
         </div>
       </div>
@@ -789,9 +791,6 @@
         <button class="coachTemplateBtn" data-coach-template="rowH" type="button"><b>·····</b><small>Fila horizontal</small></button>
         <button class="coachTemplateBtn" data-coach-template="rowV" type="button"><b>⋮</b><small>Fila vertical</small></button>
         <button class="coachTemplateBtn" data-coach-template="rowD" type="button"><b>╲</b><small>Fila diagonal</small></button>
-        <button class="coachTemplateBtn" data-coach-template="zigzag" type="button"><b>⌁</b><small>Zigzag</small></button>
-        <button class="coachTemplateBtn" data-coach-template="square" type="button"><b>□</b><small>Cuadrado</small></button>
-        <button class="coachTemplateBtn" data-coach-template="circuit" type="button"><b>↻</b><small>Circuito</small></button>
       </div>
     </section>
 
@@ -814,7 +813,7 @@
       </div>
     </section>
 
-    <div class="coachObjectsHint"><b>Nuevo flujo:</b> usa Alineado para colocar conos rectos, Preciso para rejilla invisible y Plantillas para filas, zigzag, cuadrados o circuitos. Toca objetos ya colocados para seleccionarlos, cambiar su tamaño y organizarlos.</div>
+    <div class="coachObjectsHint"><b>Nuevo flujo:</b> usa Alineado para colocar conos rectos, Preciso para rejilla invisible y Plantillas para filas (horizontal, vertical o diagonal). Toca objetos ya colocados para seleccionarlos, cambiar su tamaño y organizarlos.</div>
     <div class="modalFoot"><button class="btn warn" id="btnCoachDeleteLastObject" type="button">Borrar último objeto</button><button class="btn primary" id="btnCoachSelectPatternTool" type="button">Volver a flechas</button></div>
   </div>
 </div>
