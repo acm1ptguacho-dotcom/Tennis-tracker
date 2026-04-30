@@ -3282,14 +3282,25 @@ body.coachMode.coachHalfCourt #court{
   grid-column:1!important;
   grid-row:2!important;
   width:100%!important;
-  /* Ajuste de anchura en media pista: usar el 100% del espacio disponible para que el área verde tenga la
-     misma proporción que en pista completa y así evitar que los objetos se desplacen al cambiar de vista. */
   max-width:100%!important;
   min-width:0!important;
-  aspect-ratio:9 / 9!important;
+  /* Eliminar la relación de aspecto fija y permitir que el contenedor se escale
+     de forma natural. Esto iguala el ancho del área verde en media pista y pista completa
+     para que los objetos no se desplacen al cambiar de vista. */
+  height:auto!important;
+  aspect-ratio:auto!important;
   justify-self:center!important;
   margin:0 auto!important;
   overflow:hidden!important;
+}
+
+/* Override half-court court element to fill available width and remove fixed aspect ratio */
+body.coachMode.coachHalfCourt .courtWrap.courtRow .court{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  height:auto !important;
+  aspect-ratio:auto !important;
 }
 body.coachMode.coachHalfCourt #courtSurface{
   inset:auto 0 auto 0!important;
@@ -4990,6 +5001,80 @@ body.coachMode:not(.coachHalfCourt) .coachHistoryControls{
   background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(4,14,24,.22));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
   overflow:hidden;
+}
+
+/* === Custom adjustments for v3.29 === */
+/* Align player cards: keep the letter and avatar on one row with the name below */
+.finishPlayerTop{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  width:100%;
+}
+.finishPlayerCard .pTag{
+  font-size:20px;
+  font-weight:600;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.finishPlayerCard .finishPlayerAvatar{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* Hide rotate court button in coach mode since rotation is not needed there */
+body.coachMode #btnRotateCourt,
+body.coachMode #lblRotateCourt{
+  display:none !important;
+}
+
+/* Allow multi-line text on finish buttons (e.g. Error forzado / Error provocado) */
+#mStepFE{
+  white-space:pre-line !important;
+}
+
+/* Redesign the basket icon to be lighter and more consistent with other icons */
+.basketShape{
+  width:40px !important;
+  height:36px !important;
+  position:relative !important;
+  display:block !important;
+  border:2px solid rgba(255,255,255,.34) !important;
+  border-radius:6px 6px 8px 8px !important;
+  background:linear-gradient(180deg, #5a89a9, #1c3b57) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 8px 16px rgba(0,0,0,.25) !important;
+  overflow:hidden !important;
+}
+.basketShape::before{
+  content:"";
+  position:absolute;
+  top:4px;
+  left:4px;
+  right:4px;
+  bottom:10px;
+  border-radius:4px 4px 6px 6px;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 6px);
+  opacity:.6;
+}
+.basketShape::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-8px;
+  height:8px;
+  background:linear-gradient(180deg, #446c8a, #1f374d);
+  border-radius:4px;
+  opacity:.9;
+}
+.basketShape i{
+  display:none !important;
 }
 .coachObjectsDropdown summary{
   list-style:none;

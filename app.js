@@ -852,8 +852,9 @@ function renderSavedMatchesList(){
         <div class="savedItemMeta">${escapeHtml(when)} · ${item.pointsCount ?? (item.state?.matchPoints?.length ?? 0)} puntos</div>
       </div>
       <div class="savedItemActions">
-        <button class="chip good" type="button" data-act="load">Cargar</button>
+        <button class="chip good" type="button" data-act="load">${tr("Cargar","Load")}</button>
         <button class="chip warn" type="button" data-act="del">${tr("Borrar","Delete")}</button>
+        <button class="chip" type="button" data-act="share">${tr("Compartir","Share")}</button>
       </div>
     `;
     row.querySelector('[data-act="load"]').addEventListener("click", ()=>{
@@ -861,6 +862,9 @@ function renderSavedMatchesList(){
     });
     row.querySelector('[data-act="del"]').addEventListener("click", ()=>{
       deleteSavedMatch(item.id);
+    });
+    row.querySelector('[data-act="share"]').addEventListener("click", ()=>{
+      shareMatch(item.id);
     });
     list.appendChild(row);
   });
@@ -920,6 +924,55 @@ function deleteSavedMatch(id){
   setSavedMatches(saved);
   renderSavedMatchesList();
   toast("🗑️ Eliminado");
+}
+
+/**
+ * Compartir un partido guardado.
+ * Genera un blob JSON con los datos del partido seleccionado y utiliza la Web Share API
+ * si está disponible, o copia el texto al portapapeles como alternativa.
+ * @param {string} id Identificador del partido guardado
+ */
+function shareMatch(id){
+  const saved = getSavedMatches();
+  const item = saved.find(x=>x.id===id);
+  if (!item){ toast(tr("No se pudo compartir","Unable to share")); return; }
+  // serializar solo el estado y metadatos necesarios
+  const payload = JSON.stringify(item);
+  const title = tr("Partido guardado","Saved match");
+  const text = `${title}: ${item.name || "Partido"}`;
+  // Si navigator.share está disponible, usarlo
+  if (navigator.share){
+    const shareData = { title, text, url:"", files:[] };
+    // Adjuntar payload como un archivo JSON si la API soporta compartir archivos
+    try{
+      const file = new File([payload], `${item.name || "partido"}.json`, { type:"application/json" });
+      if (navigator.canShare && navigator.canShare({ files:[file] })){
+        shareData.files = [file];
+      } else {
+        // incluir datos en texto si no se pueden compartir archivos
+        shareData.text = `${text}\n\n${payload}`;
+      }
+    }catch(e){
+      shareData.text = `${text}\n\n${payload}`;
+    }
+    navigator.share(shareData).catch(err=>{
+      console.warn('Share cancelled or failed', err);
+      toast(tr("No se pudo compartir","Share failed"));
+    });
+    return;
+  }
+  // Fallback: copiar al portapapeles
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(payload).then(()=>{
+      toast(tr("Datos copiados al portapapeles","Data copied to clipboard"));
+    }).catch(err=>{
+      console.warn('Clipboard failed', err);
+      toast(tr("No se pudo copiar","Copy failed"));
+    });
+  } else {
+    // Último recurso: mostrar una ventana emergente con el texto para copiar manualmente
+    prompt(tr("Copia y comparte este texto","Copy and share this text"), payload);
+  }
 }
 
 
@@ -5833,11 +5886,11 @@ function fitCoachTemplatePoints(points){
 }
 function makeCoachTemplatePoints(template, origin){
   const o = {x:clamp01(origin.x), y:clamp01(origin.y)};
-  // Separación reducida: distancia más corta entre conos para mantener proporción con la pista.
-  // Se reducen los valores originales de 0.17/0.145 y 0.145/0.122 para que las filas de conos
-  // queden más compactas y no rompan la lógica visual de la pista.
-  const sx = isCoachHalfCourt() ? 0.12 : 0.095;
-  const sy = isCoachHalfCourt() ? 0.10 : 0.08;
+  // Ajustar separación de conos. En versiones anteriores los conos quedaban demasiado separados
+  // y rompían la lógica visual de la pista. Usamos valores pequeños para que las filas sean
+  // más compactas y simétricas. Diferenciamos entre media pista y pista completa.
+  const sx = isCoachHalfCourt() ? 0.08 : 0.06;
+  const sy = isCoachHalfCourt() ? 0.07 : 0.05;
   let pts = [];
   if (template === "rowH") pts = [-2,-1,0,1,2].map(i=>({x:o.x+i*sx,y:o.y}));
   else if (template === "rowV") pts = [-2,-1,0,1,2].map(i=>({x:o.x,y:o.y+i*sy}));

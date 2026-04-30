@@ -594,14 +594,24 @@
       <div class="finishStep finishPlayerStep" id="finishPlayerStep">
         <div class="finishStepTitle" id="finishWhoTitle">¿Quién finaliza el punto?</div>
         <div class="finishPlayerCards" id="finishPlayerCards">
+          <!--
+            The player cards were previously arranged vertically (letter, avatar, name).
+            To make them more compact and aligned, wrap the letter and avatar in a row container
+            and place the player name below. This improves visual hierarchy and keeps the
+            letter/face combination on a single line.
+          -->
           <button class="finishPlayerCard" id="finishSelectA" type="button" data-player="A">
-            <span class="pTag">A</span>
-            <span class="finishPlayerAvatar" id="finishAvatarA" aria-hidden="true"></span>
+            <div class="finishPlayerTop">
+              <span class="pTag">A</span>
+              <span class="finishPlayerAvatar" id="finishAvatarA" aria-hidden="true"></span>
+            </div>
             <span class="pName" id="finishNameA">Jugador A</span>
           </button>
           <button class="finishPlayerCard" id="finishSelectB" type="button" data-player="B">
-            <span class="pTag">B</span>
-            <span class="finishPlayerAvatar" id="finishAvatarB" aria-hidden="true"></span>
+            <div class="finishPlayerTop">
+              <span class="pTag">B</span>
+              <span class="finishPlayerAvatar" id="finishAvatarB" aria-hidden="true"></span>
+            </div>
             <span class="pName" id="finishNameB">Jugador B</span>
           </button>
         </div>
