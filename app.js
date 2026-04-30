@@ -654,7 +654,15 @@ function applyI18n(){
   setTxt('#finishHowTitle', tr('¿Cómo finaliza el punto?','How does the point finish?'));
   setTxt('#finishSelectedKicker', tr('Jugador seleccionado','Selected player'));
   setTxt('#finishChangePlayer', tr('Cambiar jugador','Change player'));
-  [['#mStepUE', tr('Error no forzado','Unforced error')], ['#mStepFE', tr('Error forzado\nError provocado','Forced error')], ['#mStepGain', tr('Gana','Wins')], ['#mStepWinner','Winner'], ['#mStepVolley', tr('Volea','Volley')]].forEach(([sel,txt])=>setTxt(sel,txt));
+  /*
+   * Ajuste de la traducción para el botón "Error forzado".  Antes se
+   * concatenaba "Error forzado" y "Error provocado" en la misma cadena, lo que
+   * daba lugar a un texto largo y confuso en la etiqueta del botón.  Ahora
+   * dejamos únicamente "Error forzado" como texto principal; el subtítulo
+   * "Error provocado" se añade mediante CSS (pseudoelemento ::after) para
+   * mantener el diseño premium de dos líneas en los botones del menú.
+   */
+  [['#mStepUE', tr('Error no forzado','Unforced error')], ['#mStepFE', tr('Error forzado','Forced error')], ['#mStepGain', tr('Gana','Wins')], ['#mStepWinner','Winner'], ['#mStepVolley', tr('Volea','Volley')]].forEach(([sel,txt])=>setTxt(sel,txt));
   setTxt('#btnPlayerLibraryMenu span', tr('Jugadores','Players'));
   setTxt('#btnAccountMenu span', tr('Cuenta','Account'));
   setTxt('#btnHelpCenter span', tr('Centro de ayuda','Help center'));

@@ -5330,10 +5330,19 @@ body.coachMode.coachHalfCourt #courtSurface{
     linear-gradient(180deg, rgba(55,144,196,.98), rgba(28,101,149,.98))!important;
 }
 @media (max-width:520px){
+  /*
+   * Para las tarjetas del menú Finalizar punto en dispositivos móviles preferimos
+   * mantener una disposición vertical: la letra y el avatar permanecen en la misma
+   * fila (contenedor .finishPlayerTop) y el nombre del jugador se sitúa debajo.
+   * El layout horizontal anterior provocaba que letra, foto y nombre se mostrasen
+   * en una sola línea con el nombre truncado en pantallas estrechas.  Al forzar
+   * la dirección de flex a columna, garantizamos que el nombre quede siempre
+   * en su propia línea y sea legible.
+   */
   .finishPlayerCard{
     min-height:94px!important;
     padding:14px!important;
-    flex-direction:row!important;
+    flex-direction:column!important;
     align-items:center!important;
   }
   .finishPlayerAvatar,
