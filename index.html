@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3270" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3271" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3272" />
 </head>
 <body>
 
@@ -368,19 +368,7 @@
         </div>
 
         <!-- Controles de zoom de pista en modo entrenador -->
-        <div class="coachZoomControls coachOnly" id="coachZoomControls" aria-label="Zoom de la pista">
-          <button class="coachZoomBtn" id="btnCoachZoomIn" type="button" title="Acercar pista" aria-label="Acercar pista">
-            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 5v14"/>
-              <path d="M5 12h14"/>
-            </svg>
-          </button>
-          <button class="coachZoomBtn" id="btnCoachZoomOut" type="button" title="Alejar pista" aria-label="Alejar pista">
-            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M5 12h14"/>
-            </svg>
-          </button>
-        </div>
+        <!-- Eliminado el zoom en modo entrenador -->
 
       <!-- rail lateral: evita tapar zonas clicables en móvil -->
       <div class="courtRail" aria-label="Acciones rápidas">
@@ -444,9 +432,23 @@
 
         <div class="quickItem coachRailOnly" id="qiCoachDirection">
           <button class="quickBtn coachDirectionBtn" id="btnCoachDirection" type="button" title="Flecha de dirección" aria-label="Flecha de dirección">
-            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17C8 7 13 6 19 6"/><path d="M15 3l4 3-4 3"/></svg>
+            <!-- Icono de flecha diagonal recta en rojo -->
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 19 L19 5" fill="none" stroke="currentColor" stroke-width="2"/>
+              <path d="M15 5 L19 5 L19 9" fill="none" stroke="currentColor" stroke-width="2"/>
+            </svg>
           </button>
           <div class="quickLbl">Dirección</div>
+        </div>
+        <!-- Botón de desplazamiento para modo entrenador -->
+        <div class="quickItem coachRailOnly" id="qiCoachDash">
+          <button class="quickBtn coachDashBtn" id="btnCoachDash" type="button" title="Flecha de desplazamiento" aria-label="Flecha de desplazamiento">
+            <!-- Icono de flecha discontinua en diagonal para desplazamientos -->
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 19 L19 5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3"/>
+            </svg>
+          </button>
+          <div class="quickLbl">Desplazamiento</div>
         </div>
 
         <div class="quickItem coachRailOnly" id="qiCoachDeleteSelected">
@@ -778,23 +780,7 @@
   <div class="modalCard solid coachModalCard coachObjectsModalCard">
     <div class="modalHead"><div><div class="modalTitle">Objetos y herramientas</div><div class="muted">Coloca material con ayuda de alineación, plantillas y organización rápida.</div></div><button class="chip" id="btnCloseCoachObjects" type="button">Cerrar</button></div>
 
-    <details class="coachObjectsDropdown" id="coachPlacementDetails">
-      <summary><span><b>Modo colocación</b><small id="coachPlacementSummary">Alineado · guías magnéticas</small></span><i>⌄</i></summary>
-      <div class="coachPlacementModes" role="group" aria-label="Modo de colocación de objetos">
-        <button class="coachPlacementBtn" data-placement-mode="free" type="button"><b>Libre</b><small>Sin ayuda</small></button>
-        <button class="coachPlacementBtn active" data-placement-mode="aligned" type="button"><b>Alineado</b><small>Guías magnéticas</small></button>
-        <button class="coachPlacementBtn" data-placement-mode="precise" type="button"><b>Preciso</b><small>Rejilla invisible</small></button>
-      </div>
-    </details>
-
-    <details class="coachObjectsDropdown coachSizePanel" id="coachSizeDetails">
-      <summary><span><b>Tamaño de objetos</b><small id="coachSizeSummary">M · medio</small></span><i>⌄</i></summary>
-      <div class="coachSizePresets" role="group" aria-label="Tamaño de objetos nuevos">
-        <button class="coachSizePresetBtn" data-object-size="small" type="button"><b>S</b><small>Pequeño</small></button>
-        <button class="coachSizePresetBtn active" data-object-size="medium" type="button"><b>M</b><small>Medio</small></button>
-        <button class="coachSizePresetBtn" data-object-size="large" type="button"><b>L</b><small>Grande</small></button>
-      </div>
-    </details>
+    <!-- Los desplegables de modo de colocación y tamaño se reubicaron más abajo -->
 
     <section class="coachObjectsSection">
       <div class="coachSectionHead"><strong>Objetos</strong><span>Selecciona y toca la pista</span></div>
@@ -819,6 +805,24 @@
         <button class="coachTemplateBtn" data-coach-template="rowD" type="button"><b>╲</b><small>Fila diagonal</small></button>
       </div>
     </section>
+
+    <!-- Modo de colocación y tamaño de objetos: reinsertados debajo de plantillas -->
+    <details class="coachObjectsDropdown" id="coachPlacementDetails">
+      <summary><span><b>Modo colocación</b><small id="coachPlacementSummary">Alineado · guías magnéticas</small></span><i>⌄</i></summary>
+      <div class="coachPlacementModes" role="group" aria-label="Modo de colocación de objetos">
+        <button class="coachPlacementBtn" data-placement-mode="free" type="button"><b>Libre</b><small>Sin ayuda</small></button>
+        <button class="coachPlacementBtn active" data-placement-mode="aligned" type="button"><b>Alineado</b><small>Guías magnéticas</small></button>
+        <button class="coachPlacementBtn" data-placement-mode="precise" type="button"><b>Preciso</b><small>Rejilla invisible</small></button>
+      </div>
+    </details>
+    <details class="coachObjectsDropdown coachSizePanel" id="coachSizeDetails">
+      <summary><span><b>Tamaño de objetos</b><small id="coachSizeSummary">M · medio</small></span><i>⌄</i></summary>
+      <div class="coachSizePresets" role="group" aria-label="Tamaño de objetos nuevos">
+        <button class="coachSizePresetBtn" data-object-size="small" type="button"><b>S</b><small>Pequeño</small></button>
+        <button class="coachSizePresetBtn active" data-object-size="medium" type="button"><b>M</b><small>Medio</small></button>
+        <button class="coachSizePresetBtn" data-object-size="large" type="button"><b>L</b><small>Grande</small></button>
+      </div>
+    </details>
 
     <section class="coachObjectsSection coachSelectionPanel">
       <div class="coachSectionHead"><strong>Organizar selección</strong><span id="coachSelectionCount">Toca objetos en la pista para seleccionarlos</span></div>
@@ -1590,7 +1594,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3271"></script>
+<script src="app.js?v=3272"></script>
 
 </body>
 </html>

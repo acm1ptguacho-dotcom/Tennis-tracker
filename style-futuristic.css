@@ -2918,6 +2918,26 @@ body.coachMode .court{transform:scale(.985);transform-origin:center top;}
 .coneIcon path:not(:first-child){stroke:#fff9cf!important;stroke-width:1.7!important;}
 .coneRailBtn{border-color:rgba(255,148,37,.45)!important;box-shadow:0 0 22px rgba(255,132,25,.18), inset 0 1px 0 rgba(255,255,255,.18)!important;}
 .coachDirectionBtn.active{border-color:rgba(199,255,74,.68)!important;box-shadow:0 0 22px rgba(199,255,74,.22), inset 0 1px 0 rgba(255,255,255,.2)!important;}
+
+/* Estilos personalizados para botones de dirección y desplazamiento */
+.coachDirectionBtn{
+  /* Flecha diagonal roja */
+  color:#ff5555!important;
+}
+.coachDashBtn{
+  /* Flecha discontinua blanca */
+  color:#ffffff!important;
+}
+.coachDashBtn.active{
+  border-color:rgba(255,255,255,.68)!important;
+  box-shadow:0 0 22px rgba(255,255,255,.22), inset 0 1px 0 rgba(255,255,255,.2)!important;
+}
+
+/* Ocultar botón de rotar en modo entrenador */
+body.coachMode #btnRotateCourt,
+body.coachMode #lblRotateCourt{
+  display:none !important;
+}
 .coachObjectsLayer{position:absolute;inset:0;z-index:8;pointer-events:none;overflow:visible;}
 .coachObject{position:absolute;transform:translate(-50%,-50%);width:38px;height:38px;border:0;background:transparent;color:#fff;pointer-events:auto;display:grid;place-items:center;cursor:pointer;filter:drop-shadow(0 8px 12px rgba(0,0,0,.4));animation:coachObjectPop .22s ease both;touch-action:none;}
 @keyframes coachObjectPop{from{transform:translate(-50%,-50%) scale(.72);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
@@ -3598,14 +3618,16 @@ body.coachMode.coachHalfCourt #court{
   overflow:hidden!important;
 }
 body.coachMode.coachHalfCourt #courtSurface{
-  left:-7%!important;
-  right:-7%!important;
-  height:166.6667%!important;
+  /* Ajuste de la pista en media pista: eliminar márgenes horizontales y usar altura doble */
+  left:0!important;
+  right:0!important;
+  height:200%!important;
   transition:top .58s cubic-bezier(.18,.84,.24,1), transform .58s cubic-bezier(.18,.84,.24,1)!important;
   will-change:top,transform;
 }
 body.coachMode.coachHalfCourt.coachHalfBottom #courtSurface{
-  top:-66.6667%!important;
+  /* Con altura doble la segunda mitad queda desplazada una altura completa */
+  top:-100%!important;
   bottom:auto!important;
 }
 body.coachMode.coachHalfCourt.coachHalfTop #courtSurface{

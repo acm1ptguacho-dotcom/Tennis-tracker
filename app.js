@@ -156,8 +156,10 @@ function ensureCoachState(){
 }
 function isCoachMode(){ return !!(state.ui && state.ui.appMode === "coach"); }
 function isCoachHalfCourt(){ return isCoachMode() && ensureCoachState().courtMode === "half"; }
-const COACH_COURT_CROP_X = 0.07;
-const COACH_HALF_SPAN = 0.60;
+// Ajustes de corte de pista para mejorar la precisión en media pista y pista completa
+// En modo entrenador eliminamos el recorte horizontal (sin márgenes) y usamos la mitad exacta para media pista.
+const COACH_COURT_CROP_X = 0.0;
+const COACH_HALF_SPAN = 0.50;
 function coachHalfStart(){
   const c = ensureCoachState();
   return c.halfView === "top" ? 0 : (1 - COACH_HALF_SPAN);
@@ -5700,6 +5702,8 @@ function setCoachTool(tool){
   c.pendingDirectionStart = null;
   document.querySelectorAll(".coachToolBtn").forEach(b=> b.classList.toggle("active", b.dataset.coachTool === c.activeTool));
   document.getElementById("btnCoachDirection")?.classList.toggle("active", c.activeTool === "direction");
+  // Destacar el botón de desplazamiento cuando corresponda
+  document.getElementById("btnCoachDash")?.classList.toggle("active", c.activeTool === "dash");
   persist();
   if (c.activeTool === "direction") toast("Flecha de dirección: toca inicio y después destino");
   else if (c.activeTool === "dash") toast("Desplazamiento: primer toque inicio, segundo toque final");
@@ -6019,12 +6023,8 @@ function coachPointFromClient(clientX, clientY){
   // Apply zoom factor: divide by current zoom to map screen coords back to unscaled court
   let x = (clientX - r.left) / Math.max(1, r.width);
   let y = (clientY - r.top) / Math.max(1, r.height);
-  // Correct for coach zoom scaling
-  const zoom = (typeof window.__coachZoom === "number" && window.__coachZoom > 0) ? window.__coachZoom : 1;
-  if (zoom !== 1){
-    x /= zoom;
-    y /= zoom;
-  }
+  // Ajustar directamente las coordenadas de la vista a coordenadas de pista
+  // Nota: se eliminó la corrección de zoom global para que el zoom no afecte a la colocación de objetos
   return coachViewportToCourtNorm(x, y);
 }
 function coachPointFromCourtEvent(evt){
@@ -6403,6 +6403,13 @@ function handleCoachDirectionRailClick(){
     return;
   }
   setCoachTool("direction");
+}
+
+// Maneja el clic en el botón de desplazamiento del rail. Al pulsar se selecciona la herramienta 'dash'.
+function handleCoachDashRailClick(){
+  if (!isCoachMode()) setAppMode("coach");
+  // No hay patrones asociados a desplazamientos, así que simplemente seleccionamos la herramienta
+  setCoachTool("dash");
 }
 
 function coachFinalizePattern(){
@@ -6895,6 +6902,8 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnRotateCourt","click", toggleRotation);
   on("btnCoachObjectsRail","click", openCoachObjects);
   on("btnCoachDirection","click", handleCoachDirectionRailClick);
+  // Selector de desplazamientos en el rail del entrenador
+  on("btnCoachDash","click", handleCoachDashRailClick);
   on("btnCoachDeleteSelectedRail","click", deleteCoachSelectedObjects);
   on("btnCoachPreview","click", openCoachPreview);
   on("btnCoachSaveRail","click", openCoachSave);
@@ -8141,10 +8150,7 @@ function init(){
   initSplash();
   registerSW();
 
-  // Inicializar controles de zoom para modo entrenador
-  try{
-    if (typeof initCoachZoom === "function") initCoachZoom();
-  }catch(e){ console.error("initCoachZoom error", e); }
+  // Se eliminó el zoom en modo entrenador: no inicializamos controles de zoom
 }
 
 let __tdtSafeBooted = false;
