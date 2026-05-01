@@ -6017,7 +6017,10 @@ function coachPointFromEvent(evt, el){ return evt ? pointNormFromEvent(evt, el |
 function coachPointFromClient(clientX, clientY){
   const surface = document.getElementById("courtSurface");
   const court = document.getElementById("court");
-  const el = surface || court;
+  // Utiliza preferentemente el contenedor visible (#court) para calcular las coordenadas, cayendo en
+  // courtSurface sólo si no existe. Esto corrige el desfase al usar media pista con una superficie de
+  // altura duplicada.
+  const el = court || surface;
   if (!el) return { x:.5, y:.5 };
   const r = el.getBoundingClientRect();
   // Apply zoom factor: divide by current zoom to map screen coords back to unscaled court
