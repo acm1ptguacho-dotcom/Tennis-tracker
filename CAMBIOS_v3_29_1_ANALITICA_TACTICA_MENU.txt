@@ -1,0 +1,5 @@
+v3.29.1 - Visibilidad de Analítica táctica
+
+- Se corrige la etiqueta del menú para que el botón aparezca claramente como "Analítica táctica".
+- La función sigue ubicada en Menú > Reportes, entre Historial y Estadísticas.
+- El módulo abre la ventana "Analítica táctica MVP".
