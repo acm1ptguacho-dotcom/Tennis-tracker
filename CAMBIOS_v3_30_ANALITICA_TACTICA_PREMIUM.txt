@@ -1,0 +1,11 @@
+Tennis Direction Tracker - v3.30 Analítica táctica premium
+
+Cambios principales:
+- Renombrada la pantalla a “Analítica táctica Premium”.
+- Añadido hero táctico premium con veredicto de presión, % de éxito, pills de saque/resto/patrón y mini pista táctica.
+- Mejoradas las tarjetas KPI con tonos visuales good/neutral/bad.
+- Rediseñado el laboratorio de patrones: separación entre “más repetidos” y “más eficaces”.
+- Añadida barra de eficacia en cada patrón.
+- Mejorado el panel de insights con asistente táctico y plan de acciones numerado.
+- Mejoras responsive para móvil: tabs, hero, mini pista y filtros.
+- Actualizada la caché a v=3300.

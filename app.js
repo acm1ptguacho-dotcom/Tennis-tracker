@@ -3771,8 +3771,85 @@ function analyticsBarList(title, obj, kind, total){
       }).join("")}</div>
     </div>`;
 }
-function analyticsKpiCard(label, value, note){
-  return `<article class="analyticsKpiCard"><span>${escapeHtml(label)}</span><strong>${value}</strong><small>${escapeHtml(note || "")}</small></article>`;
+function analyticsKpiCard(label, value, note, tone=""){
+  const cls = tone ? ` tone-${tone}` : "";
+  return `<article class="analyticsKpiCard${cls}"><span>${escapeHtml(label)}</span><strong>${value}</strong><small>${escapeHtml(note || "")}</small></article>`;
+}
+
+function analyticsDeltaLabel(value){
+  const n = Number(value) || 0;
+  if (n > 0) return `+${n}`;
+  return String(n);
+}
+function analyticsPressureTone(diff){
+  if (diff >= 8) return "good";
+  if (diff <= -8) return "bad";
+  return "neutral";
+}
+function analyticsPressureTitle(diff){
+  if (diff >= 8) return tr("Sube bajo presión","Rises under pressure");
+  if (diff <= -8) return tr("Alerta bajo presión","Pressure alert");
+  return tr("Estable bajo presión","Stable under pressure");
+}
+function analyticsTopServeLabel(stats){
+  const key = analyticsTopKey(stats?.serveTargets || {});
+  return key ? analyticsServeName(key) : "—";
+}
+function analyticsTopRallyLabel(stats){
+  const top = analyticsTopDirection(stats?.strokeDir || {});
+  return top ? top.label : "—";
+}
+function analyticsLastPressureStrip(points, persp){
+  const important = (points || []).filter(p => analyticsContextMatch(p, persp, 'important')).slice(-12);
+  if (!important.length) return `<div class="analyticsPremiumEmpty">${tr('Sin puntos importantes registrados todavía.','No important points tracked yet.')}</div>`;
+  return `<div class="analyticsPressureDots">${important.map(p => `<button class="analyticsPressureDot ${p.winner === persp ? 'won' : 'lost'}" type="button" title="${tr('Punto','Point')} ${p.n}" data-point-open="${p.n}">${p.n}</button>`).join('')}</div>`;
+}
+function analyticsPremiumCourt(filteredStats, topPattern, topReturn, topServeKey){
+  const serveLabel = topServeKey ? analyticsServeName(topServeKey) : tr('Sin datos','No data');
+  const returnLabel = topReturn ? topReturn.label : tr('Sin datos','No data');
+  const rallyLabel = analyticsTopRallyLabel(filteredStats);
+  const patternText = topPattern ? topPattern.longLabel.replace(/<[^>]+>/g, '') : tr('Aún no hay patrón estable.','No stable pattern yet.');
+  return `<div class="analyticsPremiumCourt">
+    <div class="analyticsPremiumCourtLines"><span></span><span></span><span></span><span></span></div>
+    <div class="analyticsCourtRoute route-serve"><i></i><b>${escapeHtml(serveLabel)}</b></div>
+    <div class="analyticsCourtRoute route-return"><i></i><b>${escapeHtml(returnLabel)}</b></div>
+    <div class="analyticsCourtRoute route-rally"><i></i><b>${escapeHtml(rallyLabel)}</b></div>
+    <div class="analyticsCourtPattern"><small>${tr('Patrón prioritario','Priority pattern')}</small><strong>${escapeHtml(patternText)}</strong></div>
+  </div>`;
+}
+function analyticsPremiumHero({allPoints, filteredPoints, persp, context, filteredStats, topPattern, bestPattern, topReturn, insights}){
+  const totalWins = allPoints.filter(p => p.winner === persp).length;
+  const filteredWins = filteredPoints.filter(p => p.winner === persp).length;
+  const importantPoints = allPoints.filter(p => analyticsContextMatch(p, persp, 'important'));
+  const importantWins = importantPoints.filter(p => p.winner === persp).length;
+  const overallRate = analyticsPct(totalWins, Math.max(1, allPoints.length));
+  const filteredRate = analyticsPct(filteredWins, Math.max(1, filteredPoints.length));
+  const pressureRate = analyticsPct(importantWins, Math.max(1, importantPoints.length));
+  const diff = pressureRate - overallRate;
+  const tone = analyticsPressureTone(diff);
+  const topServeKey = analyticsTopKey(filteredStats?.serveTargets || {});
+  const mainInsight = insights?.[0] || { title: tr('Base táctica','Tactical baseline'), body: tr('Registra más puntos para generar una lectura más sólida.','Track more points to generate a stronger reading.') };
+  return `<div class="analyticsPremiumHero tone-${tone}">
+    <div class="analyticsHeroLeft">
+      <div class="analyticsHeroEyebrow">${tr('Informe táctico premium','Premium tactical report')}</div>
+      <h3>${escapeHtml(analyticsPlayerName(persp))}</h3>
+      <div class="analyticsHeroSubtitle">${escapeHtml(analyticsContextLabel(context))} · ${filteredPoints.length} ${tr('puntos analizados','points analysed')}</div>
+      <div class="analyticsHeroVerdict">
+        <div class="analyticsVerdictRing"><span>${filteredRate}%</span><small>${tr('éxito filtro','filter win')}</small></div>
+        <div class="analyticsVerdictText"><strong>${escapeHtml(analyticsPressureTitle(diff))}</strong><p>${tr('Diferencia presión vs. promedio:','Pressure vs average difference:')} <b>${analyticsDeltaLabel(diff)}%</b></p></div>
+      </div>
+      <div class="analyticsHeroPills">
+        <span>${tr('Saque top','Top serve')}: <b>${escapeHtml(topServeKey ? analyticsServeName(topServeKey) : '—')}</b></span>
+        <span>${tr('Resto top','Top return')}: <b>${escapeHtml(topReturn ? topReturn.label : '—')}</b></span>
+        <span>${tr('Patrón eficaz','Effective pattern')}: <b>${escapeHtml(bestPattern ? bestPattern.winRate + '%' : '—')}</b></span>
+      </div>
+      <article class="analyticsHeroInsight"><small>${escapeHtml(mainInsight.title)}</small><p>${escapeHtml(mainInsight.body)}</p></article>
+      ${analyticsLastPressureStrip(allPoints, persp)}
+    </div>
+    <div class="analyticsHeroRight">
+      ${analyticsPremiumCourt(filteredStats, topPattern, topReturn, topServeKey)}
+    </div>
+  </div>`;
 }
 function analyticsPointRow(p, persp, includeServe){
   const tags = analyticsPointTags(p, persp).filter((v, idx, arr) => arr.indexOf(v) === idx && v !== "serve" && v !== "return").slice(0,2);
@@ -3793,18 +3870,21 @@ function analyticsPointRow(p, persp, includeServe){
   </div>`;
 }
 function analyticsPatternCard(it){
-  return `<article class="analyticsPatternCard">
+  const tone = it.winRate >= 65 ? 'good' : (it.winRate <= 40 ? 'bad' : 'neutral');
+  const startText = it.dominantStart === 'serve' ? tr('Saque','Serve') : it.dominantStart === 'return' ? tr('Resto','Return') : tr('Rally','Rally');
+  return `<article class="analyticsPatternCard tone-${tone}">
     <div class="analyticsPatternTop">
       <div class="analyticsPatternSeq">${it.label}</div>
       <span class="analyticsPatternCount">${it.count}x</span>
     </div>
+    <div class="analyticsPatternProgress"><span style="width:${Math.max(4, Math.min(100, it.winRate))}%"></span></div>
     <div class="analyticsPatternMeta">
       <span>${tr("Éxito","Win rate")}: <b>${it.winRate}%</b></span>
       <span>${tr("Contexto","Context")}: <b>${escapeHtml(analyticsShortContextLabel(it.dominantContext))}</b></span>
-      <span>${tr("Inicio","Start")}: <b>${escapeHtml(it.dominantStart === 'serve' ? tr('Saque','Serve') : it.dominantStart === 'return' ? tr('Resto','Return') : tr('Rally','Rally'))}</b></span>
+      <span>${tr("Inicio","Start")}: <b>${escapeHtml(startText)}</b></span>
       <span>${tr("Lado","Side")}: <b>${escapeHtml(it.dominantSide)}</b></span>
     </div>
-    <div class="analyticsPatternPoints">${it.points.slice(0,8).map(n => `<button class="analyticsPointMiniBtn" type="button" data-point-open="${n}">${n}</button>`).join('')}</div>
+    <div class="analyticsPatternPoints">${it.points.slice(0,10).map(n => `<button class="analyticsPointMiniBtn" type="button" data-point-open="${n}">${n}</button>`).join('')}</div>
   </article>`;
 }
 
@@ -4115,13 +4195,15 @@ function renderAnalytics(){
   if (kpis){
     const importantPoints = allPoints.filter(p => analyticsContextMatch(p, persp, 'important'));
     const importantWins = importantPoints.filter(p => p.winner === persp).length;
+    const winRate = analyticsPct(filteredPoints.filter(p => p.winner === persp).length, Math.max(1, filteredPoints.length));
+    const importantRate = analyticsPct(importantWins, Math.max(1, importantPoints.length));
     kpis.innerHTML = [
-      analyticsKpiCard(tr('Puntos analizados','Points analysed'), `<span>${filteredPoints.length}</span>`, analyticsContextLabel(context)),
-      analyticsKpiCard(tr('% ganados','Win %'), `<span>${analyticsFmtPct(filteredPoints.filter(p => p.winner === persp).length, Math.max(1, filteredPoints.length))}</span>`, analyticsPlayerName(persp)),
-      analyticsKpiCard(tr('Puntos importantes','Important points'), `<span>${importantPoints.length}</span>`, analyticsFmtPct(importantWins, Math.max(1, importantPoints.length))),
-      analyticsKpiCard(tr('Patrón top','Top pattern'), `<span>${topPattern ? topPattern.count + 'x' : '—'}</span>`, topPattern ? topPattern.longLabel.replace(/<[^>]+>/g, '') : tr('Sin datos','No data')),
-      analyticsKpiCard(tr('Patrón más eficaz','Most effective pattern'), `<span>${bestPattern ? bestPattern.winRate + '%' : '—'}</span>`, bestPattern ? bestPattern.longLabel.replace(/<[^>]+>/g, '') : tr('Sin datos','No data')),
-      analyticsKpiCard(tr('Resto dominante','Top return direction'), `<span>${topReturn ? topReturn.label : '—'}</span>`, topReturn ? `${topReturn.count} ${tr('veces','times')}` : tr('Sin datos','No data'))
+      analyticsKpiCard(tr('Puntos analizados','Points analysed'), `<span>${filteredPoints.length}</span>`, analyticsContextLabel(context), 'neutral'),
+      analyticsKpiCard(tr('% ganados','Win %'), `<span>${winRate}%</span>`, analyticsPlayerName(persp), winRate >= 55 ? 'good' : (winRate <= 40 ? 'bad' : 'neutral')),
+      analyticsKpiCard(tr('Puntos importantes','Important points'), `<span>${importantPoints.length}</span>`, `${importantRate}% ${tr('ganados','won')}`, importantRate >= 55 ? 'good' : (importantRate <= 40 ? 'bad' : 'neutral')),
+      analyticsKpiCard(tr('Patrón top','Top pattern'), `<span>${topPattern ? topPattern.count + 'x' : '—'}</span>`, topPattern ? topPattern.longLabel.replace(/<[^>]+>/g, '') : tr('Sin datos','No data'), 'neutral'),
+      analyticsKpiCard(tr('Patrón más eficaz','Most effective pattern'), `<span>${bestPattern ? bestPattern.winRate + '%' : '—'}</span>`, bestPattern ? bestPattern.longLabel.replace(/<[^>]+>/g, '') : tr('Sin datos','No data'), bestPattern && bestPattern.winRate >= 65 ? 'good' : 'neutral'),
+      analyticsKpiCard(tr('Resto dominante','Top return direction'), `<span>${topReturn ? topReturn.label : '—'}</span>`, topReturn ? `${topReturn.count} ${tr('veces','times')}` : tr('Sin datos','No data'), 'neutral')
     ].join('');
   }
 
@@ -4135,7 +4217,8 @@ function renderAnalytics(){
       ...contextSummary.filter(x => ['break_for','break_against','deuce'].includes(x.key)).map(x => ({ label: x.label, rate: `${x.winRate}%`, count: x.count }))
     ];
     summaryPane.innerHTML = `
-      <div class="analyticsGrid analyticsGrid-2">
+      ${analyticsPremiumHero({ allPoints, filteredPoints, persp, context, filteredStats, topPattern, bestPattern, topReturn, insights })}
+      <div class="analyticsGrid analyticsGrid-2 analyticsGapTop">
         <div class="analyticsPanel analyticsPanelFeature">
           <div class="analyticsPanelTitle">${tr('Resumen táctico','Tactical summary')}</div>
           <div class="analyticsNarrative">${insights.slice(0,3).map(item => `<article class="analyticsInsightCard"><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.body)}</p></article>`).join('')}</div>
@@ -4187,11 +4270,24 @@ function renderAnalytics(){
 
   const patternsPane = $('#analyticsPane-patterns');
   if (patternsPane){
+    const efficientPatterns = [...patterns].filter(p => p.winRate >= 60).slice(0, 4);
+    const frequentPatterns = [...patterns].sort((a,b)=>(b.count-a.count)||(b.winRate-a.winRate)).slice(0, 8);
     patternsPane.innerHTML = `
-      <div class="analyticsPanel analyticsPanelSoft">
-        <div class="analyticsPanelTitle">${tr('Patrones repetidos','Repeated patterns')}</div>
-        <div class="analyticsPanelSub">${analyticsModeLabel(mode)} · ${len} ${tr('golpes','shots')} · ${tr('mínimo','minimum')} ${minCount}</div>
-        <div class="analyticsPatternStack">${patterns.length ? patterns.map(analyticsPatternCard).join('') : `<div class="analyticsEmpty">${tr('No hay suficientes secuencias con los filtros actuales.','Not enough sequences for the current filters.')}</div>`}</div>
+      <div class="analyticsPremiumPatternHeader">
+        <div><span>${tr('Laboratorio de patrones','Pattern lab')}</span><strong>${analyticsModeLabel(mode)} · ${len} ${tr('golpes','shots')}</strong></div>
+        <p>${tr('Prioriza frecuencia, eficacia y contexto para convertir secuencias reales en tareas de entrenamiento.','Prioritise frequency, efficiency and context to turn real sequences into training tasks.')}</p>
+      </div>
+      <div class="analyticsGrid analyticsGrid-2 analyticsGapTop">
+        <div class="analyticsPanel analyticsPanelSoft">
+          <div class="analyticsPanelTitle">${tr('Más repetidos','Most repeated')}</div>
+          <div class="analyticsPanelSub">${tr('Mínimo','Minimum')} ${minCount} · ${analyticsModeLabel(mode)}</div>
+          <div class="analyticsPatternStack">${frequentPatterns.length ? frequentPatterns.map(analyticsPatternCard).join('') : `<div class="analyticsEmpty">${tr('No hay suficientes secuencias con los filtros actuales.','Not enough sequences for the current filters.')}</div>`}</div>
+        </div>
+        <div class="analyticsPanel analyticsPanelFeature">
+          <div class="analyticsPanelTitle">${tr('Más eficaces','Most effective')}</div>
+          <div class="analyticsPanelSub">${tr('Secuencias con mayor porcentaje de éxito','Sequences with the highest win rate')}</div>
+          <div class="analyticsPatternStack">${efficientPatterns.length ? efficientPatterns.map(analyticsPatternCard).join('') : `<div class="analyticsEmpty">${tr('Aún no hay patrones claramente eficaces.','No clearly effective patterns yet.')}</div>`}</div>
+        </div>
       </div>`;
   }
 
@@ -4251,12 +4347,17 @@ function renderAnalytics(){
     if (analyticsTopDirection(filteredStats.returnDir || {})) recommendations.push(tr('Trabajar una alternativa al resto dominante para no ser previsible.','Train an alternative to the dominant return to avoid predictability.'));
     if (!recommendations.length) recommendations.push(tr('Seguir registrando puntos para desbloquear recomendaciones más sólidas.','Keep tracking more points to unlock stronger recommendations.'));
     insightsPane.innerHTML = `
-      <div class="analyticsGrid analyticsGrid-2">
-        ${insights.map(item => `<article class="analyticsInsightCard analyticsInsightCardLarge"><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.body)}</p></article>`).join('')}
+      <div class="analyticsInsightHero">
+        <span>${tr('Asistente táctico','Tactical assistant')}</span>
+        <strong>${tr('Qué repetir, qué variar y qué entrenar','What to repeat, vary and train')}</strong>
+        <p>${tr('Los insights convierten el registro del partido en decisiones de entrenamiento accionables.','Insights turn match tracking into actionable coaching decisions.')}</p>
+      </div>
+      <div class="analyticsGrid analyticsGrid-2 analyticsGapTop">
+        ${insights.map((item, idx) => `<article class="analyticsInsightCard analyticsInsightCardLarge premium-rank-${idx+1}"><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.body)}</p></article>`).join('')}
       </div>
       <div class="analyticsPanel analyticsPanelFeature analyticsGapTop">
-        <div class="analyticsPanelTitle">${tr('Recomendaciones tácticas','Tactical recommendations')}</div>
-        <div class="analyticsRecoList">${recommendations.map(rec => `<div class="analyticsRecoItem">${escapeHtml(rec)}</div>`).join('')}</div>
+        <div class="analyticsPanelTitle">${tr('Plan táctico sugerido','Suggested tactical plan')}</div>
+        <div class="analyticsRecoList">${recommendations.map((rec, i) => `<div class="analyticsRecoItem"><b>${i+1}</b><span>${escapeHtml(rec)}</span></div>`).join('')}</div>
       </div>`;
   }
 
