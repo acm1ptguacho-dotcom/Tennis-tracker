@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3300" />
+<link rel="stylesheet" href="style.css?v=3301" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3300" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3301" />
 </head>
 <body>
 
@@ -983,6 +983,14 @@
       </div>
     </div>
 
+    <div class="analyticsTabBar analyticsTabBarFixed" id="analyticsTabs" role="tablist" aria-label="Tabs analíticas">
+      <button class="analyticsTabBtn active" type="button" data-analytics-tab="summary">Resumen</button>
+      <button class="analyticsTabBtn" type="button" data-analytics-tab="points">Puntos importantes</button>
+      <button class="analyticsTabBtn" type="button" data-analytics-tab="patterns">Patrones</button>
+      <button class="analyticsTabBtn" type="button" data-analytics-tab="directions">Direcciones</button>
+      <button class="analyticsTabBtn" type="button" data-analytics-tab="insights">Insights</button>
+    </div>
+
     <div class="modalBody premiumModalBody analyticsModalBodyShell">
       <div class="analyticsToolbar analyticsToolbarPremium">
         <label>Jugador
@@ -1031,14 +1039,6 @@
       </div>
 
       <div class="analyticsKpiGrid" id="analyticsKpis"></div>
-
-      <div class="analyticsTabBar" id="analyticsTabs" role="tablist" aria-label="Tabs analíticas">
-        <button class="analyticsTabBtn active" type="button" data-analytics-tab="summary">Resumen</button>
-        <button class="analyticsTabBtn" type="button" data-analytics-tab="points">Puntos importantes</button>
-        <button class="analyticsTabBtn" type="button" data-analytics-tab="patterns">Patrones</button>
-        <button class="analyticsTabBtn" type="button" data-analytics-tab="directions">Direcciones</button>
-        <button class="analyticsTabBtn" type="button" data-analytics-tab="insights">Insights</button>
-      </div>
 
       <div class="analyticsPaneWrap">
         <section class="analyticsPane active" id="analyticsPane-summary"></section>
@@ -1593,7 +1593,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3300"></script>
+<script src="app.js?v=3301"></script>
 
 </body>
 </html>

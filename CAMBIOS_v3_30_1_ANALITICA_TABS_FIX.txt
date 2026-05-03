@@ -1,0 +1,8 @@
+Versión v3.30.1 — Corrección de pestañas en Analítica táctica Premium
+
+Cambios aplicados:
+- Las pestañas de Analítica táctica se movieron fuera del cuerpo con scroll del modal.
+- Ahora quedan justo debajo de la cabecera principal y antes del contenido analítico.
+- Barra tipo segmented control con scroll horizontal suave en móvil.
+- Z-index y overflow corregidos para que no queden tapadas por tarjetas KPI o paneles.
+- Caché actualizada a v=3301 y service worker v3.30.1.
