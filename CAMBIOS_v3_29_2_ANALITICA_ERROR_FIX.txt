@@ -1,0 +1,4 @@
+v3.29.2 - Corrección Analítica táctica
+- Corrige el error "Error al abrir analíticas" al abrir la pantalla de Analítica táctica.
+- Causa: la pestaña Direcciones usaba serveHeat, returnHeat y rallyHeat sin crearlos dentro de renderAnalytics().
+- Solución: se calculan los heatmaps antes de renderizar pestañas, igual que en la exportación PDF.

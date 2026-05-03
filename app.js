@@ -4094,6 +4094,18 @@ function renderAnalytics(){
   const contextSummary = analyticsContextSummary(allPoints, persp);
   const insights = analyticsBuildInsights(allPoints, filteredPoints, persp, patterns, filteredStatsAll);
 
+  // v3.29.2 fix: renderAnalytics also needs the tactical heatmap data.
+  // These variables were previously only created in analyticsCollectData(),
+  // but renderAnalytics uses them in the Direcciones tab. Without them, the
+  // modal rendered the first cards and then showed "Error al abrir analíticas".
+  const serveHeat = {
+    A: filteredStats.serveTargets?.A || 0,
+    C: filteredStats.serveTargets?.C || 0,
+    T: filteredStats.serveTargets?.T || 0
+  };
+  const returnHeat = analyticsDirectionMatrix(filteredPoints, persp, 'return');
+  const rallyHeat = analyticsDirectionMatrix(filteredPoints, persp, 'rally');
+
   const sub = $('#analyticsSub');
   if (sub){
     sub.textContent = `${analyticsPlayerName(persp)} · ${analyticsContextLabel(context)} · ${filteredPoints.length} ${tr('puntos analizados','points analysed')}`;
