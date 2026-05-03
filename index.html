@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3301" />
+<link rel="stylesheet" href="style.css?v=3310" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3303" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3310" />
 </head>
 <body>
 
@@ -234,6 +234,7 @@
     <div class="drawerGroupLabel matchOnly" data-i18n="reports">Reportes</div>
     <button class="chip menuItem" id="btnHistory" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span data-i18n="history">Historial</span></button>
     <button class="chip menuItem" id="btnAnalytics" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span data-i18n="analytics">Analítica táctica</span></button>
+    <button class="chip menuItem" id="btnVideoAI" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 9l4-2v10l-4-2z"/><path d="M7 15l3-6 3 6"/><path d="M8.2 13h3.6"/></svg><span>Vídeo IA</span></button>
     <button class="chip menuItem" id="btnStats" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span data-i18n="stats">Estadísticas</span></button>
     
     <button class="chip menuItem" id="btnCharts" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 14 9 9 13 13 20 6"/><polyline points="20 6 20 12 14 12"/></svg><span data-i18n="charts">Gráficos</span></button>
@@ -969,27 +970,109 @@
   </div>
 </div>
 
-<div class="modal hidden" id="analyticsModal">
-  <div class="modalCard solid analyticsModalCard">
-    <div class="modalHead analyticsModalHeadCompact">
-      <div class="analyticsModalIntro">
-        <div class="modalTitle">Analítica táctica Premium</div>
-        <div class="muted" id="analyticsSub">Lectura táctica avanzada · presión · patrones · direcciones · insights</div>
+
+<div class="modal hidden" id="videoAiModal">
+  <div class="modalCard solid videoAiCard">
+    <div class="modalHead videoAiHead">
+      <div>
+        <div class="modalTitle">Vídeo IA</div>
+        <div class="muted">Grabación, calibración y preparación para lectura automática de direcciones.</div>
       </div>
-      <div class="modalActions analyticsHeaderActions">
-        <button class="chip analyticsIconBtn" id="btnAnalyticsPDF" type="button" aria-label="Exportar PDF" title="Exportar PDF">
-          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M9 15h6"/><path d="M9 18h4"/></svg>
+      <div class="modalActions videoAiHeaderActions">
+        <button class="chip videoAiIconBtn" id="btnVideoAIStopCamera" type="button" aria-label="Detener cámara" title="Detener cámara">
+          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
         </button>
-        <button class="chip analyticsIconBtn" id="btnAnalyticsFilters" type="button" aria-label="Abrir filtros" title="Filtros">
-          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
-        </button>
-        <button class="chip analyticsIconBtn" id="btnAnalyticsRefresh" type="button" aria-label="Actualizar analítica" title="Actualizar analítica">
-          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M20 11a8 8 0 1 0 2.3 5.7"/></svg>
-        </button>
-        <button class="chip analyticsIconBtn analyticsCloseBtn" id="btnCloseAnalytics" type="button" aria-label="Cerrar" title="Cerrar">
+        <button class="chip videoAiIconBtn" id="btnCloseVideoAI" type="button" aria-label="Cerrar" title="Cerrar">
           <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
         </button>
       </div>
+    </div>
+
+    <div class="modalBody videoAiBody">
+      <section class="videoAiPreviewCard">
+        <div class="videoAiPreviewFrame" id="videoAiPreviewFrame">
+          <video id="videoAiPreview" playsinline muted></video>
+          <canvas id="videoAiOverlay" aria-label="Calibración de pista"></canvas>
+          <div class="videoAiEmpty" id="videoAiEmpty">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 9l4-2v10l-4-2z"/></svg>
+            <strong>Cámara no iniciada</strong>
+            <span>Coloca el móvil fijo en trípode y pulsa “Iniciar cámara”.</span>
+          </div>
+          <div class="videoAiRecBadge hidden" id="videoAiRecBadge"><i></i> REC</div>
+        </div>
+        <div class="videoAiStatus" id="videoAiStatus">Listo para iniciar cámara</div>
+      </section>
+
+      <section class="videoAiControlsPanel">
+        <label class="videoAiSelectLabel">Cámara
+          <select id="videoAiCameraSelect">
+            <option value="">Cámara trasera / automática</option>
+          </select>
+        </label>
+        <div class="videoAiButtonGrid">
+          <button class="chip primary" id="btnVideoAIStartCamera" type="button">Iniciar cámara</button>
+          <button class="chip" id="btnVideoAIStartRecording" type="button">Grabar</button>
+          <button class="chip" id="btnVideoAIStopRecording" type="button" disabled>Detener</button>
+          <a class="chip videoAiDownload hidden" id="videoAiDownload" download="tennis-direction-video.webm">Descargar vídeo</a>
+        </div>
+      </section>
+
+      <section class="videoAiWorkflow">
+        <article class="videoAiStep active"><span>1</span><div><strong>Posición fija</strong><small>Móvil en trípode, pista completa visible y cámara estable.</small></div></article>
+        <article class="videoAiStep"><span>2</span><div><strong>Calibración</strong><small>Marca 4 referencias de la pista sobre el vídeo.</small></div></article>
+        <article class="videoAiStep"><span>3</span><div><strong>Grabación</strong><small>Guarda el vídeo y la calibración para la futura lectura IA.</small></div></article>
+      </section>
+
+      <section class="videoAiCalibrationPanel">
+        <div class="videoAiSectionHead">
+          <div>
+            <h3>Calibración de pista</h3>
+            <p>Marca los puntos en este orden: fondo izquierda, fondo derecha, red izquierda, red derecha.</p>
+          </div>
+          <span id="videoAiCalibCount">0/4</span>
+        </div>
+        <div class="videoAiCalibrationActions">
+          <button class="chip" id="btnVideoAICalibrate" type="button">Calibrar pista</button>
+          <button class="chip" id="btnVideoAIUndoPoint" type="button">Deshacer punto</button>
+          <button class="chip" id="btnVideoAIClearCalibration" type="button">Limpiar</button>
+        </div>
+        <ol class="videoAiPointList" id="videoAiCalibrationList"></ol>
+      </section>
+
+      <section class="videoAiDataPanel">
+        <div class="videoAiSectionHead">
+          <div>
+            <h3>Datos preparados para IA</h3>
+            <p>Esta base deja listo el flujo para que v3.32/v3.33 detecte trayectorias y direcciones.</p>
+          </div>
+        </div>
+        <pre id="videoAiSessionPreview" class="videoAiSessionPreview"></pre>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="analyticsModal">
+  <div class="modalCard solid analyticsModalCard">
+    <div class="modalHead analyticsModalHeadCompact analyticsHeaderV331">
+      <div class="analyticsHeaderTop">
+        <div class="modalTitle">Analítica táctica Premium</div>
+        <div class="modalActions analyticsHeaderActions">
+          <button class="chip analyticsIconBtn" id="btnAnalyticsPDF" type="button" aria-label="Exportar PDF" title="Exportar PDF">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M9 15h6"/><path d="M9 18h4"/></svg>
+          </button>
+          <button class="chip analyticsIconBtn" id="btnAnalyticsFilters" type="button" aria-label="Abrir filtros" title="Filtros">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
+          </button>
+          <button class="chip analyticsIconBtn" id="btnAnalyticsRefresh" type="button" aria-label="Actualizar analítica" title="Actualizar analítica">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M20 11a8 8 0 1 0 2.3 5.7"/></svg>
+          </button>
+          <button class="chip analyticsIconBtn analyticsCloseBtn" id="btnCloseAnalytics" type="button" aria-label="Cerrar" title="Cerrar">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="muted" id="analyticsSub">Lectura táctica avanzada · presión · patrones · direcciones · insights</div>
     </div>
 
     <div class="analyticsTabBar analyticsTabBarFixed" id="analyticsTabs" role="tablist" aria-label="Tabs analíticas">
@@ -1615,7 +1698,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3303"></script>
+<script src="app.js?v=3310"></script>
 
 </body>
 </html>

@@ -1,0 +1,20 @@
+v3.31 — Vídeo IA base
+
+- Añadida nueva entrada de menú: Vídeo IA.
+- Nueva ventana premium de Vídeo IA.
+- Captura de cámara desde navegador mediante getUserMedia.
+- Selector de cámara disponible tras conceder permisos.
+- Grabación local del vídeo mediante MediaRecorder.
+- Descarga local del vídeo grabado.
+- Calibración manual de pista con 4 puntos de referencia:
+  1. Fondo izquierda
+  2. Fondo derecha
+  3. Red izquierda
+  4. Red derecha
+- Overlay visual sobre el vídeo con puntos y polígono de calibración.
+- Guardado local de metadatos de sesión de vídeo IA.
+- Vista JSON de estructura preparada para futuras detecciones automáticas.
+- Preparada la estructura futura para: jugador, golpe, dirección, profundidad, velocidad estimada y confianza.
+- Corregida cabecera de Analítica táctica para que el contexto aparezca en una única línea horizontal.
+- Cache actualizada a v=3310.
+- app.js validado sin errores de sintaxis.

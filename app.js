@@ -6,6 +6,7 @@ const STORAGE_BASE_MATCHES = "tdt_saved_matches_v2";
 const STORAGE_BASE_PROFILES = "tdt_player_profiles_v1";
 const STORAGE_BASE_FINISH_MODE = "tdt_finish_mode_v2";
 const STORAGE_BASE_EXERCISES = "tdt_coach_exercises_v1";
+const STORAGE_BASE_VIDEO_AI = "tdt_video_ai_sessions_v1";
 const ACCOUNTS_KEY = "tdt_accounts_v1";
 const SESSION_KEY = "tdt_session_v1";
 
@@ -107,6 +108,7 @@ function getSavedMatchesStorageKey(){ return scopedKey(STORAGE_BASE_MATCHES); }
 function getProfilesStorageKey(){ return scopedKey(STORAGE_BASE_PROFILES); }
 function getFinishModeKey(){ return scopedKey(STORAGE_BASE_FINISH_MODE); }
 function getCoachExercisesStorageKey(){ return scopedKey(STORAGE_BASE_EXERCISES); }
+function getVideoAISessionsStorageKey(){ return scopedKey(STORAGE_BASE_VIDEO_AI); }
 
 function createDefaultCoachState(){
   return {
@@ -2377,6 +2379,299 @@ function openAnalyticsFilters(){
 function closeAnalyticsFilters(){
   const sheet = $("#analyticsFilterSheet");
   if (sheet) sheet.classList.add("hidden");
+}
+
+// ====================
+// v3.31 · Vídeo IA base: cámara, grabación y calibración manual
+// Esta primera versión prepara la estructura para que las próximas versiones puedan
+// leer dirección, trayectoria, tipo de golpe y velocidad estimada desde vídeo.
+const VIDEO_AI_CALIBRATION_LABELS = [
+  "Fondo izquierda",
+  "Fondo derecha",
+  "Red izquierda",
+  "Red derecha"
+];
+const videoAI = {
+  stream:null,
+  recorder:null,
+  chunks:[],
+  objectUrl:null,
+  lastBlob:null,
+  recording:false,
+  calibrationMode:false,
+  calibrationPoints:[],
+  devices:[]
+};
+function getVideoAISessions(){ return safeReadJSON(localStorage, getVideoAISessionsStorageKey(), []) || []; }
+function saveVideoAISessionMeta(meta){
+  const arr = getVideoAISessions();
+  arr.unshift(meta);
+  safeWriteJSON(localStorage, getVideoAISessionsStorageKey(), arr.slice(0, 25));
+}
+function videoAIStatus(msg){ const el = $("#videoAiStatus"); if (el) el.textContent = msg || ""; }
+function currentVideoAISessionPayload(){
+  return {
+    version:"3.31",
+    source:"video_ai_base",
+    matchId: state?.matchId || null,
+    createdAt: new Date().toISOString(),
+    camera: $("#videoAiCameraSelect")?.selectedOptions?.[0]?.textContent || "auto",
+    calibration: videoAI.calibrationPoints.map((p,i)=>({
+      label: VIDEO_AI_CALIBRATION_LABELS[i] || `Punto ${i+1}`,
+      x: Number(p.x.toFixed(4)),
+      y: Number(p.y.toFixed(4))
+    })),
+    futureEventsSchema:[
+      { field:"player", example:"A" },
+      { field:"shot", example:"forehand | backhand | serve | volley" },
+      { field:"direction", example:"cross | line | center" },
+      { field:"depth", example:"short | medium | deep" },
+      { field:"speedKmh", example:null },
+      { field:"confidence", example:0.82 }
+    ]
+  };
+}
+function renderVideoAISessionPreview(){
+  const el = $("#videoAiSessionPreview");
+  if (!el) return;
+  el.textContent = JSON.stringify(currentVideoAISessionPayload(), null, 2);
+}
+function renderVideoAICalibrationList(){
+  const list = $("#videoAiCalibrationList");
+  const count = $("#videoAiCalibCount");
+  if (count) count.textContent = `${videoAI.calibrationPoints.length}/4`;
+  if (list){
+    list.innerHTML = videoAI.calibrationPoints.length
+      ? videoAI.calibrationPoints.map((p,i)=>`<li><strong>${escapeHtml(VIDEO_AI_CALIBRATION_LABELS[i] || `Punto ${i+1}`)}</strong>: x ${Math.round(p.x*100)}%, y ${Math.round(p.y*100)}%</li>`).join("")
+      : `<li>${tr("Sin puntos marcados todavía.","No points marked yet.")}</li>`;
+  }
+  renderVideoAISessionPreview();
+}
+function resizeVideoAIOverlay(){
+  const frame = $("#videoAiPreviewFrame");
+  const canvas = $("#videoAiOverlay");
+  if (!frame || !canvas) return;
+  const r = frame.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(1, Math.round(r.width * dpr));
+  const h = Math.max(1, Math.round(r.height * dpr));
+  if (canvas.width !== w || canvas.height !== h){
+    canvas.width = w;
+    canvas.height = h;
+  }
+  canvas.style.width = `${r.width}px`;
+  canvas.style.height = `${r.height}px`;
+  renderVideoAIOverlay();
+}
+function renderVideoAIOverlay(){
+  const canvas = $("#videoAiOverlay");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const pts = videoAI.calibrationPoints || [];
+  const w = canvas.width, h = canvas.height;
+  if (videoAI.calibrationMode){
+    ctx.save();
+    ctx.fillStyle = "rgba(0,12,24,.18)";
+    ctx.fillRect(0,0,w,h);
+    ctx.restore();
+  }
+  if (pts.length){
+    ctx.save();
+    ctx.lineWidth = Math.max(2, w * .004);
+    ctx.strokeStyle = "rgba(207,255,75,.92)";
+    ctx.fillStyle = "rgba(207,255,75,.18)";
+    ctx.beginPath();
+    pts.forEach((p,i)=>{
+      const x=p.x*w, y=p.y*h;
+      if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    if (pts.length === 4) ctx.closePath();
+    ctx.stroke();
+    pts.forEach((p,i)=>{
+      const x=p.x*w, y=p.y*h;
+      ctx.beginPath(); ctx.arc(x,y,Math.max(10,w*.018),0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#102232";
+      ctx.font = `900 ${Math.max(14,w*.032)}px system-ui, sans-serif`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(String(i+1), x, y);
+      ctx.fillStyle = "rgba(207,255,75,.18)";
+    });
+    ctx.restore();
+  }
+  if (videoAI.calibrationMode && pts.length < 4){
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.font = `800 ${Math.max(13,w*.026)}px system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillText(`Marca: ${VIDEO_AI_CALIBRATION_LABELS[pts.length]}`, w/2, Math.max(28,h*.06));
+    ctx.restore();
+  }
+}
+function renderVideoAIButtons(){
+  const start = $("#btnVideoAIStartRecording");
+  const stop = $("#btnVideoAIStopRecording");
+  const badge = $("#videoAiRecBadge");
+  const empty = $("#videoAiEmpty");
+  const hasStream = !!videoAI.stream;
+  if (start) start.disabled = !hasStream || videoAI.recording;
+  if (stop) stop.disabled = !videoAI.recording;
+  if (badge) badge.classList.toggle("hidden", !videoAI.recording);
+  if (empty) empty.classList.toggle("hidden", hasStream);
+}
+async function listVideoAICameras(){
+  const select = $("#videoAiCameraSelect");
+  if (!select || !navigator.mediaDevices?.enumerateDevices) return;
+  try{
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    videoAI.devices = devices.filter(d => d.kind === "videoinput");
+    const current = select.value;
+    select.innerHTML = `<option value="">${tr("Cámara trasera / automática","Rear / automatic camera")}</option>` + videoAI.devices.map((d,i)=>`<option value="${escapeHtml(d.deviceId)}">${escapeHtml(d.label || `${tr("Cámara","Camera")} ${i+1}`)}</option>`).join("");
+    if (current && [...select.options].some(o=>o.value===current)) select.value = current;
+  }catch(e){ console.warn(e); }
+}
+async function startVideoAICamera(){
+  if (!navigator.mediaDevices?.getUserMedia){
+    toast("La cámara necesita navegador compatible y HTTPS");
+    videoAIStatus("getUserMedia no disponible. Usa HTTPS o localhost.");
+    return;
+  }
+  await stopVideoAICamera(false);
+  const deviceId = $("#videoAiCameraSelect")?.value || "";
+  const constraints = {
+    audio:false,
+    video: deviceId
+      ? { deviceId:{ exact:deviceId }, width:{ ideal:1280 }, height:{ ideal:720 } }
+      : { facingMode:{ ideal:"environment" }, width:{ ideal:1280 }, height:{ ideal:720 } }
+  };
+  try{
+    videoAI.stream = await navigator.mediaDevices.getUserMedia(constraints);
+    const video = $("#videoAiPreview");
+    if (video){
+      video.srcObject = videoAI.stream;
+      await video.play().catch(()=>{});
+    }
+    await listVideoAICameras();
+    videoAIStatus("Cámara activa. Puedes calibrar la pista o iniciar grabación.");
+    renderVideoAIButtons();
+    setTimeout(resizeVideoAIOverlay, 80);
+  }catch(e){
+    console.error(e);
+    toast("No se pudo iniciar la cámara");
+    videoAIStatus("Permiso denegado o cámara no disponible.");
+  }
+}
+async function stopVideoAICamera(showToast=true){
+  if (videoAI.recording) stopVideoAIRecording();
+  if (videoAI.stream){
+    videoAI.stream.getTracks().forEach(t=>t.stop());
+    videoAI.stream = null;
+  }
+  const video = $("#videoAiPreview");
+  if (video){ video.pause(); video.srcObject = null; }
+  renderVideoAIButtons();
+  if (showToast) videoAIStatus("Cámara detenida.");
+}
+function supportedVideoMime(){
+  const options = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm", "video/mp4"];
+  return options.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || "";
+}
+async function startVideoAIRecording(){
+  if (!videoAI.stream) await startVideoAICamera();
+  if (!videoAI.stream || !window.MediaRecorder){
+    toast("Grabación no disponible en este navegador");
+    return;
+  }
+  try{
+    videoAI.chunks = [];
+    const mimeType = supportedVideoMime();
+    videoAI.recorder = new MediaRecorder(videoAI.stream, mimeType ? { mimeType } : undefined);
+    videoAI.recorder.ondataavailable = e => { if (e.data && e.data.size) videoAI.chunks.push(e.data); };
+    videoAI.recorder.onstop = () => finalizeVideoAIRecording(mimeType || "video/webm");
+    videoAI.recorder.start(1000);
+    videoAI.recording = true;
+    videoAIStatus("Grabando partido…");
+    renderVideoAIButtons();
+  }catch(e){
+    console.error(e);
+    toast("No se pudo iniciar la grabación");
+  }
+}
+function stopVideoAIRecording(){
+  if (!videoAI.recorder || videoAI.recorder.state === "inactive") return;
+  try{ videoAI.recorder.stop(); }catch(e){ console.warn(e); }
+  videoAI.recording = false;
+  videoAIStatus("Procesando grabación…");
+  renderVideoAIButtons();
+}
+function finalizeVideoAIRecording(mimeType){
+  const blob = new Blob(videoAI.chunks || [], { type:mimeType || "video/webm" });
+  if (videoAI.objectUrl) URL.revokeObjectURL(videoAI.objectUrl);
+  videoAI.lastBlob = blob;
+  videoAI.objectUrl = URL.createObjectURL(blob);
+  const link = $("#videoAiDownload");
+  if (link){
+    const ext = (mimeType || "").includes("mp4") ? "mp4" : "webm";
+    link.href = videoAI.objectUrl;
+    link.download = `tennis-direction-video-${Date.now()}.${ext}`;
+    link.classList.remove("hidden");
+  }
+  const meta = currentVideoAISessionPayload();
+  meta.video = { mimeType, sizeBytes: blob.size, localObjectUrl:true };
+  saveVideoAISessionMeta(meta);
+  videoAIStatus("Grabación lista. Puedes descargar el vídeo y la calibración ha quedado registrada como metadato local.");
+  renderVideoAISessionPreview();
+  toast("Vídeo IA guardado localmente");
+}
+function startVideoAICalibration(){
+  videoAI.calibrationMode = true;
+  videoAIStatus("Modo calibración activo. Toca 4 referencias de la pista en orden.");
+  renderVideoAIOverlay();
+}
+function undoVideoAICalibrationPoint(){
+  videoAI.calibrationPoints.pop();
+  if (videoAI.calibrationPoints.length < 4) videoAI.calibrationMode = true;
+  renderVideoAICalibrationList();
+  renderVideoAIOverlay();
+}
+function clearVideoAICalibration(){
+  videoAI.calibrationPoints = [];
+  videoAI.calibrationMode = false;
+  renderVideoAICalibrationList();
+  renderVideoAIOverlay();
+  videoAIStatus("Calibración limpiada.");
+}
+function handleVideoAIOverlayPoint(evt){
+  if (!videoAI.calibrationMode) return;
+  evt.preventDefault();
+  const canvas = $("#videoAiOverlay");
+  if (!canvas || videoAI.calibrationPoints.length >= 4) return;
+  const r = canvas.getBoundingClientRect();
+  const x = Math.max(0, Math.min(1, (evt.clientX - r.left) / Math.max(1, r.width)));
+  const y = Math.max(0, Math.min(1, (evt.clientY - r.top) / Math.max(1, r.height)));
+  videoAI.calibrationPoints.push({x,y});
+  if (videoAI.calibrationPoints.length >= 4){
+    videoAI.calibrationMode = false;
+    videoAIStatus("Calibración completada. Ya puedes grabar o descargar el vídeo.");
+    toast("Calibración completada");
+  }else{
+    videoAIStatus(`Punto ${videoAI.calibrationPoints.length}/4 marcado. Siguiente: ${VIDEO_AI_CALIBRATION_LABELS[videoAI.calibrationPoints.length]}`);
+  }
+  renderVideoAICalibrationList();
+  renderVideoAIOverlay();
+}
+function openVideoAI(){
+  openModal("#videoAiModal");
+  renderVideoAIButtons();
+  renderVideoAICalibrationList();
+  renderVideoAISessionPreview();
+  resizeVideoAIOverlay();
+  listVideoAICameras();
+}
+function closeVideoAI(){
+  stopVideoAICamera(false);
+  closeModal("#videoAiModal");
 }
 
 function openStats(){
@@ -6980,6 +7275,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
 
   on("btnHistory","click", openHistory);
   on("btnAnalytics","click", openAnalytics);
+  on("btnVideoAI","click", ()=>openFromMenu(openVideoAI));
   on("btnStats","click", openStats);
   on("btnCharts","click", openCharts);
   on("btnExport","click", openExport);
@@ -7064,6 +7360,18 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnCloseHistory","click", closeHistory);
   on("btnClosePointViewer","click", closePointViewer);
   on("btnCloseAnalytics","click", closeAnalytics);
+  on("btnCloseVideoAI","click", closeVideoAI);
+  on("btnVideoAIStartCamera","click", startVideoAICamera);
+  on("btnVideoAIStopCamera","click", ()=>stopVideoAICamera(true));
+  on("btnVideoAIStartRecording","click", startVideoAIRecording);
+  on("btnVideoAIStopRecording","click", stopVideoAIRecording);
+  on("btnVideoAICalibrate","click", startVideoAICalibration);
+  on("btnVideoAIUndoPoint","click", undoVideoAICalibrationPoint);
+  on("btnVideoAIClearCalibration","click", clearVideoAICalibration);
+  on("videoAiCameraSelect","change", ()=>{ if (videoAI.stream) startVideoAICamera(); });
+  const videoAiOverlay = $("#videoAiOverlay");
+  if (videoAiOverlay) videoAiOverlay.addEventListener("pointerdown", handleVideoAIOverlayPoint, {passive:false});
+  window.addEventListener("resize", resizeVideoAIOverlay);
   on("btnCloseStats","click", closeStats);
   on("btnCloseCharts","click", closeCharts);
   on("btnCloseChartsZoom","click", closeChartsZoom);
@@ -7085,7 +7393,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // (Eliminado) Tema y modo normal
 
 // cerrar menú al elegir una opción (las acciones que viven dentro del menú)
-["btnSaveMatch","btnLoadMatch","btnGameMode","btnSurface","btnLanguage","btnInfo","btnBackHome","btnHistory","btnAnalytics","btnStats","btnCharts","btnExport","btnDashboardMenu","btnPlayerLibraryMenu","btnAccountMenu","btnHelpCenter","btnLegal","btnCoachExercises","btnCoachLoadExercise","btnCoachSaveExercise","btnCoachNewExercise","btnCoachObjects","btnCoachCourtMode","btnCoachClear"].forEach(id=>{
+["btnSaveMatch","btnLoadMatch","btnGameMode","btnSurface","btnLanguage","btnInfo","btnBackHome","btnHistory","btnAnalytics","btnVideoAI","btnStats","btnCharts","btnExport","btnDashboardMenu","btnPlayerLibraryMenu","btnAccountMenu","btnHelpCenter","btnLegal","btnCoachExercises","btnCoachLoadExercise","btnCoachSaveExercise","btnCoachNewExercise","btnCoachObjects","btnCoachCourtMode","btnCoachClear"].forEach(id=>{
   const el = $("#"+id);
   if (el) el.addEventListener("click", ()=>setMenuOpen(false));
 });
