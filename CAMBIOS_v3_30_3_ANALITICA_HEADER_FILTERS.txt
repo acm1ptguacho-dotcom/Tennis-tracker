@@ -1,0 +1,10 @@
+v3.30.3 — Analítica táctica Premium: cabecera compacta y filtros en ventana
+
+- Cabecera de Analítica táctica Premium optimizada para móvil.
+- El texto de contexto (Jugador · contexto · puntos analizados) queda en una única línea con scroll horizontal si no cabe.
+- Añadido nuevo botón de filtros entre PDF y Actualizar.
+- Eliminado el desplegable de filtros dentro del contenido principal.
+- Los filtros se abren ahora en una ventana/panel premium independiente.
+- Botones PDF, Filtros, Actualizar y Cerrar quedan compactos en la misma línea.
+- Cache actualizada a v=3303.
+- Validado app.js sin errores de sintaxis.

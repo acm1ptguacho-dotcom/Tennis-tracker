@@ -2363,10 +2363,21 @@ function renderPointViewer(point){
 
 function openAnalytics(){
   openModal("#analyticsModal");
+  closeAnalyticsFilters();
   try{ renderAnalytics(); }
   catch(e){ console.error(e); toast("Error al abrir analíticas"); }
 }
-function closeAnalytics(){ closeModal("#analyticsModal"); }
+function closeAnalytics(){ closeAnalyticsFilters(); closeModal("#analyticsModal"); }
+
+function openAnalyticsFilters(){
+  const sheet = $("#analyticsFilterSheet");
+  if (sheet) sheet.classList.remove("hidden");
+}
+
+function closeAnalyticsFilters(){
+  const sheet = $("#analyticsFilterSheet");
+  if (sheet) sheet.classList.add("hidden");
+}
 
 function openStats(){
   state.ui = state.ui || {};
@@ -7188,6 +7199,8 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
 
   on("btnAnalyticsRefresh","click", renderAnalytics);
   on("btnAnalyticsPDF","click", exportAnalyticsPDF);
+  on("btnAnalyticsFilters","click", openAnalyticsFilters);
+  on("btnAnalyticsFiltersClose","click", closeAnalyticsFilters);
 
   // stats filters
   ["sRange","sSet","sServer","sContext","sMode","sSub"].forEach(id=>{

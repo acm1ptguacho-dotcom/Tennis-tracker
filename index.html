@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3301" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3302" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3303" />
 </head>
 <body>
 
@@ -980,6 +980,9 @@
         <button class="chip analyticsIconBtn" id="btnAnalyticsPDF" type="button" aria-label="Exportar PDF" title="Exportar PDF">
           <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M9 15h6"/><path d="M9 18h4"/></svg>
         </button>
+        <button class="chip analyticsIconBtn" id="btnAnalyticsFilters" type="button" aria-label="Abrir filtros" title="Filtros">
+          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
+        </button>
         <button class="chip analyticsIconBtn" id="btnAnalyticsRefresh" type="button" aria-label="Actualizar analítica" title="Actualizar analítica">
           <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M20 11a8 8 0 1 0 2.3 5.7"/></svg>
         </button>
@@ -997,16 +1000,18 @@
       <button class="analyticsTabBtn" type="button" data-analytics-tab="insights">Insights</button>
     </div>
 
-    <div class="modalBody premiumModalBody analyticsModalBodyShell">
-      <details class="analyticsFilterDetails" id="analyticsFilters">
-        <summary class="analyticsFilterSummary">
-          <span class="analyticsFilterSummaryText">Filtros de búsqueda</span>
-          <span class="analyticsFilterSummaryMeta">Jugador, contexto, patrón y saque</span>
-          <span class="analyticsFilterChevron" aria-hidden="true">
-            <svg class="svgIcon" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
-          </span>
-        </summary>
-        <div class="analyticsToolbar analyticsToolbarPremium">
+    <div class="analyticsFilterSheet hidden" id="analyticsFilterSheet" role="dialog" aria-modal="true" aria-label="Filtros de búsqueda">
+      <div class="analyticsFilterSheetCard">
+        <div class="analyticsFilterSheetHead">
+          <div>
+            <div class="analyticsFilterSheetTitle">Filtros de búsqueda</div>
+            <div class="analyticsFilterSheetSub">Jugador, contexto, patrón y saque</div>
+          </div>
+          <button class="chip analyticsIconBtn analyticsFilterCloseBtn" id="btnAnalyticsFiltersClose" type="button" aria-label="Cerrar filtros" title="Cerrar filtros">
+            <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div class="analyticsToolbar analyticsToolbarPremium analyticsToolbarInSheet">
           <label>Jugador
             <select id="aPerspective">
               <option value="A">Jugador A</option>
@@ -1051,8 +1056,10 @@
           </label>
           <label class="check"><input type="checkbox" id="aIncludeServe" checked> Incluir saque</label>
         </div>
-      </details>
+      </div>
+    </div>
 
+    <div class="modalBody premiumModalBody analyticsModalBodyShell">
       <div class="analyticsKpiGrid" id="analyticsKpis"></div>
 
       <div class="analyticsPaneWrap">
@@ -1608,7 +1615,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3302"></script>
+<script src="app.js?v=3303"></script>
 
 </body>
 </html>
