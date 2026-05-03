@@ -1,0 +1,14 @@
+v3.32 — Vídeo IA asistido
+
+- Añadido módulo de análisis asistido dentro de Vídeo IA.
+- El usuario puede marcar inicio y final de una trayectoria sobre el vídeo.
+- La web transforma esos puntos mediante la calibración de 4 referencias.
+- Se calcula dirección táctica: cruzado, paralelo o centro.
+- Se calcula profundidad: corto, medio o profundo.
+- Se genera código táctico compatible con Analítica táctica.
+- Se permite seleccionar jugador, tipo de golpe, resultado y ganador del punto.
+- Se pueden guardar varios golpes asistidos por sesión.
+- Botón “Enviar a Analítica” crea un punto analizable en la sesión actual.
+- Overlay actualizado: muestra inicio, final, flechas actuales y trayectorias guardadas.
+- JSON de sesión actualizado a version 3.32 e incluye assistedEvents.
+- Cache actualizada a v=3320.

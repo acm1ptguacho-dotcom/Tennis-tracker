@@ -2382,7 +2382,7 @@ function closeAnalyticsFilters(){
 }
 
 // ====================
-// v3.31 · Vídeo IA base: cámara, grabación y calibración manual
+// v3.32 · Vídeo IA asistido: cámara, grabación y calibración manual
 // Esta primera versión prepara la estructura para que las próximas versiones puedan
 // leer dirección, trayectoria, tipo de golpe y velocidad estimada desde vídeo.
 const VIDEO_AI_CALIBRATION_LABELS = [
@@ -2400,7 +2400,11 @@ const videoAI = {
   recording:false,
   calibrationMode:false,
   calibrationPoints:[],
-  devices:[]
+  devices:[],
+  assistedMode:false,
+  markMode:null,
+  currentTrajectory:{ start:null, end:null },
+  assistedEvents:[]
 };
 function getVideoAISessions(){ return safeReadJSON(localStorage, getVideoAISessionsStorageKey(), []) || []; }
 function saveVideoAISessionMeta(meta){
@@ -2411,8 +2415,8 @@ function saveVideoAISessionMeta(meta){
 function videoAIStatus(msg){ const el = $("#videoAiStatus"); if (el) el.textContent = msg || ""; }
 function currentVideoAISessionPayload(){
   return {
-    version:"3.31",
-    source:"video_ai_base",
+    version:"3.32",
+    source:"video_ai_assisted",
     matchId: state?.matchId || null,
     createdAt: new Date().toISOString(),
     camera: $("#videoAiCameraSelect")?.selectedOptions?.[0]?.textContent || "auto",
@@ -2420,6 +2424,18 @@ function currentVideoAISessionPayload(){
       label: VIDEO_AI_CALIBRATION_LABELS[i] || `Punto ${i+1}`,
       x: Number(p.x.toFixed(4)),
       y: Number(p.y.toFixed(4))
+    })),
+    assistedEvents: (videoAI.assistedEvents || []).map(ev => ({
+      id: ev.id,
+      player: ev.player,
+      shot: ev.shot,
+      result: ev.result,
+      direction: ev.direction,
+      depth: ev.depth,
+      code: ev.code,
+      confidence: ev.confidence,
+      start: ev.start,
+      end: ev.end
     })),
     futureEventsSchema:[
       { field:"player", example:"A" },
@@ -2446,6 +2462,199 @@ function renderVideoAICalibrationList(){
       : `<li>${tr("Sin puntos marcados todavía.","No points marked yet.")}</li>`;
   }
   renderVideoAISessionPreview();
+}
+
+function videoAIAssistShotName(shot){
+  const map = { serve:tr("Saque","Serve"), return:tr("Resto","Return"), forehand:tr("Derecha","Forehand"), backhand:tr("Revés","Backhand"), volley:tr("Volea","Volley") };
+  return map[shot] || shot || "—";
+}
+function videoAIAssistDirectionName(dir){
+  const map = { cross:tr("Cruzado","Crosscourt"), line:tr("Paralelo","Down the line"), center:tr("Centro","Center") };
+  return map[dir] || dir || "—";
+}
+function videoAIAssistDepthName(depth){
+  const map = { deep:tr("Profundo","Deep"), medium:tr("Medio","Medium"), short:tr("Corto","Short") };
+  return map[depth] || depth || "—";
+}
+function videoAIDirCode(dir){ return dir === "cross" ? "C" : dir === "center" ? "M" : "P"; }
+function videoAIDepthCode(depth){ return depth === "deep" ? "P" : depth === "medium" ? "M" : "C"; }
+function videoAICourtToShotCode(courtEnd, dir){
+  const depth = courtEnd.y >= .66 ? "deep" : courtEnd.y >= .34 ? "medium" : "short";
+  return { depth, dir, code:`${videoAIDepthCode(depth)}${videoAIDirCode(dir)}` };
+}
+function videoAIEstimateServeTarget(courtEnd){
+  if (!courtEnd) return "C";
+  if (courtEnd.x < .35) return "A";
+  if (courtEnd.x > .65) return "T";
+  return "C";
+}
+function videoAIInvert3x3(m){
+  const a=m[0],b=m[1],c=m[2],d=m[3],e=m[4],f=m[5],g=m[6],h=m[7],i=m[8];
+  const A=e*i-f*h, B=-(d*i-f*g), C=d*h-e*g;
+  const D=-(b*i-c*h), E=a*i-c*g, F=-(a*h-b*g);
+  const G=b*f-c*e, H=-(a*f-c*d), I=a*e-b*d;
+  const det=a*A+b*B+c*C;
+  if (Math.abs(det)<1e-9) return null;
+  return [A/det,D/det,G/det,B/det,E/det,H/det,C/det,F/det,I/det];
+}
+function videoAIComputeHomography(src, dst){
+  const A=[];
+  const b=[];
+  for(let k=0;k<4;k++){
+    const x=src[k].x, y=src[k].y, u=dst[k].x, v=dst[k].y;
+    A.push([x,y,1,0,0,0,-u*x,-u*y]); b.push(u);
+    A.push([0,0,0,x,y,1,-v*x,-v*y]); b.push(v);
+  }
+  // Gaussian elimination 8x8
+  for(let col=0; col<8; col++){
+    let pivot=col;
+    for(let r=col+1;r<8;r++) if(Math.abs(A[r][col])>Math.abs(A[pivot][col])) pivot=r;
+    if(Math.abs(A[pivot][col])<1e-9) return null;
+    [A[col],A[pivot]]=[A[pivot],A[col]]; [b[col],b[pivot]]=[b[pivot],b[col]];
+    const div=A[col][col];
+    for(let j=col;j<8;j++) A[col][j]/=div; b[col]/=div;
+    for(let r=0;r<8;r++){
+      if(r===col) continue;
+      const factor=A[r][col];
+      for(let j=col;j<8;j++) A[r][j]-=factor*A[col][j];
+      b[r]-=factor*b[col];
+    }
+  }
+  return [b[0],b[1],b[2], b[3],b[4],b[5], b[6],b[7],1];
+}
+function videoAIApplyHomography(H, p){
+  if (!H || !p) return null;
+  const x=p.x, y=p.y;
+  const den=H[6]*x + H[7]*y + H[8];
+  if (Math.abs(den)<1e-9) return null;
+  return { x:clamp01((H[0]*x + H[1]*y + H[2]) / den), y:clamp01((H[3]*x + H[4]*y + H[5]) / den) };
+}
+function videoAIImagePointToCourtNorm(pt){
+  const pts = videoAI.calibrationPoints || [];
+  if (pts.length < 4 || !pt) return null;
+  // source order: fondo izquierda, fondo derecha, red izquierda, red derecha
+  const src = [pts[0], pts[1], pts[2], pts[3]];
+  const dst = [{x:0,y:1},{x:1,y:1},{x:0,y:0},{x:1,y:0}];
+  const H = videoAIComputeHomography(src, dst);
+  return videoAIApplyHomography(H, pt);
+}
+function videoAIAnalyzeTrajectory(start, end){
+  const cs = videoAIImagePointToCourtNorm(start);
+  const ce = videoAIImagePointToCourtNorm(end);
+  if (!cs || !ce) return null;
+  const dx = ce.x - cs.x;
+  let direction = "line";
+  if (ce.x > .42 && ce.x < .58) direction = "center";
+  else if ((cs.x < .5 && ce.x > .5) || (cs.x > .5 && ce.x < .5)) direction = "cross";
+  const shotInfo = videoAICourtToShotCode(ce, direction);
+  const distance = Math.hypot(dx, ce.y - cs.y);
+  const confidence = Math.max(.52, Math.min(.93, .62 + distance*.48));
+  return { courtStart:cs, courtEnd:ce, direction, depth:shotInfo.depth, code:shotInfo.code, confidence:Number(confidence.toFixed(2)) };
+}
+function renderVideoAIAssistedPanel(){
+  const count = $("#videoAiAssistCount");
+  if (count) count.textContent = String((videoAI.assistedEvents||[]).length);
+  const box = $("#videoAiAssistResultBox");
+  const list = $("#videoAiEventList");
+  const st = videoAI.currentTrajectory?.start;
+  const en = videoAI.currentTrajectory?.end;
+  if (box){
+    if ((videoAI.calibrationPoints||[]).length < 4){
+      box.textContent = tr("Primero completa la calibración de 4 puntos.","Complete the 4-point calibration first.");
+    }else if (!st || !en){
+      box.textContent = tr("Marca el inicio y el final de la trayectoria sobre el vídeo.","Mark the start and end of the trajectory on the video.");
+    }else{
+      const a = videoAIAnalyzeTrajectory(st,en);
+      box.innerHTML = a ? `<strong>${escapeHtml(videoAIAssistDirectionName(a.direction))} · ${escapeHtml(videoAIAssistDepthName(a.depth))}</strong><span>${tr("Código táctico","Tactical code")}: ${escapeHtml(a.code)} · ${tr("confianza estimada","estimated confidence")}: ${Math.round(a.confidence*100)}%</span>` : tr("Trayectoria fuera de la zona calibrada.","Trajectory outside calibrated zone.");
+    }
+  }
+  if (list){
+    list.innerHTML = (videoAI.assistedEvents||[]).length ? videoAI.assistedEvents.map((ev,i)=>`<li><b>${i+1}. ${escapeHtml(playerName(ev.player))}</b> · ${escapeHtml(videoAIAssistShotName(ev.shot))} · ${escapeHtml(videoAIAssistDirectionName(ev.direction))} ${escapeHtml(videoAIAssistDepthName(ev.depth))} <small>${escapeHtml(ev.code)} · ${Math.round((ev.confidence||0)*100)}%</small></li>`).join("") : `<li>${tr("Sin golpes asistidos guardados todavía.","No assisted shots saved yet.")}</li>`;
+  }
+  renderVideoAISessionPreview();
+}
+function startVideoAIMark(mode){
+  if ((videoAI.calibrationPoints||[]).length < 4){ toast("Primero calibra la pista"); return; }
+  videoAI.assistedMode = true;
+  videoAI.markMode = mode;
+  videoAIStatus(mode === "start" ? "Toca el inicio de la trayectoria." : "Toca el final de la trayectoria.");
+  renderVideoAIOverlay();
+}
+function saveVideoAIAssistedEvent(){
+  const start = videoAI.currentTrajectory?.start;
+  const end = videoAI.currentTrajectory?.end;
+  const analysis = videoAIAnalyzeTrajectory(start, end);
+  if (!analysis){ toast("Marca inicio y final dentro de la zona calibrada"); return; }
+  const player = $("#videoAiAssistPlayer")?.value || "A";
+  const shot = $("#videoAiAssistShot")?.value || "forehand";
+  const result = $("#videoAiAssistResult")?.value || "neutral";
+  const ev = {
+    id:`via_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+    player, shot, result,
+    direction: analysis.direction,
+    depth: analysis.depth,
+    code: analysis.code,
+    confidence: analysis.confidence,
+    start:{ x:Number(start.x.toFixed(4)), y:Number(start.y.toFixed(4)), court:analysis.courtStart },
+    end:{ x:Number(end.x.toFixed(4)), y:Number(end.y.toFixed(4)), court:analysis.courtEnd },
+    createdAt:new Date().toISOString()
+  };
+  if (shot === "serve"){
+    ev.serveTarget = videoAIEstimateServeTarget(analysis.courtEnd);
+  }
+  videoAI.assistedEvents.push(ev);
+  videoAI.currentTrajectory = { start:null, end:null };
+  videoAI.markMode = null;
+  videoAI.assistedMode = false;
+  renderVideoAIAssistedPanel();
+  renderVideoAIOverlay();
+  videoAIStatus("Golpe asistido guardado. Puedes marcar otro o enviarlo a Analítica.");
+  toast("Golpe asistido guardado");
+}
+function clearVideoAIAssistedEvents(){
+  videoAI.assistedEvents = [];
+  videoAI.currentTrajectory = { start:null, end:null };
+  videoAI.markMode = null;
+  videoAI.assistedMode = false;
+  renderVideoAIAssistedPanel();
+  renderVideoAIOverlay();
+  videoAIStatus("Golpes asistidos limpiados.");
+}
+function videoAIEventToMatchEvent(ev){
+  if (!ev) return null;
+  if (ev.shot === "serve"){
+    const target = ev.serveTarget || "C";
+    return { type:"serve", player:ev.player, code:`S ${target}`, meta:{ target, source:"video_ai_assisted", confidence:ev.confidence } };
+  }
+  const prefix = ev.shot === "return" ? "R " : "";
+  return { type:"rally", player:ev.player, code:`${prefix}${ev.code}`, meta:{ shot:ev.shot, direction:ev.direction, depth:ev.depth, source:"video_ai_assisted", confidence:ev.confidence } };
+}
+function sendVideoAIAssistedToAnalytics(){
+  const events = (videoAI.assistedEvents || []).map(videoAIEventToMatchEvent).filter(Boolean);
+  if (!events.length){ toast("No hay golpes asistidos para enviar"); return; }
+  const winner = $("#videoAiAssistWinner")?.value || events[events.length-1]?.player || "A";
+  const n = (state.matchPoints || []).length + 1;
+  const point = {
+    n,
+    winner,
+    reason:"Vídeo IA asistido",
+    server: events.find(e=>e.type==="serve")?.player || state.currentServer || "A",
+    side: serveSideLabel ? serveSideLabel() : "deuce",
+    snapshot:`Vídeo IA asistido · ${events.length} golpes`,
+    finishDetail:{ source:"video_ai_assisted", winner, eventCount:events.length },
+    important:false,
+    importantNote:"",
+    events,
+    arrows:[],
+    videoAI:true,
+    videoAISession: currentVideoAISessionPayload()
+  };
+  state.matchPoints = Array.isArray(state.matchPoints) ? state.matchPoints : [];
+  state.matchPoints.push(point);
+  persist();
+  renderAll();
+  videoAIStatus("Evento enviado a Analítica táctica. Abre Reportes > Analítica táctica para verlo.");
+  toast("Enviado a Analítica táctica");
 }
 function resizeVideoAIOverlay(){
   const frame = $("#videoAiPreviewFrame");
@@ -2500,12 +2709,60 @@ function renderVideoAIOverlay(){
     });
     ctx.restore();
   }
+  // Draw assisted trajectories and current start/end marker
+  const drawPoint = (p, label, color) => {
+    if (!p) return;
+    const x=p.x*w, y=p.y*h;
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.strokeStyle = "rgba(255,255,255,.9)";
+    ctx.lineWidth = Math.max(2, w*.0035);
+    ctx.beginPath(); ctx.arc(x,y,Math.max(8,w*.014),0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#061421";
+    ctx.font = `900 ${Math.max(11,w*.022)}px system-ui, sans-serif`;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(label, x, y);
+    ctx.restore();
+  };
+  const drawLine = (a,b,color) => {
+    if (!a || !b) return;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(3,w*.005);
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(a.x*w,a.y*h); ctx.lineTo(b.x*w,b.y*h); ctx.stroke();
+    const ang = Math.atan2((b.y-a.y)*h,(b.x-a.x)*w);
+    const sz = Math.max(12,w*.022);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(b.x*w,b.y*h);
+    ctx.lineTo(b.x*w - Math.cos(ang-.5)*sz, b.y*h - Math.sin(ang-.5)*sz);
+    ctx.lineTo(b.x*w - Math.cos(ang+.5)*sz, b.y*h - Math.sin(ang+.5)*sz);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  };
+  (videoAI.assistedEvents||[]).forEach(ev => {
+    const a = ev.start, b = ev.end;
+    if (a && b) drawLine(a,b,"rgba(255,80,90,.75)");
+  });
+  const cur = videoAI.currentTrajectory || {};
+  if (cur.start && cur.end) drawLine(cur.start,cur.end,"rgba(57,213,255,.92)");
+  drawPoint(cur.start,"I","rgba(57,213,255,.92)");
+  drawPoint(cur.end,"F","rgba(207,255,75,.95)");
+
   if (videoAI.calibrationMode && pts.length < 4){
     ctx.save();
     ctx.fillStyle = "rgba(255,255,255,.92)";
     ctx.font = `800 ${Math.max(13,w*.026)}px system-ui, sans-serif`;
     ctx.textAlign = "center";
     ctx.fillText(`Marca: ${VIDEO_AI_CALIBRATION_LABELS[pts.length]}`, w/2, Math.max(28,h*.06));
+    ctx.restore();
+  }else if (videoAI.markMode){
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.font = `800 ${Math.max(13,w*.026)}px system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillText(videoAI.markMode === "start" ? "Marca inicio de trayectoria" : "Marca final de trayectoria", w/2, Math.max(28,h*.06));
     ctx.restore();
   }
 }
@@ -2626,6 +2883,8 @@ function finalizeVideoAIRecording(mimeType){
 }
 function startVideoAICalibration(){
   videoAI.calibrationMode = true;
+  videoAI.markMode = null;
+  videoAI.assistedMode = false;
   videoAIStatus("Modo calibración activo. Toca 4 referencias de la pista en orden.");
   renderVideoAIOverlay();
 }
@@ -2638,33 +2897,56 @@ function undoVideoAICalibrationPoint(){
 function clearVideoAICalibration(){
   videoAI.calibrationPoints = [];
   videoAI.calibrationMode = false;
+  videoAI.currentTrajectory = { start:null, end:null };
+  videoAI.markMode = null;
   renderVideoAICalibrationList();
+  renderVideoAIAssistedPanel();
   renderVideoAIOverlay();
   videoAIStatus("Calibración limpiada.");
 }
 function handleVideoAIOverlayPoint(evt){
-  if (!videoAI.calibrationMode) return;
+  if (!videoAI.calibrationMode && !videoAI.markMode) return;
   evt.preventDefault();
   const canvas = $("#videoAiOverlay");
-  if (!canvas || videoAI.calibrationPoints.length >= 4) return;
+  if (!canvas) return;
   const r = canvas.getBoundingClientRect();
   const x = Math.max(0, Math.min(1, (evt.clientX - r.left) / Math.max(1, r.width)));
   const y = Math.max(0, Math.min(1, (evt.clientY - r.top) / Math.max(1, r.height)));
-  videoAI.calibrationPoints.push({x,y});
-  if (videoAI.calibrationPoints.length >= 4){
-    videoAI.calibrationMode = false;
-    videoAIStatus("Calibración completada. Ya puedes grabar o descargar el vídeo.");
-    toast("Calibración completada");
-  }else{
-    videoAIStatus(`Punto ${videoAI.calibrationPoints.length}/4 marcado. Siguiente: ${VIDEO_AI_CALIBRATION_LABELS[videoAI.calibrationPoints.length]}`);
+  if (videoAI.calibrationMode){
+    if (videoAI.calibrationPoints.length >= 4) return;
+    videoAI.calibrationPoints.push({x,y});
+    if (videoAI.calibrationPoints.length >= 4){
+      videoAI.calibrationMode = false;
+      videoAIStatus("Calibración completada. Ya puedes grabar o usar análisis asistido.");
+      toast("Calibración completada");
+    }else{
+      videoAIStatus(`Punto ${videoAI.calibrationPoints.length}/4 marcado. Siguiente: ${VIDEO_AI_CALIBRATION_LABELS[videoAI.calibrationPoints.length]}`);
+    }
+    renderVideoAICalibrationList();
+    renderVideoAIAssistedPanel();
+    renderVideoAIOverlay();
+    return;
   }
-  renderVideoAICalibrationList();
-  renderVideoAIOverlay();
+  if (videoAI.markMode){
+    videoAI.currentTrajectory = videoAI.currentTrajectory || {start:null,end:null};
+    if (videoAI.markMode === "start"){
+      videoAI.currentTrajectory.start = {x,y};
+      videoAI.markMode = null;
+      videoAIStatus("Inicio marcado. Ahora pulsa 'Marcar final'.");
+    }else{
+      videoAI.currentTrajectory.end = {x,y};
+      videoAI.markMode = null;
+      videoAIStatus("Final marcado. Revisa cálculo y guarda el golpe.");
+    }
+    renderVideoAIAssistedPanel();
+    renderVideoAIOverlay();
+  }
 }
 function openVideoAI(){
   openModal("#videoAiModal");
   renderVideoAIButtons();
   renderVideoAICalibrationList();
+  renderVideoAIAssistedPanel();
   renderVideoAISessionPreview();
   resizeVideoAIOverlay();
   listVideoAICameras();
@@ -7368,6 +7650,11 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnVideoAICalibrate","click", startVideoAICalibration);
   on("btnVideoAIUndoPoint","click", undoVideoAICalibrationPoint);
   on("btnVideoAIClearCalibration","click", clearVideoAICalibration);
+  on("btnVideoAIMarkStart","click", ()=>startVideoAIMark("start"));
+  on("btnVideoAIMarkEnd","click", ()=>startVideoAIMark("end"));
+  on("btnVideoAISaveEvent","click", saveVideoAIAssistedEvent);
+  on("btnVideoAISendAnalytics","click", sendVideoAIAssistedToAnalytics);
+  on("btnVideoAIClearEvents","click", clearVideoAIAssistedEvents);
   on("videoAiCameraSelect","change", ()=>{ if (videoAI.stream) startVideoAICamera(); });
   const videoAiOverlay = $("#videoAiOverlay");
   if (videoAiOverlay) videoAiOverlay.addEventListener("pointerdown", handleVideoAIOverlayPoint, {passive:false});

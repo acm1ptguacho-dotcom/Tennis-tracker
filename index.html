@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3310" />
+<link rel="stylesheet" href="style.css?v=3320" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3310" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3320" />
 </head>
 <body>
 
@@ -1039,6 +1039,56 @@
         <ol class="videoAiPointList" id="videoAiCalibrationList"></ol>
       </section>
 
+      <section class="videoAiAssistedPanel">
+        <div class="videoAiSectionHead">
+          <div>
+            <h3>Análisis asistido</h3>
+            <p>Marca inicio y final de la trayectoria. La web calcula dirección, profundidad y crea eventos para Analítica táctica.</p>
+          </div>
+          <span id="videoAiAssistCount">0</span>
+        </div>
+        <div class="videoAiAssistGrid">
+          <label class="videoAiSelectLabel">Jugador
+            <select id="videoAiAssistPlayer">
+              <option value="A">Jugador A</option>
+              <option value="B">Jugador B</option>
+            </select>
+          </label>
+          <label class="videoAiSelectLabel">Tipo de golpe
+            <select id="videoAiAssistShot">
+              <option value="serve">Saque</option>
+              <option value="return">Resto</option>
+              <option value="forehand" selected>Derecha</option>
+              <option value="backhand">Revés</option>
+              <option value="volley">Volea</option>
+            </select>
+          </label>
+          <label class="videoAiSelectLabel">Resultado
+            <select id="videoAiAssistResult">
+              <option value="neutral" selected>Continúa el punto</option>
+              <option value="winner">Golpe ganador</option>
+              <option value="forced_error">Provoca error</option>
+              <option value="unforced_error">Error propio</option>
+            </select>
+          </label>
+          <label class="videoAiSelectLabel">Ganador del punto
+            <select id="videoAiAssistWinner">
+              <option value="A">Jugador A</option>
+              <option value="B">Jugador B</option>
+            </select>
+          </label>
+        </div>
+        <div class="videoAiAssistActions">
+          <button class="chip" id="btnVideoAIMarkStart" type="button">Marcar inicio</button>
+          <button class="chip" id="btnVideoAIMarkEnd" type="button">Marcar final</button>
+          <button class="chip primary" id="btnVideoAISaveEvent" type="button">Guardar golpe</button>
+          <button class="chip" id="btnVideoAISendAnalytics" type="button">Enviar a Analítica</button>
+          <button class="chip" id="btnVideoAIClearEvents" type="button">Limpiar golpes</button>
+        </div>
+        <div class="videoAiAssistResultBox" id="videoAiAssistResultBox">Calibra la pista y marca una trayectoria para calcular dirección.</div>
+        <ol class="videoAiEventList" id="videoAiEventList"></ol>
+      </section>
+
       <section class="videoAiDataPanel">
         <div class="videoAiSectionHead">
           <div>
@@ -1698,7 +1748,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3310"></script>
+<script src="app.js?v=3320"></script>
 
 </body>
 </html>

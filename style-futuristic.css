@@ -6821,3 +6821,78 @@ body.coachMode.coachHalfCourt #courtSurface{
   .analyticsHeaderV331 .modalTitle{max-width:150px!important;font-size:clamp(21px, 7vw, 27px)!important;}
   .analyticsHeaderV331 .analyticsHeaderActions{gap:5px!important;}
 }
+
+/* ===== v3.32 Vídeo IA asistido ===== */
+.videoAiAssistedPanel{
+  padding:16px!important;
+  border:1px solid rgba(175,216,255,.16)!important;
+  background:
+    radial-gradient(340px 150px at 85% 0%, rgba(57,213,255,.12), transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.025))!important;
+  border-radius:28px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 18px 38px rgba(0,8,24,.18)!important;
+}
+#videoAiAssistCount{
+  flex:0 0 auto;
+  min-width:48px;
+  text-align:center;
+  border-radius:999px;
+  padding:8px 10px;
+  color:#061421;
+  background:linear-gradient(180deg,#39d5ff,#81ffef);
+  font-weight:1000;
+}
+.videoAiAssistGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.videoAiAssistActions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px;
+}
+.videoAiAssistActions .chip{
+  min-height:46px!important;
+  justify-content:center;
+}
+.videoAiAssistResultBox{
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:18px;
+  background:rgba(1,9,18,.55);
+  border:1px solid rgba(175,216,255,.13);
+  color:rgba(239,248,255,.84);
+  font-weight:800;
+  line-height:1.35;
+}
+.videoAiAssistResultBox strong{
+  display:block;
+  color:#cfff4b;
+  font-size:18px;
+  margin-bottom:4px;
+}
+.videoAiAssistResultBox span{
+  display:block;
+  color:rgba(235,246,255,.72);
+  font-size:13px;
+}
+.videoAiEventList{
+  margin:12px 0 0;
+  padding-left:22px;
+  color:rgba(240,249,255,.85);
+}
+.videoAiEventList li{
+  margin:8px 0;
+  line-height:1.35;
+}
+.videoAiEventList small{
+  display:block;
+  color:rgba(235,246,255,.62);
+  margin-top:2px;
+}
+@media (max-width:520px){
+  .videoAiAssistGrid,
+  .videoAiAssistActions{grid-template-columns:1fr!important;}
+}
