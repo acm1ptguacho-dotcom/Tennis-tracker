@@ -4,7 +4,7 @@
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
 
-const CACHE = "tennis-tracker-web-v3.28.1-finish-menu-polish";
+const CACHE = "tennis-tracker-web-v3.29.1-finish-menu-polish";
 const CORE = [
   "./",
   "./index.html",

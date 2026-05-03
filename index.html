@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3270" />
+<link rel="stylesheet" href="style.css?v=3290" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3272" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3290" />
 </head>
 <body>
 
@@ -233,7 +233,7 @@
     <div class="drawerDivider matchOnly"></div>
     <div class="drawerGroupLabel matchOnly" data-i18n="reports">Reportes</div>
     <button class="chip menuItem" id="btnHistory" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span data-i18n="history">Historial</span></button>
-    <button class="chip menuItem" id="btnAnalytics" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span data-i18n="analytics">Analíticas</span></button>
+    <button class="chip menuItem" id="btnAnalytics" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span data-i18n="analytics">Analítica táctica</span></button>
     <button class="chip menuItem" id="btnStats" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span data-i18n="stats">Estadísticas</span></button>
     
     <button class="chip menuItem" id="btnCharts" type="button"><svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 14 9 9 13 13 20 6"/><polyline points="20 6 20 12 14 12"/></svg><span data-i18n="charts">Gráficos</span></button>
@@ -973,8 +973,8 @@
   <div class="modalCard solid analyticsModalCard">
     <div class="modalHead">
       <div>
-        <div class="modalTitle">Analíticas tácticas</div>
-        <div class="muted" id="analyticsSub">Patrones, presión, direcciones e insights del partido</div>
+        <div class="modalTitle">Analítica táctica MVP</div>
+        <div class="muted" id="analyticsSub">Contexto, patrones 2–4 golpes, direcciones e insights tácticos</div>
       </div>
       <div class="modalActions">
         <button class="chip" id="btnAnalyticsPDF" type="button">PDF</button>
@@ -1010,7 +1010,6 @@
             <option value="2">2 golpes</option>
             <option value="3" selected>3 golpes</option>
             <option value="4">4 golpes</option>
-            <option value="5">5 golpes</option>
           </select>
         </label>
         <label>Modo
@@ -1594,7 +1593,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3272"></script>
+<script src="app.js?v=3290"></script>
 
 </body>
 </html>

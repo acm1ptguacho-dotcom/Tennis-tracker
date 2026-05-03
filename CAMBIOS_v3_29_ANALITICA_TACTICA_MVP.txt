@@ -1,0 +1,9 @@
+v3.29 - Analítica táctica MVP
+
+- Añadida/renombrada la entrada de menú como “Analítica táctica”.
+- Pantalla de Analítica táctica MVP con pestañas:
+  Resumen, Puntos importantes, Patrones, Direcciones e Insights.
+- Filtros por jugador, contexto, longitud de patrón y ocurrencias.
+- MVP centrado en patrones exactos de 2 a 4 golpes.
+- KPIs tácticos, lista de puntos importantes, distribución de direcciones e insights automáticos.
+- Estructura preparada para datos manuales actuales y futura fuente de vídeo/IA.
