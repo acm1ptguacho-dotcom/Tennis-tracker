@@ -1,0 +1,9 @@
+v3.30.2 — Analítica táctica premium: pulido visual
+
+- Botones PDF, Actualizar y Cerrar rediseñados como botones compactos con iconos.
+- Los 3 botones quedan ahora en una sola fila en la cabecera.
+- Mejora visual premium de la cabecera de acciones.
+- Filtros de búsqueda convertidos en bloque desplegable/colapsable.
+- Resumen del desplegable con texto auxiliar y chevron animado.
+- Los filtros permanecen funcionales con los mismos IDs y lógica existente.
+- Cache-busting actualizado a v=3302 en index.html.

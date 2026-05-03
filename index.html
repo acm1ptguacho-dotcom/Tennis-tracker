@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3301" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3301" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3302" />
 </head>
 <body>
 
@@ -971,15 +971,21 @@
 
 <div class="modal hidden" id="analyticsModal">
   <div class="modalCard solid analyticsModalCard">
-    <div class="modalHead">
-      <div>
+    <div class="modalHead analyticsModalHeadCompact">
+      <div class="analyticsModalIntro">
         <div class="modalTitle">Analítica táctica Premium</div>
         <div class="muted" id="analyticsSub">Lectura táctica avanzada · presión · patrones · direcciones · insights</div>
       </div>
-      <div class="modalActions">
-        <button class="chip analyticsActionBtn" id="btnAnalyticsPDF" type="button"><span>PDF</span></button>
-        <button class="chip analyticsActionBtn" id="btnAnalyticsRefresh" type="button"><span>Actualizar</span></button>
-        <button class="chip" id="btnCloseAnalytics" type="button" data-i18n="close">Cerrar</button>
+      <div class="modalActions analyticsHeaderActions">
+        <button class="chip analyticsIconBtn" id="btnAnalyticsPDF" type="button" aria-label="Exportar PDF" title="Exportar PDF">
+          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M9 15h6"/><path d="M9 18h4"/></svg>
+        </button>
+        <button class="chip analyticsIconBtn" id="btnAnalyticsRefresh" type="button" aria-label="Actualizar analítica" title="Actualizar analítica">
+          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M20 11a8 8 0 1 0 2.3 5.7"/></svg>
+        </button>
+        <button class="chip analyticsIconBtn analyticsCloseBtn" id="btnCloseAnalytics" type="button" aria-label="Cerrar" title="Cerrar">
+          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></svg>
+        </button>
       </div>
     </div>
 
@@ -992,51 +998,60 @@
     </div>
 
     <div class="modalBody premiumModalBody analyticsModalBodyShell">
-      <div class="analyticsToolbar analyticsToolbarPremium">
-        <label>Jugador
-          <select id="aPerspective">
-            <option value="A">Jugador A</option>
-            <option value="B">Jugador B</option>
-          </select>
-        </label>
-        <label>Contexto
-          <select id="aContext">
-            <option value="all">Todo el partido</option>
-            <option value="important">Puntos importantes</option>
-            <option value="break_for">Break point a favor</option>
-            <option value="break_against">Break point en contra</option>
-            <option value="deuce">Deuce / ventaja</option>
-            <option value="game">Game points</option>
-            <option value="set">Set points</option>
-            <option value="tb">Tie-break</option>
-            <option value="serve">Puntos al saque</option>
-            <option value="return">Puntos al resto</option>
-          </select>
-        </label>
-        <label>Longitud patrón
-          <select id="aPatternLen">
-            <option value="2">2 golpes</option>
-            <option value="3" selected>3 golpes</option>
-            <option value="4">4 golpes</option>
-          </select>
-        </label>
-        <label>Modo
-          <select id="aMode">
-            <option value="exact">Exacto</option>
-            <option value="similar">Similar táctico</option>
-            <option value="effective">Más eficaces</option>
-          </select>
-        </label>
-        <label>Mín. ocurrencias
-          <select id="aMin">
-            <option value="1">1</option>
-            <option value="2" selected>2</option>
-            <option value="3">3</option>
-            <option value="5">5</option>
-          </select>
-        </label>
-        <label class="check"><input type="checkbox" id="aIncludeServe" checked> Incluir saque</label>
-      </div>
+      <details class="analyticsFilterDetails" id="analyticsFilters">
+        <summary class="analyticsFilterSummary">
+          <span class="analyticsFilterSummaryText">Filtros de búsqueda</span>
+          <span class="analyticsFilterSummaryMeta">Jugador, contexto, patrón y saque</span>
+          <span class="analyticsFilterChevron" aria-hidden="true">
+            <svg class="svgIcon" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </span>
+        </summary>
+        <div class="analyticsToolbar analyticsToolbarPremium">
+          <label>Jugador
+            <select id="aPerspective">
+              <option value="A">Jugador A</option>
+              <option value="B">Jugador B</option>
+            </select>
+          </label>
+          <label>Contexto
+            <select id="aContext">
+              <option value="all">Todo el partido</option>
+              <option value="important">Puntos importantes</option>
+              <option value="break_for">Break point a favor</option>
+              <option value="break_against">Break point en contra</option>
+              <option value="deuce">Deuce / ventaja</option>
+              <option value="game">Game points</option>
+              <option value="set">Set points</option>
+              <option value="tb">Tie-break</option>
+              <option value="serve">Puntos al saque</option>
+              <option value="return">Puntos al resto</option>
+            </select>
+          </label>
+          <label>Longitud patrón
+            <select id="aPatternLen">
+              <option value="2">2 golpes</option>
+              <option value="3" selected>3 golpes</option>
+              <option value="4">4 golpes</option>
+            </select>
+          </label>
+          <label>Modo
+            <select id="aMode">
+              <option value="exact">Exacto</option>
+              <option value="similar">Similar táctico</option>
+              <option value="effective">Más eficaces</option>
+            </select>
+          </label>
+          <label>Mín. ocurrencias
+            <select id="aMin">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="5">5</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" id="aIncludeServe" checked> Incluir saque</label>
+        </div>
+      </details>
 
       <div class="analyticsKpiGrid" id="analyticsKpis"></div>
 
@@ -1593,7 +1608,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3301"></script>
+<script src="app.js?v=3302"></script>
 
 </body>
 </html>
