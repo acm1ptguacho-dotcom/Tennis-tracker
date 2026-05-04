@@ -2415,7 +2415,8 @@ function saveVideoAISessionMeta(meta){
 function videoAIStatus(msg){ const el = $("#videoAiStatus"); if (el) el.textContent = msg || ""; }
 function currentVideoAISessionPayload(){
   return {
-    version:"3.32",
+    // Actualizar a la versión 3.33 para los metadatos de sesión de vídeo IA
+    version:"3.33",
     source:"video_ai_assisted",
     matchId: state?.matchId || null,
     createdAt: new Date().toISOString(),
