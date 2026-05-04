@@ -7042,466 +7042,604 @@ body.coachMode.coachHalfCourt #courtSurface{
   max-width:100% !important;
 }
 
-/* =====================================================================
-   v3.35 — Elite Graphite Light visual refresh
-   Objetivo: nuevo lenguaje visual claro, moderno y profesional sin tocar JS.
-   ===================================================================== */
+/* ===== v3.35.1 Premium Light polish: contrast, topbar, players, premium depth ===== */
 :root{
-  --font:"Manrope", "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
-  --bg0:#F6F8FB !important;
-  --bg1:#EAF0F6 !important;
-  --card:#FFFFFF !important;
-  --card2:#F3F6FA !important;
-  --stroke:rgba(24,42,60,.12) !important;
-  --stroke2:rgba(24,42,60,.20) !important;
-  --text:#142130 !important;
-  --muted:rgba(20,33,48,.62) !important;
-  --accent:#9CD71D !important;
-  --accent2:#1677B8 !important;
-  --good:#8CCB19 !important;
-  --warn:#D98A18 !important;
-  --bad:#E34A4F !important;
-  --yellow:#9CD71D !important;
-  --red:#E34A4F !important;
-  --radius:12px !important;
-  --shadow:0 18px 42px rgba(19,35,52,.11) !important;
-  --shadow2:0 10px 24px rgba(19,35,52,.08) !important;
-  --inset:inset 0 1px 0 rgba(255,255,255,.75) !important;
-  --panelBg:linear-gradient(180deg, rgba(255,255,255,.96), rgba(244,248,252,.92)) !important;
-  --panelBgSoft:linear-gradient(180deg, rgba(255,255,255,.92), rgba(240,245,250,.88)) !important;
-  --panelBorder:rgba(22,42,61,.12) !important;
-  --panelBorder2:rgba(22,42,61,.18) !important;
-  --panelInsetHi:inset 0 1px 0 rgba(255,255,255,.9) !important;
-  --panelInsetLo:inset 0 -1px 0 rgba(20,33,48,.05) !important;
-  --panelShadow:0 20px 48px rgba(18,32,48,.12) !important;
+  --font-ui:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  --font-display:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  --surface-0:#ffffff;
+  --surface-1:#f7f9fc;
+  --surface-2:#eef3f8;
+  --surface-3:#e8eef5;
+  --ink:#162338;
+  --ink-2:#536479;
+  --ink-3:#7a8899;
+  --border:#d8e1eb;
+  --border-strong:#c5d0dc;
+  --accent:#c8eb59;
+  --accent-2:#b6dc33;
+  --accent-soft:rgba(196,232,74,.24);
+  --navy:#203149;
+  --premium-shadow:0 18px 38px rgba(28,45,68,.12),0 4px 12px rgba(28,45,68,.06);
+  --premium-shadow-lg:0 28px 56px rgba(28,45,68,.14),0 8px 24px rgba(28,45,68,.08);
+  --premium-inset:inset 0 1px 0 rgba(255,255,255,.92), inset 0 -1px 0 rgba(205,216,228,.45);
 }
 
-html,body{
-  color:#142130 !important;
+html,body{background:#edf2f7 !important;}
+body,
+body.light{
+  color:var(--ink) !important;
   background:
-    radial-gradient(900px 540px at 12% 0%, rgba(156,215,29,.12), transparent 58%),
-    radial-gradient(860px 520px at 92% 10%, rgba(22,119,184,.11), transparent 54%),
-    linear-gradient(180deg,#F8FAFC 0%,#EEF3F8 48%,#E6EDF4 100%) !important;
-  font-family:var(--font) !important;
+    radial-gradient(900px 460px at 10% -10%, rgba(200,235,89,.20), transparent 50%),
+    radial-gradient(800px 420px at 90% 0%, rgba(126,183,224,.20), transparent 48%),
+    linear-gradient(180deg, #edf2f7 0%, #e7edf4 40%, #dee7f0 100%) !important;
 }
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:-1;
+body::before,
+body::after{opacity:.36 !important;}
+
+body,
+body *,
+input,
+select,
+textarea,
+button{
+  font-family:var(--font-ui) !important;
+}
+
+.modalTitle,
+.drawerTitle,
+.authTitle,
+.finishMenuTitle,
+h1,h2,h3,h4,
+.topbarBrand,
+.brand,
+.workspaceLabel,
+.workspaceName,
+.sectionTitle,
+.panelTitle,
+.tvName input,
+.analyticsTabBtn,
+.playerModeBtn span,
+.playerChooserName,
+.quickLbl,
+.drawerGroupLabel{
+  color:var(--ink) !important;
+}
+
+.muted,
+small,
+.modalHead .muted,
+#playerLibrarySummary,
+#analyticsSub,
+.analyticsFilterSheetSub,
+.analyticsKpiCard .sub,
+.kpi .t,
+.profilePhotoMeta span,
+.playerModeBtn small,
+.playerHistorySide small,
+.playerStatTile span,
+.playerDataList li,
+.drawerGroupLabel,
+.quickLbl,
+.tvHeader,
+label,
+label span{
+  color:var(--ink-2) !important;
+  opacity:1 !important;
+}
+
+/* Main premium light surfaces */
+.topbar,
+#workspaceBar.workspaceCompact,
+.scoreTv,
+.timelineCard,
+.metaCard,
+.panelLike,
+.savedItem,
+.historyGame,
+.profileCard,
+.profileEditor,
+.modalCard,
+.modalCard.solid,
+.drawer,
+.filters,
+.surfaceOpt,
+.authShowcase,
+.authCard,
+.showcaseCard,
+.planCard,
+.timelineSide > *,
+.finishMenuCard,
+.playersModalCard,
+.analyticsModalCard,
+.statsCard,
+.accountModalCard,
+.playerChooserModalCard,
+.dashboardCard,
+.dashboardTile,
+.analyticsKpiCard,
+.analyticsInsightCard,
+.videoAiCard,
+.analyticsFilterSheetCard,
+.playerLibraryShell,
+.profilePhotoEditor,
+.historyFilters,
+.historyGameShell{
   background:
-    linear-gradient(135deg, transparent 0 47%, rgba(44,69,93,.045) 47.2% 47.6%, transparent 47.9%),
-    linear-gradient(30deg, transparent 0 62%, rgba(156,215,29,.045) 62.1% 62.35%, transparent 62.6%);
-}
-*{letter-spacing:normal;}
-
-/* Tipografía: menos condensada, más SaaS premium */
-.modalTitle,.drawerTitle,.splashCopy h1,.authShowcase h1,
-.tvName input,.quickLbl,.drawerBody .menuItem span,
-.playerProfileName,.analyticsHeroTitle,.finishMenuTitle{
-  font-family:"Manrope", "Inter", system-ui, sans-serif !important;
-  font-weight:800 !important;
-  letter-spacing:-.025em !important;
-}
-.drawerGroupLabel,.muted,.modalHead .muted,.splashEyebrow,
-.tvHeader,.historyHint,.analyticsFilterSummaryText{
-  font-family:"Inter", system-ui, sans-serif !important;
-  letter-spacing:.08em !important;
-  text-transform:uppercase !important;
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(244,247,251,.97)) !important;
+  border:1px solid var(--border) !important;
+  box-shadow:var(--premium-inset), var(--premium-shadow) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  color:var(--ink) !important;
 }
 
-/* Radios globales más técnicos */
-.btn,.chip,.quickBtn,.iconChip,.modalCard,.modalCard.solid,.drawer,
-.scoreTv,.section,.panelLike,.timelineCard,.metaCard,.surfaceCard,
-.historyPointCard,.gameGroup,.statsCard,.playerProfileSheet,.finishMenuCard,
-.authCard,.authShowcase,.showcaseCard,.planCard,.courtWrap,.workspaceCompact,
-.workspaceExpand,.workspaceBar,.analyticsCard,.analyticsKpiCard,.videoAiPanel,
-.videoAiStage,.videoAiCard,.coachObjectsPanel,.coachTemplateBtn{
-  border-radius:12px !important;
+.section,
+.tvRow,
+.analyticsTabBar,
+.analyticsFilterSheet,
+.analyticsPaneWrap,
+.playerChooserCard,
+.historyPointCard,
+.historyReplayCard,
+.dashboardSummaryCard,
+.reportCard,
+.panelSection,
+.profileEditor .formGrid label,
+.playerDataPanel,
+.playerStatTile,
+.playerHistoryRow{
+  background:linear-gradient(180deg, var(--surface-0), var(--surface-1)) !important;
+  border:1px solid var(--border) !important;
+  box-shadow:var(--premium-inset), 0 10px 24px rgba(23,38,59,.08) !important;
+  color:var(--ink) !important;
 }
-.splashQuickAccess .btn,.splashStart{border-radius:14px !important;}
-.tennisBall,.serveBall{border-radius:999px !important;}
 
-/* Botones: planos, limpios y con acento verde solo cuando aporta valor */
-.btn,.chip{
-  color:#142130 !important;
-  background:linear-gradient(180deg,#FFFFFF,#F2F6FA) !important;
-  border:1px solid rgba(30,48,68,.13) !important;
-  box-shadow:0 8px 18px rgba(17,32,48,.08), inset 0 1px 0 rgba(255,255,255,.9) !important;
-  text-shadow:none !important;
+/* Buttons and chips */
+.chip,
+.btn,
+.iconChip,
+.analyticsIconBtn,
+.statsPdfBtn,
+.statsFiltersToggle,
+.menuItem,
+.playerIconBtn,
+.analyticsTabBtn,
+.coachHistoryBtn,
+.quickBtn,
+.videoAiBtn,
+.profilePhotoUpload,
+.surfaceOpt,
+.playerModeBtn,
+.authActionBtn,
+.workpaceActions .chip{
+  color:var(--ink) !important;
+  background:linear-gradient(180deg,#ffffff,#f3f7fb) !important;
+  border:1px solid var(--border-strong) !important;
+  box-shadow:0 8px 20px rgba(24,41,64,.10), inset 0 1px 0 rgba(255,255,255,.95) !important;
+  border-radius:16px !important;
 }
-.btn:hover,.chip:hover{border-color:rgba(30,48,68,.22) !important; box-shadow:0 12px 26px rgba(17,32,48,.12) !important;}
-.btn.primary,.chip.primary,.btn.good,.chip.good,
-.splashQuickAccess .btn.good,.splashStart,.authSubmit,
-.videoAiPrimaryBtn,.coachTemplateBtn.active,.analyticsTab.active,
-.aTab.active,.tabs button.active{
-  color:#102313 !important;
-  background:linear-gradient(180deg,#B9ED39 0%, #91CE18 100%) !important;
-  border-color:rgba(104,151,12,.36) !important;
-  box-shadow:0 14px 28px rgba(132,188,24,.24), inset 0 1px 0 rgba(255,255,255,.45) !important;
-}
-.btn.bad,.chip.bad,.quickBtn.warn,.finishAction.danger{
-  color:#FFFFFF !important;
-  background:linear-gradient(180deg,#F36A6E,#E1464C) !important;
-  border-color:rgba(196,43,48,.28) !important;
-}
-.btn.warn,.chip.warn{background:linear-gradient(180deg,#FFE2B5,#F6B65E) !important;color:#432600 !important;}
-.svgIcon{stroke-width:1.8 !important;}
 
-/* Portada: claro premium con tiles verdes */
-.splash{
-  background:
-    radial-gradient(700px 420px at 14% 18%, rgba(156,215,29,.16), transparent 60%),
-    radial-gradient(800px 520px at 92% 4%, rgba(22,119,184,.12), transparent 60%),
-    linear-gradient(180deg,#FFFFFF,#F1F5F9) !important;
-  color:#142130 !important;
+.chip:hover,
+.btn:hover,
+.analyticsIconBtn:hover,
+.analyticsTabBtn:hover,
+.playerModeBtn:hover,
+.menuItem:hover,
+.quickBtn:hover,
+.coachHistoryBtn:hover,
+.playerIconBtn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 12px 26px rgba(24,41,64,.14), inset 0 1px 0 rgba(255,255,255,.98) !important;
 }
-.splash::before,.splash::after{display:none !important;}
-.splashInner{
-  border:1px solid rgba(25,44,63,.12) !important;
-  background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.36)) !important;
-  box-shadow:0 24px 54px rgba(18,31,46,.12) !important;
+
+.chip.primary,
+.btn.primary,
+.profilePhotoUpload,
+.analyticsTabBtn.active,
+.playerModeBtn.active,
+.quickBtn.active,
+.iconChip.active,
+body .chip.good,
+body .btn.good{
+  color:#1f2f14 !important;
+  background:linear-gradient(180deg, #d8f36e 0%, #c8eb59 55%, #b7dc32 100%) !important;
+  border-color:#bddc4d !important;
+  box-shadow:0 14px 28px rgba(179,214,67,.28), inset 0 1px 0 rgba(248,255,224,.95) !important;
+}
+
+.chip.warn,
+.btn.warn,
+body .chip.bad,
+body .btn.bad,
+.playerIconBtn.delete{
+  background:linear-gradient(180deg,#fff5f4,#ffe7e5) !important;
+  color:#9a403d !important;
+  border-color:#edc2bc !important;
+}
+
+.analyticsCloseBtn,
+#btnClosePlayers,
+#btnCloseMenu,
+#btnCloseStats,
+#btnCloseAccount,
+#btnClosePlayerChooser,
+#btnCloseAnalytics{
+  min-width:54px !important;
+  justify-content:center !important;
+}
+
+/* Inputs */
+input,
+select,
+textarea,
+.playerCard input,
+.profileEditor input,
+.profileEditor select,
+.profileEditor textarea,
+.analyticsToolbar select,
+.analyticsFilterSheet select,
+.authInput,
+.authCard input,
+.authCard select{
+  color:var(--ink) !important;
+  background:linear-gradient(180deg,#fbfcfe,#f2f6fa) !important;
+  border:1px solid var(--border-strong) !important;
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.95), inset 0 -1px 2px rgba(198,208,220,.35) !important;
+  border-radius:15px !important;
+}
+input::placeholder,
+textarea::placeholder{color:#7a8798 !important; opacity:1 !important;}
+
+/* Topbar redesign */
+.topbarInline{
+  padding-top:max(env(safe-area-inset-top), 6px) !important;
+  margin-bottom:10px !important;
+}
+.topbarRow{
+  padding:12px 14px !important;
+  border-radius:18px !important;
+  background:linear-gradient(180deg,#ffffff 0%, #f3f7fb 100%) !important;
+  border:1px solid var(--border) !important;
+  box-shadow:var(--premium-shadow-lg) !important;
+}
+.topbarRow::after,
+.topbarRow::before{display:none !important;}
+.topbarBrand{
+  min-height:64px !important;
+  border-radius:18px !important;
+  background:linear-gradient(180deg,#fdfefe,#eff4f8) !important;
+  border:1px solid var(--border) !important;
+  box-shadow:var(--premium-inset), 0 12px 22px rgba(30,50,74,.10) !important;
+}
+.topbarBrand img{
+  filter:drop-shadow(0 2px 10px rgba(157,196,44,.18));
+}
+#btnMenu,
+#btnToolsRail{
+  width:56px !important;
+  height:56px !important;
+  padding:0 !important;
   border-radius:18px !important;
 }
-.splashLogo{filter:drop-shadow(0 10px 24px rgba(25,42,59,.10)) !important;}
-.splashQuickAccess{
-  display:grid !important;
-  grid-template-columns:1fr 1fr !important;
-  gap:12px !important;
-  max-width:620px !important;
-}
-.splashQuickAccess .btn{
-  min-height:74px !important;
-  justify-content:flex-start !important;
-  text-align:left !important;
-  padding:18px 20px !important;
-  background:linear-gradient(135deg,#A9E22E,#7DBB13) !important;
-  color:#102313 !important;
-  border:1px solid rgba(95,142,12,.35) !important;
-  box-shadow:0 16px 32px rgba(101,157,19,.22) !important;
-}
-.splashVersion{
-  color:#6E9A12 !important;
-  background:rgba(255,255,255,.75) !important;
-  border:1px solid rgba(115,160,20,.18) !important;
-  border-radius:8px !important;
-  padding:5px 8px !important;
-  font-weight:800 !important;
-}
+#btnMenu .svgIcon,
+#btnToolsRail .svgIcon{stroke:var(--navy) !important;color:var(--navy)!important;}
 
-/* Header principal: estilo claro con barra superior graphite */
-.topbarInline,.topbar,.topbarRow{
-  background:linear-gradient(180deg,#243241,#182635) !important;
-  border:1px solid rgba(255,255,255,.08) !important;
-  box-shadow:0 12px 30px rgba(20,35,51,.18) !important;
-  border-radius:0 0 14px 14px !important;
-  color:#F9FBFD !important;
-}
-.topbarRow::after{border-radius:10px !important; opacity:.18 !important;}
-.topbarBrand,.brand{
-  background:rgba(255,255,255,.06) !important;
-  border:1px solid rgba(255,255,255,.12) !important;
-  box-shadow:none !important;
-  color:#F9FBFD !important;
-}
-.topIcon,.iconChip,.topbar .chip{
-  color:#FFFFFF !important;
-  background:rgba(255,255,255,.08) !important;
-  border:1px solid rgba(255,255,255,.14) !important;
-  box-shadow:none !important;
-}
-.entryLangBtn{background:#94D21D !important; color:#102313 !important; border:0 !important;}
-
-/* Marcador / score */
+/* Scoreboard / main header */
 .scoreTv{
-  background:linear-gradient(180deg,#FFFFFF 0%,#F4F7FA 100%) !important;
-  border:1px solid rgba(26,47,68,.12) !important;
-  box-shadow:0 14px 32px rgba(18,35,53,.10) !important;
-  color:#142130 !important;
+  border-radius:22px !important;
+  padding:14px !important;
+  background:linear-gradient(180deg,#ffffff,#f4f7fb) !important;
 }
-.scoreTv::before,.scoreTv::after{display:none !important;}
+.tvHeader{
+  color:#738398 !important;
+  font-weight:700 !important;
+  letter-spacing:.06em !important;
+}
 .tvRow{
-  background:#FFFFFF !important;
-  border:1px solid rgba(29,48,68,.10) !important;
-  box-shadow:0 8px 18px rgba(25,42,58,.06) !important;
-  border-radius:10px !important;
+  border-radius:18px !important;
+  padding:12px !important;
+}
+.tvName{
+  background:transparent !important;
 }
 .tvTag{
-  background:#ECF2F7 !important;
-  color:#244154 !important;
-  border:1px solid rgba(31,52,73,.12) !important;
-  border-radius:8px !important;
-}
-.tvAvatar{background:linear-gradient(180deg,#E7EEF5,#D7E3ED) !important; border-radius:10px !important;}
-.scoreTv input,.tvGames,.tvPts,.tvSets .setBox{
-  color:#142130 !important;
-  background:#F7FAFC !important;
-  border:1px solid rgba(27,48,70,.10) !important;
-  box-shadow:none !important;
-  border-radius:8px !important;
-}
-.tvPts{color:#7FBD10 !important;}
-.serveBall{background:radial-gradient(circle at 35% 30%,#F4FF82,#95D51D 56%,#6EA30E) !important;}
-
-/* Workspace / detalle de ejercicio */
-.workspaceCompact,.workspaceExpand,.workspaceBar{
-  background:linear-gradient(180deg,#FFFFFF,#F2F6FA) !important;
-  color:#142130 !important;
-  border:1px solid rgba(23,44,64,.12) !important;
-  box-shadow:0 12px 28px rgba(18,35,53,.08) !important;
-}
-.workspaceLabel,.workspaceName{color:#142130 !important;}
-.workspacePill{background:#EAF2F7 !important;color:#526879 !important;border-radius:8px !important;}
-
-/* Diagrama y rail */
-.diagramArea,.diagramGrid{background:transparent !important;}
-.courtWrap.courtRow{
-  background:linear-gradient(180deg,#FFFFFF,#F2F6FA) !important;
-  border:1px solid rgba(27,48,68,.12) !important;
-  box-shadow:0 18px 42px rgba(17,35,52,.12) !important;
+  background:linear-gradient(180deg,#f7fafc,#e9eef4) !important;
+  color:var(--navy) !important;
+  border:1px solid var(--border) !important;
   border-radius:14px !important;
+  box-shadow:0 6px 14px rgba(23,38,59,.08) !important;
 }
-.court{
-  border-radius:12px !important;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.16), 0 12px 30px rgba(28,54,79,.16) !important;
-}
-.baselineName{
-  background:rgba(255,255,255,.80) !important;
-  color:#1D3448 !important;
-  border:1px solid rgba(29,54,76,.12) !important;
-  border-radius:9px !important;
-  box-shadow:0 8px 16px rgba(18,35,52,.08) !important;
-}
-.courtRail{
-  background:linear-gradient(180deg,#FFFFFF,#F3F7FA) !important;
-  border:1px solid rgba(23,44,66,.12) !important;
-  box-shadow:0 12px 28px rgba(18,35,54,.10) !important;
+.tvAvatar{
   border-radius:14px !important;
+  background:linear-gradient(180deg,#fdfefe,#edf3f8) !important;
+  border:1px solid var(--border) !important;
 }
-.quickBtn,.coachHistoryBtn{
-  background:linear-gradient(180deg,#FFFFFF,#EDF3F8) !important;
-  color:#1C3246 !important;
-  border:1px solid rgba(24,47,70,.13) !important;
-  box-shadow:0 8px 18px rgba(15,33,50,.08) !important;
-  border-radius:10px !important;
+.tvName input{
+  background:linear-gradient(180deg,#ffffff,#f4f8fb) !important;
+  color:var(--ink) !important;
+  border:1px solid var(--border) !important;
+  font-weight:800 !important;
+  letter-spacing:-.01em !important;
 }
-.quickBtn.good,.quickBtn.active,.coachHistoryBtn:not(:disabled):active{
-  background:linear-gradient(180deg,#B9ED39,#91CE18) !important;
-  color:#102313 !important;
+.tvGames,
+.tvPts,
+.tvSets > *,
+.tvHeaderSets > *{
+  background:linear-gradient(180deg,#ffffff,#f5f8fb) !important;
+  color:var(--navy) !important;
+  border:1px solid var(--border) !important;
+  box-shadow:0 8px 18px rgba(23,38,59,.07) !important;
 }
-.quickLbl{color:#50697B !important; font-size:11px !important;}
-.tennisBall.inCourt{box-shadow:0 0 0 4px rgba(255,255,255,.55),0 10px 28px rgba(156,215,29,.34) !important;}
+.tvPts{ color:#7caf22 !important; }
+.serveBall{
+  background:radial-gradient(circle at 35% 35%, #eff9a4, #b2d72d 60%, #93bc12 100%) !important;
+  box-shadow:0 0 0 4px rgba(198,232,89,.18), 0 8px 20px rgba(174,214,54,.38) !important;
+}
 
-/* Paneles y modales: superficies blancas y bordes finos */
-.modal{background:rgba(235,241,247,.66) !important; backdrop-filter:blur(14px) !important;}
-.modalCard,.modalCard.solid,.finishMenuCard,.playerProfileSheet,.surfaceModalBody,
-.videoAiModalCard,.analyticsModalCard{
-  background:linear-gradient(180deg,#FFFFFF,#F5F8FB) !important;
-  color:#142130 !important;
-  border:1px solid rgba(22,42,62,.12) !important;
-  box-shadow:0 28px 64px rgba(17,34,50,.18) !important;
-}
-.modalHead,.modalFoot{
-  background:transparent !important;
-  border-color:rgba(22,42,62,.10) !important;
-}
-.modalTitle{color:#142130 !important;}
-.modalHead .muted,.muted{color:rgba(20,33,48,.62) !important;}
-.modalBody{color:#142130 !important;}
-.panelLike,.metaCard,.timelineCard,.gameGroup,.historyPointCard,.statsSection,.statsCard,
-.profileCard,.coachObjectsSection,.coachObjectsDropdown,.analyticsKpiCard,.analyticsCard,
-.videoAiPanel,.videoAiStage,.videoAiCalibrationCard,.videoAiAssistedCard{
-  background:linear-gradient(180deg,#FFFFFF,#F6F9FC) !important;
-  color:#142130 !important;
-  border:1px solid rgba(23,44,64,.11) !important;
-  box-shadow:0 10px 24px rgba(18,34,50,.08) !important;
-}
-.panelLike::before,.metaCard::before,.timelineCard::before,.historyPointCard::before,
-.analyticsCard::before,.statsCard::before{opacity:.06 !important;}
-
-/* Drawer: navegación estilo app profesional */
-.menuOverlay{background:rgba(16,28,42,.24) !important; backdrop-filter:blur(10px) !important;}
+/* Drawer/menu */
 .drawer{
-  background:linear-gradient(180deg,#FFFFFF,#F4F7FA) !important;
-  color:#142130 !important;
-  border:1px solid rgba(24,44,64,.13) !important;
-  box-shadow:0 28px 70px rgba(15,31,47,.22) !important;
-  border-radius:16px !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(244,247,251,.98)) !important;
 }
-.drawerHead{border-bottom:1px solid rgba(24,44,64,.10) !important;}
-.drawerTitle{color:#142130 !important;}
-.drawerGroupLabel{color:#6B7F8D !important;}
-.drawerDivider{background:linear-gradient(90deg,transparent,rgba(24,44,64,.12),transparent) !important;}
+.drawerHead{
+  border-bottom:1px solid rgba(210,220,232,.9) !important;
+}
 .drawerBody .menuItem{
+  min-height:70px !important;
   justify-content:flex-start !important;
-  background:#FFFFFF !important;
-  color:#142130 !important;
-  border:1px solid rgba(24,44,64,.10) !important;
-  box-shadow:0 6px 14px rgba(17,34,50,.06) !important;
-  border-radius:10px !important;
+  gap:14px !important;
+  font-weight:800 !important;
 }
-.drawerBody .menuItem .svgIcon{color:#1E3D55 !important; stroke:#1E3D55 !important; opacity:.9 !important;}
-.drawerBody .menuItem:hover,.drawerBody .menuItem.active{
-  background:#F0F7E6 !important;
-  border-color:rgba(141,199,24,.35) !important;
+.drawerBody .menuItem .svgIcon{color:var(--navy) !important; stroke:currentColor !important;}
+
+/* Analytics premium readability */
+.analyticsModalCard,
+.analyticsModalHeadCompact,
+.analyticsHeaderV331,
+.analyticsTabBar,
+.analyticsPaneWrap,
+.analyticsFilterSheetCard{
+  color:var(--ink) !important;
+}
+.analyticsModalHeadCompact,
+.analyticsHeaderV331{
+  background:linear-gradient(180deg,#ffffff,#f4f8fb) !important;
+  border-bottom:1px solid var(--border) !important;
+  padding:18px 18px 16px !important;
+}
+.analyticsHeaderTop{
+  align-items:flex-start !important;
+}
+.analyticsModalHeadCompact .modalTitle,
+.analyticsHeaderV331 .modalTitle{
+  color:var(--ink) !important;
+  text-shadow:none !important;
+}
+.analyticsHeaderActions{
+  gap:10px !important;
+}
+.analyticsHeaderActions .analyticsIconBtn{
+  width:54px !important;
+  height:54px !important;
+  padding:0 !important;
+}
+.analyticsHeaderActions .svgIcon{
+  width:24px !important;
+  height:24px !important;
+  color:var(--navy) !important;
+  stroke:currentColor !important;
+}
+.analyticsTabBar{
+  background:linear-gradient(180deg,#f8fbfe,#eef4f8) !important;
+  border-top:1px solid var(--border) !important;
+  border-bottom:1px solid var(--border) !important;
+  padding:10px 12px !important;
+  gap:10px !important;
+}
+.analyticsTabBtn{
+  min-height:56px !important;
+  padding:0 20px !important;
+  font-size:clamp(16px,2vw,18px) !important;
+  font-weight:800 !important;
+}
+#analyticsKpis .analyticsKpiCard,
+#analyticsPane-summary .analyticsInsightCard,
+#analyticsPane-points .analyticsInsightCard,
+#analyticsPane-patterns .analyticsInsightCard,
+#analyticsPane-directions .analyticsInsightCard,
+#analyticsPane-insights .analyticsInsightCard{
+  color:var(--ink) !important;
+}
+#analyticsKpis .analyticsKpiCard *,
+.analyticsPaneWrap *{color:inherit;}
+
+/* Player library / players modal premium light */
+#playersModal .playersModalCard,
+#playersModal .playersModalBody,
+#playersModal .playerLibraryShell,
+#playersModal .profileEditor,
+#playersModal .profilePhotoEditor,
+#playersModal .playerProfileSheet,
+#playersModal .profileCard,
+#playersModal .playerDataPanel,
+#playersModal .playerStatTile,
+#playersModal .playerHistoryRow,
+#playerChooserModal .playerChooserModalCard,
+#playerChooserModal .playerChooserCard{
+  background:linear-gradient(180deg,#ffffff,#f4f7fb) !important;
+  color:var(--ink) !important;
+  border:1px solid var(--border) !important;
+  box-shadow:var(--premium-inset), 0 14px 28px rgba(25,42,64,.10) !important;
+}
+#playersModal .modalHead,
+#playerChooserModal .modalHead,
+#playerModal .modalHead{
+  background:linear-gradient(180deg,#f9fbfd,#eef4f8) !important;
+  border-bottom:1px solid var(--border) !important;
+}
+#playersModal .modalTitle,
+#playerChooserModal .modalTitle,
+#playerModal .modalTitle,
+#playersModal .playerSheetText h3,
+#playersModal .playerDataPanel h4,
+#playersModal .profileCard h4,
+#playerChooserModal .playerChooserName,
+#playersModal .playerModeBtn span,
+#playersModal .profilePhotoMeta strong{
+  color:var(--ink) !important;
+}
+#playersModal .muted,
+#playerChooserModal .muted,
+#playersModal .playerModeBtn small,
+#playersModal .playerDataList li,
+#playersModal .playerStatTile span,
+#playersModal .profilePhotoMeta span,
+#playersModal .playerHistoryMain span,
+#playersModal .playerHistorySide small,
+#playersModal #playerLibrarySummary{
+  color:var(--ink-2) !important;
+}
+#playersModal .playerModeBtn,
+#playersModal .playerHistoryBadge,
+#playersModal .playerSheetMeta span,
+#playersModal .profileMeta span,
+#playerChooserModal .playerChooserMetaRow span,
+#playerChooserModal .playerChooserBottom .chip{
+  background:linear-gradient(180deg,#fbfcfe,#eff4f8) !important;
+  border:1px solid var(--border) !important;
+  color:var(--ink) !important;
+}
+#playersModal .profilePhotoPreview,
+#playersModal .playerSheetPhoto,
+#playersModal .profileAvatar,
+#playerChooserModal .playerChooserAvatar{
+  background:linear-gradient(180deg,#fdfefe,#edf3f8) !important;
+  border:1px solid var(--border) !important;
+  box-shadow:0 10px 24px rgba(24,41,64,.10) !important;
+}
+#playersModal input,
+#playersModal select,
+#playersModal textarea,
+#playerChooserModal input,
+#playerChooserModal select,
+#playerChooserModal textarea{
+  color:var(--ink) !important;
+  background:linear-gradient(180deg,#fcfdff,#f2f6fa) !important;
+  border:1px solid var(--border-strong) !important;
+}
+#playersModal .chip.primary,
+#playerChooserModal .chip.primary{color:#203113 !important;}
+
+/* Stats modal and history */
+#statsModal .modalHead,
+#historyModal .modalHead,
+#dashboardModal .modalHead,
+#videoAiModal .modalHead,
+#videoAiAssistModal .modalHead{
+  background:linear-gradient(180deg,#f9fbfd,#eef4f8) !important;
+  border-bottom:1px solid var(--border) !important;
+}
+#statsModal .modalTitle,
+#historyModal .modalTitle,
+#dashboardModal .modalTitle,
+#videoAiModal .modalTitle,
+#videoAiAssistModal .modalTitle{color:var(--ink) !important;}
+#statsModal table,
+#statsModal .tableView,
+#statsModal .statsTable,
+.historyGame,
+.historyPointCard,
+#historyList .pointRow,
+#historyList .savedItem{
+  color:var(--ink) !important;
 }
 
-/* Historial */
-.historyHint{color:#50697B !important;}
-.historyPointCard{
-  border-radius:12px !important;
-  background:#FFFFFF !important;
+/* Video IA / special panels */
+#videoAiModal .modalCard,
+#videoAiAssistModal .modalCard,
+.videoAiCard,
+.videoAiPanel,
+.videoAiStatus,
+.videoAiGuide,
+.videoAiAssistGrid > *{
+  background:linear-gradient(180deg,#ffffff,#f4f7fb) !important;
+  border:1px solid var(--border) !important;
+  color:var(--ink) !important;
+  box-shadow:var(--premium-inset), 0 12px 24px rgba(23,40,61,.08) !important;
 }
-.historyPointCard.active,.historyPointCard.selected{
-  border-color:#9CD71D !important;
-  box-shadow:0 10px 24px rgba(126,186,18,.18) !important;
-}
-.historyPointCard strong,.gameGroup h3{color:#142130 !important;}
-.historyPointCard .winner,.historyPointCard .pointWinner{color:#6AA200 !important;}
-
-/* Estadísticas / tablas */
-.statsTable,.statsRows,.statTable,.statsGrid{
-  background:#FFFFFF !important;
-  color:#142130 !important;
-}
-.statsRow,.statRow,.statsLine{
-  border-color:rgba(24,44,64,.10) !important;
-  background:transparent !important;
-}
-.statsPlayerA,.statA,.playerAColor{color:#7FBD10 !important;}
-.statsPlayerB,.statB,.playerBColor{color:#1677B8 !important;}
-.statsRow b,.statValue,.statNumber{font-weight:800 !important;}
-
-/* Biblioteca / perfil de jugador */
-.playerProfileHero,.playerCardPro,.playerLibraryCard,.profileSummary{
-  background:#FFFFFF !important;
-  color:#142130 !important;
-  border:1px solid rgba(23,44,64,.12) !important;
-  box-shadow:0 12px 28px rgba(18,34,50,.08) !important;
-  border-radius:14px !important;
-}
-.playerPhoto,.playerAvatarLarge,.profileAvatar{
-  border-radius:14px !important;
-  border:1px solid rgba(22,42,62,.13) !important;
-  box-shadow:0 8px 18px rgba(18,34,50,.10) !important;
-}
-input,select,textarea{
-  background:#FFFFFF !important;
-  color:#142130 !important;
-  border:1px solid rgba(23,44,64,.14) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.85) !important;
-  border-radius:10px !important;
-}
-input::placeholder,textarea::placeholder{color:rgba(20,33,48,.45) !important;}
-label{color:#142130 !important;}
-
-/* Analítica táctica */
-.analyticsTabBarFixed,.analyticsTabBar,.aTabs{
-  background:#FFFFFF !important;
-  border:1px solid rgba(23,44,64,.10) !important;
-  box-shadow:0 8px 18px rgba(17,34,50,.06) !important;
-  border-radius:12px !important;
-}
-.analyticsTab,.aTab{
-  color:#2A4357 !important;
-  background:transparent !important;
-  border-color:transparent !important;
-  border-radius:10px !important;
-}
-.analyticsHeaderActions .analyticsIconBtn,.analyticsIconBtn{
-  background:#FFFFFF !important;
-  color:#142130 !important;
-  border:1px solid rgba(23,44,64,.13) !important;
-  border-radius:10px !important;
-  box-shadow:0 8px 18px rgba(18,34,50,.08) !important;
-}
-.analyticsIconBtn .svgIcon{stroke:#142130 !important;}
-.analyticsFilterDetails,.analyticsFilterModal,.analyticsFilterDialog{
-  background:#FFFFFF !important;
-  border:1px solid rgba(23,44,64,.12) !important;
-  color:#142130 !important;
-}
-.analyticsHero,.analyticsReport,.analyticsInsightCard{
-  background:linear-gradient(180deg,#FFFFFF,#F6F9FC) !important;
-  color:#142130 !important;
-  border:1px solid rgba(23,44,64,.12) !important;
-  border-radius:14px !important;
-}
-.analyticsMiniCourt,.tacticalCourtMini{
-  background:#E7EEF5 !important;
-  border-color:rgba(23,44,64,.12) !important;
-}
-
-/* Vídeo IA: claro técnico, controles limpios */
-.videoAiModalCard .modalHead,.videoAiHeader{
-  background:linear-gradient(180deg,#FFFFFF,#F5F8FB) !important;
-  border-bottom:1px solid rgba(23,44,64,.10) !important;
-}
-.videoAiStage{
-  background:#FFFFFF !important;
-  border-radius:14px !important;
-}
-.videoAiFrame,.videoAiCameraBox{
-  background:#0E1722 !important;
-  border:1px solid rgba(20,34,48,.18) !important;
-  border-radius:12px !important;
+#videoAiVideoStage,
+.videoAiPreviewShell,
+.videoAiCameraShell{
+  border-radius:18px !important;
+  overflow:hidden !important;
+  border:1px solid #d8e0eb !important;
+  box-shadow:0 18px 34px rgba(20,38,58,.14) !important;
 }
 .videoAiControl.record{
-  background:#FFFFFF !important;
-  border:4px solid rgba(255,255,255,.88) !important;
-  box-shadow:0 10px 24px rgba(227,74,79,.24) !important;
+  background:rgba(255,255,255,.96) !important;
+  border:1px solid rgba(219,64,64,.20) !important;
+  box-shadow:0 18px 28px rgba(22,38,59,.16) !important;
 }
-.videoAiControl.record::after{background:#E34A4F !important;}
 .videoAiControl.pause{
-  background:linear-gradient(180deg,#B9ED39,#91CE18) !important;
-  color:#102313 !important;
-  border-color:rgba(107,156,14,.34) !important;
-}
-.videoAiStatus{background:#F1F6FA !important;color:#142130 !important;border-color:rgba(23,44,64,.10) !important;}
-
-/* Coach / objetos */
-.coachObjectsPanel,.coachObjectsModal .modalCard,.coachObjectsDropdown,
-.coachPlacementBtn,.coachSizePresetBtn,.objectTile{
-  background:#FFFFFF !important;
-  color:#142130 !important;
-  border:1px solid rgba(23,44,64,.12) !important;
-  box-shadow:0 8px 18px rgba(18,34,50,.07) !important;
-  border-radius:12px !important;
-}
-.coachPlacementBtn.active,.coachSizePresetBtn.active,.objectTile.active{
-  background:linear-gradient(180deg,#F1F9E7,#E8F5D4) !important;
-  border-color:rgba(139,199,25,.45) !important;
+  background:rgba(255,255,255,.96) !important;
+  border:1px solid var(--border) !important;
 }
 
-/* Fondos oscuros residuales con !important en estilos anteriores */
-.authPortal,.app.single{
-  background:transparent !important;
+/* Reduce rounded corners globally for the new design direction */
+.modalCard,
+.modalCard.solid,
+.scoreTv,
+.tvRow,
+.section,
+.panelLike,
+.drawer,
+.menuItem,
+.playerChooserCard,
+.profileEditor,
+.profilePhotoEditor,
+.analyticsKpiCard,
+.analyticsInsightCard,
+.analyticsTabBtn,
+.chip,
+.btn,
+input,
+select,
+textarea,
+.topbarRow,
+.topbarBrand{
+  border-radius:18px !important;
 }
-.authCard,.authShowcase{
-  background:linear-gradient(180deg,#FFFFFF,#F5F8FB) !important;
-  color:#142130 !important;
-  border:1px solid rgba(23,44,64,.12) !important;
-  border-radius:16px !important;
-}
-.authTab{color:#243A4E !important; background:#FFFFFF !important; border-radius:10px !important;}
-.authTab.active{background:#EAF7D1 !important;color:#102313 !important;border-color:rgba(139,199,25,.42) !important;}
-.authField input,.authField select{background:#FFFFFF !important;color:#142130 !important;}
 
-/* Mobile refinements */
-@media (max-width:720px){
-  .splashQuickAccess{grid-template-columns:1fr !important; max-width:360px !important;}
-  .splashQuickAccess .btn{min-height:62px !important; padding:14px 18px !important;}
-  .topbarInline,.topbarRow{border-radius:0 0 12px 12px !important;}
-  .scoreTv{padding:14px !important;}
-  .modalCard,.modalCard.solid{border-radius:14px !important;}
-  .drawer{border-radius:14px !important;}
-  .courtWrap.courtRow{border-radius:12px !important;}
-  .quickBtn{border-radius:9px !important;}
+/* Mobile readability */
+@media (max-width: 760px){
+  .topbarRow{padding:10px 12px !important; gap:10px !important;}
+  .topbarBrand{min-height:58px !important;}
+  .analyticsModalHeadCompact,
+  .analyticsHeaderV331{padding:16px 14px 14px !important;}
+  .analyticsHeaderActions .analyticsIconBtn{
+    width:48px !important;
+    height:48px !important;
+  }
+  .modalTitle{font-size:clamp(22px, 6vw, 32px) !important; line-height:1.05 !important;}
+  .tvRow{padding:10px !important;}
 }
 
-/* Accesibilidad visual */
-:focus-visible{
-  outline:3px solid rgba(156,215,29,.55) !important;
-  outline-offset:2px !important;
+/* Extra contrast guards */
+.analyticsKpiCard *,
+.analyticsInsightCard *,
+.analyticsPane *,
+#playersModal .profileEditor *,
+#playersModal .playerProfileSheet *,
+#playerChooserModal .playerChooserCard *,
+#statsModal .statsCard *,
+#historyModal .modalBody *{
+  text-shadow:none !important;
+}
+.analyticsKpiCard .sub,
+.analyticsInsightCard .sub,
+.analyticsPane .muted,
+#playersModal .muted,
+#playerChooserModal .muted,
+#statsModal .muted,
+#historyModal .muted{
+  opacity:1 !important;
 }
