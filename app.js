@@ -2415,7 +2415,8 @@ function saveVideoAISessionMeta(meta){
 function videoAIStatus(msg){ const el = $("#videoAiStatus"); if (el) el.textContent = msg || ""; }
 function currentVideoAISessionPayload(){
   return {
-    version:"3.32",
+    // Actualizar a la versión 3.33 para los metadatos de sesión de vídeo IA
+    version:"3.33",
     source:"video_ai_assisted",
     matchId: state?.matchId || null,
     createdAt: new Date().toISOString(),
@@ -2971,8 +2972,6 @@ function openVideoAI(){
   resizeVideoAIOverlay();
   listVideoAICameras();
 }
-// Exponer la apertura de Vídeo IA para el botón del menú inicial
-window.openVideoAI = openVideoAI;
 function closeVideoAI(){
   stopVideoAICamera(false);
   closeModal("#videoAiModal");
@@ -7704,7 +7703,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // (Eliminado) Tema y modo normal
 
 // cerrar menú al elegir una opción (las acciones que viven dentro del menú)
-["btnSaveMatch","btnLoadMatch","btnGameMode","btnSurface","btnLanguage","btnInfo","btnBackHome","btnHistory","btnAnalytics","btnStats","btnCharts","btnExport","btnDashboardMenu","btnPlayerLibraryMenu","btnAccountMenu","btnHelpCenter","btnLegal","btnCoachExercises","btnCoachLoadExercise","btnCoachSaveExercise","btnCoachNewExercise","btnCoachObjects","btnCoachCourtMode","btnCoachClear"].forEach(id=>{
+["btnSaveMatch","btnLoadMatch","btnGameMode","btnSurface","btnLanguage","btnInfo","btnBackHome","btnHistory","btnAnalytics","btnVideoAI","btnStats","btnCharts","btnExport","btnDashboardMenu","btnPlayerLibraryMenu","btnAccountMenu","btnHelpCenter","btnLegal","btnCoachExercises","btnCoachLoadExercise","btnCoachSaveExercise","btnCoachNewExercise","btnCoachObjects","btnCoachCourtMode","btnCoachClear"].forEach(id=>{
   const el = $("#"+id);
   if (el) el.addEventListener("click", ()=>setMenuOpen(false));
 });
