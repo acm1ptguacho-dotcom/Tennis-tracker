@@ -1,0 +1,20 @@
+v3.35 — Rediseño visual Elite Graphite Light
+
+Cambios de estilo aplicados sin modificar la lógica funcional:
+
+- Cambio global a un estilo claro premium: blanco, gris claro, grafito y verde lima.
+- Sustitución del exceso de azul oscuro por superficies claras y limpias.
+- Reducción de esquinas redondeadas para un diseño más moderno y técnico.
+- Nueva tipografía principal Manrope/Inter, más limpia y profesional.
+- Botones rediseñados con menos volumen, bordes finos y estados verdes para acciones importantes.
+- Pantalla de inicio actualizada a versión v3.35.
+- Header principal rediseñado con estilo graphite oscuro y contenido claro.
+- Marcador, tarjetas, menús, modales, historial, biblioteca, estadísticas, analítica, modo entrenador y Vídeo IA reciben overrides visuales.
+- Menú lateral convertido a una navegación clara tipo app profesional.
+- Estadísticas y tablas mejoradas para mejor lectura sobre fondo claro.
+- Biblioteca de jugadores con aspecto más próximo a ficha profesional.
+- Vídeo IA mantiene un marco técnico oscuro dentro de una interfaz clara.
+- Cache busting actualizado a v=3350.
+- Service worker actualizado a tennis-tracker-web-v3.35-elite-graphite-light.
+
+Nota: esta versión es una capa visual CSS/HTML. No altera el flujo funcional ni la lógica JavaScript de la web.
