@@ -2385,6 +2385,52 @@ function closeAnalyticsFilters(){
 // v3.32 · Vídeo IA asistido: cámara, grabación y calibración manual
 // Esta primera versión prepara la estructura para que las próximas versiones puedan
 // leer dirección, trayectoria, tipo de golpe y velocidad estimada desde vídeo.
+// En v3.34 añadimos detección básica del tipo de golpe y velocidad aproximada.
+
+/**
+ * Clasificación sencilla del tipo de golpe en función de la trayectoria.
+ * Esta heurística es deliberadamente básica y solo sirve como demostración.
+ * Siempre devuelve una de las claves permitidas: forehand, backhand, volley o serve.
+ * @param {{x:number, y:number}} start
+ * @param {{x:number, y:number}} end
+ * @returns {string}
+ */
+function videoAIClassifyShot(start, end){
+  if (!start || !end) return 'forehand';
+  // Heurística aproximada: si la bola sale desde muy atrás y termina en la mitad opuesta de la pista, lo interpretamos como saque.
+  if (start.y < 0.2 && end.y > 0.3){
+    return 'serve';
+  }
+  // Si el impacto ocurre en el aire (trayectorias muy cortas y cercanas a la red), lo interpretamos como volea.
+  const dy = Math.abs(end.y - start.y);
+  const dx = Math.abs(end.x - start.x);
+  if (dy < 0.15 && Math.max(dx, dy) < 0.2){
+    return 'volley';
+  }
+  // Para distancias largas, discriminamos entre derecha y revés por la dirección horizontal:
+  // Un desplazamiento hacia la derecha para jugador A se etiqueta como derecha; a la izquierda como revés.
+  // Esta lógica se invierte para Jugador B en el procesamiento de eventos.
+  const deltaX = end.x - start.x;
+  return deltaX >= 0 ? 'forehand' : 'backhand';
+}
+
+/**
+ * Estima una velocidad en km/h a partir de la longitud de la trayectoria en coordenadas normalizadas.
+ * Dado que no disponemos del tiempo de vuelo real ni de la escala exacta, se utiliza un factor
+ * empírico para traducir la distancia normalizada a una velocidad aproximada.
+ * @param {{x:number, y:number}} start
+ * @param {{x:number, y:number}} end
+ * @returns {number}
+ */
+function videoAIEstimateSpeed(start, end){
+  if (!start || !end) return 0;
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const distance = Math.sqrt(dx*dx + dy*dy);
+  // Factor: en condiciones reales un desplazamiento normalizado de 0.5 podría equivaler a unos 100 km/h.
+  const speed = distance * 200; // factor empírico
+  return Math.max(0, Math.round(speed));
+}
 const VIDEO_AI_CALIBRATION_LABELS = [
   "Fondo izquierda",
   "Fondo derecha",
@@ -2443,7 +2489,7 @@ function currentVideoAISessionPayload(){
       { field:"shot", example:"forehand | backhand | serve | volley" },
       { field:"direction", example:"cross | line | center" },
       { field:"depth", example:"short | medium | deep" },
-      { field:"speedKmh", example:null },
+      { field:"speedKmh", example:110 },
       { field:"confidence", example:0.82 }
     ]
   };
@@ -2566,11 +2612,21 @@ function renderVideoAIAssistedPanel(){
       box.textContent = tr("Marca el inicio y el final de la trayectoria sobre el vídeo.","Mark the start and end of the trajectory on the video.");
     }else{
       const a = videoAIAnalyzeTrajectory(st,en);
-      box.innerHTML = a ? `<strong>${escapeHtml(videoAIAssistDirectionName(a.direction))} · ${escapeHtml(videoAIAssistDepthName(a.depth))}</strong><span>${tr("Código táctico","Tactical code")}: ${escapeHtml(a.code)} · ${tr("confianza estimada","estimated confidence")}: ${Math.round(a.confidence*100)}%</span>` : tr("Trayectoria fuera de la zona calibrada.","Trajectory outside calibrated zone.");
+      if (a){
+        // Clasificación automática de golpe y velocidad aproximada para mostrar al usuario
+        const shot = videoAIClassifyShot(st,en);
+        const speedKmh = videoAIEstimateSpeed(st,en);
+        box.innerHTML = `<strong>${escapeHtml(videoAIAssistDirectionName(a.direction))} · ${escapeHtml(videoAIAssistDepthName(a.depth))}</strong><span>${tr("Código táctico","Tactical code")}: ${escapeHtml(a.code)} · ${tr("confianza estimada","estimated confidence")}: ${Math.round(a.confidence*100)}%<br>${tr("Golpe","Shot")}: ${escapeHtml(videoAIAssistShotName(shot))} · ${tr("Velocidad aprox.","Approx. speed")}: ${speedKmh} km/h</span>`;
+      }else{
+        box.textContent = tr("Trayectoria fuera de la zona calibrada.","Trajectory outside calibrated zone.");
+      }
     }
   }
   if (list){
-    list.innerHTML = (videoAI.assistedEvents||[]).length ? videoAI.assistedEvents.map((ev,i)=>`<li><b>${i+1}. ${escapeHtml(playerName(ev.player))}</b> · ${escapeHtml(videoAIAssistShotName(ev.shot))} · ${escapeHtml(videoAIAssistDirectionName(ev.direction))} ${escapeHtml(videoAIAssistDepthName(ev.depth))} <small>${escapeHtml(ev.code)} · ${Math.round((ev.confidence||0)*100)}%</small></li>`).join("") : `<li>${tr("Sin golpes asistidos guardados todavía.","No assisted shots saved yet.")}</li>`;
+    list.innerHTML = (videoAI.assistedEvents||[]).length ? videoAI.assistedEvents.map((ev,i)=>{
+      const speed = ev.speedKmh ? `${ev.speedKmh} km/h` : "—";
+      return `<li><b>${i+1}. ${escapeHtml(playerName(ev.player))}</b> · ${escapeHtml(videoAIAssistShotName(ev.shot))} · ${speed} · ${escapeHtml(videoAIAssistDirectionName(ev.direction))} ${escapeHtml(videoAIAssistDepthName(ev.depth))} <small>${escapeHtml(ev.code)} · ${Math.round((ev.confidence||0)*100)}%</small></li>`;
+    }).join("") : `<li>${tr("Sin golpes asistidos guardados todavía.","No assisted shots saved yet.")}</li>`;
   }
   renderVideoAISessionPreview();
 }
@@ -2587,7 +2643,10 @@ function saveVideoAIAssistedEvent(){
   const analysis = videoAIAnalyzeTrajectory(start, end);
   if (!analysis){ toast("Marca inicio y final dentro de la zona calibrada"); return; }
   const player = $("#videoAiAssistPlayer")?.value || "A";
-  const shot = $("#videoAiAssistShot")?.value || "forehand";
+  // En v3.34 dejamos de utilizar la selección manual de tipo de golpe y clasificamos automáticamente
+  const shot = videoAIClassifyShot(start, end);
+  // Estimamos una velocidad aproximada para el golpe
+  const speedKmh = videoAIEstimateSpeed(start, end);
   const result = $("#videoAiAssistResult")?.value || "neutral";
   const ev = {
     id:`via_${Date.now()}_${Math.random().toString(16).slice(2)}`,
@@ -2598,6 +2657,7 @@ function saveVideoAIAssistedEvent(){
     confidence: analysis.confidence,
     start:{ x:Number(start.x.toFixed(4)), y:Number(start.y.toFixed(4)), court:analysis.courtStart },
     end:{ x:Number(end.x.toFixed(4)), y:Number(end.y.toFixed(4)), court:analysis.courtEnd },
+    speedKmh,
     createdAt:new Date().toISOString()
   };
   if (shot === "serve"){

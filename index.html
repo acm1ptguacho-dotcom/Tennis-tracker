@@ -9,9 +9,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Actualizamos la versión de las hojas de estilo para romper la caché del navegador -->
-<link rel="stylesheet" href="style.css?v=3333" />
+<!-- Bump cache version to ensure latest styles load in v3.34 -->
+<link rel="stylesheet" href="style.css?v=3344" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3333" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3344" />
 </head>
 <body>
 
@@ -50,7 +51,8 @@
     <!-- Versión: visible en la esquina inferior derecha del menú de inicio.
          Actualiza este número cada vez que se genere una nueva versión. -->
     <!-- Versión visible: actualiza este número al generar una nueva revisión -->
-    <div class="splashVersion" id="splashVersion">v3.33</div>
+    <!-- Actualizamos el número de versión a v3.34 -->
+    <div class="splashVersion" id="splashVersion">v3.34</div>
   </div>
 </div>
 
@@ -1087,7 +1089,8 @@
               <option value="B">Jugador B</option>
             </select>
           </label>
-          <label class="videoAiSelectLabel">Tipo de golpe
+          <!-- En v3.34 la IA clasifica automáticamente el tipo de golpe, por lo que ocultamos el selector manual. -->
+          <label class="videoAiSelectLabel" style="display:none;">Tipo de golpe
             <select id="videoAiAssistShot">
               <option value="serve">Saque</option>
               <option value="return">Resto</option>
