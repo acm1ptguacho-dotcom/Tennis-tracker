@@ -1,0 +1,16 @@
+v3.33 — Vídeo IA como modo principal + UI premium
+
+- Vídeo IA se retira del menú lateral de Reportes.
+- Vídeo IA pasa a ser el cuarto modo del menú inicial junto a Acceder, Modo demo y Modo entrenador.
+- Se elimina visualmente el botón adicional de Iniciar/crear cuenta del menú inicial para dejar sólo los 4 accesos principales.
+- Los 4 botones del menú inicial usan estilo premium verde.
+- Se añade/actualiza la etiqueta de versión en la esquina inferior derecha del menú inicial: v3.33.
+- El botón Home de Vídeo IA vuelve al menú inicial.
+- El encabezado de Vídeo IA se compacta para mejorar simetría y reducir espacio perdido.
+- Se elimina el botón superior de detener cámara; las acciones principales quedan dentro de la ventana de vídeo.
+- Los controles de Vídeo IA quedan integrados sobre la ventana de cámara:
+  1. Iniciar cámara aparece antes de activar la cámara.
+  2. REC aparece como botón circular cuando la cámara está lista y no está grabando.
+  3. Pause aparece como botón circular en la esquina inferior derecha cuando está grabando.
+- La calibración de pista queda debajo de la ventana de cámara para acceso rápido.
+- Cache actualizada a v=3330.

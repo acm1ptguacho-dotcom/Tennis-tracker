@@ -6996,3 +6996,222 @@ body.coachMode.coachHalfCourt #courtSurface{
   .videoAiAssistGrid,
   .videoAiAssistActions{grid-template-columns:1fr!important;}
 }
+
+/* ===== v3.33 Home + Vídeo IA premium ===== */
+/* Portada: solo cuatro accesos principales y versión visible */
+.splashStart,
+.splashHint{
+  display:none!important;
+}
+.splashQuickAccess{
+  width:min(92vw, 620px)!important;
+  max-width:620px!important;
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:14px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+.splashQuickAccess .btn.good{
+  min-width:0!important;
+  width:100%!important;
+  height:68px!important;
+  min-height:68px!important;
+  border-radius:24px!important;
+  color:#102232!important;
+  font-weight:1000!important;
+  letter-spacing:.045em!important;
+  text-transform:uppercase!important;
+  background:
+    radial-gradient(120% 160% at 15% 0%, rgba(255,255,255,.46), transparent 34%),
+    linear-gradient(180deg, #dbff63 0%, #a6d92e 52%, #78a719 100%)!important;
+  border:1px solid rgba(226,255,122,.72)!important;
+  box-shadow:
+    0 18px 36px rgba(109,155,24,.28),
+    0 6px 16px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.62),
+    inset 0 -10px 22px rgba(57,86,9,.18)!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.35)!important;
+}
+.splashQuickAccess .btn.good:hover,
+.splashQuickAccess .btn.good:focus-visible{
+  transform:translateY(-1px)!important;
+  filter:saturate(1.08) brightness(1.04)!important;
+}
+.splashVersion{
+  position:fixed!important;
+  right:18px!important;
+  bottom:calc(14px + env(safe-area-inset-bottom, 0px))!important;
+  z-index:30!important;
+  padding:6px 10px!important;
+  border-radius:999px!important;
+  color:rgba(245,255,255,.72)!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+  background:rgba(3,18,32,.36)!important;
+  border:1px solid rgba(210,236,255,.10)!important;
+  backdrop-filter:blur(10px)!important;
+}
+@media (max-width:520px){
+  .splashQuickAccess{
+    width:min(92vw, 420px)!important;
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+    margin-top:48vh!important;
+  }
+  .splashQuickAccess .btn.good{
+    height:56px!important;
+    min-height:56px!important;
+    border-radius:20px!important;
+    font-size:clamp(14px, 4vw, 17px)!important;
+  }
+}
+
+/* Vídeo IA: cabecera más estética, simétrica y compacta */
+.videoAiHead{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:12px!important;
+  padding:18px 20px 16px!important;
+}
+.videoAiHead .modalTitle{
+  font-size:clamp(34px, 6vw, 48px)!important;
+  line-height:.92!important;
+  margin:0!important;
+  max-width:100%!important;
+}
+.videoAiHead .muted{
+  margin-top:8px!important;
+  max-width:440px!important;
+  font-size:clamp(13px, 2.4vw, 16px)!important;
+  line-height:1.12!important;
+  letter-spacing:.16em!important;
+  opacity:.76!important;
+}
+.videoAiHeaderActions{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:10px!important;
+}
+.videoAiIconBtn{
+  width:58px!important;
+  min-width:58px!important;
+  height:58px!important;
+  min-height:58px!important;
+  border-radius:20px!important;
+  background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.035)), linear-gradient(180deg, rgba(35,70,98,.92), rgba(9,31,51,.96))!important;
+  border:1px solid rgba(174,214,255,.20)!important;
+  box-shadow:0 12px 26px rgba(0,10,28,.24), inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+.videoAiIconBtn .svgIcon{
+  width:27px!important;
+  height:27px!important;
+  stroke:#f7fbff!important;
+  stroke-width:2.15!important;
+  fill:none!important;
+}
+@media (max-width:520px){
+  .videoAiHead{
+    grid-template-columns:1fr auto!important;
+    padding:16px 16px 14px!important;
+    gap:8px!important;
+  }
+  .videoAiHead .modalTitle{
+    font-size:clamp(31px, 9vw, 42px)!important;
+  }
+  .videoAiHead .muted{
+    font-size:12px!important;
+    letter-spacing:.13em!important;
+    line-height:1.15!important;
+  }
+  .videoAiHeaderActions{gap:8px!important;}
+  .videoAiIconBtn{
+    width:52px!important;
+    min-width:52px!important;
+    height:52px!important;
+    min-height:52px!important;
+    border-radius:17px!important;
+  }
+}
+
+/* Vídeo IA: controles integrados dentro del visor */
+.videoAiOverlayControls{
+  position:absolute!important;
+  inset:0!important;
+  z-index:7!important;
+  pointer-events:none!important;
+  display:block!important;
+  padding:0!important;
+}
+.videoAiOverlayControls .videoAiControl{
+  pointer-events:auto!important;
+  border:0!important;
+  outline:0!important;
+  cursor:pointer!important;
+  box-shadow:0 16px 34px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.16)!important;
+}
+.videoAiOverlayControls .videoAiControl.startCamera{
+  position:absolute!important;
+  left:50%!important;
+  bottom:24px!important;
+  transform:translateX(-50%)!important;
+  width:min(82%, 360px)!important;
+  min-height:58px!important;
+  border-radius:999px!important;
+  color:#102232!important;
+  font-weight:1000!important;
+  letter-spacing:.03em!important;
+  background:linear-gradient(180deg,#dfff63,#90bd24)!important;
+  border:1px solid rgba(230,255,130,.72)!important;
+}
+.videoAiOverlayControls .videoAiControl.record,
+.videoAiOverlayControls .videoAiControl.pause{
+  width:70px!important;
+  height:70px!important;
+  border-radius:999px!important;
+  background:rgba(4,20,36,.82)!important;
+  border:1px solid rgba(210,236,255,.16)!important;
+  backdrop-filter:blur(12px)!important;
+}
+.videoAiOverlayControls .videoAiControl.record{
+  position:absolute!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:24px!important;
+  transform:translateX(-50%)!important;
+}
+.videoAiOverlayControls .videoAiControl.record::before{
+  content:""!important;
+  display:block!important;
+  width:34px!important;
+  height:34px!important;
+  border-radius:999px!important;
+  background:#ff2f4f!important;
+  box-shadow:0 0 18px rgba(255,47,79,.85)!important;
+}
+.videoAiOverlayControls .videoAiControl.pause{
+  position:absolute!important;
+  right:24px!important;
+  bottom:24px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.videoAiOverlayControls .videoAiControl.pause .svgIcon{
+  width:28px!important;
+  height:28px!important;
+  fill:none!important;
+  stroke:#ffffff!important;
+  stroke-width:0!important;
+}
+.videoAiOverlayControls .videoAiControl.pause rect{
+  fill:#fff!important;
+  stroke:none!important;
+}
+.videoAiPreviewCard .videoAiCalibrationPanel{
+  margin-top:14px!important;
+}
