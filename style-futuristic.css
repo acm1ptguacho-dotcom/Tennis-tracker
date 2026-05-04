@@ -7013,3 +7013,31 @@ body.coachMode.coachHalfCourt #courtSurface{
 #analyticsSub{
   display:none!important;
 }
+
+/* Ajuste: forzamos que la cuadrícula de KPIs de Analítica táctica muestre siempre tres columnas.
+   Aunque existan reglas en puntos de rotura que reducen a 2 o 1 columnas, aquí
+   anulamos esas reglas para que todos los indicadores se distribuyan en filas de tres.
+   Usamos la id #analyticsKpis junto a la clase analyticsKpiGrid para elevar la especificidad. */
+#analyticsKpis.analyticsKpiGrid{
+  grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+}
+@media (max-width:1080px){
+  #analyticsKpis.analyticsKpiGrid{
+    grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width:760px){
+  #analyticsKpis.analyticsKpiGrid{
+    grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Ajuste: aumentamos el espacio inferior de la cabecera de Analítica táctica y añadimos margen inferior al título
+   para que no quede pegado a las pestañas. También aprovechamos para permitir que el título ocupe todo el ancho disponible. */
+.analyticsModalHeadCompact{
+  padding-bottom:20px !important;
+}
+.analyticsModalHeadCompact .modalTitle{
+  margin-bottom:6px !important;
+  max-width:100% !important;
+}
