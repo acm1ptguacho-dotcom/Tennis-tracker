@@ -7007,6 +7007,9 @@ body.coachMode.coachHalfCourt #courtSurface{
 }
 
 /* Ocultamos la línea de contexto en la cabecera de Analítica táctica para ahorrar espacio */
+/* Para tener suficiente especificidad, apuntamos también a las variantes de cabecera */
+.analyticsModalHeadCompact #analyticsSub,
+.analyticsHeaderV331 #analyticsSub,
 #analyticsSub{
   display:none!important;
 }
