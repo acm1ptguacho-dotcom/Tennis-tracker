@@ -2776,6 +2776,26 @@ function renderVideoAIButtons(){
   if (stop) stop.disabled = !videoAI.recording;
   if (badge) badge.classList.toggle("hidden", !videoAI.recording);
   if (empty) empty.classList.toggle("hidden", hasStream);
+
+  // Actualiza la visibilidad de los controles integrados en la ventana de vídeo.
+  const overlayStart = document.getElementById('btnVideoAIStartCamera');
+  const overlayRecord = document.getElementById('btnVideoAIStartRecording');
+  const overlayPause = document.getElementById('btnVideoAIStopRecording');
+  if (overlayStart && overlayRecord && overlayPause) {
+    if (!hasStream) {
+      overlayStart.style.display = '';
+      overlayRecord.style.display = 'none';
+      overlayPause.style.display = 'none';
+    } else if (videoAI.recording) {
+      overlayStart.style.display = 'none';
+      overlayRecord.style.display = 'none';
+      overlayPause.style.display = '';
+    } else {
+      overlayStart.style.display = 'none';
+      overlayRecord.style.display = '';
+      overlayPause.style.display = 'none';
+    }
+  }
 }
 async function listVideoAICameras(){
   const select = $("#videoAiCameraSelect");
@@ -7578,6 +7598,8 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnAuthLanguage","click", toggleLanguage);
   on("btnInfo","click", ()=>openFromMenu(()=>openModal("#infoModal")));
   on("btnBackHome","click", ()=>openFromMenu(()=>{ showSplashAgain(); }));
+  // Botón Home en la interfaz de Vídeo IA: cerrar el modal y volver a la portada
+  on("btnVideoAIHome","click", ()=>{ try{ closeVideoAI(); }catch(e){} showSplashAgain(); });
   on("btnCloseSurface","click", closeSurface);
   on("btnCloseLanguage","click", ()=>closeModal("#languageModal"));
   on("btnCloseInfo","click", ()=>closeModal("#infoModal"));

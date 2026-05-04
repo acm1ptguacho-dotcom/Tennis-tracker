@@ -29,13 +29,27 @@
       <span class="splashBadge">Informes premium</span>
     </div>
     <div class="splashQuickAccess" aria-label="Acceso rápido">
-      <button class="btn primary" id="btnSplashLogin" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('login')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'login')">Acceder</button>
-      <button class="btn" id="btnSplashSignup" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('signup')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'signup')">Crear cuenta</button>
-      <button class="btn good" id="btnSplashDemo" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('demo')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'demo')">Modo demo</button>
-      <button class="btn coachAccess" id="btnSplashCoach" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('coach')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'coach')">Modo entrenador</button>
+      <!-- Ajuste: todos los botones del menú de inicio utilizan el estilo verde "good" para un aspecto premium.
+           Se ha eliminado el acceso directo para crear cuenta; la creación de cuentas se realiza desde la pestaña Acceder.
+           Se ha añadido un acceso directo a Vídeo IA. -->
+      <button class="btn good" id="btnSplashLogin" type="button"
+              onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('login')"
+              ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'login')">Acceder</button>
+      <button class="btn good" id="btnSplashDemo" type="button"
+              onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('demo')"
+              ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'demo')">Modo demo</button>
+      <button class="btn good" id="btnSplashCoach" type="button"
+              onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('coach')"
+              ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'coach')">Modo entrenador</button>
+      <button class="btn good" id="btnSplashVideoAI" type="button"
+              onclick="return false;" title="Abrir Vídeo IA">Vídeo IA</button>
     </div>
     <div class="splashHint">También puedes pulsar cualquier zona de la portada para continuar.</div>
     <button class="btn primary splashStart" id="btnStartApp" type="button" onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('login')" ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'login')" data-i18n="start">Iniciar</button>
+    <!-- Versión: visible en la esquina inferior derecha del menú de inicio.
+         Actualiza este número cada vez que se genere una nueva versión. -->
+    <!-- Versión visible: actualiza este número al generar una nueva revisión -->
+    <div class="splashVersion" id="splashVersion">v3.34</div>
   </div>
 </div>
 
@@ -979,6 +993,13 @@
         <div class="muted">Grabación, calibración y preparación para lectura automática de direcciones.</div>
       </div>
       <div class="modalActions videoAiHeaderActions">
+        <!-- Botón Home para volver al menú inicial -->
+        <button class="chip videoAiIconBtn" id="btnVideoAIHome" type="button" aria-label="Inicio" title="Inicio">
+          <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 11l9-8 9 8"/>
+            <path d="M5 10v10h14V10"/>
+          </svg>
+        </button>
         <button class="chip videoAiIconBtn" id="btnVideoAIStopCamera" type="button" aria-label="Detener cámara" title="Detener cámara">
           <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
         </button>
@@ -999,36 +1020,29 @@
             <span>Coloca el móvil fijo en trípode y pulsa “Iniciar cámara”.</span>
           </div>
           <div class="videoAiRecBadge hidden" id="videoAiRecBadge"><i></i> REC</div>
+          <!-- Controles integrados dentro de la ventana de vídeo.
+               Inicialmente solo se muestra el botón de iniciar cámara.
+               Posteriormente aparece el botón de grabar (círculo rojo) y finalmente el botón de pausa. -->
+          <div class="videoAiOverlayControls" id="videoAiOverlayControls">
+            <button class="videoAiControl startCamera" id="btnVideoAIStartCamera" type="button">Iniciar cámara</button>
+            <button class="videoAiControl record" id="btnVideoAIStartRecording" type="button" aria-label="Grabar" style="display:none;"></button>
+            <button class="videoAiControl pause" id="btnVideoAIStopRecording" type="button" aria-label="Pausar" style="display:none;">
+              <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="3" height="16"/><rect x="15" y="4" width="3" height="16"/></svg>
+            </button>
+          </div>
         </div>
         <div class="videoAiStatus" id="videoAiStatus">Listo para iniciar cámara</div>
-      </section>
 
-      <section class="videoAiControlsPanel">
-        <label class="videoAiSelectLabel">Cámara
-          <select id="videoAiCameraSelect">
-            <option value="">Cámara trasera / automática</option>
-          </select>
-        </label>
-        <div class="videoAiButtonGrid">
-          <button class="chip primary" id="btnVideoAIStartCamera" type="button">Iniciar cámara</button>
-          <button class="chip" id="btnVideoAIStartRecording" type="button">Grabar</button>
-          <button class="chip" id="btnVideoAIStopRecording" type="button" disabled>Detener</button>
-          <a class="chip videoAiDownload hidden" id="videoAiDownload" download="tennis-direction-video.webm">Descargar vídeo</a>
-        </div>
-      </section>
-
-      <section class="videoAiWorkflow">
-        <article class="videoAiStep active"><span>1</span><div><strong>Posición fija</strong><small>Móvil en trípode, pista completa visible y cámara estable.</small></div></article>
-        <article class="videoAiStep"><span>2</span><div><strong>Calibración</strong><small>Marca 4 referencias de la pista sobre el vídeo.</small></div></article>
-        <article class="videoAiStep"><span>3</span><div><strong>Grabación</strong><small>Guarda el vídeo y la calibración para la futura lectura IA.</small></div></article>
-      </section>
-
+      <!-- Mover la calibración de pista justo debajo de la ventana de la cámara.
+           Esta sección se ha desplazado desde el panel lateral a la tarjeta de vista previa
+           para que el usuario tenga un acceso rápido después de iniciar la cámara.  -->
       <section class="videoAiCalibrationPanel">
         <div class="videoAiSectionHead">
           <div>
             <h3>Calibración de pista</h3>
             <p>Marca los puntos en este orden: fondo izquierda, fondo derecha, red izquierda, red derecha.</p>
           </div>
+          <!-- Contador de puntos calibrados. Muestra 0/4 por defecto. -->
           <span id="videoAiCalibCount">0/4</span>
         </div>
         <div class="videoAiCalibrationActions">
@@ -1038,7 +1052,25 @@
         </div>
         <ol class="videoAiPointList" id="videoAiCalibrationList"></ol>
       </section>
+      </section>
 
+      <!-- La sección de calibración se integró dentro de la tarjeta de vista previa -->
+
+      <section class="videoAiControlsPanel">
+        <label class="videoAiSelectLabel">Cámara
+          <select id="videoAiCameraSelect">
+            <option value="">Cámara trasera / automática</option>
+          </select>
+        </label>
+        <!-- Mantener el enlace de descarga separado de los controles integrados -->
+        <a class="chip videoAiDownload hidden" id="videoAiDownload" download="tennis-direction-video.webm">Descargar vídeo</a>
+      </section>
+
+      <section class="videoAiWorkflow">
+        <article class="videoAiStep active"><span>1</span><div><strong>Posición fija</strong><small>Móvil en trípode, pista completa visible y cámara estable.</small></div></article>
+        <article class="videoAiStep"><span>2</span><div><strong>Calibración</strong><small>Marca 4 referencias de la pista sobre el vídeo.</small></div></article>
+        <article class="videoAiStep"><span>3</span><div><strong>Grabación</strong><small>Guarda el vídeo y la calibración para la futura lectura IA.</small></div></article>
+      </section>
       <section class="videoAiAssistedPanel">
         <div class="videoAiSectionHead">
           <div>
@@ -1722,6 +1754,12 @@
     pressBinder('btnSplashSignup', function(){ quickAccess('signup'); });
     pressBinder('btnSplashDemo', function(){ quickAccess('demo'); });
     pressBinder('btnSplashCoach', function(){ quickAccess('coach'); });
+    // Abrir Vídeo IA desde el menú de inicio: primero se entra en la interfaz principal y luego se abre la modal.
+    pressBinder('btnSplashVideoAI', function(){
+      try{ if (typeof window.safeInit === 'function') window.safeInit(); }catch(e){}
+      if (typeof window.forceEnterMainInterface === 'function') window.forceEnterMainInterface();
+      if (typeof window.openVideoAI === 'function') window.openVideoAI();
+    });
     pressBinder('btnSplashLanguage', function(){ if (typeof window.toggleTdtLanguage === 'function') return window.toggleTdtLanguage(); if (typeof window.openEntryLanguage === 'function') return window.openEntryLanguage(); });
     pressBinder('btnStartApp', function(){ quickAccess('login'); });
     pressBinder('tabAuthLogin', function(){ switchAuth('login'); });
