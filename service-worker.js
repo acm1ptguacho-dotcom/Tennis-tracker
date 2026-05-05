@@ -4,14 +4,14 @@
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
 
-const CACHE = "tennis-tracker-web-v3.36-premium-direction";
+const CACHE = "tennis-tracker-web-v3.37-alignment-rail-finish";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=3360",
-  "./style-futuristic.css?v=3360",
-  "./style-premium-direction.css?v=3360",
-  "./app.js?v=3360",
+  "./style.css?v=3370",
+  "./style-futuristic.css?v=3370",
+  "./style-premium-direction.css?v=3370",
+  "./app.js?v=3370",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",

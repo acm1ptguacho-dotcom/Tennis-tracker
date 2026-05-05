@@ -10,10 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Actualizamos la versión de las hojas de estilo para romper la caché del navegador -->
 <!-- Bump cache version to ensure latest styles load in v3.35 -->
-<link rel="stylesheet" href="style.css?v=3360" />
+<link rel="stylesheet" href="style.css?v=3370" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3360" />
-  <link rel="stylesheet" href="style-premium-direction.css?v=3360" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3370" />
+  <link rel="stylesheet" href="style-premium-direction.css?v=3370" />
 </head>
 <body>
 
@@ -53,7 +53,7 @@
          Actualiza este número cada vez que se genere una nueva versión. -->
     <!-- Versión visible: actualiza este número al generar una nueva revisión -->
     <!-- Actualizamos el número de versión a v3.35 -->
-    <div class="splashVersion" id="splashVersion">v3.35</div>
+    <div class="splashVersion" id="splashVersion">v3.37</div>
   </div>
 </div>
 
@@ -370,6 +370,7 @@
           <div class="baselineName baselineTop" id="baselineTop">Jugador B</div>
           <div class="baselineName baselineBottom" id="baselineBottom">Jugador A</div>
         </div>
+        <button id="finishBall" class="tennisBall courtPointAction quickBtn good" type="button" aria-label="Acciones del punto"><span>Punto</span></button>
         <button id="btnCoachHalfSwitch" class="coachHalfSwitch" type="button" hidden aria-label="Ver media pista superior">↑</button>
       </div>
 
@@ -389,11 +390,6 @@
 
       <!-- rail lateral: evita tapar zonas clicables en móvil -->
       <div class="courtRail" aria-label="Acciones rápidas">
-        <div class="quickItem demoRailBallItem" id="qiPointActions">
-          <button id="finishBall" class="tennisBall railBallAction quickBtn good" type="button" aria-label="Acciones del punto">✓</button>
-          <div class="quickLbl">Punto</div>
-        </div>
-
         <div class="quickItem" id="qiScoreToggle">
           <button class="quickBtn eyeToggle" id="btnEyeScore" type="button" aria-label="Ocultar marcador" aria-pressed="false" title="Ocultar/mostrar marcador">
             <svg class="svgIcon eyeOpen" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -465,12 +461,13 @@
         <!-- Botón de desplazamiento para modo entrenador -->
         <div class="quickItem coachRailOnly" id="qiCoachDash">
           <button class="quickBtn coachDashBtn" id="btnCoachDash" type="button" title="Flecha de desplazamiento" aria-label="Flecha de desplazamiento">
-            <!-- Icono de flecha discontinua en diagonal para desplazamientos -->
+            <!-- Icono de flecha discontinua en diagonal con punta para desplazar -->
             <svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M5 19 L19 5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3"/>
+              <path d="M5 19 L17 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 3"/>
+              <path d="M13.5 6.5 H18 V11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <div class="quickLbl">Desplazamiento</div>
+          <div class="quickLbl">Desplazar</div>
         </div>
 
         <div class="quickItem coachRailOnly" id="qiCoachDeleteSelected">
@@ -1783,7 +1780,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3360"></script>
+<script src="app.js?v=3370"></script>
 
 </body>
 </html>

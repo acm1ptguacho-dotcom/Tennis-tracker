@@ -1,0 +1,11 @@
+Tennis Direction Tracker v3.37
+
+Cambios aplicados según revisión móvil:
+- Corregido el solape de los boxes de juegos/puntos del marcador en modo demo.
+- Alineada la barra superior con logo, marcador y diagrama usando el mismo margen móvil.
+- Eliminado el hueco fantasma del botón Punto en modo entrenador.
+- Eliminado el botón Punto del rail lateral; ahora el botón de acciones del punto está en la parte superior del diagrama de pista y no tapa las direcciones del rail.
+- Cambiado el icono de Desplazamiento por una flecha discontinua con punta.
+- Renombrado “Desplazamiento” a “Desplazar” para que encaje mejor.
+- Compactada la ventana de Finalizar punto para que las acciones entren en pantalla sin obligar al usuario a hacer scroll, manteniendo el scroll como respaldo.
+- Actualizado el versionado de caché a v3.37.
