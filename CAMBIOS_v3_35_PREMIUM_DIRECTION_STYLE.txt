@@ -1,0 +1,9 @@
+# v3.35 · Rediseño premium Tennis Direction
+
+- Añadida nueva hoja final `style-premium-direction.css` cargada después del estilo anterior.
+- Cambio visual global a sistema oscuro premium negro/lima inspirado en la referencia enviada: paneles compactos, bordes finos, brillo verde, profundidad y textura deportiva.
+- Nueva pantalla de inicio tipo app móvil con cuatro tarjetas premium: Acceder, Modo demo, Modo entrenador y Vídeo IA.
+- Menú lateral rediseñado con logo, secciones compactas y estados hover/activo más limpios.
+- Historial del partido rediseñado como lista de tarjetas compactas con botón visual de reproducción.
+- Estadísticas, Analítica táctica, Biblioteca de jugadores y Vídeo IA reciben acabado premium coherente.
+- Actualizada versión visible a v3.35 y caché del service worker.
