@@ -1,0 +1,27 @@
+Tennis Direction Tracker v3.42
+
+Cambios aplicados:
+
+1. Barra superior sin blink en móvil
+- La barra principal deja de usar fixed/sticky en modo demo y entrenador.
+- Se elimina el transform/will-change/contain de la barra para evitar el parpadeo en iPhone/Safari al hacer scroll.
+- La barra queda en el flujo normal de la página, por lo que no se superpone a ventanas, modales ni menú lateral.
+- Los modales y el menú lateral mantienen z-index superior.
+
+2. Alineación de barra superior
+- La barra usa el ancho real del contenedor móvil.
+- El logo queda centrado dentro de la barra.
+- La barra respeta los márgenes laterales del teléfono.
+
+3. Menú lateral
+- El logo del menú lateral queda centrado visualmente.
+- El botón de cerrar se mantiene a la derecha sin desplazar el logo.
+
+4. Modo entrenador / Objetos y herramientas
+- Las opciones de Modo colocación y Tamaño de objetos ya no son desplegables.
+- Se muestran siempre como bloques visibles dentro de la ventana de objetos.
+- Se fuerza su visibilidad para evitar que aparezcan solo líneas vacías.
+
+5. Caché
+- Service worker actualizado a v3.42.
+- Versionado CSS/JS actualizado a 3420.
