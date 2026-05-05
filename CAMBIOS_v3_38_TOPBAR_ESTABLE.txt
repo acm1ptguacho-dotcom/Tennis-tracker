@@ -1,0 +1,10 @@
+Tennis Direction Tracker v3.38
+
+Corrección aplicada:
+- Solucionado el parpadeo de la barra superior al hacer scroll en iOS/móvil.
+- La barra superior deja de depender de position: sticky en móvil y pasa a estar fijada al viewport.
+- Se reserva automáticamente la altura del header en la app para que el contenido no quede debajo.
+- Se elimina el backdrop-filter del fondo del header móvil, que era una causa habitual de flicker con sticky en Safari/iPhone.
+- Se añade estabilización por GPU con translate3d/backface-visibility/contain.
+- Se mantiene la alineación con los márgenes móviles de la web.
+- Cache/versionado actualizado a v3.38 / ?v=3380.

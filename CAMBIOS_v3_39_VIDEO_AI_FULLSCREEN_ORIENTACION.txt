@@ -1,0 +1,11 @@
+Versión v3.39 - Vídeo IA fullscreen y orientación panorámica
+
+Cambios aplicados:
+- El modo Vídeo IA abre la cámara como experiencia de pantalla completa dentro de la PWA.
+- La vista de cámara ocupa todo el alto y ancho del viewport, con controles superpuestos.
+- Al girar el teléfono a panorámico, la interfaz detecta la orientación y adapta la vista automáticamente.
+- Se añadieron clases dinámicas de orientación para portrait/landscape y cámara portrait/landscape.
+- Se fuerza el reajuste del canvas de calibración al cambiar orientación o tamaño.
+- Se intenta activar Fullscreen API cuando el usuario entra en Vídeo IA o inicia la cámara, con fallback CSS para iOS/Safari.
+- Los metadatos de sesión de Vídeo IA guardan el estado de orientación usado durante la grabación/análisis.
+- Caché actualizada a v3.39.

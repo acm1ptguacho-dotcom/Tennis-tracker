@@ -2454,7 +2454,9 @@ const videoAI = {
   assistedMode:false,
   markMode:null,
   currentTrajectory:{ start:null, end:null },
-  assistedEvents:[]
+  assistedEvents:[],
+  fullscreenActive:false,
+  _orientationResizeTimer:null
 };
 function getVideoAISessions(){ return safeReadJSON(localStorage, getVideoAISessionsStorageKey(), []) || []; }
 function saveVideoAISessionMeta(meta){
@@ -2466,11 +2468,12 @@ function videoAIStatus(msg){ const el = $("#videoAiStatus"); if (el) el.textCont
 function currentVideoAISessionPayload(){
   return {
     // Actualizar a la versión 3.33 para los metadatos de sesión de vídeo IA
-    version:"3.33",
+    version:"3.39",
     source:"video_ai_assisted",
     matchId: state?.matchId || null,
     createdAt: new Date().toISOString(),
     camera: $("#videoAiCameraSelect")?.selectedOptions?.[0]?.textContent || "auto",
+    orientation: getVideoAIOrientationState(),
     calibration: videoAI.calibrationPoints.map((p,i)=>({
       label: VIDEO_AI_CALIBRATION_LABELS[i] || `Punto ${i+1}`,
       x: Number(p.x.toFixed(4)),
@@ -2721,6 +2724,61 @@ function sendVideoAIAssistedToAnalytics(){
   videoAIStatus("Evento enviado a Analítica táctica. Abre Reportes > Analítica táctica para verlo.");
   toast("Enviado a Analítica táctica");
 }
+
+function getVideoAIOrientationState(){
+  const angle = Number(screen?.orientation?.angle ?? window.orientation ?? 0) || 0;
+  const viewportLandscape = window.innerWidth > window.innerHeight;
+  const angleLandscape = Math.abs(angle) === 90 || Math.abs(angle) === 270;
+  const video = $("#videoAiPreview");
+  const cameraLandscape = !!(video && video.videoWidth && video.videoHeight && video.videoWidth >= video.videoHeight);
+  return {
+    angle,
+    viewportLandscape,
+    angleLandscape,
+    cameraLandscape,
+    isLandscape: viewportLandscape || angleLandscape
+  };
+}
+function updateVideoAIOrientation(){
+  const st = getVideoAIOrientationState();
+  document.body.classList.toggle("video-ai-landscape", !!st.isLandscape);
+  document.body.classList.toggle("video-ai-portrait", !st.isLandscape);
+  document.body.classList.toggle("video-ai-camera-landscape", !!st.cameraLandscape);
+  document.body.classList.toggle("video-ai-camera-portrait", !st.cameraLandscape);
+  const modal = $("#videoAiModal");
+  if (modal){
+    modal.dataset.orientation = st.isLandscape ? "landscape" : "portrait";
+    modal.dataset.camera = st.cameraLandscape ? "landscape" : "portrait";
+  }
+  window.clearTimeout(videoAI._orientationResizeTimer);
+  videoAI._orientationResizeTimer = window.setTimeout(resizeVideoAIOverlay, 90);
+}
+async function requestVideoAIFullscreen(){
+  const modal = $("#videoAiModal") || document.documentElement;
+  try{
+    if (!document.fullscreenElement && modal?.requestFullscreen){
+      await modal.requestFullscreen({ navigationUI:"hide" });
+      videoAI.fullscreenActive = true;
+    }else if (!document.webkitFullscreenElement && modal?.webkitRequestFullscreen){
+      modal.webkitRequestFullscreen();
+      videoAI.fullscreenActive = true;
+    }
+  }catch(e){
+    // En iOS Safari el Fullscreen API puede no estar disponible para contenedores.
+    // La vista sigue ocupando toda la pantalla mediante CSS.
+    videoAI.fullscreenActive = false;
+  }
+}
+async function exitVideoAIFullscreen(){
+  try{
+    if (videoAI.fullscreenActive && document.fullscreenElement && document.exitFullscreen){
+      await document.exitFullscreen();
+    }else if (videoAI.fullscreenActive && document.webkitFullscreenElement && document.webkitExitFullscreen){
+      document.webkitExitFullscreen();
+    }
+  }catch(e){ console.warn(e); }
+  videoAI.fullscreenActive = false;
+}
 function resizeVideoAIOverlay(){
   const frame = $("#videoAiPreviewFrame");
   const canvas = $("#videoAiOverlay");
@@ -2874,6 +2932,8 @@ async function listVideoAICameras(){
   }catch(e){ console.warn(e); }
 }
 async function startVideoAICamera(){
+  updateVideoAIOrientation();
+  requestVideoAIFullscreen();
   if (!navigator.mediaDevices?.getUserMedia){
     toast("La cámara necesita navegador compatible y HTTPS");
     videoAIStatus("getUserMedia no disponible. Usa HTTPS o localhost.");
@@ -2892,10 +2952,15 @@ async function startVideoAICamera(){
     const video = $("#videoAiPreview");
     if (video){
       video.srcObject = videoAI.stream;
+      video.setAttribute("playsinline", "");
+      video.setAttribute("autoplay", "");
+      video.onloadedmetadata = () => { updateVideoAIOrientation(); resizeVideoAIOverlay(); };
+      video.onresize = () => { updateVideoAIOrientation(); resizeVideoAIOverlay(); };
       await video.play().catch(()=>{});
+      updateVideoAIOrientation();
     }
     await listVideoAICameras();
-    videoAIStatus("Cámara activa. Puedes calibrar la pista o iniciar grabación.");
+    videoAIStatus("Cámara activa en pantalla completa. Si giras el teléfono, la vista se adapta automáticamente a panorámica.");
     renderVideoAIButtons();
     setTimeout(resizeVideoAIOverlay, 80);
   }catch(e){
@@ -3028,7 +3093,10 @@ function handleVideoAIOverlayPoint(evt){
   }
 }
 function openVideoAI(){
+  document.body.classList.add("video-ai-active");
+  updateVideoAIOrientation();
   openModal("#videoAiModal");
+  requestVideoAIFullscreen();
   renderVideoAIButtons();
   renderVideoAICalibrationList();
   renderVideoAIAssistedPanel();
@@ -3036,8 +3104,10 @@ function openVideoAI(){
   resizeVideoAIOverlay();
   listVideoAICameras();
 }
-function closeVideoAI(){
-  stopVideoAICamera(false);
+async function closeVideoAI(){
+  await stopVideoAICamera(false);
+  await exitVideoAIFullscreen();
+  document.body.classList.remove("video-ai-active", "video-ai-landscape", "video-ai-portrait", "video-ai-camera-landscape", "video-ai-camera-portrait");
   closeModal("#videoAiModal");
 }
 
@@ -7743,7 +7813,11 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("videoAiCameraSelect","change", ()=>{ if (videoAI.stream) startVideoAICamera(); });
   const videoAiOverlay = $("#videoAiOverlay");
   if (videoAiOverlay) videoAiOverlay.addEventListener("pointerdown", handleVideoAIOverlayPoint, {passive:false});
-  window.addEventListener("resize", resizeVideoAIOverlay);
+  window.addEventListener("resize", ()=>{ updateVideoAIOrientation(); resizeVideoAIOverlay(); });
+  window.addEventListener("orientationchange", ()=>setTimeout(()=>{ updateVideoAIOrientation(); resizeVideoAIOverlay(); }, 160));
+  if (screen?.orientation?.addEventListener){
+    screen.orientation.addEventListener("change", ()=>setTimeout(()=>{ updateVideoAIOrientation(); resizeVideoAIOverlay(); }, 160));
+  }
   on("btnCloseStats","click", closeStats);
   on("btnCloseCharts","click", closeCharts);
   on("btnCloseChartsZoom","click", closeChartsZoom);
