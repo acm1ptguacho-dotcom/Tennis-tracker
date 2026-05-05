@@ -10,10 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Actualizamos la versión de las hojas de estilo para romper la caché del navegador -->
 <!-- Bump cache version to ensure latest styles load in v3.35 -->
-<link rel="stylesheet" href="style.css?v=3420" />
+<link rel="stylesheet" href="style.css?v=3430" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3420" />
-  <link rel="stylesheet" href="style-premium-direction.css?v=3420" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3430" />
+  <link rel="stylesheet" href="style-premium-direction.css?v=3430" />
 </head>
 <body>
 
@@ -40,7 +40,7 @@
               ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'login')"><span class="splashTileIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg></span><span class="splashTileText" data-i18n="login">Acceder</span><span class="splashTileSub">Inicia sesión en tu cuenta</span></button>
       <button class="btn good" id="btnSplashDemo" type="button"
               onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('demo')"
-              ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'demo')"><span class="splashTileIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4z"/></svg></span><span class="splashTileText" data-i18n="demoMode">Modo demo</span><span class="splashTileSub">Explora la app sin registro</span></button>
+              ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'demo')"><span class="splashTileIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4z"/></svg></span><span class="splashTileText" data-i18n="demoMode">Modo partido</span><span class="splashTileSub">Explora la app sin registro</span></button>
       <button class="btn good" id="btnSplashCoach" type="button"
               onclick="return window.__tdtQuickAccess && window.__tdtQuickAccess('coach')"
               ontouchend="return window.__tdtTouchQuick && window.__tdtTouchQuick(event, 'coach')"><span class="splashTileIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="splashTileText">Modo entrenador</span><span class="splashTileSub">Herramientas avanzadas para entrenadores</span></button>
@@ -53,7 +53,7 @@
          Actualiza este número cada vez que se genere una nueva versión. -->
     <!-- Versión visible: actualiza este número al generar una nueva revisión -->
     <!-- Actualizamos el número de versión a v3.35 -->
-    <div class="splashVersion" id="splashVersion">v3.42</div>
+    <div class="splashVersion" id="splashVersion">v3.43</div>
   </div>
 </div>
 
@@ -119,7 +119,7 @@
         </label>
         <label class="authCheck"><input id="rememberSession" type="checkbox" checked> Recordar sesión en este dispositivo</label>
         <button class="btn primary authSubmit" id="btnLogin" type="button" onclick="return window.__tdtAuthAction && window.__tdtAuthAction('login')" ontouchend="return window.__tdtTouchAuth && window.__tdtTouchAuth(event, 'login')">Entrar en la plataforma</button>
-        <button class="btn authGhost" id="btnDemoAccess" type="button" onclick="return window.__tdtAuthAction && window.__tdtAuthAction('demo')" ontouchend="return window.__tdtTouchAuth && window.__tdtTouchAuth(event, 'demo')">Entrar en modo demo</button>
+        <button class="btn authGhost" id="btnDemoAccess" type="button" onclick="return window.__tdtAuthAction && window.__tdtAuthAction('demo')" ontouchend="return window.__tdtTouchAuth && window.__tdtTouchAuth(event, 'demo')">Entrar en modo partido</button>
         <button class="btn coachAccess authGhost" id="btnCoachAccess" type="button" onclick="return window.__tdtAuthAction && window.__tdtAuthAction('coach')" ontouchend="return window.__tdtTouchAuth && window.__tdtTouchAuth(event, 'coach')">Entrar en modo entrenador</button>
         <div class="authFeedback" id="loginFeedback"></div>
       </div>
@@ -798,7 +798,7 @@
         <button class="coachToolBtn" data-coach-tool="player" type="button"><span class="toolIcon personShape">J</span><small>Jugador</small></button>
         <button class="coachToolBtn" data-coach-tool="coach" type="button"><span class="toolIcon personShape coach">E</span><small>Entrenador</small></button>
         <button class="coachToolBtn" data-coach-tool="target" type="button"><span class="toolIcon targetShape"></span><small>Objetivo</small></button>
-        <button class="coachToolBtn" data-coach-tool="dash" type="button"><span class="toolIcon dashToolIcon">⇢</span><small>Desplazamiento</small></button>
+        <button class="coachToolBtn" data-coach-tool="dash" type="button"><span class="toolIcon dashToolIcon">⇢</span><small>Desplazar</small></button>
         <button class="coachToolBtn" data-coach-tool="ladder" type="button"><span class="toolIcon ladderShape"></span><small>Escalera</small></button>
         <button class="coachToolBtn" data-coach-tool="text" type="button"><span class="toolIcon noteToolIcon">Nota</span><small>Nota</small></button>
       </div>
@@ -1531,6 +1531,14 @@
 
 
 
+<div class="modal hidden" id="playerProfileModal">
+  <div class="modalCard solid playerProfileModalCard">
+    <div class="playerProfileStandalone" id="playerProfileStandaloneSheet"></div>
+  </div>
+</div>
+
+
+
 <div class="modal hidden" id="playerChooserModal">
   <div class="modalCard solid playerChooserModalCard">
     <div class="modalHead">
@@ -1780,7 +1788,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3420"></script>
+<script src="app.js?v=3430"></script>
 
 </body>
 </html>

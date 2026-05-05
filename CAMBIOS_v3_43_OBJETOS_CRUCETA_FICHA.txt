@@ -1,0 +1,10 @@
+Tennis Direction Tracker v3.43
+
+Cambios aplicados:
+- Corregida la ventana de Objetos y herramientas para evitar solapes entre Plantillas rápidas, Modo colocación, Tamaño de objetos y Organizar selección.
+- Modo colocación y Tamaño de objetos quedan visibles siempre y separados en tarjetas propias.
+- Añadida cruceta verde persistente durante el arrastre de objetos en modo entrenador para saber exactamente dónde se colocará el objeto.
+- Cambiado el nombre visible de Modo demo a Modo partido.
+- Rediseñada la ficha de jugador con estructura de cabecera, foto, datos principales, métricas y pestañas: Información, Estadísticas y Notas.
+- La ficha de jugador se abre ahora en una ventana/modal independiente, no dentro de la biblioteca de jugadores.
+- Caché actualizada a v3.43.

@@ -279,7 +279,7 @@ const I18N = {
     apply: "Aplicar",
     start: "Iniciar",
     login: "Acceder",
-    demoMode: "Modo demo",
+    demoMode: "Modo partido",
     matchData: "Datos del partido",
     seqTitle: "Secuencia del punto",
     last: "Último:",
@@ -335,7 +335,7 @@ const I18N = {
     apply: "Apply",
     start: "Start",
     login: "Access",
-    demoMode: "Demo mode",
+    demoMode: "Match mode",
     matchData: "Match details",
     seqTitle: "Point sequence",
     last: "Last:",
@@ -401,7 +401,7 @@ const TDT_TEXT_TRANSLATIONS = {
   "Informes premium":"Premium reports",
   "Acceder":"Sign in",
   "Crear cuenta":"Create account",
-  "Modo demo":"Demo mode",
+  "Modo partido":"Match mode",
   "Modo entrenador":"Coach mode",
   "También puedes pulsar cualquier zona de la portada para continuar.":"You can also tap anywhere on the cover to continue.",
   "Convierte el tracking en una plataforma con imagen profesional.":"Turn tracking into a professional-looking platform.",
@@ -424,7 +424,7 @@ const TDT_TEXT_TRANSLATIONS = {
   "Tu contraseña":"Your password",
   "Recordar sesión en este dispositivo":"Remember session on this device",
   "Entrar en la plataforma":"Enter the platform",
-  "Entrar en modo demo":"Enter demo mode",
+  "Entrar en modo partido":"Enter match mode",
   "Entrar en modo entrenador":"Enter coach mode",
   "Nombre profesional":"Professional name",
   "Nombre del entrenador o academia":"Coach or academy name",
@@ -688,6 +688,9 @@ function applyI18n(){
 
 function closeIconMarkup(){
   return `<svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+}
+function backIconMarkup(){
+  return `<svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path><path d="M10 12h10"></path></svg>`;
 }
 function upgradeCloseButtons(scope=document){
   const ids = [
@@ -2468,7 +2471,7 @@ function videoAIStatus(msg){ const el = $("#videoAiStatus"); if (el) el.textCont
 function currentVideoAISessionPayload(){
   return {
     // Actualizar a la versión 3.33 para los metadatos de sesión de vídeo IA
-    version:"3.40",
+    version:"3.43",
     source:"video_ai_assisted",
     matchId: state?.matchId || null,
     createdAt: new Date().toISOString(),
@@ -6566,7 +6569,7 @@ function setCoachTool(tool){
   else if (c.activeTool === "dash") toast("Desplazamiento: primer toque inicio, segundo toque final");
   else toast("Toca la pista para colocar: " + coachToolLabel(c.activeTool));
 }
-function coachToolLabel(tool){ return ({ cone:"Cono", hoop:"Aro", basket:"Cesta", ladder:"Escalera", player:"Jugador", coach:"Entrenador", target:"Objetivo", dash:"Desplazamiento", text:"Nota", direction:"Dirección", template:"Plantilla" })[tool] || "Objeto"; }
+function coachToolLabel(tool){ return ({ cone:"Cono", hoop:"Aro", basket:"Cesta", ladder:"Escalera", player:"Jugador", coach:"Entrenador", target:"Objetivo", dash:"Desplazar", text:"Nota", direction:"Dirección", template:"Plantilla" })[tool] || "Objeto"; }
 
 const COACH_OBJECT_SIZE_PRESETS = { small:0.75, medium:1, large:1.15 };
 function coachObjectSizeBounds(type){
@@ -6701,6 +6704,26 @@ function coachSnapPoint(pt, options={}){
   return { point:{x:clamp01(x), y:clamp01(y)}, guides };
 }
 let __coachGuideTimer = null;
+let __coachDragCrossEl = null;
+function updateCoachDragCross(point, visible=true){
+  const layer = document.getElementById("coachObjectsLayer");
+  if (!layer) return;
+  if (!visible){ clearCoachDragCross(); return; }
+  if (!__coachDragCrossEl || !__coachDragCrossEl.isConnected){
+    __coachDragCrossEl = document.createElement("div");
+    __coachDragCrossEl.className = "coachDragCross";
+    __coachDragCrossEl.innerHTML = "<i></i>";
+    layer.appendChild(__coachDragCrossEl);
+  }
+  __coachDragCrossEl.style.left = (clamp01(point?.x ?? .5) * 100) + "%";
+  __coachDragCrossEl.style.top = (clamp01(point?.y ?? .5) * 100) + "%";
+}
+function clearCoachDragCross(){
+  if (__coachDragCrossEl){
+    __coachDragCrossEl.remove();
+    __coachDragCrossEl = null;
+  }
+}
 function showCoachAlignmentGuides(point, guides=[]){
   const layer = document.getElementById("coachObjectsLayer");
   if (!layer) return;
@@ -7178,6 +7201,7 @@ function wireCoachDraggableObject(el, obj, options={}){
     document.removeEventListener('pointermove', onMove);
     document.removeEventListener('pointerup', onUp);
     document.removeEventListener('pointercancel', onCancel);
+    el.classList.remove("dragging");
   };
   const updateEl=()=>{
     el.style.left=(clamp01(obj.x)*100)+'%';
@@ -7191,6 +7215,8 @@ function wireCoachDraggableObject(el, obj, options={}){
       if(!historyRecorded){ recordCoachHistory(); historyRecorded=true; }
       const pt = coachPointFromClient(e.clientX, e.clientY);
       obj.x=clamp01(pt.x); obj.y=clamp01(pt.y);
+      const snapPreview = coachSnapPoint(pt, {type:obj.type, excludeId:obj.id});
+      updateCoachDragCross(snapPreview.point, true);
       updateEl();
     }
   };
@@ -7210,9 +7236,11 @@ function wireCoachDraggableObject(el, obj, options={}){
     if(moved){
       e && e.preventDefault && e.preventDefault();
       finishDrag();
+      clearCoachDragCross();
       setTimeout(()=>{start=null; moved=false; historyRecorded=false;},0);
       return;
     }
+    clearCoachDragCross();
     const tap = options && typeof options.onTap === 'function' ? options.onTap : null;
     if (tap) tap(e);
     setTimeout(()=>{start=null; moved=false; historyRecorded=false;},0);
@@ -7221,14 +7249,17 @@ function wireCoachDraggableObject(el, obj, options={}){
     if(!start) return;
     cleanup();
     if(moved){ finishDrag(); }
+    clearCoachDragCross();
     setTimeout(()=>{start=null; moved=false; historyRecorded=false;},0);
   };
   el.addEventListener('pointerdown',(e)=>{
     if(e.target.closest && e.target.closest('.noteDelete,.ladderRotateBtn')) return;
     e.preventDefault();
     e.stopPropagation();
+    el.classList.add("dragging");
     start={x0:e.clientX,y0:e.clientY,pointerId:e.pointerId,ox:obj.x,oy:obj.y};
     moved=false; historyRecorded=false;
+    updateCoachDragCross({x:obj.x, y:obj.y}, true);
     try{ el.setPointerCapture && el.setPointerCapture(e.pointerId); }catch(_){ }
     document.addEventListener('pointermove',onMove,{passive:false});
     document.addEventListener('pointerup',onUp,{passive:false});
@@ -7978,7 +8009,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnPDFStats","click", exportStatsPDF);
 
   // close modals clicking outside
-  ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal","coachSaveModal","coachLibraryModal","coachObjectsModal","coachPreviewModal"].forEach(mid=>{
+  ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal","coachSaveModal","coachLibraryModal","coachObjectsModal","coachPreviewModal","playerProfileModal"].forEach(mid=>{
     const m = $("#"+mid);
     if (!m) return;
     m.addEventListener("click", (e)=>{
@@ -7999,7 +8030,7 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   // keyboard shortcuts
   window.addEventListener("keydown", (e)=>{
     if (e.key==="Escape"){
-      ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal","coachSaveModal","coachLibraryModal","coachObjectsModal","coachPreviewModal","finishMenu"].forEach(id=>{
+      ["saveLoadModal","gameModeModal","surfaceModal","languageModal","infoModal","historyModal","pointViewerModal","analyticsModal","statsModal","chartsModal","exportModal","dashboardModal","playersModal","accountModal","helpModal","legalModal","onboardingModal","coachSaveModal","coachLibraryModal","coachObjectsModal","coachPreviewModal","playerProfileModal","finishMenu"].forEach(id=>{
         const el=$("#"+id);
         if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
       });
@@ -8174,94 +8205,121 @@ function buildPlayerProfileDataset(profile){
   return { history, totals };
 }
 function renderPlayerProfileDetail(id){
-  const shell = $("#playerProfileSheet");
+  const shell = $("#playerProfileStandaloneSheet") || $("#playerProfileSheet");
   if (!shell) return;
   const profile = getPlayerProfiles().find(p => p.id === id);
-  if (!profile){ shell.classList.add("hidden"); shell.innerHTML = ""; return; }
+  if (!profile){ closePlayerProfileDetail(); return; }
   const { history, totals } = buildPlayerProfileDataset(profile);
   const firstServePct = totals.servePoints ? Math.round((totals.firstIn / totals.servePoints) * 100) : 0;
   const pointsWonPct = totals.totalPoints ? Math.round((totals.pointsWon / totals.totalPoints) * 100) : 0;
   const returnInPct = totals.returnPoints ? Math.round((totals.returnsIn / totals.returnPoints) * 100) : 0;
   const breakPct = totals.bpOpp ? Math.round((totals.bpConv / totals.bpOpp) * 100) : 0;
+  const winPct = totals.matches ? Math.round((totals.wins / Math.max(1, totals.matches)) * 100) : 0;
+  const handLabel = (profile.hand || "R") === "L" ? tr("Zurdo","Left-handed") : tr("Diestro","Right-handed");
+  const sexLabel = (profile.sex || "M") === "F" ? tr("Mujer","Female") : tr("Hombre","Male");
+  const statusLabel = state.playerAssignments?.A === profile.id ? "A" : state.playerAssignments?.B === profile.id ? "B" : tr("Libre","Free");
   const insight = totals.matches === 0
     ? tr('Aún no hay partidos guardados para este jugador. Guarda encuentros asignados para construir su historial.','No saved matches yet for this player. Save assigned matches to build the player history.')
     : totals.ue > totals.winners
       ? (isEn() ? `Currently this player makes more unforced errors (${totals.ue}) than winners (${totals.winners}).` : `Ahora mismo comete más errores no forzados (${totals.ue}) que winners (${totals.winners}).`)
       : (isEn() ? `Positive attacking balance: ${totals.winners} winners versus ${totals.ue} unforced errors.` : `Balance ofensivo positivo: ${totals.winners} winners frente a ${totals.ue} errores no forzados.`);
   shell.innerHTML = `
-    <section class="playerSheetBanner">
-      <div class="playerSheetTop">
-        <div class="playerSheetIdentity">
-          <div class="playerSheetPhoto ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : defaultAvatarSVG(profile.sex || 'M')}</div>
-          <div class="playerSheetText">
-            <div class="playerSheetEyebrow">${tr("Perfil del jugador","Player profile")}</div>
-            <h3>${escapeHtml(profile.name || 'Jugador')}</h3>
-            <div class="playerSheetMeta">
-              <span>${escapeHtml(profile.category || tr("Sin categoría","No category"))}</span>
-              <span>${(profile.hand || "R") === "L" ? tr("Zurdo","Left-handed") : tr("Diestro","Right-handed")}</span>
-              <span>${(profile.sex || "M") === "F" ? tr("Mujer","Female") : tr("Hombre","Male")}</span>
-              <span>${totals.matches} ${tr("partidos asignados","assigned matches")}</span>
-            </div>
-          </div>
+    <section class="playerFichaWindow" data-profile-id="${escapeHtml(profile.id)}">
+      <header class="playerFichaHeader">
+        <button class="playerFichaIconBtn" type="button" data-profile-action="closeDetail" aria-label="${tr("Volver","Back")}">${backIconMarkup()}</button>
+        <div class="playerFichaTitleBlock">
+          <div class="playerFichaTitle">${tr("Ficha de jugador","Player card")}</div>
+          <div class="playerFichaSub">${escapeHtml(profile.name || 'Jugador')} · ${totals.matches} ${tr("partidos","matches")}</div>
         </div>
-        <div class="playerSheetHeaderActions">
-          <button class="chip" type="button" data-profile-action="edit" data-profile-id="${profile.id}">${tr("Editar ficha","Edit profile")}</button>
-          <button class="chip modalCloseX" type="button" data-profile-action="closeDetail" aria-label="${tr("Cerrar","Close")}" title="${tr("Cerrar","Close")}">${closeIconMarkup()}</button>
+        <div class="playerFichaHeaderActions">
+          <button class="playerFichaIconBtn" type="button" data-profile-action="edit" data-profile-id="${escapeHtml(profile.id)}" aria-label="${tr("Editar","Edit")}">${playerEditIcon()}</button>
+          <button class="playerFichaIconBtn" type="button" data-profile-action="closeDetail" aria-label="${tr("Cerrar","Close")}">${closeIconMarkup()}</button>
+        </div>
+      </header>
+
+      <div class="playerFichaHero">
+        <div class="playerFichaPhoto ${profile.photoData ? 'hasPhoto' : ''}">${profile.photoData ? `<img src="${profile.photoData}" alt="Foto de ${escapeHtml(profile.name || 'Jugador')}">` : defaultAvatarSVG(profile.sex || 'M')}</div>
+        <div class="playerFichaIdentity">
+          <div class="playerFichaNameRow"><h3>${escapeHtml(profile.name || 'Jugador')}</h3><span class="playerFichaStatus">${escapeHtml(statusLabel)}</span></div>
+          <div class="playerFichaMetaLine">${escapeHtml(profile.category || tr("Sin categoría","No category"))} · ${escapeHtml(handLabel)} · ${escapeHtml(sexLabel)}</div>
+          <div class="playerFichaMetaLine">${tr("Objetivo","Goal")}: ${escapeHtml(profile.goal || '—')}</div>
         </div>
       </div>
-      <div class="playerSheetStatsGrid">
-        <article class="playerStatTile"><strong>${totals.matches}</strong><span>${tr("Partidos","Matches")}</span></article>
-        <article class="playerStatTile"><strong>${totals.wins}</strong><span>${tr("Victorias","Wins")}</span></article>
-        <article class="playerStatTile"><strong>${pointsWonPct}%</strong><span>${tr("Puntos ganados","Points won")}</span></article>
-        <article class="playerStatTile"><strong>${firstServePct}%</strong><span>${tr("1º saque dentro","1st serve in")}</span></article>
-        <article class="playerStatTile"><strong>${returnInPct}%</strong><span>${tr("Restos dentro","Returns in")}</span></article>
-        <article class="playerStatTile"><strong>${breakPct}%</strong><span>${tr("Break convertidos","Break converted")}</span></article>
+
+      <div class="playerFichaStatsGrid">
+        <article><span>${tr("Partidos","Matches")}</span><strong>${totals.matches}</strong><small>${tr("Jugados","Played")}</small></article>
+        <article><span>${tr("Victorias","Wins")}</span><strong>${winPct}%</strong><small>${totals.wins}/${totals.matches}</small></article>
+        <article><span>${tr("Puntos","Points")}</span><strong>${pointsWonPct}%</strong><small>${tr("Ganados","Won")}</small></article>
+        <article><span>${tr("1º saque","1st serve")}</span><strong>${firstServePct}%</strong><small>${tr("Dentro","In")}</small></article>
       </div>
-      <div class="playerSheetGrid">
-        <article class="playerDataPanel">
-          <h4>${tr("Ficha técnica","Player card")}</h4>
-          <ul class="playerDataList">
-            <li><b>${tr("Objetivo","Goal")}:</b> ${escapeHtml(profile.goal || '—')}</li>
-            <li><b>${tr("Fortalezas","Strengths")}:</b> ${escapeHtml(profile.strengths || '—')}</li>
-            <li><b>${tr("Debilidades","Weaknesses")}:</b> ${escapeHtml(profile.weaknesses || '—')}</li>
-            <li><b>${tr("Notas","Notes")}:</b> ${escapeHtml(profile.notes || '—')}</li>
-          </ul>
-        </article>
-        <article class="playerDataPanel">
-          <h4>${tr("Lectura rápida","Quick read")}</h4>
-          <div class="playerInsightBox">${escapeHtml(insight)}</div>
-          <ul class="playerDataList compact">
-            <li><b>Winners:</b> ${totals.winners}</li>
-            <li><b>${tr("Errores no forzados","Unforced errors")}:</b> ${totals.ue}</li>
-            <li><b>${tr("Puntos al saque","Serve points")}:</b> ${totals.servePointsWon}/${totals.servePoints}</li>
-            <li><b>${tr("Puntos al resto","Return points")}:</b> ${totals.returnPointsWon}/${totals.returnPoints}</li>
-            <li><b>${tr("Puntos de break","Break points")}:</b> ${totals.bpConv}/${totals.bpOpp}</li>
-          </ul>
-        </article>
+
+      <nav class="playerFichaTabs" role="tablist" aria-label="${tr("Secciones de ficha","Profile sections")}">
+        <button class="active" type="button" data-profile-tab="info">${tr("Información","Information")}</button>
+        <button type="button" data-profile-tab="stats">${tr("Estadísticas","Stats")}</button>
+        <button type="button" data-profile-tab="notes">${tr("Notas","Notes")}</button>
+      </nav>
+
+      <div class="playerFichaTabPanel active" data-profile-panel="info">
+        <div class="playerFichaRows">
+          <div><span>${tr("Categoría","Category")}</span><strong>${escapeHtml(profile.category || '—')}</strong></div>
+          <div><span>${tr("Mano hábil","Playing hand")}</span><strong>${escapeHtml(handLabel)}</strong></div>
+          <div><span>${tr("Sexo","Sex")}</span><strong>${escapeHtml(sexLabel)}</strong></div>
+          <div><span>${tr("Asignación actual","Current assignment")}</span><strong>${escapeHtml(statusLabel)}</strong></div>
+          <div><span>${tr("Objetivo principal","Main goal")}</span><strong>${escapeHtml(profile.goal || '—')}</strong></div>
+        </div>
       </div>
-      <article class="playerDataPanel">
-        <h4>${tr("Historial del jugador","Player history")}</h4>
-        ${history.length ? `<div class="playerHistoryList">${history.map(item => `<div class="playerHistoryRow">
-          <div class="playerHistoryMain">
-            <strong>${escapeHtml(item.name)}</strong>
-            <span>${escapeHtml(item.opponent)} · ${new Date(item.when || Date.now()).toLocaleDateString()} · ${item.pointsCount} ${tr("puntos","points")}</span>
-          </div>
-          <div class="playerHistorySide">
-            <span class="playerHistoryBadge ${item.result.tone}">${item.result.status}</span>
-            <small>${Math.round(((item.stats.pointsWon || 0) / Math.max(1, item.pointsCount)) * 100)}% ${tr("puntos","points")}</small>
-          </div>
-        </div>`).join('')}</div>` : `<div class="playerHistoryEmpty">${tr("Todavía no hay partidos guardados para este jugador.","There are no saved matches for this player yet.")}</div>`}
-      </article>
+
+      <div class="playerFichaTabPanel" data-profile-panel="stats">
+        <div class="playerFichaRows compact">
+          <div><span>${tr("Puntos ganados","Points won")}</span><strong>${totals.pointsWon}/${totals.totalPoints} · ${pointsWonPct}%</strong></div>
+          <div><span>${tr("Puntos al saque","Serve points")}</span><strong>${totals.servePointsWon}/${totals.servePoints}</strong></div>
+          <div><span>${tr("Restos dentro","Returns in")}</span><strong>${returnInPct}%</strong></div>
+          <div><span>${tr("Winners","Winners")}</span><strong>${totals.winners}</strong></div>
+          <div><span>${tr("Errores no forzados","Unforced errors")}</span><strong>${totals.ue}</strong></div>
+          <div><span>${tr("Break convertidos","Break converted")}</span><strong>${totals.bpConv}/${totals.bpOpp} · ${breakPct}%</strong></div>
+        </div>
+        <div class="playerFichaInsight">${escapeHtml(insight)}</div>
+      </div>
+
+      <div class="playerFichaTabPanel" data-profile-panel="notes">
+        <div class="playerFichaNotesGrid">
+          <article><h4>${tr("Fortalezas","Strengths")}</h4><p>${escapeHtml(profile.strengths || '—')}</p></article>
+          <article><h4>${tr("Debilidades","Weaknesses")}</h4><p>${escapeHtml(profile.weaknesses || '—')}</p></article>
+          <article><h4>${tr("Notas del entrenador","Coach notes")}</h4><p>${escapeHtml(profile.notes || '—')}</p></article>
+        </div>
+        <div class="playerFichaHistory">
+          <h4>${tr("Historial reciente","Recent history")}</h4>
+          ${history.length ? history.slice(0,5).map(item => `<div class="playerFichaHistoryRow"><span>${escapeHtml(item.name)}</span><strong>${item.result.status}</strong></div>`).join('') : `<p>${tr("Todavía no hay partidos guardados para este jugador.","There are no saved matches for this player yet.")}</p>`}
+        </div>
+      </div>
     </section>`;
   shell.classList.remove("hidden");
   upgradeCloseButtons(shell);
-  shell.scrollIntoView({ block:"start", behavior:"smooth" });
+  openModal("#playerProfileModal");
+  setPlayerProfileTab("info");
+}
+
+function setPlayerProfileTab(tab="info"){
+  const root = document.getElementById("playerProfileModal");
+  if (!root) return;
+  const key = ["info","stats","notes"].includes(tab) ? tab : "info";
+  root.querySelectorAll("[data-profile-tab]").forEach(btn=>{
+    const active = btn.dataset.profileTab === key;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  root.querySelectorAll("[data-profile-panel]").forEach(panel=>{
+    panel.classList.toggle("active", panel.dataset.profilePanel === key);
+  });
 }
 function closePlayerProfileDetail(){
-  const shell = $("#playerProfileSheet");
-  if (!shell) return;
-  shell.innerHTML = "";
-  shell.classList.add("hidden");
+  ["#playerProfileStandaloneSheet", "#playerProfileSheet"].forEach(sel=>{
+    const shell = $(sel);
+    if (!shell) return;
+    shell.innerHTML = "";
+    shell.classList.add("hidden");
+  });
+  closeModal("#playerProfileModal");
 }
 function playerEditIcon(){
   return `<svg class="svgIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/><path d="M14.06 4.94l3.75 3.75"/></svg>`;
@@ -8613,7 +8671,7 @@ function renderAccountModal(){
   const profiles = getPlayerProfiles();
   const matches = getSavedMatches();
   const current = getCurrentAccount();
-  const mode = session?.isDemo ? "Modo demo" : "Cuenta local";
+  const mode = session?.isDemo ? "Modo partido" : "Cuenta local";
   const created = current?.createdAt ? new Date(current.createdAt).toLocaleDateString('es-ES') : "Sesión local";
   box.innerHTML = `
     <div class="accountBrandPanel dataPanel">
@@ -8844,18 +8902,12 @@ function initProfessionalShell(){
     if (action === "assignB") assignProfileToSide(id, "B");
     if (action === "view"){
       closePlayerChooser();
-      openModal("#playersModal");
-      const choosePane = $("#playersChoosePane");
-      if (choosePane){
-        choosePane.classList.remove("hidden");
-        choosePane.classList.add("isVisibleForDetail");
-      }
-      const createPane = $("#playersCreatePane");
-      if (createPane) createPane.classList.add("hidden");
+      closePlayers();
       renderPlayerProfileDetail(id);
     }
     if (action === "edit"){
       closePlayerChooser();
+      closePlayerProfileDetail();
       openModal("#playersModal");
       loadProfileIntoForm(id);
     }
@@ -8865,7 +8917,12 @@ function initProfessionalShell(){
   $("#playerProfileList")?.addEventListener("click", playerActionDelegate);
   $("#playerProfileSheet")?.addEventListener("click", playerActionDelegate);
   $("#playerChooserList")?.addEventListener("click", playerActionDelegate);
-  ["dashboardModal","playersModal","playerChooserModal","accountModal","helpModal","legalModal","onboardingModal"].forEach(mid=>{
+  $("#playerProfileModal")?.addEventListener("click", (e)=>{
+    const tabBtn = e.target.closest("[data-profile-tab]");
+    if (tabBtn){ e.preventDefault(); setPlayerProfileTab(tabBtn.dataset.profileTab || "info"); return; }
+    playerActionDelegate(e);
+  });
+  ["dashboardModal","playersModal","playerChooserModal","playerProfileModal","accountModal","helpModal","legalModal","onboardingModal"].forEach(mid=>{
     const modal = $("#"+mid);
     if (!modal) return;
     modal.addEventListener("click", (e)=>{ if (e.target === modal) closeModal(mid); });

@@ -3,16 +3,16 @@
 // - HTML (navegación): network-first
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
-// v3.42: barra sin blink, logo centrado y objetos visibles.
+// v3.43: objetos, cruceta de arrastre, modo partido y ficha premium.
 
-const CACHE = "tennis-tracker-web-v3.42-topbar-logo-objects";
+const CACHE = "tennis-tracker-web-v3.43-player-card-coach-tools";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=3420",
-  "./style-futuristic.css?v=3420",
-  "./style-premium-direction.css?v=3420",
-  "./app.js?v=3420",
+  "./style.css?v=3430",
+  "./style-futuristic.css?v=3430",
+  "./style-premium-direction.css?v=3430",
+  "./app.js?v=3430",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",
