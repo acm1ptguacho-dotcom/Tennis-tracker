@@ -3662,14 +3662,12 @@ function renderFinishPlayerVisuals(){
     if (!card) return;
     const avatar = card.querySelector('.finishPlayerAvatar');
     const name = card.querySelector('.pName');
-    const tag = card.querySelector('.pTag');
-    const profile = getAssignedProfile(side);
+        const profile = getAssignedProfile(side);
     if (avatar){
       avatar.innerHTML = playerAvatarMarkup(side);
       avatar.classList.toggle('hasPhoto', !!(profile && profile.photoData));
     }
     if (name) name.textContent = playerName(side);
-    if (tag) tag.textContent = side;
   });
   const selAvatar = $("#finishSelectedAvatar");
   const selPlayer = finishSelectedPlayer;

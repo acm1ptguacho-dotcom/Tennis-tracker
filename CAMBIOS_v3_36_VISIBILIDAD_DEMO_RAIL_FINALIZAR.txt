@@ -1,0 +1,9 @@
+Tennis Direction Tracker v3.36
+
+Cambios aplicados según feedback:
+- Interfaz menos oscura: se añadieron iluminaciones premium lima/cian, superficies algo más claras, bordes más visibles y mayor separación entre tarjetas.
+- Modo demo: marcador reducido para que no domine la pantalla.
+- Modo demo: rail separado del diagrama de pista, evitando superposición sobre la pista.
+- Modo demo: botones del rail más grandes y cómodos, pero todavía por debajo del tamaño usado en modo entrenador.
+- Finalizar punto: las tarjetas de jugador muestran solo avatar/foto de perfil y nombre. Se eliminó la letra A/B lateral de la tarjeta.
+- Fallback de nombres mantenido: si no hay nombre personalizado, se muestra Jugador A o Jugador B.

@@ -10,10 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Actualizamos la versión de las hojas de estilo para romper la caché del navegador -->
 <!-- Bump cache version to ensure latest styles load in v3.35 -->
-<link rel="stylesheet" href="style.css?v=3350" />
+<link rel="stylesheet" href="style.css?v=3360" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3350" />
-  <link rel="stylesheet" href="style-premium-direction.css?v=3350" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3360" />
+  <link rel="stylesheet" href="style-premium-direction.css?v=3360" />
 </head>
 <body>
 
@@ -371,8 +371,6 @@
           <div class="baselineName baselineBottom" id="baselineBottom">Jugador A</div>
         </div>
         <button id="btnCoachHalfSwitch" class="coachHalfSwitch" type="button" hidden aria-label="Ver media pista superior">↑</button>
-<!-- botón de acciones (confirmar / finalizar punto) -->
-        <button id="finishBall" class="tennisBall inCourt fab" type="button" aria-label="Acciones del punto">✓</button>
       </div>
 
         <div class="coachHistoryControls coachOnly" id="coachHistoryControls" aria-label="Deshacer y rehacer acciones del ejercicio">
@@ -391,6 +389,11 @@
 
       <!-- rail lateral: evita tapar zonas clicables en móvil -->
       <div class="courtRail" aria-label="Acciones rápidas">
+        <div class="quickItem demoRailBallItem" id="qiPointActions">
+          <button id="finishBall" class="tennisBall railBallAction quickBtn good" type="button" aria-label="Acciones del punto">✓</button>
+          <div class="quickLbl">Punto</div>
+        </div>
+
         <div class="quickItem" id="qiScoreToggle">
           <button class="quickBtn eyeToggle" id="btnEyeScore" type="button" aria-label="Ocultar marcador" aria-pressed="false" title="Ocultar/mostrar marcador">
             <svg class="svgIcon eyeOpen" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -631,24 +634,12 @@
       <div class="finishStep finishPlayerStep" id="finishPlayerStep">
         <div class="finishStepTitle" id="finishWhoTitle">¿Quién finaliza el punto?</div>
         <div class="finishPlayerCards" id="finishPlayerCards">
-          <!--
-            The player cards were previously arranged vertically (letter, avatar, name).
-            To make them more compact and aligned, wrap the letter and avatar in a row container
-            and place the player name below. This improves visual hierarchy and keeps the
-            letter/face combination on a single line.
-          -->
           <button class="finishPlayerCard" id="finishSelectA" type="button" data-player="A">
-            <div class="finishPlayerTop">
-              <span class="pTag">A</span>
-              <span class="finishPlayerAvatar" id="finishAvatarA" aria-hidden="true"></span>
-            </div>
+            <span class="finishPlayerAvatar" id="finishAvatarA" aria-hidden="true"></span>
             <span class="pName" id="finishNameA">Jugador A</span>
           </button>
           <button class="finishPlayerCard" id="finishSelectB" type="button" data-player="B">
-            <div class="finishPlayerTop">
-              <span class="pTag">B</span>
-              <span class="finishPlayerAvatar" id="finishAvatarB" aria-hidden="true"></span>
-            </div>
+            <span class="finishPlayerAvatar" id="finishAvatarB" aria-hidden="true"></span>
             <span class="pName" id="finishNameB">Jugador B</span>
           </button>
         </div>
@@ -1792,7 +1783,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3350"></script>
+<script src="app.js?v=3360"></script>
 
 </body>
 </html>
