@@ -3,16 +3,16 @@
 // - HTML (navegación): network-first
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
-// v3.40: Ajustes Vídeo IA vertical, menú y contornos de pista.
+// v3.41: Ajustes Vídeo IA vertical, menú y contornos de pista.
 
-const CACHE = "tennis-tracker-web-v3.40-video-ai-portrait-menu-court-fixes";
+const CACHE = "tennis-tracker-web-v3.41-video-ai-portrait-menu-court-fixes";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=3400",
-  "./style-futuristic.css?v=3400",
-  "./style-premium-direction.css?v=3400",
-  "./app.js?v=3400",
+  "./style.css?v=3410",
+  "./style-futuristic.css?v=3410",
+  "./style-premium-direction.css?v=3410",
+  "./app.js?v=3410",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",

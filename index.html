@@ -10,10 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Actualizamos la versión de las hojas de estilo para romper la caché del navegador -->
 <!-- Bump cache version to ensure latest styles load in v3.35 -->
-<link rel="stylesheet" href="style.css?v=3400" />
+<link rel="stylesheet" href="style.css?v=3410" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3400" />
-  <link rel="stylesheet" href="style-premium-direction.css?v=3400" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3410" />
+  <link rel="stylesheet" href="style-premium-direction.css?v=3410" />
 </head>
 <body>
 
@@ -53,7 +53,7 @@
          Actualiza este número cada vez que se genere una nueva versión. -->
     <!-- Versión visible: actualiza este número al generar una nueva revisión -->
     <!-- Actualizamos el número de versión a v3.35 -->
-    <div class="splashVersion" id="splashVersion">v3.40</div>
+    <div class="splashVersion" id="splashVersion">v3.41</div>
   </div>
 </div>
 
@@ -813,23 +813,23 @@
       </div>
     </section>
 
-    <!-- Modo de colocación y tamaño de objetos: reinsertados debajo de plantillas -->
-    <details class="coachObjectsDropdown" id="coachPlacementDetails">
-      <summary><span><b>Modo colocación</b><small id="coachPlacementSummary">Alineado · guías magnéticas</small></span><i>⌄</i></summary>
+    <!-- Modo de colocación y tamaño de objetos: visibles siempre, sin desplegables -->
+    <section class="coachObjectsDropdown coachObjectsStatic" id="coachPlacementDetails" aria-label="Modo de colocación">
+      <div class="coachObjectsStaticHead"><span><b>Modo colocación</b><small id="coachPlacementSummary">Alineado · guías magnéticas</small></span></div>
       <div class="coachPlacementModes" role="group" aria-label="Modo de colocación de objetos">
         <button class="coachPlacementBtn" data-placement-mode="free" type="button"><b>Libre</b><small>Sin ayuda</small></button>
         <button class="coachPlacementBtn active" data-placement-mode="aligned" type="button"><b>Alineado</b><small>Guías magnéticas</small></button>
         <button class="coachPlacementBtn" data-placement-mode="precise" type="button"><b>Preciso</b><small>Rejilla invisible</small></button>
       </div>
-    </details>
-    <details class="coachObjectsDropdown coachSizePanel" id="coachSizeDetails">
-      <summary><span><b>Tamaño de objetos</b><small id="coachSizeSummary">M · medio</small></span><i>⌄</i></summary>
+    </section>
+    <section class="coachObjectsDropdown coachObjectsStatic coachSizePanel" id="coachSizeDetails" aria-label="Tamaño de objetos">
+      <div class="coachObjectsStaticHead"><span><b>Tamaño de objetos</b><small id="coachSizeSummary">M · medio</small></span></div>
       <div class="coachSizePresets" role="group" aria-label="Tamaño de objetos nuevos">
         <button class="coachSizePresetBtn" data-object-size="small" type="button"><b>S</b><small>Pequeño</small></button>
         <button class="coachSizePresetBtn active" data-object-size="medium" type="button"><b>M</b><small>Medio</small></button>
         <button class="coachSizePresetBtn" data-object-size="large" type="button"><b>L</b><small>Grande</small></button>
       </div>
-    </details>
+    </section>
 
     <section class="coachObjectsSection coachSelectionPanel">
       <div class="coachSectionHead"><strong>Organizar selección</strong><span id="coachSelectionCount">Toca objetos en la pista para seleccionarlos</span></div>
@@ -1780,7 +1780,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3400"></script>
+<script src="app.js?v=3410"></script>
 
 </body>
 </html>

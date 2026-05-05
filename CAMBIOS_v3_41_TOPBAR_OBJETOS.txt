@@ -1,0 +1,9 @@
+Tennis Direction Tracker v3.41
+
+Cambios:
+- La barra superior deja de estar fixed en móvil y vuelve a ocupar espacio real dentro de la web.
+- Corregido el solape de la barra superior con ventanas, menús, biblioteca, modo demo y modo entrenador.
+- La barra superior queda alineada al ancho/márgenes reales del contenido móvil.
+- Los modales y el menú lateral quedan por encima de la barra principal.
+- Vídeo IA mantiene la barra principal oculta para la cámara en pantalla completa.
+- En modo entrenador, el menú de objetos ya no usa desplegables para "Modo colocación" ni "Tamaño de objetos"; ambas secciones quedan siempre visibles.
