@@ -3,16 +3,16 @@
 // - HTML (navegación): network-first
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
-// v3.39: Vídeo IA en pantalla completa con adaptación a orientación panorámica.
+// v3.40: Ajustes Vídeo IA vertical, menú y contornos de pista.
 
-const CACHE = "tennis-tracker-web-v3.39-video-ai-fullscreen-orientation";
+const CACHE = "tennis-tracker-web-v3.40-video-ai-portrait-menu-court-fixes";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=3390",
-  "./style-futuristic.css?v=3390",
-  "./style-premium-direction.css?v=3390",
-  "./app.js?v=3390",
+  "./style.css?v=3400",
+  "./style-futuristic.css?v=3400",
+  "./style-premium-direction.css?v=3400",
+  "./app.js?v=3400",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",

@@ -1,0 +1,10 @@
+Versión v3.40 - Correcciones de Vídeo IA vertical, menú y contornos de pista
+
+Cambios incluidos:
+- El header principal se oculta al abrir Vídeo IA para que no tape la cámara ni los controles.
+- En Vídeo IA vertical, los botones Iniciar cámara / Grabar / Pausar quedan visibles por encima del panel de calibración.
+- En Vídeo IA vertical, el panel de calibración se convierte en una bandeja inferior compacta con botones accesibles.
+- El modo horizontal de Vídeo IA se mantiene sin cambios.
+- El menú lateral ahora queda por encima de la barra superior, evitando solapes al hacer scroll.
+- El contorno del diagrama de pista queda estable aunque se oculte marcador o rail.
+- Caché y versión actualizadas a v3.40.

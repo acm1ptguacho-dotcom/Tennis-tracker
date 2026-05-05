@@ -2468,7 +2468,7 @@ function videoAIStatus(msg){ const el = $("#videoAiStatus"); if (el) el.textCont
 function currentVideoAISessionPayload(){
   return {
     // Actualizar a la versión 3.33 para los metadatos de sesión de vídeo IA
-    version:"3.39",
+    version:"3.40",
     source:"video_ai_assisted",
     matchId: state?.matchId || null,
     createdAt: new Date().toISOString(),
@@ -2899,6 +2899,8 @@ function renderVideoAIButtons(){
   if (stop) stop.disabled = !videoAI.recording;
   if (badge) badge.classList.toggle("hidden", !videoAI.recording);
   if (empty) empty.classList.toggle("hidden", hasStream);
+  document.body.classList.toggle("video-ai-camera-active", hasStream);
+  document.body.classList.toggle("video-ai-recording", !!videoAI.recording);
 
   // Actualiza la visibilidad de los controles integrados en la ventana de vídeo.
   const overlayStart = document.getElementById('btnVideoAIStartCamera');
@@ -3107,7 +3109,7 @@ function openVideoAI(){
 async function closeVideoAI(){
   await stopVideoAICamera(false);
   await exitVideoAIFullscreen();
-  document.body.classList.remove("video-ai-active", "video-ai-landscape", "video-ai-portrait", "video-ai-camera-landscape", "video-ai-camera-portrait");
+  document.body.classList.remove("video-ai-active", "video-ai-landscape", "video-ai-portrait", "video-ai-camera-landscape", "video-ai-camera-portrait", "video-ai-camera-active", "video-ai-recording");
   closeModal("#videoAiModal");
 }
 
