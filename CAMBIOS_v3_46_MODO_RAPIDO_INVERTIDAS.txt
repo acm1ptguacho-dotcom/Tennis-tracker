@@ -1,0 +1,7 @@
+v3.46 · Modo rápido con invertidas
+
+- Se vuelven a añadir los comandos Invertida cruzada e Invertida paralela en Modo rápido.
+- Se mantiene la independencia entre Modo rápido y Modo partido.
+- Se mantiene el rail superior horizontal del Modo rápido.
+- Se mantiene el panel simplificado y el orden solicitado.
+- Se actualiza la caché a v3460 para forzar recarga de app.js y estilos.

@@ -158,6 +158,96 @@ function ensureCoachState(){
 }
 function isCoachMode(){ return !!(state.ui && state.ui.appMode === "coach"); }
 function isQuickMode(){ return !!(state.ui && state.ui.appMode === "quick"); }
+const RUNTIME_SESSION_FIELDS = ["sets","games","points","matchMode","isTiebreak","tb","tbStartingServer","currentServer","matchFinished","point","matchPoints","undoStack","setHistory","meta"];
+function defaultMeta(){ return { event:"", venue:"", date:"", time:"", conditions:"", notes:"" }; }
+function cloneRuntimeValue(value){
+  try{ return JSON.parse(JSON.stringify(value == null ? null : value)); }
+  catch(_){ return value; }
+}
+function createDefaultRuntimeSession(){
+  return {
+    sets:{A:0,B:0},
+    games:{A:0,B:0},
+    points:{A:0,B:0},
+    matchMode:"standard",
+    isTiebreak:false,
+    tb:{A:0,B:0},
+    tbStartingServer:"A",
+    currentServer:"A",
+    matchFinished:false,
+    point:null,
+    matchPoints:[],
+    undoStack:[],
+    setHistory:[],
+    meta:defaultMeta()
+  };
+}
+function isQuickPoint(point){
+  if (!point) return false;
+  if (point.sourceMode === "quick") return true;
+  if (point.finishDetail && point.finishDetail.sourceMode === "quick") return true;
+  return Array.isArray(point.events) && point.events.some(e => e && e.meta && e.meta.sourceMode === "quick");
+}
+function normalizeRuntimeSession(raw){
+  const base = createDefaultRuntimeSession();
+  const src = raw && typeof raw === "object" ? raw : {};
+  RUNTIME_SESSION_FIELDS.forEach(k=>{
+    if (typeof src[k] !== "undefined") base[k] = cloneRuntimeValue(src[k]);
+  });
+  base.sets = Object.assign({A:0,B:0}, base.sets || {});
+  base.games = Object.assign({A:0,B:0}, base.games || {});
+  base.points = Object.assign({A:0,B:0}, base.points || {});
+  base.tb = Object.assign({A:0,B:0}, base.tb || {});
+  base.matchMode = base.matchMode || "standard";
+  base.tbStartingServer = base.tbStartingServer === "B" ? "B" : "A";
+  base.currentServer = base.currentServer === "B" ? "B" : "A";
+  base.matchFinished = !!base.matchFinished;
+  base.matchPoints = Array.isArray(base.matchPoints) ? base.matchPoints : [];
+  base.undoStack = Array.isArray(base.undoStack) ? base.undoStack : [];
+  base.setHistory = Array.isArray(base.setHistory) ? base.setHistory : [];
+  base.meta = Object.assign(defaultMeta(), base.meta || {});
+  return base;
+}
+function runtimeSessionFromState(){
+  const snap = createDefaultRuntimeSession();
+  RUNTIME_SESSION_FIELDS.forEach(k=>{
+    if (typeof state !== "undefined" && typeof state[k] !== "undefined") snap[k] = cloneRuntimeValue(state[k]);
+  });
+  return normalizeRuntimeSession(snap);
+}
+function applyRuntimeSessionToState(raw){
+  const snap = normalizeRuntimeSession(raw);
+  RUNTIME_SESSION_FIELDS.forEach(k=>{ state[k] = cloneRuntimeValue(snap[k]); });
+  if (state.point && state.point.coach) state.point = null;
+}
+function deriveLegacyModeSessions(){
+  const current = normalizeRuntimeSession(runtimeSessionFromState());
+  const points = Array.isArray(current.matchPoints) ? current.matchPoints : [];
+  const quickPoints = points.filter(isQuickPoint);
+  const matchPoints = points.filter(p=>!isQuickPoint(p));
+  const match = normalizeRuntimeSession({ ...current, matchPoints });
+  const quick = normalizeRuntimeSession({ ...createDefaultRuntimeSession(), matchPoints:quickPoints });
+  if (state.ui && state.ui.appMode === "quick") return { match, quick:current };
+  return { match, quick };
+}
+function ensureModeSessions(){
+  if (!state.modeSessions || typeof state.modeSessions !== "object") state.modeSessions = deriveLegacyModeSessions();
+  state.modeSessions.match = normalizeRuntimeSession(state.modeSessions.match || createDefaultRuntimeSession());
+  state.modeSessions.quick = normalizeRuntimeSession(state.modeSessions.quick || createDefaultRuntimeSession());
+  return state.modeSessions;
+}
+function syncActiveRuntimeSession(){
+  if (!state || !state.ui) return;
+  const mode = state.ui.appMode;
+  if (mode !== "match" && mode !== "quick") return;
+  const sessions = ensureModeSessions();
+  sessions[mode] = runtimeSessionFromState();
+}
+function loadRuntimeSessionForMode(mode){
+  const sessions = ensureModeSessions();
+  const key = mode === "quick" ? "quick" : "match";
+  applyRuntimeSessionToState(sessions[key]);
+}
 function ensureQuickState(){
   if (!state.quick || typeof state.quick !== "object") state.quick = { trackedPlayer:"A", columnsRotated:false, lastSummary:"" };
   state.quick.trackedPlayer = state.quick.trackedPlayer === "B" ? "B" : "A";
@@ -226,7 +316,11 @@ function createDefaultState(){
       columnsRotated:false,
       lastSummary:""
     },
-    coach: createDefaultCoachState()
+    coach: createDefaultCoachState(),
+    modeSessions: {
+      match: createDefaultRuntimeSession(),
+      quick: createDefaultRuntimeSession()
+    }
   };
 }
 
@@ -754,6 +848,7 @@ function formatSnapshot(s){
 
 
 function persist(){
+  try{ syncActiveRuntimeSession(); }catch(_){}
   try{
     localStorage.setItem(getStateStorageKey(), JSON.stringify(state));
   }catch(e){
@@ -793,6 +888,12 @@ function load(){
     if (!state.ui.appMode) state.ui.appMode = "match";
     ensureQuickState();
     ensureCoachState();
+    const hadModeSessions = !!(state.modeSessions && typeof state.modeSessions === "object" && (state.modeSessions.match || state.modeSessions.quick));
+    ensureModeSessions();
+    if (state.ui.appMode === "match" || state.ui.appMode === "quick"){
+      if (hadModeSessions) state.modeSessions[state.ui.appMode] = runtimeSessionFromState();
+      else loadRuntimeSessionForMode(state.ui.appMode);
+    }
     if (state.point){ if (typeof state.point.important === "undefined") state.point.important = false; if (typeof state.point.importantNote === "undefined") state.point.importantNote = ""; }
   }catch(e){ console.error(e); }
 }
@@ -905,6 +1006,7 @@ function renderSavedMatchesList(){
 }
 
 function saveCurrentMatch(){
+  try{ syncActiveRuntimeSession(); }catch(_){}
   const name = ($("#saveMatchName")?.value || "").trim() || `Partido ${new Date().toLocaleString()}`;
   const saved = getSavedMatches();
   const id = "m_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,7);
@@ -941,6 +1043,10 @@ function loadSavedMatch(id){
   state.ui = state.ui || { theme:"dark", coach:true, hideScore:false, rotated:false, hideRail:false };
   state.matchPoints = Array.isArray(state.matchPoints) ? state.matchPoints : [];
   state.undoStack = Array.isArray(state.undoStack) ? state.undoStack : [];
+  ensureQuickState();
+  ensureCoachState();
+  ensureModeSessions();
+  if (state.ui.appMode === "match" || state.ui.appMode === "quick") state.modeSessions[state.ui.appMode] = runtimeSessionFromState();
 
   // ensure point exists
   if (!state.point) initPoint();
@@ -6249,13 +6355,17 @@ function initCoachPoint(){
 }
 function setAppMode(mode){
   state.ui = state.ui || {};
-  state.ui.appMode = mode === "coach" ? "coach" : (mode === "quick" ? "quick" : "match");
+  const previousMode = state.ui.appMode === "quick" ? "quick" : (state.ui.appMode === "coach" ? "coach" : "match");
+  const nextMode = mode === "coach" ? "coach" : (mode === "quick" ? "quick" : "match");
+  if (previousMode === "match" || previousMode === "quick") syncActiveRuntimeSession();
+  state.ui.appMode = nextMode;
   if (isCoachMode()){
     ensureCoachState();
     if (!state.point || !state.point.coach) initCoachPoint();
     state.ui.hideScore = true;
   } else {
     ensureQuickState();
+    loadRuntimeSessionForMode(nextMode);
     if (!state.point || state.point.coach) initPoint();
     state.ui.hideScore = false;
   }
@@ -6301,6 +6411,8 @@ function applyCoachModeUI(){
   if (title) title.textContent = coachMode ? t("exerciseSequence") : (quickMode ? "Datos del partido" : t("seqTitle"));
   const metaSummary = document.querySelector("#matchMetaCard summary");
   if (metaSummary) metaSummary.textContent = coachMode ? t("exerciseData") : t("matchData");
+  const metaDetails = document.querySelector("#matchMetaCard .metaDetails");
+  if (metaDetails && quickMode) metaDetails.open = true;
   const last = document.getElementById("lastTouch");
   if (coachMode && last && (!state.point || !state.point.events || !state.point.events.length)) last.textContent = t("startTapCourt");
   document.querySelector(".matchMetaGrid")?.classList.toggle("hidden", coachMode);
@@ -8053,7 +8165,7 @@ function renderQuickMode(){
   const chips = document.getElementById("quickSequenceChips");
   if (chips){
     const events = state.point?.events || [];
-    chips.innerHTML = events.length ? events.map((ev, idx)=>`<span class="quickSeqChip ${ev.player === "A" ? "a" : "b"}"><small>${idx+1}</small>${escapeHtml(quickEventShort(ev))}</span>`).join("") : `<span class="muted">Sin golpes registrados</span>`;
+    chips.innerHTML = events.length ? events.map((ev, idx)=>`<span class="quickSeqChip ${ev.player === "A" ? "a" : "b"}"><small>${idx+1}</small>${escapeHtml(quickEventShort(ev))}</span>`).join("") : `<span class="muted">Sin direcciones</span>`;
   }
   const sum = document.getElementById("quickMiniSummary");
   if (sum){
@@ -8069,18 +8181,17 @@ function renderQuickBoard(stage){
   const shotColumn = (hand)=>{
     const title = hand === "FH" ? "Derecha" : "Revés";
     const icon = hand === "FH" ? "D" : "R";
-    const extra = hand === "FH" ? `<button class="quickShotBtn" type="button" data-qaction="shot_FH_IC"><b>IC</b><span>Invertida cruzada</span></button><button class="quickShotBtn" type="button" data-qaction="shot_FH_IP"><b>IP</b><span>Invertida paralela</span></button>` : "";
-    return `<div class="quickShotColumn ${hand === "FH" ? "forehand" : "backhand"}" data-hand="${hand}"><h3><span>${icon}</span>${title}</h3><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_P"><b>P</b><span>Paralelo</span></button><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_M"><b>C</b><span>Centro</span></button><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_C"><b>X</b><span>Cruzado</span></button>${extra}</div>`;
+    return `<div class="quickShotColumn ${hand === "FH" ? "forehand" : "backhand"}" data-hand="${hand}"><h3><span>${icon}</span>${title}</h3><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_P"><b>P</b><span>Paralelo</span></button><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_M"><b>M</b><span>Medio</span></button><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_C"><b>X</b><span>Cruzado</span></button><button class="quickShotBtn inverted" type="button" data-qaction="shot_${hand}_IP"><b>IP</b><span>Inv. paralela</span></button><button class="quickShotBtn inverted" type="button" data-qaction="shot_${hand}_IC"><b>IX</b><span>Inv. cruzada</span></button></div>`;
   };
   if (stage === "serve"){
     board.className = "quickControlBoard serveBoard";
-    board.innerHTML = `<div class="quickServeGrid"><button class="quickServeBtn" data-qaction="serve_W" type="button"><b>W</b><span>Saque abierto</span></button><button class="quickServeBtn" data-qaction="serve_C" type="button"><b>C</b><span>Saque al centro</span></button><button class="quickServeBtn" data-qaction="serve_T" type="button"><b>T</b><span>Saque a la T</span></button><button class="quickServeBtn bad" data-qaction="fault" type="button"><b>F</b><span>${state.point?.firstServeFault ? "Segunda falta = DF" : "Falta"}</span></button><button class="quickServeBtn bad" data-qaction="double_fault" type="button"><b>DF</b><span>Doble falta</span></button><button class="quickServeBtn good" data-qaction="finish" type="button"><b>✓</b><span>Punto finalizado</span></button></div>`;
+    board.innerHTML = `<div class="quickServeGrid"><button class="quickServeBtn" data-qaction="serve_W" type="button"><b>W</b><span>Abierto</span></button><button class="quickServeBtn" data-qaction="serve_C" type="button"><b>C</b><span>Centro</span></button><button class="quickServeBtn" data-qaction="serve_T" type="button"><b>T</b><span>T</span></button><button class="quickServeBtn bad" data-qaction="fault" type="button"><b>F</b><span>${state.point?.firstServeFault ? "DF" : "Falta"}</span></button><button class="quickServeBtn bad" data-qaction="double_fault" type="button"><b>DF</b><span>Doble</span></button><button class="quickServeBtn good" data-qaction="finish" type="button"><b>✓</b><span>Punto</span></button></div>`;
     return;
   }
   board.className = "quickControlBoard shotBoard" + (q.columnsRotated ? " rotatedColumns" : "");
   const left = q.columnsRotated ? shotColumn("FH") : shotColumn("BH");
   const right = q.columnsRotated ? shotColumn("BH") : shotColumn("FH");
-  board.innerHTML = `<div class="quickShotColumns">${left}${right}</div><div class="quickBoardActions"><button class="quickActionBtn" data-qaction="undo" type="button">↶ Deshacer</button><button class="quickActionBtn good" data-qaction="finish" type="button">✓ Punto finalizado</button></div>`;
+  board.innerHTML = `<div class="quickShotColumns">${left}${right}</div><div class="quickBoardActions"><button class="quickActionBtn" data-qaction="undo" type="button">↶ Deshacer</button><button class="quickActionBtn good" data-qaction="finish" type="button">✓ Punto</button></div>`;
 }
 
 function renderAll(){
@@ -8141,8 +8252,6 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnQuickModeMenu","click", ()=>openFromMenu(()=>setAppMode("quick")));
   on("quickTrackedPlayer","change", ()=>{ const q=ensureQuickState(); q.trackedPlayer = $("#quickTrackedPlayer")?.value === "B" ? "B" : "A"; q.lastSummary=""; persist(); renderAll(); });
   on("quickImportantToggle","click", quickToggleImportant);
-  on("quickTabSimple","click", ()=>setAppMode("quick"));
-  on("quickTabAdvanced","click", ()=>setAppMode("match"));
   on("quickFinishClose","click", closeQuickFinish);
   const qBoard = document.getElementById("quickControlBoard");
   if (qBoard && qBoard.dataset.bound !== "1") { qBoard.dataset.bound = "1"; qBoard.addEventListener("click", handleQuickBoardClick); }

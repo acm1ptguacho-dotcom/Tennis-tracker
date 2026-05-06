@@ -10,10 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Actualizamos la versión de las hojas de estilo para romper la caché del navegador -->
 <!-- Bump cache version to ensure latest styles load in v3.35 -->
-<link rel="stylesheet" href="style.css?v=3440" />
+<link rel="stylesheet" href="style.css?v=3460" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3440" />
-  <link rel="stylesheet" href="style-premium-direction.css?v=3440" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3460" />
+  <link rel="stylesheet" href="style-premium-direction.css?v=3460" />
 </head>
 <body>
 
@@ -362,32 +362,27 @@
       <div class="courtWrap courtRow">
       <section class="quickModePanel hidden" id="quickModePanel" aria-label="Modo rápido">
         <div class="quickModeHead">
-          <div>
+          <div class="quickModeTitle">
             <span class="quickEyebrow">MODO RÁPIDO</span>
             <h1>Control táctico simple</h1>
-            <p>Trackea un solo jugador: saque, resto, dirección y resultado.</p>
           </div>
-          <label class="quickPlayerPick">Jugador
+          <label class="quickPlayerPick">Jugador A o B
             <select id="quickTrackedPlayer" class="input">
               <option value="A">Jugador A</option>
               <option value="B">Jugador B</option>
             </select>
           </label>
         </div>
-        <div class="quickModeTabs" role="tablist" aria-label="Nivel de control">
-          <button class="quickModeTab active" id="quickTabSimple" type="button">Rápido</button>
-          <button class="quickModeTab" id="quickTabAdvanced" type="button">Avanzado</button>
-        </div>
-        <section class="quickSequenceScreen">
+        <div class="quickRotationToast" id="quickRotationToast" aria-live="polite"></div>
+        <section class="quickControlBoard" id="quickControlBoard" aria-label="Comandos de direcciones"></section>
+        <section class="quickSequenceScreen" aria-label="Panel de direcciones">
           <div class="quickStatusLine">
             <span class="quickStatusPill" id="quickPointState">—</span>
             <span class="quickOrientationPill" id="quickColumnsState">Derecha a la derecha</span>
           </div>
-          <div class="quickSequenceChips" id="quickSequenceChips"><span class="muted">Sin golpes registrados</span></div>
+          <div class="quickSequenceChips" id="quickSequenceChips"><span class="muted">Sin direcciones</span></div>
           <button class="quickImportantToggle" id="quickImportantToggle" type="button" aria-pressed="false">★ Punto importante</button>
         </section>
-        <div class="quickRotationToast" id="quickRotationToast" aria-live="polite"></div>
-        <section class="quickControlBoard" id="quickControlBoard"></section>
         <div class="quickMiniSummary" id="quickMiniSummary" aria-live="polite"></div>
       </section>
       <div class="court" id="court">
@@ -1846,7 +1841,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3440"></script>
+<script src="app.js?v=3460"></script>
 
 </body>
 </html>

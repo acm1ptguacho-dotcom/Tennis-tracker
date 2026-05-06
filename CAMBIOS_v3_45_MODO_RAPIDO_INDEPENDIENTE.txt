@@ -1,0 +1,22 @@
+CAMBIOS v3.45 · Modo rápido independiente + panel simplificado
+
+- Modo rápido y Modo partido quedan separados mediante sesiones internas independientes.
+  - El historial, marcador, punto activo, undo, datos del partido y registros de un modo no se cargan al entrar en el otro.
+  - Se mantiene una migración básica para separar puntos rápidos antiguos marcados con sourceMode="quick".
+
+- Panel de Modo rápido simplificado y reordenado:
+  1. Control táctico simple
+  2. Selector Jugador A o B
+  3. Comandos de direcciones
+  4. Panel de direcciones registradas
+  5. Datos del partido
+
+- Eliminado el acceso visual al modo avanzado dentro de Modo rápido.
+  - Ya no aparece la pestaña Avanzado.
+  - Se eliminan los comandos invertida cruzada / invertida paralela del panel rápido para mantenerlo simple.
+
+- Rail de Modo rápido reposicionado arriba en horizontal, con comportamiento similar al rail de media pista en Modo entrenador.
+
+- Botones de comandos de dirección retocados con diseño moderno, colores premium y textos más cortos para reducir carga visual.
+
+- Bump de caché CSS a v3450.

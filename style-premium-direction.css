@@ -2909,3 +2909,159 @@ body.coachMode .coachObject.dragging{opacity:.88;filter:drop-shadow(0 0 14px rgb
   .quickMode .timelineSide{grid-column:1 / -1;}
 }
 .quickImportantToggle{position:relative;overflow:hidden;}
+
+/* ===== v3.46 · Modo rápido independiente con invertidas ===== */
+.quickMode .diagramGrid{
+  grid-template-columns:minmax(0,1fr) !important;
+  gap:12px !important;
+}
+.quickMode .courtWrap.courtRow{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  grid-template-rows:auto auto !important;
+  grid-template-areas:
+    "quickRail"
+    "quickPanel" !important;
+  gap:10px !important;
+  padding:10px !important;
+  overflow:visible !important;
+  align-items:start !important;
+}
+.quickMode .quickModePanel{
+  grid-area:quickPanel !important;
+  order:2;
+  min-height:0;
+  gap:10px;
+}
+.quickMode .courtRail{
+  grid-area:quickRail !important;
+  order:1;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:auto !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:10px !important;
+  padding:4px 4px 8px !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  scrollbar-width:none;
+}
+.quickMode .courtRail::-webkit-scrollbar{display:none;}
+.quickMode .courtRail .quickItem{
+  width:82px !important;
+  min-width:82px !important;
+  max-width:82px !important;
+  flex:0 0 82px !important;
+  gap:5px !important;
+}
+.quickMode .courtRail .quickBtn{
+  width:70px !important;
+  height:70px !important;
+  min-width:70px !important;
+  min-height:70px !important;
+  border-radius:22px !important;
+}
+.quickMode .courtRail .quickBtn .svgIcon{
+  width:34px !important;
+  height:34px !important;
+}
+.quickMode .courtRail .quickLbl{
+  width:82px !important;
+  max-width:82px !important;
+  font-size:12px !important;
+  line-height:1.02 !important;
+}
+.quickMode .timelineSide{
+  display:block !important;
+  width:100% !important;
+  max-width:100% !important;
+}
+.quickMode .timelineSide .metaCard{
+  width:100% !important;
+  max-width:100% !important;
+}
+.quickModeHead{
+  flex-direction:column;
+  align-items:stretch;
+  gap:10px;
+}
+.quickModeTitle{min-width:0;}
+.quickModeHead h1{
+  margin:2px 0 0;
+}
+.quickModeHead p,
+.quickModeTabs{
+  display:none !important;
+}
+.quickPlayerPick{
+  width:100%;
+  min-width:0;
+}
+.quickPlayerPick select{
+  width:100%;
+}
+.quickControlBoard{
+  order:3;
+  border-color:rgba(181,255,43,.24);
+  background:
+    radial-gradient(circle at 12% 0%,rgba(181,255,43,.13),transparent 28%),
+    linear-gradient(180deg,rgba(20,56,70,.90),rgba(5,15,27,.96));
+}
+.quickSequenceScreen{
+  order:4;
+}
+.quickServeGrid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.quickShotColumns{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.quickServeBtn,.quickShotBtn,.quickActionBtn{
+  border-color:rgba(114,219,255,.28);
+  background:
+    radial-gradient(circle at 28% 0%,rgba(105,221,255,.20),transparent 35%),
+    linear-gradient(180deg,rgba(29,74,94,.94),rgba(5,18,32,.98));
+}
+.quickShotColumn.forehand .quickShotBtn{
+  border-color:rgba(181,255,43,.30);
+}
+.quickShotColumn.backhand .quickShotBtn{
+  border-color:rgba(91,221,255,.30);
+}
+
+.quickShotBtn.inverted{
+  border-color:rgba(214,255,88,.34);
+  background:
+    radial-gradient(circle at 24% 0%,rgba(214,255,88,.18),transparent 35%),
+    linear-gradient(180deg,rgba(38,79,86,.94),rgba(7,21,35,.98));
+}
+.quickShotBtn.inverted b{
+  font-size:27px;
+}
+.quickServeBtn b,.quickShotBtn b{
+  font-size:32px;
+}
+.quickServeBtn span,.quickShotBtn span{
+  font-size:11px;
+}
+.quickBoardActions{
+  grid-template-columns:1fr 1fr;
+}
+@media(max-width:560px){
+  .quickModePanel{padding:12px;border-radius:26px;}
+  .quickMode .courtWrap.courtRow{padding:8px !important;}
+  .quickMode .courtRail .quickItem{width:74px!important;min-width:74px!important;max-width:74px!important;flex-basis:74px!important;}
+  .quickMode .courtRail .quickBtn{width:62px!important;height:62px!important;min-width:62px!important;min-height:62px!important;border-radius:20px!important;}
+  .quickMode .courtRail .quickBtn .svgIcon{width:30px!important;height:30px!important;}
+  .quickMode .courtRail .quickLbl{width:74px!important;max-width:74px!important;font-size:11px!important;}
+  .quickServeGrid{gap:8px;}
+  .quickServeBtn,.quickShotBtn{min-height:64px;padding:9px 6px;border-radius:18px;}
+  .quickShotColumns{gap:8px;}
+  .quickShotColumn{padding:8px;gap:8px;}
+  .quickShotColumn h3{font-size:22px;}
+}
