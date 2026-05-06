@@ -157,6 +157,14 @@ function ensureCoachState(){
   return state.coach;
 }
 function isCoachMode(){ return !!(state.ui && state.ui.appMode === "coach"); }
+function isQuickMode(){ return !!(state.ui && state.ui.appMode === "quick"); }
+function ensureQuickState(){
+  if (!state.quick || typeof state.quick !== "object") state.quick = { trackedPlayer:"A", columnsRotated:false, lastSummary:"" };
+  state.quick.trackedPlayer = state.quick.trackedPlayer === "B" ? "B" : "A";
+  state.quick.columnsRotated = !!state.quick.columnsRotated;
+  state.quick.lastSummary = state.quick.lastSummary || "";
+  return state.quick;
+}
 function isCoachHalfCourt(){ return isCoachMode() && ensureCoachState().courtMode === "half"; }
 // Ajustes de corte de pista para mejorar la precisión en media pista y pista completa
 // En modo entrenador eliminamos el recorte horizontal (sin márgenes) y usamos la mitad exacta para media pista.
@@ -212,6 +220,11 @@ function createDefaultState(){
       chartPlayer:"A",
       saveLoadMode:"save",
       appMode:"match"
+    },
+    quick: {
+      trackedPlayer:"A",
+      columnsRotated:false,
+      lastSummary:""
     },
     coach: createDefaultCoachState()
   };
@@ -778,6 +791,7 @@ function load(){
     if (!state.ui.chartPlayer) state.ui.chartPlayer = "A";
     if (!state.ui.saveLoadMode) state.ui.saveLoadMode = "save";
     if (!state.ui.appMode) state.ui.appMode = "match";
+    ensureQuickState();
     ensureCoachState();
     if (state.point){ if (typeof state.point.important === "undefined") state.point.important = false; if (typeof state.point.importantNote === "undefined") state.point.importantNote = ""; }
   }catch(e){ console.error(e); }
@@ -2007,6 +2021,7 @@ function savePoint(winner, reason){
     finishDetail,
     important: !!p.important,
     importantNote: p.importantNote || "",
+    sourceMode: (p.events || []).some(e=>e?.meta?.sourceMode === "quick") || (p.finishDetail && p.finishDetail.sourceMode === "quick") ? "quick" : undefined,
     events: p.events.slice(),
     arrows: p.arrows ? JSON.parse(JSON.stringify(p.arrows)) : [],
   });
@@ -4313,6 +4328,29 @@ function analyticsSequenceTokens(p, includeServe){
       return;
     }
     if (ev.type !== "rally") return;
+    if (ev.meta && ev.meta.sourceMode === "quick"){
+      const normalized = normalizeShotCode(ev.code);
+      const phase = normalized.isReturn || ev.meta.quickStage === "return" ? "return" : "rally";
+      const dir = ev.meta.direction || "M";
+      const hand = ev.meta.hand || ev.meta.shot || "";
+      const label = ev.meta.quickLabel || normalized.code;
+      const phaseShort = phase === "return" ? tr("R","R") : tr("G","S");
+      out.push({
+        phase,
+        kind: phase,
+        player: ev.player,
+        dir,
+        depth: null,
+        hand,
+        code: label,
+        key: `${phase}:${label}`,
+        exactKey: `${phase}:${label}`,
+        similarKey: `${phase}:${dir}`,
+        short: `${phaseShort} ${label}`,
+        long: `${phase === "return" ? tr("Resto","Return") : tr("Golpe","Shot")} ${quickHandLabel(hand)} ${analyticsDirName(dir)} (${tr("sin profundidad","no depth")})`
+      });
+      return;
+    }
     const normalized = normalizeShotCode(ev.code);
     const dd = decodeDirDepth(normalized.code);
     if (!dd) return;
@@ -5300,7 +5338,8 @@ function computeStats(points){
 
     if (serveIn){
       const lastT = targetEvs[targetEvs.length-1]?.meta?.target;
-      if (lastT && agg[server].serveTargets[lastT]!==undefined) agg[server].serveTargets[lastT]++;
+      const targetKey = lastT === "W" ? "A" : lastT;
+      if (targetKey && agg[server].serveTargets[targetKey]!==undefined) agg[server].serveTargets[targetKey]++;
     }
 
     // aces (solo si modo avanzado lo etiqueta)
@@ -5313,11 +5352,16 @@ function computeStats(points){
     const returnEv = evs.find(e=>e && e.type==="rally" && e.player===receiver && String(e.code||"").startsWith("R "));
     if (returnEv){
       agg[receiver].returnsIn++;
-      const n = normalizeShotCode(returnEv.code);
-      const dd = decodeDirDepth(n.code);
-      if (dd){
-        if (agg[receiver].returnDir[dd.dir]!==undefined) agg[receiver].returnDir[dd.dir]++;
-        if (agg[receiver].returnDepth[dd.depth]!==undefined) agg[receiver].returnDepth[dd.depth]++;
+      if (returnEv.meta && returnEv.meta.sourceMode === "quick"){
+        const qd = returnEv.meta.direction;
+        if (qd && agg[receiver].returnDir[qd]!==undefined) agg[receiver].returnDir[qd]++;
+      } else {
+        const n = normalizeShotCode(returnEv.code);
+        const dd = decodeDirDepth(n.code);
+        if (dd){
+          if (agg[receiver].returnDir[dd.dir]!==undefined) agg[receiver].returnDir[dd.dir]++;
+          if (agg[receiver].returnDepth[dd.depth]!==undefined) agg[receiver].returnDepth[dd.depth]++;
+        }
       }
     }
 
@@ -5327,11 +5371,17 @@ function computeStats(points){
       const pl = ev.player;
       if (pl!=="A" && pl!=="B") continue;
       agg[pl].strokes++;
-      const n = normalizeShotCode(ev.code);
-      const dd = decodeDirDepth(n.code);
-      if (dd){
-        if (agg[pl].strokeDir[dd.dir]!==undefined) agg[pl].strokeDir[dd.dir]++;
-        if (agg[pl].strokeDepth[dd.depth]!==undefined) agg[pl].strokeDepth[dd.depth]++;
+      if (ev.meta && ev.meta.sourceMode === "quick"){
+        const qd = ev.meta.direction;
+        if (qd && agg[pl].strokeDir[qd]!==undefined) agg[pl].strokeDir[qd]++;
+        // En modo rápido no se registra profundidad.
+      } else {
+        const n = normalizeShotCode(ev.code);
+        const dd = decodeDirDepth(n.code);
+        if (dd){
+          if (agg[pl].strokeDir[dd.dir]!==undefined) agg[pl].strokeDir[dd.dir]++;
+          if (agg[pl].strokeDepth[dd.depth]!==undefined) agg[pl].strokeDepth[dd.depth]++;
+        }
       }
     }
 
@@ -5362,7 +5412,7 @@ function computeStats(points){
         if (fd.kind==="WINNER" && fd.winnerType && agg[pl].advWinners[fd.winnerType]!==undefined){
           agg[pl].advWinners[fd.winnerType]++;
         }
-        if (fd.mode==="advanced"){
+        if (fd.mode==="advanced" || fd.mode==="quick"){
           if (fd.kind==="UE" && fd.strokeType && agg[pl].advUE[fd.strokeType]!==undefined){
             agg[pl].advUE[fd.strokeType]++;
           }
@@ -6199,12 +6249,13 @@ function initCoachPoint(){
 }
 function setAppMode(mode){
   state.ui = state.ui || {};
-  state.ui.appMode = mode === "coach" ? "coach" : "match";
+  state.ui.appMode = mode === "coach" ? "coach" : (mode === "quick" ? "quick" : "match");
   if (isCoachMode()){
     ensureCoachState();
     if (!state.point || !state.point.coach) initCoachPoint();
     state.ui.hideScore = true;
   } else {
+    ensureQuickState();
     if (!state.point || state.point.coach) initPoint();
     state.ui.hideScore = false;
   }
@@ -6216,7 +6267,9 @@ function setAppMode(mode){
 function applyCoachModeUI(){
   const coachMode = isCoachMode();
   const coachState = coachMode ? ensureCoachState() : null;
+  const quickMode = isQuickMode();
   document.body.classList.toggle("coachMode", coachMode);
+  document.body.classList.toggle("quickMode", quickMode);
   const halfActive = !!(coachMode && coachState && coachState.courtMode === "half");
   document.body.classList.toggle("coachHalfCourt", halfActive);
   document.body.classList.toggle("coachHalfTop", !!(halfActive && coachState.halfView === "top"));
@@ -6229,6 +6282,10 @@ function applyCoachModeUI(){
     const c = coachState || ensureCoachState();
     if (wsName) wsName.textContent = c.courtMode === "half" ? t("coachModeHalf") : t("coachMode");
     if (wsSub) wsSub.textContent = c.exerciseName || t("exerciseEditor");
+  } else if (quickMode){
+    const q = ensureQuickState();
+    if (wsName) wsName.textContent = "Modo rápido";
+    if (wsSub) wsSub.textContent = `Trackeando a ${playerName(q.trackedPlayer)}`;
   }
   const modeLabel = document.getElementById("coachCourtModeLabel");
   if (modeLabel && coachMode) modeLabel.textContent = (coachState && coachState.courtMode === "half") ? t("fullCourt") : t("halfCourt");
@@ -6241,7 +6298,7 @@ function applyCoachModeUI(){
     modeBtn.classList.toggle("active", half);
   }
   const title = document.querySelector(".timelineTitle");
-  if (title) title.textContent = coachMode ? t("exerciseSequence") : t("seqTitle");
+  if (title) title.textContent = coachMode ? t("exerciseSequence") : (quickMode ? "Datos del partido" : t("seqTitle"));
   const metaSummary = document.querySelector("#matchMetaCard summary");
   if (metaSummary) metaSummary.textContent = coachMode ? t("exerciseData") : t("matchData");
   const last = document.getElementById("lastTouch");
@@ -7533,6 +7590,7 @@ function undoLastCoachPattern(){
 }
 function applyRailVisibility(){
   const coach = isCoachMode();
+  const quick = isQuickMode();
   const railHidden = !coach && !!state.ui.hideRail;
   document.body.classList.toggle("railHidden", railHidden);
   const b = $("#btnToolsRail");
@@ -7549,6 +7607,7 @@ function applyRailVisibility(){
       b.setAttribute("aria-label", "Menú derecho");
       b.title = isHidden ? "Menú derecho · Mostrar herramientas" : "Menú derecho · Ocultar herramientas";
       b.classList.toggle("isActive", isHidden);
+      b.classList.toggle("quickTools", quick);
     }
   }
 }
@@ -7564,6 +7623,17 @@ function toggleRailVisibility(){
 }
 
 function applyRotation(){
+  if (isQuickMode()){
+    const q = ensureQuickState();
+    const bq = $("#btnRotateCourt");
+    if (bq){
+      bq.setAttribute("aria-label", "Rotar columnas");
+      bq.title = "Rotar columnas Derecha/Revés";
+      bq.classList.toggle("isActive", !!q.columnsRotated);
+    }
+    const lblq = $("#lblRotateCourt");
+    if (lblq) lblq.textContent = "Columnas";
+  }
   const c = $("#court");
   if (c) c.classList.toggle("rotated", !!state.ui.rotated);
   const b = $("#btnRotateCourt");
@@ -7581,6 +7651,10 @@ function applyRotation(){
   renderLiveArrows(false);
 }
 function toggleRotation(){
+  if (isQuickMode()){
+    quickRotateColumns();
+    return;
+  }
   state.ui.rotated = !state.ui.rotated;
   applyRotation();
   persist();
@@ -7698,6 +7772,317 @@ window.addEventListener('orientationchange', ()=>{
   setTimeout(syncTopbarHeight, 80);
 });
 
+
+// --- Modo rápido v3.44: tracking simplificado de un jugador ---
+let quickFinishContext = null;
+let quickRotationTimer = null;
+
+function quickTrackedPlayer(){ return ensureQuickState().trackedPlayer || "A"; }
+function quickOpponent(){ return other(quickTrackedPlayer()); }
+function quickRallyEvents(){ return (state.point?.events || []).filter(e=>e && e.type === "rally"); }
+function quickOwnEvents(){ const pl = quickTrackedPlayer(); return (state.point?.events || []).filter(e=>e && e.player === pl); }
+function quickStage(){
+  if (!state.point) initPoint();
+  const p = state.point;
+  const tracked = quickTrackedPlayer();
+  if (p.phase === "serve"){
+    return tracked === p.server ? "serve" : "return";
+  }
+  const rally = quickRallyEvents();
+  if (tracked === other(p.server) && rally.length <= 1 && rally.every(e=>e.player === tracked)) return "return";
+  return "rally";
+}
+function quickStageLabel(stage){
+  if (stage === "serve") return "Sacando";
+  if (stage === "return") return "Restando";
+  return "En rally";
+}
+function quickFinishStage(){
+  const stage = quickStage();
+  const tracked = quickTrackedPlayer();
+  const p = state.point;
+  const evs = p?.events || [];
+  const rally = evs.filter(e=>e && e.type === "rally");
+  const serves = evs.filter(e=>e && e.type === "serve");
+  if (tracked === (p?.server || state.currentServer) && serves.length && rally.length === 0) return "serve";
+  if (tracked === other(p?.server || state.currentServer) && rally.length <= 1) return "return";
+  return stage;
+}
+function quickDirectionLabel(d){ return ({C:"Cruzada", M:"Centro", P:"Paralela", IC:"Invertida cruzada", IP:"Invertida paralela"})[d] || d; }
+function quickHandLabel(h){ return h === "FH" ? "Derecha" : "Revés"; }
+function quickHandCode(h){ return h === "FH" ? "D" : "R"; }
+function quickDirectionCode(d){ return d === "M" ? "M" : (d === "P" ? "P" : "C"); }
+function quickEventShort(ev){
+  if (!ev) return "";
+  if (ev.meta && ev.meta.quickLabel) return ev.meta.quickLabel;
+  return String(ev.code || "").replace(/^R\s+/, "R ").trim();
+}
+function quickSetLastSummary(text){
+  const q = ensureQuickState();
+  q.lastSummary = text || "";
+  try{ renderQuickMode(); }catch(_){ }
+  setTimeout(()=>{
+    const qq = ensureQuickState();
+    if (qq.lastSummary === text){ qq.lastSummary = ""; renderQuickMode(); }
+  }, 1800);
+}
+function quickFlashButton(btn, evt){
+  if (!btn) return;
+  try{ flashTap(btn, evt || null); }catch(_){
+    btn.classList.remove("tapFlash"); void btn.offsetWidth; btn.classList.add("tapFlash");
+    setTimeout(()=>btn.classList.remove("tapFlash"), 700);
+  }
+}
+function quickToggleImportant(){
+  if (!state.point) initPoint();
+  state.point.important = !state.point.important;
+  persist();
+  renderQuickMode();
+}
+function quickRotateColumns(){
+  const q = ensureQuickState();
+  q.columnsRotated = !q.columnsRotated;
+  const panel = document.getElementById("quickControlBoard");
+  if (panel){ panel.classList.remove("quickSwapAnim"); void panel.offsetWidth; panel.classList.add("quickSwapAnim"); }
+  const toastEl = document.getElementById("quickRotationToast");
+  if (toastEl){
+    toastEl.textContent = q.columnsRotated ? "Derecha a la izquierda" : "Derecha a la derecha";
+    toastEl.classList.add("show");
+    if (quickRotationTimer) clearTimeout(quickRotationTimer);
+    quickRotationTimer = setTimeout(()=>toastEl.classList.remove("show"), 1250);
+  }
+  persist();
+  renderQuickMode();
+}
+function quickServeTarget(target){
+  if (state.matchFinished) return;
+  if (!state.point) initPoint();
+  const server = state.currentServer || state.point.server || "A";
+  state.point.server = server;
+  state.point.side = serveSideLabel();
+  state.point.events.push({
+    type:"serve",
+    player:server,
+    code:`S ${state.point.side} ${target}`,
+    meta:{ target, sourceMode:"quick", depth:null }
+  });
+  state.point.phase = "rally";
+  state.point.firstServeFault = !!state.point.firstServeFault;
+  persist();
+  renderAll();
+}
+function quickServeFault(forceDouble=false){
+  if (state.matchFinished) return;
+  if (!state.point) initPoint();
+  const server = state.currentServer || state.point.server || "A";
+  state.point.server = server;
+  state.point.side = serveSideLabel();
+  if (forceDouble || state.point.firstServeFault){
+    state.point.events.push({ type:"serve", player:server, code:`S ${state.point.side} DF`, meta:{ df:true, sourceMode:"quick" } });
+    state.point.finishDetail = { mode:"quick", kind:"DF", offender:server, sourceMode:"quick" };
+    const winner = other(server);
+    const seq = (state.point.events || []).map(quickEventShort).join(" · ");
+    endPoint(winner, `Doble falta (${server})`);
+    quickSetLastSummary(`Punto guardado · ${seq || "DF"} · gana ${playerName(winner)}`);
+    closeQuickFinish();
+  } else {
+    state.point.firstServeFault = true;
+    state.point.events.push({ type:"serve", player:server, code:`S ${state.point.side} F`, meta:{ fault:true, sourceMode:"quick" } });
+    persist();
+    renderAll();
+  }
+}
+function quickAddShot(hand, direction, evt, btn){
+  if (state.matchFinished) return;
+  if (!state.point) initPoint();
+  const tracked = quickTrackedPlayer();
+  const stage = quickStage();
+  const baseDir = direction === "IP" ? "P" : (direction === "IC" ? "C" : direction);
+  const label = `${quickHandCode(hand)}-${direction}`;
+  const prefix = stage === "return" ? "R " : "";
+  const ev = {
+    type:"rally",
+    player:tracked,
+    code:`${prefix}${label}`,
+    meta:{
+      sourceMode:"quick",
+      shot:hand,
+      hand:hand,
+      direction:baseDir,
+      directionLabel:quickDirectionLabel(direction),
+      depth:null,
+      quickLabel:label,
+      quickStage:stage,
+      inverted:(direction === "IC" || direction === "IP")
+    }
+  };
+  state.point.events.push(ev);
+  state.point.phase = "rally";
+  quickFlashButton(btn, evt);
+  persist();
+  renderAll();
+}
+function quickUndoShot(){
+  if (!state.point || !state.point.events || !state.point.events.length) return;
+  state.point.events.pop();
+  if (state.point.events.length === 0){
+    state.point.phase = "serve";
+    state.point.firstServeFault = false;
+  } else if (!state.point.events.some(e=>e.type === "serve") && quickTrackedPlayer() === other(state.currentServer)){
+    state.point.phase = "serve";
+  }
+  persist();
+  renderAll();
+}
+function quickOpenFinish(){
+  if (!state.point) initPoint();
+  quickFinishContext = quickFinishStage();
+  const menu = document.getElementById("quickFinishMenu");
+  const title = document.getElementById("quickFinishTitle");
+  const sub = document.getElementById("quickFinishSub");
+  const body = document.getElementById("quickFinishBody");
+  if (!menu || !body) return;
+  const tracked = quickTrackedPlayer();
+  const server = state.currentServer || state.point.server || "A";
+  const stage = quickFinishContext;
+  if (title) title.textContent = stage === "serve" ? "Finalizar saque" : (stage === "return" ? "Finalizar resto" : "Finalizar punto");
+  if (sub) sub.textContent = `Jugador analizado: ${playerName(tracked)}`;
+  const btn = (label, action, tone="") => `<button class="quickFinishOption ${tone}" type="button" data-qfinish="${action}">${label}</button>`;
+  if (stage === "serve"){
+    body.innerHTML = `<div class="quickFinishSingle">${btn("ACE", "serve_ace", "good")}${btn("Saque ganador", "serve_winner", "good")}</div>`;
+  } else if (stage === "return"){
+    body.innerHTML = `<div class="quickFinishCols"><div><h3>PERDIDO</h3>${btn("Error derecha", "ret_lost_fh", "bad")}${btn("Error revés", "ret_lost_bh", "bad")}${btn("Ace rival", "ret_lost_ace", "bad")}</div><div><h3>GANADO</h3>${btn("Winner derecha", "ret_win_fh", "good")}${btn("Winner revés", "ret_win_bh", "good")}${btn("Golpe", "ret_win_gain", "good")}${btn("Doble falta rival", "ret_win_df", "good")}</div></div>`;
+  } else {
+    body.innerHTML = `<div class="quickFinishCols"><div><h3>PERDIDO</h3>${btn("Error no forzado", "rally_lost_ue", "bad")}${btn("Error forzado", "rally_lost_fe", "bad")}${btn("Dejada", "rally_lost_drop", "bad")}${btn("Volea", "rally_lost_volley", "bad")}</div><div><h3>GANADO</h3>${btn("Winner", "rally_win_winner", "good")}${btn("Golpe", "rally_win_gain", "good")}${btn("Dejada", "rally_win_drop", "good")}${btn("Volea", "rally_win_volley", "good")}</div></div>`;
+  }
+  menu.classList.remove("hidden");
+}
+function closeQuickFinish(){
+  quickFinishContext = null;
+  document.getElementById("quickFinishMenu")?.classList.add("hidden");
+}
+function quickFinishPayload(action){
+  const tracked = quickTrackedPlayer();
+  const rival = other(tracked);
+  const server = state.currentServer || state.point?.server || "A";
+  const receiver = other(server);
+  const lose = (reason, detail={}) => ({ winner:rival, reason, detail:{ mode:"quick", sourceMode:"quick", ...detail } });
+  const win = (reason, detail={}) => ({ winner:tracked, reason, detail:{ mode:"quick", sourceMode:"quick", ...detail } });
+  switch(action){
+    case "serve_ace": return { winner:server, reason:`Winner (${server})`, detail:{ mode:"quick", sourceMode:"quick", kind:"WINNER", offender:server, winnerType:"ACE" } };
+    case "serve_winner": return { winner:server, reason:`Winner (${server})`, detail:{ mode:"quick", sourceMode:"quick", kind:"WINNER", offender:server, winnerType:"WIN" } };
+    case "ret_lost_fh": return lose(`Error no forzado (${tracked})`, {kind:"UE", offender:tracked, strokeType:"FH", quickContext:"return"});
+    case "ret_lost_bh": return lose(`Error no forzado (${tracked})`, {kind:"UE", offender:tracked, strokeType:"BH", quickContext:"return"});
+    case "ret_lost_ace": return { winner:server, reason:`Winner (${server})`, detail:{ mode:"quick", sourceMode:"quick", kind:"WINNER", offender:server, winnerType:"ACE", quickContext:"return" } };
+    case "ret_win_fh": return win(`Winner (${tracked})`, {kind:"WINNER", offender:tracked, winnerType:"FH", quickContext:"return"});
+    case "ret_win_bh": return win(`Winner (${tracked})`, {kind:"WINNER", offender:tracked, winnerType:"BH", quickContext:"return"});
+    case "ret_win_gain": return win(`Gana (${tracked})`, {kind:"GAIN", offender:tracked, quickContext:"return"});
+    case "ret_win_df": return { winner:receiver, reason:`Doble falta (${server})`, detail:{ mode:"quick", sourceMode:"quick", kind:"DF", offender:server, quickContext:"return" } };
+    case "rally_lost_ue": return lose(`Error no forzado (${tracked})`, {kind:"UE", offender:tracked});
+    case "rally_lost_fe": return lose(`Error forzado (${tracked})`, {kind:"FE", offender:tracked});
+    case "rally_lost_drop": return { winner:rival, reason:`Winner (${rival})`, detail:{mode:"quick", sourceMode:"quick", kind:"WINNER", offender:rival, winnerType:"DROP"} };
+    case "rally_lost_volley": return { winner:rival, reason:`Winner (${rival})`, detail:{mode:"quick", sourceMode:"quick", kind:"WINNER", offender:rival, winnerType:"VOL"} };
+    case "rally_win_winner": return win(`Winner (${tracked})`, {kind:"WINNER", offender:tracked, winnerType:"WIN"});
+    case "rally_win_gain": return win(`Gana (${tracked})`, {kind:"GAIN", offender:tracked});
+    case "rally_win_drop": return win(`Winner (${tracked})`, {kind:"WINNER", offender:tracked, winnerType:"DROP"});
+    case "rally_win_volley": return win(`Winner (${tracked})`, {kind:"WINNER", offender:tracked, winnerType:"VOL"});
+  }
+  return null;
+}
+function quickCommitFinish(action){
+  if (state.matchFinished) return;
+  if (!state.point) initPoint();
+  const payload = quickFinishPayload(action);
+  if (!payload) return;
+  if (payload.detail) state.point.finishDetail = payload.detail;
+  // ensure a rival double fault selected from return menu is visible in events
+  if (payload.detail && payload.detail.kind === "DF"){
+    const server = payload.detail.offender || state.currentServer || "A";
+    if (!(state.point.events || []).some(e=>e?.meta?.df)){
+      state.point.events.push({ type:"serve", player:server, code:`S ${serveSideLabel()} DF`, meta:{ df:true, sourceMode:"quick" } });
+    }
+  }
+  const seq = (state.point.events || []).map(quickEventShort).join(" · ");
+  endPoint(payload.winner, payload.reason);
+  quickSetLastSummary(`Punto guardado · ${seq || "sin golpes"} · gana ${playerName(payload.winner)}`);
+  closeQuickFinish();
+}
+function handleQuickFinishClick(e){
+  const btn = e.target.closest("[data-qfinish]");
+  if (!btn) return;
+  quickFlashButton(btn, e);
+  quickCommitFinish(btn.dataset.qfinish);
+}
+function handleQuickBoardClick(e){
+  const btn = e.target.closest("[data-qaction]");
+  if (!btn) return;
+  const action = btn.dataset.qaction;
+  if (action === "finish") { quickFlashButton(btn, e); quickOpenFinish(); return; }
+  if (action === "fault") { quickFlashButton(btn, e); quickServeFault(false); return; }
+  if (action === "double_fault") { quickFlashButton(btn, e); quickServeFault(true); return; }
+  if (action === "undo") { quickFlashButton(btn, e); quickUndoShot(); return; }
+  if (action && action.startsWith("serve_")) { quickFlashButton(btn, e); quickServeTarget(action.replace("serve_", "")); return; }
+  if (action && action.startsWith("shot_")){
+    const parts = action.split("_");
+    quickAddShot(parts[1] === "FH" ? "FH" : "BH", parts[2] || "C", e, btn);
+  }
+}
+function renderQuickMode(){
+  const panel = document.getElementById("quickModePanel");
+  if (!panel) return;
+  const quick = isQuickMode();
+  panel.classList.toggle("hidden", !quick);
+  if (!quick) return;
+  const q = ensureQuickState();
+  if (!state.point || state.point.coach) initPoint();
+  const select = document.getElementById("quickTrackedPlayer");
+  if (select){
+    select.innerHTML = `<option value="A">${escapeHtml(playerName("A"))}</option><option value="B">${escapeHtml(playerName("B"))}</option>`;
+    select.value = q.trackedPlayer;
+  }
+  const stage = quickStage();
+  const stateEl = document.getElementById("quickPointState");
+  if (stateEl) stateEl.textContent = `${quickStageLabel(stage)} · ${scoreLabel()} · ${state.point?.side || serveSideLabel()}`;
+  const colEl = document.getElementById("quickColumnsState");
+  if (colEl) colEl.textContent = q.columnsRotated ? "Derecha a la izquierda" : "Derecha a la derecha";
+  const important = document.getElementById("quickImportantToggle");
+  if (important){
+    important.classList.toggle("active", !!state.point?.important);
+    important.setAttribute("aria-pressed", state.point?.important ? "true" : "false");
+  }
+  const chips = document.getElementById("quickSequenceChips");
+  if (chips){
+    const events = state.point?.events || [];
+    chips.innerHTML = events.length ? events.map((ev, idx)=>`<span class="quickSeqChip ${ev.player === "A" ? "a" : "b"}"><small>${idx+1}</small>${escapeHtml(quickEventShort(ev))}</span>`).join("") : `<span class="muted">Sin golpes registrados</span>`;
+  }
+  const sum = document.getElementById("quickMiniSummary");
+  if (sum){
+    sum.textContent = q.lastSummary || "";
+    sum.classList.toggle("show", !!q.lastSummary);
+  }
+  renderQuickBoard(stage);
+}
+function renderQuickBoard(stage){
+  const board = document.getElementById("quickControlBoard");
+  if (!board) return;
+  const q = ensureQuickState();
+  const shotColumn = (hand)=>{
+    const title = hand === "FH" ? "Derecha" : "Revés";
+    const icon = hand === "FH" ? "D" : "R";
+    const extra = hand === "FH" ? `<button class="quickShotBtn" type="button" data-qaction="shot_FH_IC"><b>IC</b><span>Invertida cruzada</span></button><button class="quickShotBtn" type="button" data-qaction="shot_FH_IP"><b>IP</b><span>Invertida paralela</span></button>` : "";
+    return `<div class="quickShotColumn ${hand === "FH" ? "forehand" : "backhand"}" data-hand="${hand}"><h3><span>${icon}</span>${title}</h3><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_P"><b>P</b><span>Paralelo</span></button><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_M"><b>C</b><span>Centro</span></button><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_C"><b>X</b><span>Cruzado</span></button>${extra}</div>`;
+  };
+  if (stage === "serve"){
+    board.className = "quickControlBoard serveBoard";
+    board.innerHTML = `<div class="quickServeGrid"><button class="quickServeBtn" data-qaction="serve_W" type="button"><b>W</b><span>Saque abierto</span></button><button class="quickServeBtn" data-qaction="serve_C" type="button"><b>C</b><span>Saque al centro</span></button><button class="quickServeBtn" data-qaction="serve_T" type="button"><b>T</b><span>Saque a la T</span></button><button class="quickServeBtn bad" data-qaction="fault" type="button"><b>F</b><span>${state.point?.firstServeFault ? "Segunda falta = DF" : "Falta"}</span></button><button class="quickServeBtn bad" data-qaction="double_fault" type="button"><b>DF</b><span>Doble falta</span></button><button class="quickServeBtn good" data-qaction="finish" type="button"><b>✓</b><span>Punto finalizado</span></button></div>`;
+    return;
+  }
+  board.className = "quickControlBoard shotBoard" + (q.columnsRotated ? " rotatedColumns" : "");
+  const left = q.columnsRotated ? shotColumn("FH") : shotColumn("BH");
+  const right = q.columnsRotated ? shotColumn("BH") : shotColumn("FH");
+  board.innerHTML = `<div class="quickShotColumns">${left}${right}</div><div class="quickBoardActions"><button class="quickActionBtn" data-qaction="undo" type="button">↶ Deshacer</button><button class="quickActionBtn good" data-qaction="finish" type="button">✓ Punto finalizado</button></div>`;
+}
+
 function renderAll(){
   syncTopbarHeight();
   applyI18n();
@@ -7710,6 +8095,7 @@ function renderAll(){
   renderCourtNames();
   renderScore();
   renderPoint();
+  renderQuickMode();
   renderCoachObjects();
   updateWorkspaceBar();
   renderDashboard();
@@ -7752,6 +8138,16 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnLoadMatch","click", ()=>openFromMenu(()=>openSaveLoad("load")));
   on("btnGameMode","click", ()=>openFromMenu(openGameMode));
   on("btnSurface","click", ()=>openFromMenu(openSurface));
+  on("btnQuickModeMenu","click", ()=>openFromMenu(()=>setAppMode("quick")));
+  on("quickTrackedPlayer","change", ()=>{ const q=ensureQuickState(); q.trackedPlayer = $("#quickTrackedPlayer")?.value === "B" ? "B" : "A"; q.lastSummary=""; persist(); renderAll(); });
+  on("quickImportantToggle","click", quickToggleImportant);
+  on("quickTabSimple","click", ()=>setAppMode("quick"));
+  on("quickTabAdvanced","click", ()=>setAppMode("match"));
+  on("quickFinishClose","click", closeQuickFinish);
+  const qBoard = document.getElementById("quickControlBoard");
+  if (qBoard && qBoard.dataset.bound !== "1") { qBoard.dataset.bound = "1"; qBoard.addEventListener("click", handleQuickBoardClick); }
+  const qFinish = document.getElementById("quickFinishBody");
+  if (qFinish && qFinish.dataset.bound !== "1") { qFinish.dataset.bound = "1"; qFinish.addEventListener("click", handleQuickFinishClick); }
   on("btnCoachExercises","click", ()=>openFromMenu(openCoachLibrary));
   on("btnCoachLoadExercise","click", ()=>openFromMenu(openCoachLibrary));
   on("btnCoachSaveExercise","click", ()=>openFromMenu(openCoachSave));
@@ -8818,6 +9214,12 @@ function handleDemoAccess(){
   activateUserContext(false);
   setAppMode("match");
 }
+function handleQuickAccess(){
+  setSession({ uid:"__quick__", name:"Modo Rápido", email:"quick@local", plan:"Quick", isDemo:true, isQuick:true, remember:false }, false);
+  activateUserContext(false);
+  setAppMode("quick");
+  return true;
+}
 function handleCoachAccess(){
   setSession({ uid:"__coach__", name:"Modo Entrenador", email:"coach@local", plan:"Coach Studio", isDemo:true, isCoach:true, remember:false }, false);
   activateUserContext(false);
@@ -8861,6 +9263,7 @@ function initProfessionalShell(){
   $("#btnLogin")?.addEventListener("click", handleLogin);
   $("#btnSignup")?.addEventListener("click", handleSignup);
   $("#btnDemoAccess")?.addEventListener("click", handleDemoAccess);
+  $("#btnQuickAccess")?.addEventListener("click", handleQuickAccess);
   $("#btnCoachAccess")?.addEventListener("click", handleCoachAccess);
   $("#btnDirectAccess")?.addEventListener("click", handleDeveloperAccess);
   ["loginEmail","loginPassword"].forEach(id=> $("#"+id)?.addEventListener("keydown", (e)=>{ if (e.key === "Enter") handleLogin(); }));
@@ -8938,7 +9341,7 @@ function initProfessionalShell(){
 let __postSplashAction = null;
 
 function afterSplashStart(){
-  if (__postSplashAction === "demo" || __postSplashAction === "coach"){
+  if (__postSplashAction === "demo" || __postSplashAction === "coach" || __postSplashAction === "quick"){
     const action = __postSplashAction;
     __postSplashAction = null;
     if (action === "demo"){
@@ -8947,6 +9350,10 @@ function afterSplashStart(){
     }
     if (action === "coach"){
       handleCoachAccess();
+      return;
+    }
+    if (action === "quick"){
+      handleQuickAccess();
       return;
     }
   }
@@ -9019,6 +9426,7 @@ function initSplash(){
   const btn = document.getElementById("btnStartApp");
   const btnLogin = document.getElementById("btnSplashLogin");
   const btnSignup = document.getElementById("btnSplashSignup");
+  const btnQuick = document.getElementById("btnSplashQuick");
   const btnDemo = document.getElementById("btnSplashDemo");
   const btnCoach = document.getElementById("btnSplashCoach");
   const btnSplashLang = document.getElementById("btnSplashLanguage");
@@ -9038,12 +9446,13 @@ function initSplash(){
 
   splash.addEventListener("click", (e)=>{
     const target = e.target;
-    if (target === btn || target === btnLogin || target === btnSignup || target === btnDemo || target === btnCoach || target === btnSplashLang) return;
+    if (target === btn || target === btnLogin || target === btnSignup || target === btnQuick || target === btnDemo || target === btnCoach || target === btnSplashLang) return;
     leaveSplash("login");
   });
 
   btn.onclick = ()=> leaveSplash("login");
   btnLogin?.addEventListener("click", ()=> leaveSplash("login"));
+  btnQuick?.addEventListener("click", ()=> leaveSplash("quick"));
   btnSignup?.addEventListener("click", ()=> leaveSplash("signup"));
   btnDemo?.addEventListener("click", ()=> leaveSplash("demo"));
   btnCoach?.addEventListener("click", ()=> leaveSplash("coach"));
@@ -9116,6 +9525,7 @@ window.setSession = setSession;
 window.handleLogin = handleLogin;
 window.handleSignup = handleSignup;
 window.handleDemoAccess = handleDemoAccess;
+window.handleQuickAccess = handleQuickAccess;
 window.handleCoachAccess = handleCoachAccess;
 window.openEntryLanguage = openEntryLanguage;
 window.setLanguage = setLanguage;

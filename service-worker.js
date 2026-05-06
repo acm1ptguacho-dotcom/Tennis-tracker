@@ -3,16 +3,16 @@
 // - HTML (navegación): network-first
 // - JS/CSS: stale-while-revalidate
 // - Imágenes: cache-first
-// v3.43: objetos, cruceta de arrastre, modo partido y ficha premium.
+// v3.44: modo rápido, rotación de columnas y tracking simplificado.
 
-const CACHE = "tennis-tracker-web-v3.43-player-card-coach-tools";
+const CACHE = "tennis-tracker-web-v3.44-quick-mode";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=3430",
-  "./style-futuristic.css?v=3430",
-  "./style-premium-direction.css?v=3430",
-  "./app.js?v=3430",
+  "./style.css?v=3440",
+  "./style-futuristic.css?v=3440",
+  "./style-premium-direction.css?v=3440",
+  "./app.js?v=3440",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",

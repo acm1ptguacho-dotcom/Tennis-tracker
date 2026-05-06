@@ -1,0 +1,19 @@
+Tennis Direction Tracker v3.44
+
+Cambios principales:
+- Añadido nuevo Modo rápido desde el menú principal.
+- Reorganizada la portada: Modo rápido entra como opción principal y Acceder pasa a botón ancho inferior.
+- Modo rápido trackea un solo jugador con una interfaz simplificada.
+- Pantalla superior de secuencia con chips de golpes: saque, resto, derecha/revés y dirección.
+- Cuadro de mandos contextual:
+  - Sacando: W, C, T, Falta, Doble falta y Punto finalizado.
+  - Restando / rally: columnas Derecha y Revés con Paralelo, Centro, Cruzado e invertidas para derecha.
+- Botón Punto importante en modo rápido.
+- Ventana de finalización contextual para saque, resto y rally.
+- Botón Rotar en Modo rápido intercambia las columnas Derecha/Revés con animación premium.
+- El rail derecho puede ocultarse/mostrarse sin afectar a la pantalla superior de secuencia.
+- Deshacer último golpe disponible y compatible con el modo rápido.
+- Todos los golpes del Modo rápido se guardan en historial, estadísticas y analítica táctica.
+- Los golpes del Modo rápido no registran profundidad; depth se guarda como null / sin profundidad.
+- Estadísticas y analítica leen direcciones de eventos rápidos aunque no haya profundidad.
+- Actualizada caché a v3.44.
