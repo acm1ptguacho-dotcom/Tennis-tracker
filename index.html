@@ -10,10 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Actualizamos la versión de las hojas de estilo para romper la caché del navegador -->
 <!-- Bump cache version to ensure latest styles load in v3.35 -->
-<link rel="stylesheet" href="style.css?v=3470" />
+<link rel="stylesheet" href="style.css?v=3510" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3470" />
-  <link rel="stylesheet" href="style-premium-direction.css?v=3470" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3510" />
+  <link rel="stylesheet" href="style-premium-direction.css?v=3510" />
 </head>
 <body>
 
@@ -56,7 +56,7 @@
          Actualiza este número cada vez que se genere una nueva versión. -->
     <!-- Versión visible: actualiza este número al generar una nueva revisión -->
     <!-- Actualizamos el número de versión a v3.35 -->
-    <div class="splashVersion" id="splashVersion">v3.47</div>
+    <div class="splashVersion" id="splashVersion">v3.51</div>
   </div>
 </div>
 
@@ -1022,7 +1022,7 @@
     <div class="modalHead videoAiHead">
       <div>
         <div class="modalTitle">Vídeo IA</div>
-        <div class="muted">Grabación, calibración, análisis automático revisable y direcciones tácticas.</div>
+        <div class="muted">Grabación, vídeo subido, calibración, análisis automático revisable y direcciones tácticas.</div>
       </div>
       <div class="modalActions videoAiHeaderActions">
         <!-- Botón Home para volver al menú inicial -->
@@ -1094,6 +1094,17 @@
             <option value="">Cámara trasera / automática</option>
           </select>
         </label>
+        <label class="videoAiSelectLabel videoAiUploadLabel">Vídeo grabado
+          <input id="videoAiUploadInput" type="file" accept="video/*" />
+        </label>
+        <div class="videoAiUploadActions">
+          <button class="chip" id="btnVideoAIUploadPlayPause" type="button">Reproducir/Pausar</button>
+          <button class="chip" id="btnVideoAIUploadBack" type="button">-10s</button>
+          <button class="chip" id="btnVideoAIUploadForward" type="button">+10s</button>
+          <button class="chip" id="btnVideoAIUploadRestart" type="button">Inicio</button>
+          <button class="chip" id="btnVideoAIClearUpload" type="button">Quitar vídeo</button>
+          <span id="videoAiUploadStatus">Sin vídeo cargado</span>
+        </div>
         <!-- Mantener el enlace de descarga separado de los controles integrados -->
         <a class="chip videoAiDownload hidden" id="videoAiDownload" download="tennis-direction-video.webm">Descargar vídeo</a>
       </section>
@@ -1101,15 +1112,16 @@
       <section class="videoAiWorkflow">
         <article class="videoAiStep active"><span>1</span><div><strong>Posición fija</strong><small>Móvil en trípode, pista completa visible y cámara estable.</small></div></article>
         <article class="videoAiStep"><span>2</span><div><strong>Calibración</strong><small>Marca 4 referencias para convertir vídeo en coordenadas de pista.</small></div></article>
-        <article class="videoAiStep"><span>3</span><div><strong>Auto IA</strong><small>Detecta candidato de pelota, dirección, jugador probable y velocidad estimada.</small></div></article>
-        <article class="videoAiStep"><span>4</span><div><strong>Revisión</strong><small>Acepta los golpes detectados y envíalos a Analítica táctica.</small></div></article>
+        <article class="videoAiStep"><span>3</span><div><strong>Directo o vídeo</strong><small>Analiza cámara en vivo o un vídeo cargado desde el dispositivo.</small></div></article>
+        <article class="videoAiStep"><span>4</span><div><strong>Revisión</strong><small>Edita jugador, golpe, dirección, profundidad, resultado y confirma antes de enviar.</small></div></article>
+        <article class="videoAiStep"><span>5</span><div><strong>Puntos IA</strong><small>Agrupa golpes confirmados en puntos completos para Analítica táctica.</small></div></article>
       </section>
 
       <section class="videoAiAutoPanel">
         <div class="videoAiSectionHead">
           <div>
             <h3>Análisis automático revisable</h3>
-            <p>Procesa frames en el navegador para detectar movimiento de pelota y crear golpes revisables con dirección, profundidad y velocidad estimada.</p>
+            <p>Procesa frames de cámara o de vídeo subido para detectar movimiento de pelota y crear golpes revisables con dirección, profundidad y velocidad estimada.</p>
           </div>
           <span id="videoAiAutoCount">0</span>
         </div>
@@ -1130,6 +1142,31 @@
             </select>
           </label>
         </div>
+        <div class="videoAiAssistGrid videoAiSpeedGrid">
+          <label class="videoAiSelectLabel">Escala de pista
+            <select id="videoAiSpeedCourt">
+              <option value="singles" selected>Individual · 8,23 m</option>
+              <option value="doubles">Dobles · 10,97 m</option>
+            </select>
+          </label>
+          <label class="videoAiSelectLabel">FPS para velocidad
+            <select id="videoAiSpeedFpsMode">
+              <option value="auto" selected>Auto / tiempo del vídeo</option>
+              <option value="30">30 fps</option>
+              <option value="60">60 fps</option>
+              <option value="120">120 fps</option>
+              <option value="manual">Manual</option>
+            </select>
+          </label>
+          <label class="videoAiSelectLabel">FPS manual
+            <input id="videoAiSpeedManualFps" type="number" min="15" max="240" step="1" value="60" />
+          </label>
+        </div>
+        <div class="videoAiAutoMetrics videoAiSpeedMetrics">
+          <div class="videoAiAutoMetric" id="videoAiSpeedModel"><strong>Individual</strong><span>8,23 m ancho · 23,77 m largo</span></div>
+          <div class="videoAiAutoMetric" id="videoAiSpeedPrecision"><strong>auto</strong><span>velocidad estimada por distancia/tiempo</span></div>
+          <div class="videoAiAutoMetric" id="videoAiAutoSpeedReliability"><strong>—</strong><span>fiabilidad velocidad</span></div>
+        </div>
         <div class="videoAiAssistActions videoAiAutoActions">
           <button class="chip primary" id="btnVideoAIStartAuto" type="button">Iniciar Auto IA</button>
           <button class="chip" id="btnVideoAIStopAuto" type="button">Detener Auto IA</button>
@@ -1141,15 +1178,15 @@
           <div class="videoAiAutoMetric" id="videoAiAutoSpeed"><strong>—</strong><span>última velocidad estimada</span></div>
           <div class="videoAiAutoMetric" id="videoAiAutoConfidence"><strong>—</strong><span>confianza · —</span></div>
         </div>
-        <div class="videoAiAutoStatus" id="videoAiAutoStatus">Modo automático preparado. Requiere cámara fija, calibración completa y buena luz.</div>
-        <p class="videoAiAutoNote">Experimental: no sustituye a Hawk‑Eye ni mide velocidad profesional. Genera datos tácticos revisables para acelerar el registro.</p>
+        <div class="videoAiAutoStatus" id="videoAiAutoStatus">Modo automático preparado. Puedes usar cámara en directo o subir un vídeo grabado.</div>
+        <p class="videoAiAutoNote">Experimental: no sustituye a Hawk‑Eye ni mide velocidad profesional. En v3.51 los golpes confirmados pueden agruparse en puntos completos antes de enviarlos a Analítica.</p>
       </section>
 
       <section class="videoAiAssistedPanel">
         <div class="videoAiSectionHead">
           <div>
-            <h3>Revisión y análisis asistido</h3>
-            <p>Revisa los golpes automáticos o marca trayectorias manuales. La web calcula dirección, profundidad y crea eventos para Analítica táctica.</p>
+            <h3>Revisión y edición</h3>
+            <p>Confirma, corrige o rechaza cada golpe antes de enviarlo. Solo los golpes confirmados pasan a Analítica táctica.</p>
           </div>
           <span id="videoAiAssistCount">0</span>
         </div>
@@ -1189,18 +1226,54 @@
           <button class="chip" id="btnVideoAIMarkStart" type="button">Marcar inicio</button>
           <button class="chip" id="btnVideoAIMarkEnd" type="button">Marcar final</button>
           <button class="chip primary" id="btnVideoAISaveEvent" type="button">Guardar golpe</button>
-          <button class="chip" id="btnVideoAISendAnalytics" type="button">Enviar a Analítica</button>
+          <button class="chip primary" id="btnVideoAISendAnalytics" type="button">Enviar confirmados</button>
+          <button class="chip" id="btnVideoAIConfirmAll" type="button">Confirmar todo</button>
+          <button class="chip" id="btnVideoAIRejectPending" type="button">Rechazar pendientes</button>
           <button class="chip" id="btnVideoAIClearEvents" type="button">Limpiar golpes</button>
         </div>
         <div class="videoAiAssistResultBox" id="videoAiAssistResultBox">Calibra la pista y marca una trayectoria para calcular dirección.</div>
-        <ol class="videoAiEventList" id="videoAiEventList"></ol>
+        <div class="videoAiReviewSummary" id="videoAiReviewSummary"><strong>0</strong> confirmados · <strong>0</strong> pendientes · <strong>0</strong> rechazados</div>
+        <ol class="videoAiEventList videoAiReviewList" id="videoAiEventList"></ol>
+      </section>
+
+      <section class="videoAiPointPanel">
+        <div class="videoAiSectionHead">
+          <div>
+            <h3>Puntos IA agrupados</h3>
+            <p>Convierte los golpes confirmados en puntos completos. Puedes revisar ganador, confirmar o rechazar cada punto antes de enviarlo a Analítica táctica.</p>
+          </div>
+          <span id="videoAiPointCount">0</span>
+        </div>
+        <div class="videoAiAssistGrid videoAiPointConfig">
+          <label class="videoAiSelectLabel">Agrupación
+            <select id="videoAiPointGroupingMode">
+              <option value="result_or_max" selected>Cierre por resultado o máximo</option>
+              <option value="max_only">Cada N golpes</option>
+            </select>
+          </label>
+          <label class="videoAiSelectLabel">Máx. golpes por punto
+            <input id="videoAiPointMaxShots" type="number" min="1" max="24" step="1" value="8" />
+          </label>
+          <label class="videoAiSelectLabel videoAiCheckLabel">
+            <input id="videoAiPointIncludeOpen" type="checkbox" checked />
+            Incluir última secuencia abierta
+          </label>
+        </div>
+        <div class="videoAiAssistActions videoAiPointActions">
+          <button class="chip primary" id="btnVideoAIGeneratePoints" type="button">Generar puntos</button>
+          <button class="chip primary" id="btnVideoAISendPoints" type="button">Enviar puntos confirmados</button>
+          <button class="chip" id="btnVideoAIConfirmPointGroups" type="button">Confirmar puntos</button>
+          <button class="chip" id="btnVideoAIClearPoints" type="button">Limpiar puntos</button>
+        </div>
+        <div class="videoAiReviewSummary" id="videoAiPointSummary"><strong>0</strong> puntos confirmados · <strong>0</strong> pendientes · <strong>0</strong> rechazados</div>
+        <ol class="videoAiPointGroupList" id="videoAiPointGroupList"></ol>
       </section>
 
       <section class="videoAiDataPanel">
         <div class="videoAiSectionHead">
           <div>
             <h3>Datos preparados para IA</h3>
-            <p>Incluye calibración, golpes manuales, golpes automáticos revisables, confianza y velocidad estimada.</p>
+            <p>Incluye fuente de vídeo, calibración, golpes manuales, golpes automáticos revisables, confianza y velocidad estimada.</p>
           </div>
         </div>
         <pre id="videoAiSessionPreview" class="videoAiSessionPreview"></pre>
@@ -1883,7 +1956,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3470"></script>
+<script src="app.js?v=3510"></script>
 
 </body>
 </html>

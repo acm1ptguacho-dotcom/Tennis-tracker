@@ -1,0 +1,16 @@
+# v3.49 · Vídeo IA con subida/análisis de vídeo grabado
+
+Cambios principales:
+- Añadida carga de vídeo grabado desde archivo local en el Modo Vídeo IA.
+- El vídeo subido se muestra en la misma ventana de análisis y reutiliza la calibración de pista.
+- Añadidos controles rápidos para vídeo subido: reproducir/pausar, -10s, +10s, volver al inicio y quitar vídeo.
+- Auto IA puede analizar cámara en directo o vídeo subido desde el dispositivo.
+- La revisión editable de v3.48 se mantiene: solo los golpes confirmados se envían a Analítica táctica.
+- Metadatos de sesión ampliados con sourceMode y uploadedVideo.
+- Estado visual específico para vídeo subido.
+- Cache actualizada a v3490.
+
+Notas:
+- El análisis sigue siendo experimental y local en navegador.
+- La velocidad sigue siendo estimada, no medición profesional.
+- Para mejores resultados: vídeo horizontal, cámara fija, buena luz y calibración sobre un frame estable donde se vea la pista.

@@ -1,0 +1,31 @@
+v3.51 · Vídeo IA puntos agrupados
+
+Objetivo
+- Convertir golpes IA/manuales confirmados en puntos completos antes de enviarlos a Analítica táctica.
+
+Cambios incluidos
+- Nuevo panel "Puntos IA agrupados" dentro de Vídeo IA.
+- Agrupación automática de golpes confirmados en puntos.
+- Modos de agrupación:
+  - cierre por resultado o máximo de golpes
+  - cada N golpes
+- Configuración de máximo de golpes por punto.
+- Opción para incluir o excluir la última secuencia abierta.
+- Ganador sugerido por punto:
+  - winner / forced_error: gana el jugador del golpe
+  - unforced_error: gana el rival
+  - secuencia abierta: usa el ganador seleccionado o el último jugador inferido
+- Revisión de puntos agrupados:
+  - confirmar
+  - pendiente
+  - rechazar
+  - borrar
+  - editar ganador
+- Envío a Analítica táctica de puntos confirmados como puntos independientes.
+- Los golpes rechazados o pendientes no se usan para generar puntos.
+- Metadatos de sesión ampliados con pointGroups y timing básico de golpes automáticos.
+- Caché actualizada a v3510.
+
+Notas
+- La agrupación depende de que los golpes estén correctamente revisados y confirmados.
+- La detección sigue siendo experimental y revisable; esta versión mejora la estructura táctica enviada a Analítica.

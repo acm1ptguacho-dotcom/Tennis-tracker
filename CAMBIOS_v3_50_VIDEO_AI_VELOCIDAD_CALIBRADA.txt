@@ -1,0 +1,13 @@
+v3.50 · Vídeo IA velocidad calibrada
+
+- Añadido bloque de calibración de velocidad dentro de Vídeo IA.
+- Nueva selección de escala de pista: individual 8,23 m o dobles 10,97 m.
+- Nueva selección de FPS para estimación de velocidad: automático, 30, 60, 120 o manual.
+- El cálculo automático usa ahora distancia real aproximada de pista + tiempo entre muestras/frames cuando está disponible.
+- Cada golpe puede guardar speedDetails con distancia en metros, duración en ms, método usado, FPS y fiabilidad.
+- El panel en vivo muestra velocidad, distancia/tiempo y fiabilidad de la última detección.
+- La revisión editable mantiene la velocidad corregible manualmente y muestra metadatos de velocidad.
+- Los datos enviados a Analítica táctica incluyen speedDetails en meta.
+- Caché actualizada a v3500.
+
+Nota: la velocidad sigue siendo estimada y no sustituye mediciones profesionales tipo Hawk-Eye/radar.

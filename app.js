@@ -2523,6 +2523,104 @@ function closeAnalyticsFilters(){
  * @param {{x:number, y:number}} end
  * @returns {string}
  */
+
+const VIDEO_AI_COURT_METERS = {
+  singlesWidth: 8.23,
+  doublesWidth: 10.97,
+  length: 23.77
+};
+function videoAIGetSpeedProfile(){
+  const court = document.getElementById("videoAiSpeedCourt")?.value || videoAI.speedProfile?.court || "singles";
+  const fpsMode = document.getElementById("videoAiSpeedFpsMode")?.value || videoAI.speedProfile?.fpsMode || "auto";
+  const manualRaw = Number(document.getElementById("videoAiSpeedManualFps")?.value || videoAI.speedProfile?.manualFps || 60);
+  const manualFps = Number.isFinite(manualRaw) ? Math.max(15, Math.min(240, manualRaw)) : 60;
+  videoAI.speedProfile = { court: court === "doubles" ? "doubles" : "singles", fpsMode, manualFps };
+  return videoAI.speedProfile;
+}
+function videoAISpeedFpsLabel(profile=videoAIGetSpeedProfile()){
+  if (profile.fpsMode === "manual") return `${profile.manualFps} fps manual`;
+  if (["30","60","120"].includes(String(profile.fpsMode))) return `${profile.fpsMode} fps`;
+  const video = document.getElementById("videoAiPreview");
+  const trackFps = video?.srcObject?.getVideoTracks?.()[0]?.getSettings?.().frameRate;
+  if (trackFps) return `auto · ${Math.round(trackFps)} fps cámara`;
+  return "auto";
+}
+function videoAICourtDistanceMeters(courtStart, courtEnd){
+  if (!courtStart || !courtEnd) return 0;
+  const profile = videoAIGetSpeedProfile();
+  const width = profile.court === "doubles" ? VIDEO_AI_COURT_METERS.doublesWidth : VIDEO_AI_COURT_METERS.singlesWidth;
+  const dxMeters = (courtEnd.x - courtStart.x) * width;
+  const dyMeters = (courtEnd.y - courtStart.y) * VIDEO_AI_COURT_METERS.length;
+  return Math.hypot(dxMeters, dyMeters);
+}
+function videoAIResolveSampleDurationMs(startSample, endSample){
+  if (!startSample || !endSample) return 0;
+  const profile = videoAIGetSpeedProfile();
+  if (Number.isFinite(startSample.mediaTs) && Number.isFinite(endSample.mediaTs) && endSample.mediaTs > startSample.mediaTs){
+    return Math.max(1, endSample.mediaTs - startSample.mediaTs);
+  }
+  if (profile.fpsMode === "manual" || ["30","60","120"].includes(String(profile.fpsMode))){
+    const fps = profile.fpsMode === "manual" ? profile.manualFps : Number(profile.fpsMode);
+    const frameDelta = Math.max(1, Math.round(((endSample.ts || 0) - (startSample.ts || 0)) / Math.max(1, 1000/fps)));
+    return Math.max(1, frameDelta * (1000/fps));
+  }
+  return Math.max(1, (endSample.ts || 0) - (startSample.ts || 0));
+}
+function videoAISpeedReliabilityName(level){
+  const map = {
+    high: tr("alta", "high"),
+    medium: tr("media", "medium"),
+    low: tr("baja", "low"),
+    visual: tr("visual", "visual")
+  };
+  return map[level] || level || "—";
+}
+function videoAIEstimateSpeedTimedDetails(courtStart, courtEnd, durationMs, fallbackStart, fallbackEnd){
+  const distanceMeters = videoAICourtDistanceMeters(courtStart, courtEnd);
+  if (!distanceMeters || !durationMs || durationMs < 40){
+    const fallbackSpeed = videoAIEstimateSpeed(fallbackStart, fallbackEnd);
+    return {
+      kmh:fallbackSpeed,
+      distanceMeters:0,
+      durationMs:0,
+      method:"visual_fallback",
+      reliability:"visual",
+      fpsLabel: videoAISpeedFpsLabel()
+    };
+  }
+  const raw = (distanceMeters / (durationMs/1000)) * 3.6;
+  const kmh = Math.round(Math.max(10, Math.min(260, raw)));
+  let reliability = "medium";
+  if (durationMs < 90 || durationMs > 1800 || kmh >= 250) reliability = "low";
+  else if (durationMs >= 120 && durationMs <= 1200 && kmh >= 25 && kmh <= 210) reliability = "high";
+  return {
+    kmh,
+    distanceMeters:Number(distanceMeters.toFixed(2)),
+    durationMs:Math.round(durationMs),
+    method:"court_time_calibrated",
+    reliability,
+    fpsLabel: videoAISpeedFpsLabel()
+  };
+}
+function videoAIGetCurrentMediaMs(video, rafTs){
+  if (videoAIHasUploadedVideo() && video && Number.isFinite(video.currentTime)) return video.currentTime * 1000;
+  return Number.isFinite(rafTs) ? rafTs : performance.now();
+}
+function renderVideoAISpeedPanel(){
+  const profile = videoAIGetSpeedProfile();
+  const model = document.getElementById("videoAiSpeedModel");
+  const precision = document.getElementById("videoAiSpeedPrecision");
+  if (model){
+    const width = profile.court === "doubles" ? VIDEO_AI_COURT_METERS.doublesWidth : VIDEO_AI_COURT_METERS.singlesWidth;
+    model.innerHTML = `<strong>${profile.court === "doubles" ? "Dobles" : "Individual"}</strong><span>${width.toFixed(2)} m ancho · ${VIDEO_AI_COURT_METERS.length.toFixed(2)} m largo</span>`;
+  }
+  if (precision){
+    const fps = videoAISpeedFpsLabel(profile);
+    precision.innerHTML = `<strong>${escapeHtml(fps)}</strong><span>${tr("velocidad estimada por distancia/tiempo", "speed estimated by distance/time")}</span>`;
+  }
+  renderVideoAISessionPreview();
+}
+
 function videoAIClassifyShot(start, end){
   if (!start || !end) return 'forehand';
   // Heurística aproximada: si la bola sale desde muy atrás y termina en la mitad opuesta de la pista, lo interpretamos como saque.
@@ -2571,6 +2669,9 @@ const videoAI = {
   chunks:[],
   objectUrl:null,
   lastBlob:null,
+  uploadObjectUrl:null,
+  uploadedFileMeta:null,
+  sourceMode:"camera",
   recording:false,
   calibrationMode:false,
   calibrationPoints:[],
@@ -2579,6 +2680,7 @@ const videoAI = {
   markMode:null,
   currentTrajectory:{ start:null, end:null },
   assistedEvents:[],
+  pointGroups:[],
   autoRunning:false,
   autoCanvas:null,
   autoCtx:null,
@@ -2588,7 +2690,8 @@ const videoAI = {
   autoLastTick:0,
   autoRaf:null,
   autoLastEventAt:0,
-  autoStats:{samples:0,candidates:0,lastSpeed:0,lastConfidence:0,lastPlayer:"—"},
+  autoStats:{samples:0,candidates:0,lastSpeed:0,lastConfidence:0,lastPlayer:"—",lastDistanceMeters:0,lastDurationMs:0,lastSpeedReliability:"—"},
+  speedProfile:{ court:"singles", fpsMode:"auto", manualFps:60 },
   fullscreenActive:false,
   _orientationResizeTimer:null
 };
@@ -2599,14 +2702,51 @@ function saveVideoAISessionMeta(meta){
   safeWriteJSON(localStorage, getVideoAISessionsStorageKey(), arr.slice(0, 25));
 }
 function videoAIStatus(msg){ const el = $("#videoAiStatus"); if (el) el.textContent = msg || ""; }
+
+function videoAIHasUploadedVideo(){
+  return !!videoAI.uploadObjectUrl;
+}
+function videoAIHasPlayableSource(){
+  const video = $("#videoAiPreview");
+  return !!(videoAI.stream || (videoAI.uploadObjectUrl && video && video.src));
+}
+function videoAIUpdateUploadStatus(){
+  const el = $("#videoAiUploadStatus");
+  if (!el) return;
+  const meta = videoAI.uploadedFileMeta;
+  if (!meta){
+    el.textContent = tr("Sin vídeo cargado","No uploaded video");
+    return;
+  }
+  const mb = meta.sizeBytes ? (meta.sizeBytes / (1024*1024)).toFixed(1) + " MB" : "—";
+  const dur = meta.durationSeconds ? `${Math.round(meta.durationSeconds)} s` : tr("duración pendiente","duration pending");
+  el.textContent = `${meta.name || tr("Vídeo cargado","Uploaded video")} · ${mb} · ${dur}`;
+}
+function videoAISetVideoSourceMode(mode){
+  videoAI.sourceMode = mode === "upload" ? "upload" : "camera";
+  document.body.classList.toggle("video-ai-upload-active", videoAI.sourceMode === "upload");
+  document.body.classList.toggle("video-ai-camera-source", videoAI.sourceMode !== "upload");
+  videoAIUpdateUploadStatus();
+}
 function currentVideoAISessionPayload(){
   return {
     // Actualizar a la versión 3.33 para los metadatos de sesión de vídeo IA
-    version:"3.47",
-    source:"video_ai_assisted",
+    version:"3.51",
+    source:"video_ai_upload_or_assisted_grouped_points",
     matchId: state?.matchId || null,
     createdAt: new Date().toISOString(),
+    sourceMode: videoAI.sourceMode || (videoAI.uploadObjectUrl ? "upload" : "camera"),
     camera: $("#videoAiCameraSelect")?.selectedOptions?.[0]?.textContent || "auto",
+    uploadedVideo: videoAI.uploadedFileMeta ? { ...videoAI.uploadedFileMeta } : null,
+    speedModel: {
+      ...videoAIGetSpeedProfile(),
+      fpsLabel: videoAISpeedFpsLabel(),
+      courtMeters: {
+        length: VIDEO_AI_COURT_METERS.length,
+        width: videoAIGetSpeedProfile().court === "doubles" ? VIDEO_AI_COURT_METERS.doublesWidth : VIDEO_AI_COURT_METERS.singlesWidth
+      },
+      note: "Velocidad estimada, no medición profesional."
+    },
     orientation: getVideoAIOrientationState(),
     calibration: videoAI.calibrationPoints.map((p,i)=>({
       label: VIDEO_AI_CALIBRATION_LABELS[i] || `Punto ${i+1}`,
@@ -2623,17 +2763,27 @@ function currentVideoAISessionPayload(){
       code: ev.code,
       confidence: ev.confidence,
       speedKmh: ev.speedKmh || null,
+      speedDetails: ev.speedDetails || null,
+      timing: ev.timing || null,
       source: ev.source || "video_ai_assisted",
       auto: !!ev.auto,
-      reviewStatus: ev.reviewStatus || "pending",
+      reviewStatus: videoAIEventReviewStatus(ev),
       start: ev.start,
       end: ev.end
     })),
+    pointGroups: videoAIPointGroupsPayload(),
     autoTracking:{
       enabled: !!videoAI.autoRunning,
       samples: videoAI.autoStats?.samples || 0,
       candidates: videoAI.autoStats?.candidates || 0,
-      acceptedEvents: (videoAI.assistedEvents || []).filter(ev=>ev.source === "video_ai_auto_reviewable").length,
+      acceptedEvents: videoAIConfirmedEvents().length,
+      pendingEvents: videoAIPendingEvents().length,
+      rejectedEvents: videoAIRejectedEvents().length,
+      inputSource: videoAI.sourceMode || (videoAI.uploadObjectUrl ? "upload" : "camera"),
+      speedModel: { ...videoAIGetSpeedProfile(), fpsLabel: videoAISpeedFpsLabel() },
+      lastDistanceMeters: videoAI.autoStats?.lastDistanceMeters || 0,
+      lastDurationMs: videoAI.autoStats?.lastDurationMs || 0,
+      lastSpeedReliability: videoAI.autoStats?.lastSpeedReliability || "—",
       sensitivity: document.getElementById("videoAiAutoSensitivity")?.value || "medium",
       playerMode: document.getElementById("videoAiAutoPlayerMode")?.value || "auto"
     },
@@ -2755,6 +2905,393 @@ function videoAIAnalyzeTrajectory(start, end){
 function videoAIAutoEventCount(){
   return (videoAI.assistedEvents || []).filter(ev => ev.source === "video_ai_auto_reviewable").length;
 }
+function videoAIEventReviewStatus(ev){
+  if (!ev) return "pending";
+  if (ev.reviewStatus) return ev.reviewStatus;
+  return ev.auto ? "pending" : "accepted";
+}
+function videoAIConfirmedEvents(){
+  return (videoAI.assistedEvents || []).filter(ev => videoAIEventReviewStatus(ev) === "accepted");
+}
+function videoAIPendingEvents(){
+  return (videoAI.assistedEvents || []).filter(ev => videoAIEventReviewStatus(ev) === "pending");
+}
+function videoAIRejectedEvents(){
+  return (videoAI.assistedEvents || []).filter(ev => videoAIEventReviewStatus(ev) === "rejected");
+}
+function videoAIReviewStatusName(status){
+  const map = {
+    accepted:tr("Confirmado","Accepted"),
+    pending:tr("Pendiente","Pending"),
+    rejected:tr("Rechazado","Rejected")
+  };
+  return map[status] || status || "—";
+}
+function videoAIResultName(result){
+  const map = {
+    neutral:tr("Continúa","Continues"),
+    winner:tr("Ganador","Winner"),
+    forced_error:tr("Provoca error","Forces error"),
+    unforced_error:tr("Error propio","Own error")
+  };
+  return map[result] || result || "—";
+}
+function videoAISelectOptions(options, current){
+  return options.map(([value,label])=>`<option value="${escapeHtml(value)}"${value === current ? " selected" : ""}>${escapeHtml(label)}</option>`).join("");
+}
+function videoAIRecomputeEditableEvent(ev){
+  if (!ev) return ev;
+  ev.depth = ["deep","medium","short"].includes(ev.depth) ? ev.depth : "medium";
+  ev.direction = ["cross","line","center"].includes(ev.direction) ? ev.direction : "center";
+  ev.code = `${videoAIDepthCode(ev.depth)}${videoAIDirCode(ev.direction)}`;
+  if (ev.shot === "serve"){
+    const courtEnd = ev.end?.court || null;
+    ev.serveTarget = videoAIEstimateServeTarget(courtEnd);
+  }else if (ev.serveTarget){
+    delete ev.serveTarget;
+  }
+  return ev;
+}
+function videoAIGetEventById(id){
+  return (videoAI.assistedEvents || []).find(ev => ev.id === id) || null;
+}
+function setVideoAIEventReviewStatus(id, status){
+  const ev = videoAIGetEventById(id);
+  if (!ev) return;
+  ev.reviewStatus = status;
+  ev.updatedAt = new Date().toISOString();
+  renderVideoAIAssistedPanel();
+  renderVideoAIOverlay();
+  renderVideoAIPointGroupsPanel();
+  const pending = videoAIPendingEvents().length;
+  const confirmed = videoAIConfirmedEvents().length;
+  videoAIStatus(`${confirmed} golpes confirmados · ${pending} pendientes de revisar.`);
+}
+function deleteVideoAIEvent(id){
+  videoAI.assistedEvents = (videoAI.assistedEvents || []).filter(ev => ev.id !== id);
+  videoAI.pointGroups = (videoAI.pointGroups || []).map(g => ({ ...g, eventIds:(g.eventIds||[]).filter(evId => evId !== id) })).filter(g => (g.eventIds||[]).length);
+  renderVideoAIAssistedPanel();
+  renderVideoAIOverlay();
+  renderVideoAIPointGroupsPanel();
+  videoAIStatus("Golpe eliminado de la revisión.");
+}
+function updateVideoAIEventField(id, field, value){
+  const ev = videoAIGetEventById(id);
+  if (!ev) return;
+  if (field === "speedKmh"){
+    const n = Math.round(Number(value));
+    ev.speedKmh = Number.isFinite(n) && n >= 0 ? Math.min(260, n) : null;
+  }else if (field === "player"){
+    ev.player = value === "B" ? "B" : "A";
+  }else if (field === "shot"){
+    ev.shot = ["serve","return","forehand","backhand","volley"].includes(value) ? value : "forehand";
+  }else if (field === "direction"){
+    ev.direction = ["cross","line","center"].includes(value) ? value : "center";
+  }else if (field === "depth"){
+    ev.depth = ["deep","medium","short"].includes(value) ? value : "medium";
+  }else if (field === "result"){
+    ev.result = ["neutral","winner","forced_error","unforced_error"].includes(value) ? value : "neutral";
+  }
+  videoAIRecomputeEditableEvent(ev);
+  ev.updatedAt = new Date().toISOString();
+  renderVideoAIAssistedPanel();
+  renderVideoAIOverlay();
+  renderVideoAIPointGroupsPanel();
+}
+function confirmAllVideoAIEvents(){
+  let changed = 0;
+  (videoAI.assistedEvents || []).forEach(ev => {
+    if (videoAIEventReviewStatus(ev) !== "accepted"){
+      ev.reviewStatus = "accepted";
+      ev.updatedAt = new Date().toISOString();
+      changed++;
+    }
+  });
+  renderVideoAIAssistedPanel();
+  renderVideoAIOverlay();
+  renderVideoAIPointGroupsPanel();
+  videoAIStatus(changed ? "Todos los golpes han quedado confirmados." : "No había golpes pendientes.");
+}
+function rejectPendingVideoAIEvents(){
+  let changed = 0;
+  (videoAI.assistedEvents || []).forEach(ev => {
+    if (videoAIEventReviewStatus(ev) === "pending"){
+      ev.reviewStatus = "rejected";
+      ev.updatedAt = new Date().toISOString();
+      changed++;
+    }
+  });
+  renderVideoAIAssistedPanel();
+  renderVideoAIOverlay();
+  renderVideoAIPointGroupsPanel();
+  videoAIStatus(changed ? "Pendientes rechazados. Puedes restaurarlos individualmente si hace falta." : "No había pendientes que rechazar.");
+}
+
+function videoAIPointGroupReviewStatus(group){
+  if (!group) return "pending";
+  return group.reviewStatus || "accepted";
+}
+function videoAIPointGroupStatusName(status){
+  const map = {
+    accepted:tr("Confirmado","Accepted"),
+    pending:tr("Pendiente","Pending"),
+    rejected:tr("Rechazado","Rejected")
+  };
+  return map[status] || status || "—";
+}
+function videoAIConfirmedPointGroups(){
+  return (videoAI.pointGroups || []).filter(g => videoAIPointGroupReviewStatus(g) === "accepted");
+}
+function videoAIPointGroupsPayload(){
+  return (videoAI.pointGroups || []).map((group, idx) => ({
+    id: group.id,
+    n: group.n || idx + 1,
+    winner: group.winner,
+    reviewStatus: videoAIPointGroupReviewStatus(group),
+    eventIds: group.eventIds || [],
+    eventCount: (group.eventIds || []).length,
+    createdAt: group.createdAt || null,
+    updatedAt: group.updatedAt || null
+  }));
+}
+function videoAIEventEndsPoint(ev){
+  return !!ev && ["winner","forced_error","unforced_error"].includes(ev.result);
+}
+function videoAIOpponent(player){
+  return player === "B" ? "A" : "B";
+}
+function videoAIInferPointWinner(events, fallback="A"){
+  const list = (events || []).filter(Boolean);
+  const closing = [...list].reverse().find(videoAIEventEndsPoint);
+  const ev = closing || list[list.length-1];
+  if (!ev) return fallback === "B" ? "B" : "A";
+  if (ev.result === "unforced_error") return videoAIOpponent(ev.player);
+  if (ev.result === "winner" || ev.result === "forced_error") return ev.player === "B" ? "B" : "A";
+  return fallback === "B" ? "B" : (ev.player === "B" ? "B" : "A");
+}
+function videoAIGetPointMaxShots(){
+  const raw = Number(document.getElementById("videoAiPointMaxShots")?.value || 8);
+  return Number.isFinite(raw) ? Math.max(1, Math.min(24, Math.round(raw))) : 8;
+}
+function videoAIGetPointGroupingMode(){
+  return document.getElementById("videoAiPointGroupingMode")?.value || "result_or_max";
+}
+function videoAIIncludeOpenPoint(){
+  const el = document.getElementById("videoAiPointIncludeOpen");
+  return !el || !!el.checked;
+}
+function videoAIGroupEventsToPoints(){
+  const confirmed = videoAIConfirmedEvents();
+  if (!confirmed.length){
+    videoAI.pointGroups = [];
+    renderVideoAIPointGroupsPanel();
+    toast("No hay golpes confirmados para agrupar");
+    return [];
+  }
+  const mode = videoAIGetPointGroupingMode();
+  const maxShots = videoAIGetPointMaxShots();
+  const includeOpen = videoAIIncludeOpenPoint();
+  const fallbackWinner = document.getElementById("videoAiAssistWinner")?.value || "A";
+  const groups = [];
+  let buffer = [];
+  const closeBuffer = (reason) => {
+    if (!buffer.length) return;
+    const idx = groups.length + 1;
+    const events = buffer.slice();
+    groups.push({
+      id:`via_point_${Date.now()}_${idx}_${Math.random().toString(16).slice(2)}`,
+      n:idx,
+      eventIds: events.map(ev => ev.id).filter(Boolean),
+      winner: videoAIInferPointWinner(events, fallbackWinner),
+      closeReason: reason || "manual",
+      reviewStatus:"accepted",
+      createdAt:new Date().toISOString()
+    });
+    buffer = [];
+  };
+  confirmed.forEach(ev => {
+    buffer.push(ev);
+    let shouldClose = false;
+    let reason = "max_shots";
+    if (mode !== "max_only" && videoAIEventEndsPoint(ev)){
+      shouldClose = true;
+      reason = "result";
+    }
+    if (buffer.length >= maxShots){
+      shouldClose = true;
+      reason = shouldClose && reason === "result" ? "result" : "max_shots";
+    }
+    if (shouldClose) closeBuffer(reason);
+  });
+  if (buffer.length && includeOpen) closeBuffer("open_sequence");
+  videoAI.pointGroups = groups;
+  renderVideoAIPointGroupsPanel();
+  renderVideoAISessionPreview();
+  videoAIStatus(`${groups.length} puntos IA generados desde ${confirmed.length} golpes confirmados.`);
+  toast(`${groups.length} puntos generados`);
+  return groups;
+}
+function videoAIGetPointGroupById(id){
+  return (videoAI.pointGroups || []).find(g => g.id === id) || null;
+}
+function videoAIGetPointGroupEvents(group){
+  if (!group) return [];
+  return (group.eventIds || []).map(videoAIGetEventById).filter(ev => ev && videoAIEventReviewStatus(ev) === "accepted");
+}
+function updateVideoAIPointGroupField(id, field, value){
+  const group = videoAIGetPointGroupById(id);
+  if (!group) return;
+  if (field === "winner") group.winner = value === "B" ? "B" : "A";
+  group.updatedAt = new Date().toISOString();
+  renderVideoAIPointGroupsPanel();
+  renderVideoAISessionPreview();
+}
+function setVideoAIPointGroupReviewStatus(id, status){
+  const group = videoAIGetPointGroupById(id);
+  if (!group) return;
+  group.reviewStatus = ["accepted","pending","rejected"].includes(status) ? status : "pending";
+  group.updatedAt = new Date().toISOString();
+  renderVideoAIPointGroupsPanel();
+  renderVideoAISessionPreview();
+}
+function deleteVideoAIPointGroup(id){
+  videoAI.pointGroups = (videoAI.pointGroups || []).filter(g => g.id !== id);
+  renderVideoAIPointGroupsPanel();
+  renderVideoAISessionPreview();
+}
+function clearVideoAIPointGroups(){
+  videoAI.pointGroups = [];
+  renderVideoAIPointGroupsPanel();
+  renderVideoAISessionPreview();
+  videoAIStatus("Puntos IA agrupados limpiados. Los golpes revisados se conservan.");
+}
+function confirmAllVideoAIPointGroups(){
+  (videoAI.pointGroups || []).forEach(g => { g.reviewStatus = "accepted"; g.updatedAt = new Date().toISOString(); });
+  renderVideoAIPointGroupsPanel();
+  renderVideoAISessionPreview();
+}
+function videoAIPointGroupSnapshot(group, events){
+  const parts = (events || []).map(ev => `${playerName(ev.player)} ${ev.code || "—"}`).slice(0, 6);
+  const extra = events.length > 6 ? ` +${events.length-6}` : "";
+  return `${parts.join(" → ")}${extra}` || "Punto IA";
+}
+function renderVideoAIPointGroupsPanel(){
+  const count = document.getElementById("videoAiPointCount");
+  const list = document.getElementById("videoAiPointGroupList");
+  const summary = document.getElementById("videoAiPointSummary");
+  const groups = videoAI.pointGroups || [];
+  const accepted = groups.filter(g => videoAIPointGroupReviewStatus(g) === "accepted").length;
+  const pending = groups.filter(g => videoAIPointGroupReviewStatus(g) === "pending").length;
+  const rejected = groups.filter(g => videoAIPointGroupReviewStatus(g) === "rejected").length;
+  if (count) count.textContent = `${accepted}/${groups.length}`;
+  if (summary) summary.innerHTML = `<strong>${accepted}</strong> puntos confirmados · <strong>${pending}</strong> pendientes · <strong>${rejected}</strong> rechazados`;
+  if (!list) return;
+  list.innerHTML = groups.length ? groups.map((group, idx) => {
+    const events = videoAIGetPointGroupEvents(group);
+    const status = videoAIPointGroupReviewStatus(group);
+    const id = escapeHtml(group.id || "");
+    const winnerOptions = videoAISelectOptions([["A",playerName("A")],["B",playerName("B")]], group.winner || "A");
+    const seq = events.map((ev, shotIdx) => `<span><b>${shotIdx+1}</b>${escapeHtml(playerName(ev.player))} · ${escapeHtml(videoAIAssistShotName(ev.shot))} · ${escapeHtml(videoAIAssistDirectionName(ev.direction))} ${escapeHtml(videoAIAssistDepthName(ev.depth))}${ev.speedKmh ? ` · ${escapeHtml(String(ev.speedKmh))} km/h` : ""}</span>`).join("");
+    const reasonMap = { result:tr("cierre por resultado","closed by result"), max_shots:tr("cierre por nº de golpes","closed by shot count"), open_sequence:tr("secuencia abierta","open sequence") };
+    return `<li class="videoAiPointItem videoAiPointItem--${escapeHtml(status)}">
+      <div class="videoAiPointTop">
+        <div class="videoAiReviewTitle"><b>Punto IA ${idx+1}</b><em>${escapeHtml(reasonMap[group.closeReason] || group.closeReason || "agrupado")}</em><span class="videoAiReviewBadge videoAiReviewBadge--${escapeHtml(status)}">${escapeHtml(videoAIPointGroupStatusName(status))}</span></div>
+        <small>${events.length} golpes · ganador sugerido: ${escapeHtml(playerName(group.winner || "A"))}</small>
+      </div>
+      <div class="videoAiPointSeq">${seq || `<span>${tr("Sin golpes confirmados en este grupo.","No confirmed shots in this group.")}</span>`}</div>
+      <div class="videoAiPointControls">
+        <label>Ganador<select data-point-id="${id}" data-video-ai-point-field="winner">${winnerOptions}</select></label>
+        <button type="button" class="chip primary" data-point-id="${id}" data-video-ai-point-review="accepted">Confirmar</button>
+        <button type="button" class="chip" data-point-id="${id}" data-video-ai-point-review="pending">Pendiente</button>
+        <button type="button" class="chip" data-point-id="${id}" data-video-ai-point-review="rejected">Rechazar</button>
+        <button type="button" class="chip danger" data-point-id="${id}" data-video-ai-point-action="delete">Borrar</button>
+      </div>
+    </li>`;
+  }).join("") : `<li>${tr("Aún no hay puntos agrupados. Confirma golpes y pulsa ‘Generar puntos’.","No grouped points yet. Confirm shots and press ‘Generate points’.")}</li>`;
+}
+function handleVideoAIPointGroupChange(event){
+  const el = event.target;
+  const id = el?.dataset?.pointId;
+  const field = el?.dataset?.videoAiPointField;
+  if (!id || !field) return;
+  updateVideoAIPointGroupField(id, field, el.value);
+}
+function handleVideoAIPointGroupClick(event){
+  const btn = event.target.closest?.("[data-video-ai-point-review],[data-video-ai-point-action]");
+  if (!btn) return;
+  const id = btn.dataset.pointId;
+  if (!id) return;
+  if (btn.dataset.videoAiPointReview){
+    setVideoAIPointGroupReviewStatus(id, btn.dataset.videoAiPointReview);
+  }else if (btn.dataset.videoAiPointAction === "delete"){
+    deleteVideoAIPointGroup(id);
+  }
+}
+function sendVideoAIPointGroupsToAnalytics(){
+  if (!(videoAI.pointGroups || []).length) videoAIGroupEventsToPoints();
+  const groups = videoAIConfirmedPointGroups();
+  if (!groups.length){
+    toast("No hay puntos IA confirmados para enviar");
+    videoAIStatus("Genera y confirma al menos un punto antes de enviarlo a Analítica.");
+    return;
+  }
+  const sourceMode = videoAI.sourceMode === "upload" || !!videoAI.uploadedFileMeta ? "video_ai_upload_grouped_points" : "video_ai_grouped_points";
+  state.matchPoints = Array.isArray(state.matchPoints) ? state.matchPoints : [];
+  let added = 0;
+  groups.forEach((group, idx) => {
+    const rawEvents = videoAIGetPointGroupEvents(group);
+    const events = rawEvents.map(videoAIEventToMatchEvent).filter(Boolean);
+    if (!events.length) return;
+    const n = state.matchPoints.length + 1;
+    const point = {
+      n,
+      winner: group.winner || videoAIInferPointWinner(rawEvents, document.getElementById("videoAiAssistWinner")?.value || "A"),
+      reason: "Vídeo IA punto agrupado",
+      server: events.find(e=>e.type==="serve")?.player || rawEvents[0]?.player || state.currentServer || "A",
+      side: serveSideLabel ? serveSideLabel() : "deuce",
+      snapshot:`Punto IA ${idx+1} · ${events.length} golpes · ${videoAIPointGroupSnapshot(group, rawEvents)}`,
+      finishDetail:{ source:sourceMode, winner:group.winner || "A", eventCount:events.length, groupId:group.id, grouped:true, confirmedOnly:true },
+      important:false,
+      importantNote:"",
+      events,
+      arrows:[],
+      videoAI:true,
+      videoAIPointGroup:{ ...group, eventCount:events.length },
+      videoAISession: currentVideoAISessionPayload()
+    };
+    state.matchPoints.push(point);
+    added++;
+  });
+  if (!added){
+    toast("Los puntos confirmados no tenían golpes válidos");
+    return;
+  }
+  persist();
+  renderAll();
+  videoAIStatus(`${added} puntos IA agrupados enviados a Analítica táctica.`);
+  toast(`${added} puntos enviados a Analítica`);
+}
+
+function handleVideoAIEventListChange(event){
+  const el = event.target;
+  const id = el?.dataset?.eventId;
+  const field = el?.dataset?.videoAiEventField;
+  if (!id || !field) return;
+  updateVideoAIEventField(id, field, el.value);
+}
+function handleVideoAIEventListClick(event){
+  const btn = event.target.closest?.("[data-video-ai-review],[data-video-ai-action]");
+  if (!btn) return;
+  const id = btn.dataset.eventId;
+  if (!id) return;
+  const review = btn.dataset.videoAiReview;
+  const action = btn.dataset.videoAiAction;
+  if (review){
+    setVideoAIEventReviewStatus(id, review);
+  }else if (action === "delete"){
+    deleteVideoAIEvent(id);
+  }
+}
 function videoAISetAutoStatus(msg){
   const el = $("#videoAiAutoStatus");
   if (el) el.textContent = msg || "";
@@ -2767,7 +3304,8 @@ function videoAIGetAutoThreshold(){
 }
 function renderVideoAIAutoPanel(){
   const count = $("#videoAiAutoCount");
-  if (count) count.textContent = String(videoAIAutoEventCount());
+  if (count) count.textContent = `${videoAIConfirmedEvents().length}/${(videoAI.assistedEvents||[]).length}`;
+  videoAIUpdateUploadStatus();
   const btnStart = $("#btnVideoAIStartAuto");
   const btnStop = $("#btnVideoAIStopAuto");
   if (btnStart) btnStart.disabled = !!videoAI.autoRunning;
@@ -2784,8 +3322,15 @@ function renderVideoAIAutoPanel(){
   const elSpeed = $("#videoAiAutoSpeed");
   if (elSpeed){
     const kmh = videoAI.autoStats?.lastSpeed || 0;
-    elSpeed.innerHTML = `<strong>${kmh ? `${kmh} km/h` : "—"}</strong><span>${tr("última velocidad estimada","last estimated speed")}</span>`;
+    const details = videoAI.autoStats?.lastDistanceMeters ? `${videoAI.autoStats.lastDistanceMeters} m · ${Math.round(videoAI.autoStats.lastDurationMs||0)} ms` : tr("distancia/tiempo pendiente","distance/time pending");
+    elSpeed.innerHTML = `<strong>${kmh ? `${kmh} km/h` : "—"}</strong><span>${escapeHtml(details)}</span>`;
   }
+  const elSpeedRel = $("#videoAiAutoSpeedReliability");
+  if (elSpeedRel){
+    const rel = videoAI.autoStats?.lastSpeedReliability || "—";
+    elSpeedRel.innerHTML = `<strong>${escapeHtml(videoAISpeedReliabilityName(rel))}</strong><span>${tr("fiabilidad velocidad", "speed reliability")}</span>`;
+  }
+  renderVideoAISpeedPanel();
   const elConf = $("#videoAiAutoConfidence");
   if (elConf){
     const cf = videoAI.autoStats?.lastConfidence || 0;
@@ -2808,7 +3353,7 @@ function videoAIResetAutoTracking(clearEvents=false){
   videoAI.autoAnchor = null;
   videoAI.autoLastTick = 0;
   videoAI.autoLastEventAt = 0;
-  videoAI.autoStats = {samples:0,candidates:0,lastSpeed:0,lastConfidence:0,lastPlayer:"—"};
+  videoAI.autoStats = {samples:0,candidates:0,lastSpeed:0,lastConfidence:0,lastPlayer:"—",lastDistanceMeters:0,lastDurationMs:0,lastSpeedReliability:"—"};
   if (clearEvents){
     videoAI.assistedEvents = (videoAI.assistedEvents || []).filter(ev => ev.source !== "video_ai_auto_reviewable");
     renderVideoAIAssistedPanel();
@@ -2817,12 +3362,7 @@ function videoAIResetAutoTracking(clearEvents=false){
   renderVideoAIOverlay();
 }
 function videoAIEstimateSpeedTimed(courtStart, courtEnd, durationMs, fallbackStart, fallbackEnd){
-  if (!courtStart || !courtEnd || !durationMs || durationMs < 120) return videoAIEstimateSpeed(fallbackStart, fallbackEnd);
-  const courtDistance = Math.hypot(courtEnd.x - courtStart.x, courtEnd.y - courtStart.y);
-  // Estimación ligera: escala de pista completa en metros. No es medición profesional.
-  const meters = courtDistance * 23.77;
-  const kmh = (meters / (durationMs/1000)) * 3.6;
-  return Math.round(Math.max(18, Math.min(225, kmh)));
+  return videoAIEstimateSpeedTimedDetails(courtStart, courtEnd, durationMs, fallbackStart, fallbackEnd).kmh;
 }
 function videoAIAutoInferPlayer(analysis){
   const mode = $("#videoAiAutoPlayerMode")?.value || "auto";
@@ -2847,8 +3387,10 @@ function videoAIAutoCreateEvent(startSample, endSample, quality){
   if (!analysis) return null;
   const player = videoAIAutoInferPlayer(analysis);
   const shot = videoAIClassifyShot(start, end);
-  const timedSpeed = videoAIEstimateSpeedTimed(analysis.courtStart, analysis.courtEnd, Math.max(1, endSample.ts - startSample.ts), start, end);
-  const mixedConfidence = Math.max(.38, Math.min(.94, ((analysis.confidence || .55) * .55) + ((quality || .5) * .45)));
+  const speedDetails = videoAIEstimateSpeedTimedDetails(analysis.courtStart, analysis.courtEnd, videoAIResolveSampleDurationMs(startSample, endSample), start, end);
+  const timedSpeed = speedDetails.kmh;
+  const speedPenalty = speedDetails.reliability === "low" ? .08 : speedDetails.reliability === "visual" ? .12 : 0;
+  const mixedConfidence = Math.max(.38, Math.min(.94, ((analysis.confidence || .55) * .55) + ((quality || .5) * .45) - speedPenalty));
   const ev = {
     id:`via_auto_${Date.now()}_${Math.random().toString(16).slice(2)}`,
     player,
@@ -2861,6 +3403,12 @@ function videoAIAutoCreateEvent(startSample, endSample, quality){
     start:{ x:Number(start.x.toFixed(4)), y:Number(start.y.toFixed(4)), court:analysis.courtStart },
     end:{ x:Number(end.x.toFixed(4)), y:Number(end.y.toFixed(4)), court:analysis.courtEnd },
     speedKmh: timedSpeed,
+    speedDetails,
+    timing:{
+      mediaStartMs:Number.isFinite(startSample.mediaTs) ? Math.round(startSample.mediaTs) : null,
+      mediaEndMs:Number.isFinite(endSample.mediaTs) ? Math.round(endSample.mediaTs) : null,
+      durationMs:speedDetails.durationMs || videoAIResolveSampleDurationMs(startSample, endSample) || null
+    },
     source:"video_ai_auto_reviewable",
     auto:true,
     reviewStatus:"pending",
@@ -2869,10 +3417,14 @@ function videoAIAutoCreateEvent(startSample, endSample, quality){
   if (shot === "serve") ev.serveTarget = videoAIEstimateServeTarget(analysis.courtEnd);
   videoAI.assistedEvents.push(ev);
   videoAI.autoStats.lastSpeed = timedSpeed;
+  videoAI.autoStats.lastDistanceMeters = speedDetails.distanceMeters || 0;
+  videoAI.autoStats.lastDurationMs = speedDetails.durationMs || 0;
+  videoAI.autoStats.lastSpeedReliability = speedDetails.reliability || "—";
   videoAI.autoStats.lastConfidence = ev.confidence;
   videoAI.autoStats.lastPlayer = player;
   renderVideoAIAssistedPanel();
   renderVideoAIAutoPanel();
+  renderVideoAIPointGroupsPanel();
   renderVideoAIOverlay();
   return ev;
 }
@@ -2883,7 +3435,7 @@ function videoAIAutoMaybeRegister(candidate){
     return;
   }
   const anchor = videoAI.autoAnchor;
-  const dt = candidate.ts - anchor.ts;
+  const dt = videoAIResolveSampleDurationMs(anchor, candidate);
   const courtMove = Math.hypot(candidate.court.x - anchor.court.x, candidate.court.y - anchor.court.y);
   const now = candidate.ts || performance.now();
   if (dt < 520 || now - (videoAI.autoLastEventAt || 0) < 760) return;
@@ -2934,6 +3486,16 @@ function videoAIAutoLoop(ts){
   videoAI.autoLastTick = ts;
   const video = $("#videoAiPreview");
   if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
+  if (videoAIHasUploadedVideo() && video.ended){
+    stopVideoAIAutoTracking(false);
+    videoAISetAutoStatus("Análisis del vídeo terminado. Revisa y confirma los golpes válidos.");
+    videoAIStatus("Vídeo analizado hasta el final. Revisa la lista antes de enviar a Analítica.");
+    return;
+  }
+  if (videoAIHasUploadedVideo() && video.paused){
+    videoAISetAutoStatus("Vídeo pausado. Auto IA espera a que continúe la reproducción.");
+    return;
+  }
   const sampleW = 176;
   const sampleH = Math.max(72, Math.round(sampleW * (video.videoHeight / video.videoWidth)));
   const { ctx } = videoAIGetAutoCanvas(sampleW, sampleH);
@@ -2948,7 +3510,7 @@ function videoAIAutoLoop(ts){
       if (found){
         const imagePoint = { x:clamp01(found.x), y:clamp01(found.y) };
         const court = videoAIImagePointToCourtNorm(imagePoint);
-        const candidate = { image:imagePoint, court, ts, quality:found.quality, count:found.count };
+        const candidate = { image:imagePoint, court, ts, mediaTs:videoAIGetCurrentMediaMs(video, ts), quality:found.quality, count:found.count };
         videoAI.autoTrack.push(candidate);
         if (videoAI.autoTrack.length > 22) videoAI.autoTrack.shift();
         videoAI.autoStats.candidates = (videoAI.autoStats.candidates || 0) + 1;
@@ -2966,12 +3528,19 @@ function videoAIAutoLoop(ts){
 }
 async function startVideoAIAutoTracking(){
   if ((videoAI.calibrationPoints||[]).length < 4){ toast("Primero calibra la pista"); return; }
-  if (!videoAI.stream) await startVideoAICamera();
-  if (!videoAI.stream){ toast("No hay cámara activa"); return; }
+  const video = $("#videoAiPreview");
+  const hasUpload = videoAIHasUploadedVideo() && video && video.src;
+  if (!videoAI.stream && !hasUpload) await startVideoAICamera();
+  if (!videoAI.stream && !hasUpload){ toast("No hay cámara ni vídeo cargado"); return; }
+  if (hasUpload && video){
+    videoAISetVideoSourceMode("upload");
+    if (video.ended) video.currentTime = 0;
+    try{ await video.play(); }catch(e){ videoAISetAutoStatus("Pulsa reproducir en el vídeo y vuelve a iniciar Auto IA si el navegador bloquea autoplay."); }
+  }
   videoAIResetAutoTracking(false);
   videoAI.autoRunning = true;
-  videoAISetAutoStatus("Análisis automático activo. Mantén cámara fija y buena luz.");
-  videoAIStatus("Auto IA activo: detectando candidato de pelota y generando golpes revisables.");
+  videoAISetAutoStatus(hasUpload ? "Analizando vídeo cargado. Puedes pausar para revisar o mover la reproducción." : "Análisis automático activo. Mantén cámara fija y buena luz.");
+  videoAIStatus(hasUpload ? "Auto IA activo sobre vídeo cargado: detectando candidato de pelota y generando golpes revisables." : "Auto IA activo: detectando candidato de pelota y generando golpes revisables.");
   renderVideoAIAutoPanel();
   videoAI.autoRaf = requestAnimationFrame(videoAIAutoLoop);
 }
@@ -2985,6 +3554,9 @@ function stopVideoAIAutoTracking(showStatus=true){
 }
 function clearVideoAIAutoEvents(){
   videoAIResetAutoTracking(true);
+  videoAI.pointGroups = [];
+  renderVideoAIPointGroupsPanel();
+  renderVideoAISessionPreview();
   videoAISetAutoStatus("Golpes automáticos limpiados.");
   videoAIStatus("Golpes automáticos eliminados. El modo asistido se mantiene disponible.");
 }
@@ -3001,8 +3573,8 @@ function demoVideoAIAutoEvents(){
     [{x:.70,y:.46},{x:.48,y:.77},2700,.71]
   ];
   samples.forEach((pair, idx)=>{
-    const a = { image:pair[0], court:videoAIImagePointToCourtNorm(pair[0]), ts:now+pair[2], quality:pair[3], count:6 };
-    const b = { image:pair[1], court:videoAIImagePointToCourtNorm(pair[1]), ts:now+pair[2]+680, quality:pair[3], count:7 };
+    const a = { image:pair[0], court:videoAIImagePointToCourtNorm(pair[0]), ts:now+pair[2], mediaTs:pair[2], quality:pair[3], count:6 };
+    const b = { image:pair[1], court:videoAIImagePointToCourtNorm(pair[1]), ts:now+pair[2]+680, mediaTs:pair[2]+680, quality:pair[3], count:7 };
     const ev = videoAIAutoCreateEvent(a,b,pair[3]);
     if (ev && idx % 2) ev.player = "B";
   });
@@ -3028,21 +3600,57 @@ function renderVideoAIAssistedPanel(){
       if (a){
         // Clasificación automática de golpe y velocidad aproximada para mostrar al usuario
         const shot = videoAIClassifyShot(st,en);
-        const speedKmh = videoAIEstimateSpeed(st,en);
-        box.innerHTML = `<strong>${escapeHtml(videoAIAssistDirectionName(a.direction))} · ${escapeHtml(videoAIAssistDepthName(a.depth))}</strong><span>${tr("Código táctico","Tactical code")}: ${escapeHtml(a.code)} · ${tr("confianza estimada","estimated confidence")}: ${Math.round(a.confidence*100)}%<br>${tr("Golpe","Shot")}: ${escapeHtml(videoAIAssistShotName(shot))} · ${tr("Velocidad aprox.","Approx. speed")}: ${speedKmh} km/h</span>`;
+        const speedDetails = videoAIEstimateSpeedTimedDetails(a.courtStart, a.courtEnd, 0, st, en);
+        const speedKmh = speedDetails.kmh;
+        box.innerHTML = `<strong>${escapeHtml(videoAIAssistDirectionName(a.direction))} · ${escapeHtml(videoAIAssistDepthName(a.depth))}</strong><span>${tr("Código táctico","Tactical code")}: ${escapeHtml(a.code)} · ${tr("confianza estimada","estimated confidence")}: ${Math.round(a.confidence*100)}%<br>${tr("Golpe","Shot")}: ${escapeHtml(videoAIAssistShotName(shot))} · ${tr("Velocidad aprox.","Approx. speed")}: ${speedKmh} km/h · ${tr("fiabilidad","reliability")}: ${escapeHtml(videoAISpeedReliabilityName(speedDetails.reliability))}</span>`;
       }else{
         box.textContent = tr("Trayectoria fuera de la zona calibrada.","Trajectory outside calibrated zone.");
       }
     }
   }
   if (list){
-    list.innerHTML = (videoAI.assistedEvents||[]).length ? videoAI.assistedEvents.map((ev,i)=>{
+    const events = videoAI.assistedEvents || [];
+    const playerOptions = [["A",playerName("A")],["B",playerName("B")]];
+    const shotOptions = [["serve",tr("Saque","Serve")],["return",tr("Resto","Return")],["forehand",tr("Derecha","Forehand")],["backhand",tr("Revés","Backhand")],["volley",tr("Volea","Volley")]];
+    const directionOptions = [["cross",tr("Cruzado","Crosscourt")],["line",tr("Paralelo","Down the line")],["center",tr("Centro","Center")]];
+    const depthOptions = [["deep",tr("Profundo","Deep")],["medium",tr("Medio","Medium")],["short",tr("Corto","Short")]];
+    const resultOptions = [["neutral",tr("Continúa","Continues")],["winner",tr("Ganador","Winner")],["forced_error",tr("Provoca error","Forces error")],["unforced_error",tr("Error propio","Own error")]];
+    list.innerHTML = events.length ? events.map((ev,i)=>{
+      videoAIRecomputeEditableEvent(ev);
       const speed = ev.speedKmh ? `${ev.speedKmh} km/h` : "—";
-      const source = ev.source === "video_ai_auto_reviewable" ? "Auto" : "Manual";
-      return `<li><b>${i+1}. ${escapeHtml(playerName(ev.player))}</b> · <em>${escapeHtml(source)}</em> · ${escapeHtml(videoAIAssistShotName(ev.shot))} · ${speed} · ${escapeHtml(videoAIAssistDirectionName(ev.direction))} ${escapeHtml(videoAIAssistDepthName(ev.depth))} <small>${escapeHtml(ev.code)} · ${Math.round((ev.confidence||0)*100)}%</small></li>`;
+      const speedMeta = ev.speedDetails ? `${ev.speedDetails.distanceMeters ? ev.speedDetails.distanceMeters + " m · " : ""}${ev.speedDetails.durationMs ? Math.round(ev.speedDetails.durationMs) + " ms · " : ""}${videoAISpeedReliabilityName(ev.speedDetails.reliability)}` : "visual";
+      const source = ev.source === "video_ai_auto_reviewable" ? "Auto IA" : "Manual";
+      const status = videoAIEventReviewStatus(ev);
+      const id = escapeHtml(ev.id || "");
+      return `<li class="videoAiReviewItem videoAiReviewItem--${escapeHtml(status)}">
+        <div class="videoAiReviewTop">
+          <div class="videoAiReviewTitle"><b>${i+1}. ${escapeHtml(playerName(ev.player))}</b><em>${escapeHtml(source)}</em><span class="videoAiReviewBadge videoAiReviewBadge--${escapeHtml(status)}">${escapeHtml(videoAIReviewStatusName(status))}</span></div>
+          <small>${escapeHtml(ev.code)} · ${Math.round((ev.confidence||0)*100)}% · ${speed} · ${escapeHtml(speedMeta)}</small>
+        </div>
+        <div class="videoAiReviewFields">
+          <label>Jugador<select data-event-id="${id}" data-video-ai-event-field="player">${videoAISelectOptions(playerOptions, ev.player)}</select></label>
+          <label>Golpe<select data-event-id="${id}" data-video-ai-event-field="shot">${videoAISelectOptions(shotOptions, ev.shot)}</select></label>
+          <label>Dirección<select data-event-id="${id}" data-video-ai-event-field="direction">${videoAISelectOptions(directionOptions, ev.direction)}</select></label>
+          <label>Profundidad<select data-event-id="${id}" data-video-ai-event-field="depth">${videoAISelectOptions(depthOptions, ev.depth)}</select></label>
+          <label>Resultado<select data-event-id="${id}" data-video-ai-event-field="result">${videoAISelectOptions(resultOptions, ev.result || "neutral")}</select></label>
+          <label>Velocidad<input data-event-id="${id}" data-video-ai-event-field="speedKmh" type="number" min="0" max="260" step="1" value="${escapeHtml(ev.speedKmh || "")}" placeholder="km/h"></label>
+        </div>
+        <div class="videoAiReviewActions">
+          <button type="button" class="chip primary" data-event-id="${id}" data-video-ai-review="accepted">Confirmar</button>
+          <button type="button" class="chip" data-event-id="${id}" data-video-ai-review="pending">Pendiente</button>
+          <button type="button" class="chip" data-event-id="${id}" data-video-ai-review="rejected">Rechazar</button>
+          <button type="button" class="chip danger" data-event-id="${id}" data-video-ai-action="delete">Borrar</button>
+        </div>
+      </li>`;
     }).join("") : `<li>${tr("Sin golpes asistidos guardados todavía.","No assisted shots saved yet.")}</li>`;
   }
+  const reviewSummary = document.getElementById("videoAiReviewSummary");
+  if (reviewSummary){
+    reviewSummary.innerHTML = `<strong>${videoAIConfirmedEvents().length}</strong> confirmados · <strong>${videoAIPendingEvents().length}</strong> pendientes · <strong>${videoAIRejectedEvents().length}</strong> rechazados`;
+  }
   renderVideoAIAutoPanel();
+  renderVideoAIPointGroupsPanel();
+  videoAIUpdateUploadStatus();
   renderVideoAISessionPreview();
 }
 function startVideoAIMark(mode){
@@ -3060,8 +3668,9 @@ function saveVideoAIAssistedEvent(){
   const player = $("#videoAiAssistPlayer")?.value || "A";
   // En v3.34 dejamos de utilizar la selección manual de tipo de golpe y clasificamos automáticamente
   const shot = videoAIClassifyShot(start, end);
-  // Estimamos una velocidad aproximada para el golpe
-  const speedKmh = videoAIEstimateSpeed(start, end);
+  // Estimamos una velocidad aproximada visual si el usuario no ha marcado tiempo de vuelo.
+  const speedDetails = videoAIEstimateSpeedTimedDetails(analysis.courtStart, analysis.courtEnd, 0, start, end);
+  const speedKmh = speedDetails.kmh;
   const result = $("#videoAiAssistResult")?.value || "neutral";
   const ev = {
     id:`via_${Date.now()}_${Math.random().toString(16).slice(2)}`,
@@ -3073,6 +3682,8 @@ function saveVideoAIAssistedEvent(){
     start:{ x:Number(start.x.toFixed(4)), y:Number(start.y.toFixed(4)), court:analysis.courtStart },
     end:{ x:Number(end.x.toFixed(4)), y:Number(end.y.toFixed(4)), court:analysis.courtEnd },
     speedKmh,
+    speedDetails,
+    timing:{ mediaStartMs:null, mediaEndMs:null, durationMs:null },
     source:"video_ai_assisted",
     auto:false,
     reviewStatus:"accepted",
@@ -3092,36 +3703,40 @@ function saveVideoAIAssistedEvent(){
 }
 function clearVideoAIAssistedEvents(){
   videoAI.assistedEvents = [];
+  videoAI.pointGroups = [];
   videoAI.currentTrajectory = { start:null, end:null };
   videoAI.markMode = null;
   videoAI.assistedMode = false;
   renderVideoAIAssistedPanel();
   renderVideoAIOverlay();
+  renderVideoAIPointGroupsPanel();
   videoAIStatus("Golpes asistidos limpiados.");
 }
 function videoAIEventToMatchEvent(ev){
   if (!ev) return null;
   if (ev.shot === "serve"){
     const target = ev.serveTarget || "C";
-    return { type:"serve", player:ev.player, code:`S ${target}`, meta:{ target, source:ev.source || "video_ai_assisted", confidence:ev.confidence, speedKmh:ev.speedKmh || null } };
+    return { type:"serve", player:ev.player, code:`S ${target}`, meta:{ target, source:ev.source || "video_ai_assisted", confidence:ev.confidence, speedKmh:ev.speedKmh || null, speedDetails:ev.speedDetails || null, timing:ev.timing || null } };
   }
   const prefix = ev.shot === "return" ? "R " : "";
-  return { type:"rally", player:ev.player, code:`${prefix}${ev.code}`, meta:{ shot:ev.shot, direction:ev.direction, depth:ev.depth, source:ev.source || "video_ai_assisted", confidence:ev.confidence, speedKmh:ev.speedKmh || null } };
+  return { type:"rally", player:ev.player, code:`${prefix}${ev.code}`, meta:{ shot:ev.shot, direction:ev.direction, depth:ev.depth, source:ev.source || "video_ai_assisted", confidence:ev.confidence, speedKmh:ev.speedKmh || null, speedDetails:ev.speedDetails || null, timing:ev.timing || null } };
 }
 function sendVideoAIAssistedToAnalytics(){
-  const events = (videoAI.assistedEvents || []).map(videoAIEventToMatchEvent).filter(Boolean);
-  if (!events.length){ toast("No hay golpes asistidos para enviar"); return; }
+  const sourceEvents = videoAIConfirmedEvents();
+  const events = sourceEvents.map(videoAIEventToMatchEvent).filter(Boolean);
+  if (!events.length){ toast("No hay golpes confirmados para enviar"); videoAIStatus("Confirma al menos un golpe antes de enviarlo a Analítica."); return; }
   const winner = $("#videoAiAssistWinner")?.value || events[events.length-1]?.player || "A";
   const n = (state.matchPoints || []).length + 1;
-  const hasAuto = (videoAI.assistedEvents || []).some(ev => ev.source === "video_ai_auto_reviewable");
+  const hasAuto = sourceEvents.some(ev => ev.source === "video_ai_auto_reviewable");
+  const fromUpload = videoAI.sourceMode === "upload" || !!videoAI.uploadedFileMeta;
   const point = {
     n,
     winner,
-    reason: hasAuto ? "Vídeo IA automático revisable" : "Vídeo IA asistido",
+    reason: hasAuto ? (fromUpload ? "Vídeo IA vídeo subido revisable" : "Vídeo IA automático revisable") : "Vídeo IA asistido",
     server: events.find(e=>e.type==="serve")?.player || state.currentServer || "A",
     side: serveSideLabel ? serveSideLabel() : "deuce",
-    snapshot:`${hasAuto ? "Vídeo IA automático" : "Vídeo IA asistido"} · ${events.length} golpes`,
-    finishDetail:{ source:hasAuto ? "video_ai_auto_reviewable" : "video_ai_assisted", winner, eventCount:events.length },
+    snapshot:`${hasAuto ? (fromUpload ? "Vídeo IA vídeo subido" : "Vídeo IA automático") : "Vídeo IA asistido"} · ${events.length} golpes`,
+    finishDetail:{ source:hasAuto ? (fromUpload ? "video_ai_upload_reviewable" : "video_ai_auto_reviewable") : "video_ai_assisted", winner, eventCount:events.length, confirmedOnly:true },
     important:false,
     importantNote:"",
     events,
@@ -3133,7 +3748,7 @@ function sendVideoAIAssistedToAnalytics(){
   state.matchPoints.push(point);
   persist();
   renderAll();
-  videoAIStatus("Evento enviado a Analítica táctica. Abre Reportes > Analítica táctica para verlo.");
+  videoAIStatus("Golpes confirmados enviados a Analítica táctica. Los pendientes o rechazados no se han enviado.");
   toast("Enviado a Analítica táctica");
 }
 
@@ -3334,19 +3949,26 @@ function renderVideoAIButtons(){
   const badge = $("#videoAiRecBadge");
   const empty = $("#videoAiEmpty");
   const hasStream = !!videoAI.stream;
-  if (start) start.disabled = !hasStream || videoAI.recording;
+  const hasUpload = videoAIHasUploadedVideo();
+  const hasSource = hasStream || hasUpload;
+  if (start) start.disabled = !hasStream || hasUpload || videoAI.recording;
   if (stop) stop.disabled = !videoAI.recording;
   if (badge) badge.classList.toggle("hidden", !videoAI.recording);
-  if (empty) empty.classList.toggle("hidden", hasStream);
-  document.body.classList.toggle("video-ai-camera-active", hasStream);
+  if (empty) empty.classList.toggle("hidden", hasSource);
+  document.body.classList.toggle("video-ai-camera-active", hasSource);
   document.body.classList.toggle("video-ai-recording", !!videoAI.recording);
+  document.body.classList.toggle("video-ai-upload-active", hasUpload);
 
   // Actualiza la visibilidad de los controles integrados en la ventana de vídeo.
   const overlayStart = document.getElementById('btnVideoAIStartCamera');
   const overlayRecord = document.getElementById('btnVideoAIStartRecording');
   const overlayPause = document.getElementById('btnVideoAIStopRecording');
   if (overlayStart && overlayRecord && overlayPause) {
-    if (!hasStream) {
+    if (hasUpload) {
+      overlayStart.style.display = 'none';
+      overlayRecord.style.display = 'none';
+      overlayPause.style.display = 'none';
+    } else if (!hasStream) {
       overlayStart.style.display = '';
       overlayRecord.style.display = 'none';
       overlayPause.style.display = 'none';
@@ -3360,6 +3982,7 @@ function renderVideoAIButtons(){
       overlayPause.style.display = 'none';
     }
   }
+  videoAIUpdateUploadStatus();
 }
 async function listVideoAICameras(){
   const select = $("#videoAiCameraSelect");
@@ -3375,6 +3998,7 @@ async function listVideoAICameras(){
 async function startVideoAICamera(){
   updateVideoAIOrientation();
   requestVideoAIFullscreen();
+  clearVideoAIUploadedVideo(false);
   if (!navigator.mediaDevices?.getUserMedia){
     toast("La cámara necesita navegador compatible y HTTPS");
     videoAIStatus("getUserMedia no disponible. Usa HTTPS o localhost.");
@@ -3401,6 +4025,7 @@ async function startVideoAICamera(){
       updateVideoAIOrientation();
     }
     await listVideoAICameras();
+    videoAISetVideoSourceMode("camera");
     videoAIStatus("Cámara activa en pantalla completa. Si giras el teléfono, la vista se adapta automáticamente a panorámica.");
     renderVideoAIButtons();
     setTimeout(resizeVideoAIOverlay, 80);
@@ -3418,9 +4043,117 @@ async function stopVideoAICamera(showToast=true){
     videoAI.stream = null;
   }
   const video = $("#videoAiPreview");
-  if (video){ video.pause(); video.srcObject = null; }
+  if (video){
+    video.pause();
+    video.srcObject = null;
+    if (!videoAI.uploadObjectUrl){
+      video.removeAttribute("src");
+      video.removeAttribute("controls");
+      try{ video.load(); }catch(e){}
+    }
+  }
   renderVideoAIButtons();
-  if (showToast) videoAIStatus("Cámara detenida.");
+  if (showToast) videoAIStatus(videoAI.uploadObjectUrl ? "Cámara detenida. El vídeo cargado sigue disponible." : "Cámara detenida.");
+}
+
+async function handleVideoAIUploadChange(event){
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  if (!file.type || !file.type.startsWith("video/")){
+    toast("Selecciona un archivo de vídeo");
+    return;
+  }
+  await loadVideoAIUploadedFile(file);
+}
+async function loadVideoAIUploadedFile(file){
+  if (!file) return;
+  if (videoAI.autoRunning) stopVideoAIAutoTracking(false);
+  if (videoAI.recording) stopVideoAIRecording();
+  if (videoAI.stream){
+    videoAI.stream.getTracks().forEach(t=>t.stop());
+    videoAI.stream = null;
+  }
+  if (videoAI.uploadObjectUrl) URL.revokeObjectURL(videoAI.uploadObjectUrl);
+  videoAI.uploadObjectUrl = URL.createObjectURL(file);
+  videoAI.uploadedFileMeta = {
+    name:file.name || "video",
+    type:file.type || "video/*",
+    sizeBytes:file.size || 0,
+    loadedAt:new Date().toISOString(),
+    durationSeconds:null,
+    localObjectUrl:true
+  };
+  videoAISetVideoSourceMode("upload");
+  const video = $("#videoAiPreview");
+  if (video){
+    video.pause();
+    video.srcObject = null;
+    video.src = videoAI.uploadObjectUrl;
+    video.controls = true;
+    video.muted = true;
+    video.setAttribute("playsinline", "");
+    video.setAttribute("preload", "metadata");
+    video.onloadedmetadata = () => {
+      if (videoAI.uploadedFileMeta) videoAI.uploadedFileMeta.durationSeconds = Number.isFinite(video.duration) ? Number(video.duration.toFixed(2)) : null;
+      updateVideoAIOrientation();
+      resizeVideoAIOverlay();
+      videoAIUpdateUploadStatus();
+      renderVideoAISessionPreview();
+    };
+    video.onresize = () => { updateVideoAIOrientation(); resizeVideoAIOverlay(); };
+    try{ await video.load(); }catch(e){}
+  }
+  renderVideoAIButtons();
+  videoAIResetAutoTracking(false);
+  videoAIStatus("Vídeo cargado. Reproduce el vídeo, calibra la pista sobre el frame visible y pulsa Iniciar Auto IA.");
+  videoAISetAutoStatus("Vídeo cargado para análisis. Usa los controles del vídeo para colocarte al inicio del punto o del intercambio.");
+  renderVideoAISessionPreview();
+  toast("Vídeo cargado");
+}
+function clearVideoAIUploadedVideo(showStatus=true){
+  if (videoAI.autoRunning) stopVideoAIAutoTracking(false);
+  if (videoAI.uploadObjectUrl){
+    URL.revokeObjectURL(videoAI.uploadObjectUrl);
+    videoAI.uploadObjectUrl = null;
+  }
+  videoAI.uploadedFileMeta = null;
+  const input = $("#videoAiUploadInput");
+  if (input) input.value = "";
+  const video = $("#videoAiPreview");
+  if (video && !videoAI.stream){
+    video.pause();
+    video.removeAttribute("src");
+    video.removeAttribute("controls");
+    try{ video.load(); }catch(e){}
+  }
+  if (!videoAI.stream) videoAISetVideoSourceMode("camera");
+  renderVideoAIButtons();
+  renderVideoAIOverlay();
+  renderVideoAISessionPreview();
+  if (showStatus) videoAIStatus("Vídeo cargado retirado. Puedes iniciar cámara o subir otro vídeo.");
+}
+
+function videoAIUploadedControl(action){
+  const video = $("#videoAiPreview");
+  if (!videoAIHasUploadedVideo() || !video){
+    toast("Primero carga un vídeo");
+    return;
+  }
+  if (action === "toggle"){
+    if (video.paused){ video.play().catch(()=>toast("Pulsa de nuevo para reproducir")); }
+    else video.pause();
+  }else if (action === "back"){
+    video.currentTime = Math.max(0, (video.currentTime || 0) - 10);
+  }else if (action === "forward"){
+    const max = Number.isFinite(video.duration) ? video.duration : (video.currentTime || 0) + 10;
+    video.currentTime = Math.min(max, (video.currentTime || 0) + 10);
+  }else if (action === "restart"){
+    video.currentTime = 0;
+    video.pause();
+  }
+  videoAIResetAutoTracking(false);
+  resizeVideoAIOverlay();
+  videoAIStatus("Vídeo ajustado. Calibra o inicia Auto IA desde esta posición.");
 }
 function supportedVideoMime(){
   const options = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm", "video/mp4"];
@@ -3467,7 +4200,7 @@ function finalizeVideoAIRecording(mimeType){
     link.classList.remove("hidden");
   }
   const meta = currentVideoAISessionPayload();
-  meta.video = { mimeType, sizeBytes: blob.size, localObjectUrl:true };
+  meta.video = { mimeType, sizeBytes: blob.size, localObjectUrl:true, sourceMode:"recording" };
   saveVideoAISessionMeta(meta);
   videoAIStatus("Grabación lista. Puedes descargar el vídeo y la calibración ha quedado registrada como metadato local.");
   renderVideoAISessionPreview();
@@ -3544,12 +4277,14 @@ function openVideoAI(){
   renderVideoAICalibrationList();
   renderVideoAIAssistedPanel();
   renderVideoAIAutoPanel();
+  renderVideoAIPointGroupsPanel();
   renderVideoAISessionPreview();
   resizeVideoAIOverlay();
   listVideoAICameras();
 }
 async function closeVideoAI(){
   await stopVideoAICamera(false);
+  clearVideoAIUploadedVideo(false);
   await exitVideoAIFullscreen();
   document.body.classList.remove("video-ai-active", "video-ai-landscape", "video-ai-portrait", "video-ai-camera-landscape", "video-ai-camera-portrait", "video-ai-camera-active", "video-ai-recording");
   closeModal("#videoAiModal");
@@ -8665,14 +9400,40 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnVideoAIMarkEnd","click", ()=>startVideoAIMark("end"));
   on("btnVideoAISaveEvent","click", saveVideoAIAssistedEvent);
   on("btnVideoAISendAnalytics","click", sendVideoAIAssistedToAnalytics);
+  on("btnVideoAIGeneratePoints","click", videoAIGroupEventsToPoints);
+  on("btnVideoAISendPoints","click", sendVideoAIPointGroupsToAnalytics);
+  on("btnVideoAIClearPoints","click", clearVideoAIPointGroups);
+  on("btnVideoAIConfirmPointGroups","click", confirmAllVideoAIPointGroups);
+  on("videoAiPointGroupingMode","change", renderVideoAIPointGroupsPanel);
+  on("videoAiPointMaxShots","change", renderVideoAIPointGroupsPanel);
+  on("videoAiPointIncludeOpen","change", renderVideoAIPointGroupsPanel);
+  on("btnVideoAIConfirmAll","click", confirmAllVideoAIEvents);
+  on("btnVideoAIRejectPending","click", rejectPendingVideoAIEvents);
   on("btnVideoAIClearEvents","click", clearVideoAIAssistedEvents);
   on("btnVideoAIStartAuto","click", startVideoAIAutoTracking);
   on("btnVideoAIStopAuto","click", ()=>stopVideoAIAutoTracking(true));
   on("btnVideoAIClearAuto","click", clearVideoAIAutoEvents);
   on("btnVideoAIDemoAuto","click", demoVideoAIAutoEvents);
+  on("btnVideoAIUploadPlayPause","click", ()=>videoAIUploadedControl("toggle"));
+  on("btnVideoAIUploadBack","click", ()=>videoAIUploadedControl("back"));
+  on("btnVideoAIUploadForward","click", ()=>videoAIUploadedControl("forward"));
+  on("btnVideoAIUploadRestart","click", ()=>videoAIUploadedControl("restart"));
+  on("btnVideoAIClearUpload","click", ()=>clearVideoAIUploadedVideo(true));
+  on("videoAiUploadInput","change", handleVideoAIUploadChange);
   on("videoAiAutoSensitivity","change", ()=>{ videoAI.autoAnchor = null; renderVideoAIAutoPanel(); });
+  ["videoAiSpeedCourt","videoAiSpeedFpsMode","videoAiSpeedManualFps"].forEach(id=> on(id,"change", ()=>{ videoAI.autoAnchor = null; renderVideoAISpeedPanel(); renderVideoAIAutoPanel(); }));
   on("videoAiCameraSelect","change", ()=>{ if (videoAI.stream) startVideoAICamera(); });
   const videoAiOverlay = $("#videoAiOverlay");
+  const videoAiEventList = document.getElementById("videoAiEventList");
+  if (videoAiEventList){
+    videoAiEventList.addEventListener("change", handleVideoAIEventListChange);
+    videoAiEventList.addEventListener("click", handleVideoAIEventListClick);
+  }
+  const videoAiPointGroupList = document.getElementById("videoAiPointGroupList");
+  if (videoAiPointGroupList){
+    videoAiPointGroupList.addEventListener("change", handleVideoAIPointGroupChange);
+    videoAiPointGroupList.addEventListener("click", handleVideoAIPointGroupClick);
+  }
   if (videoAiOverlay) videoAiOverlay.addEventListener("pointerdown", handleVideoAIOverlayPoint, {passive:false});
   window.addEventListener("resize", ()=>{ updateVideoAIOrientation(); resizeVideoAIOverlay(); });
   window.addEventListener("orientationchange", ()=>setTimeout(()=>{ updateVideoAIOrientation(); resizeVideoAIOverlay(); }, 160));

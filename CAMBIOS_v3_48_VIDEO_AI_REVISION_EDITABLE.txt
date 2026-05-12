@@ -1,0 +1,16 @@
+v3.48 · Vídeo IA revisión editable
+
+Cambios principales:
+- Panel de revisión por golpe detectado o marcado manualmente.
+- Cada golpe permite editar jugador, tipo de golpe, dirección, profundidad, resultado y velocidad estimada.
+- Estados de revisión: confirmado, pendiente y rechazado.
+- Botones individuales para confirmar, dejar pendiente, rechazar o borrar.
+- Botones globales: confirmar todo y rechazar pendientes.
+- Envío a Analítica táctica limitado únicamente a golpes confirmados.
+- Los golpes pendientes o rechazados permanecen en la revisión pero no contaminan Analítica.
+- Resumen visible de confirmados, pendientes y rechazados.
+- Metadatos de sesión actualizados a versión 3.48.
+- Caché actualizada a v3480.
+
+Nota:
+- La detección automática sigue siendo experimental y local en navegador. Esta versión mejora la validación de datos antes de enviarlos a reportes.
