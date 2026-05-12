@@ -1,0 +1,11 @@
+v3.53  (12/05/2026)
+---------------------
+
+* Modo rápido refinado para mejorar su usabilidad en móviles.  Se ajustó el panel de direcciones y el panel de control para que todo quepa en pantalla sin desbordar:
+  * El panel de secuencia de direcciones jugadas se sitúa entre la barra superior y los botones de direcciones, con un tamaño más compacto y texto reducido para no competir con el panel de control.
+  * La pista y la cronología se ocultan completamente en modo rápido (`.quickMode .courtWrap > .court` y `.diagramArea .court`), de modo que el usuario solo ve los botones necesarios.
+  * Se eliminó el ensanchamiento de la página al añadir fichas: las fichas ahora se distribuyen en una sola línea con desplazamiento horizontal (`flex-wrap:nowrap`) para evitar que el contenedor aumente su anchura.
+  * Se redujo el tamaño de tipografía y padding en las pastillas de estado y en la lista de direcciones para ganar espacio.
+  * El menú de acciones (rail ball) se optimizó con scroll horizontal y elementos no deformables, permitiendo ver todas las opciones desplazando lateralmente.
+  * Se mantuvo el diseño premium de los botones y se redujeron los márgenes para que los botones de dirección sean más alargados.
+* Se incrementó el número de versión visible a v3.53.

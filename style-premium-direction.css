@@ -2809,6 +2809,11 @@ body.coachMode .coachObject.dragging{opacity:.88;filter:drop-shadow(0 0 14px rgb
 .quickMode .courtWrap{min-width:0;}
 .quickMode .courtWrap .court,
 .quickMode .coachHistoryControls{display:none !important;}
+/* Asegura que la pista desaparece completamente en modo rápido */
+.quickMode .courtWrap > .court,
+.quickMode .diagramArea .court{
+  display:none !important;
+}
 .quickMode .quickModePanel{display:flex;}
 .quickMode .timelineSide{display:block;}
 .quickMode .timelineCard{display:none !important;}
@@ -2851,7 +2856,32 @@ body.coachMode .coachObject.dragging{opacity:.88;filter:drop-shadow(0 0 14px rgb
 .quickStatusLine{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
 .quickStatusPill,.quickOrientationPill{display:inline-flex;align-items:center;min-height:32px;border-radius:999px;padding:7px 12px;border:1px solid rgba(181,255,43,.24);background:rgba(181,255,43,.10);color:#dfff74;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;font-size:12px;}
 .quickOrientationPill{border-color:rgba(91,221,255,.24);background:rgba(91,221,255,.09);color:#bff4ff;}
+
+/* Ajustes de tamaño para el panel de secuencia en modo rápido para dar más espacio al panel de control */
+.quickMode .quickSequenceScreen{
+  font-size:13px;
+  padding:10px;
+}
+.quickMode .quickStatusPill,
+.quickMode .quickOrientationPill{
+  font-size:11px;
+  padding:6px 10px;
+}
 .quickSequenceChips{min-height:54px;display:flex;align-items:center;gap:8px;overflow-x:auto;padding:8px;border-radius:18px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.07);}
+.quickMode .quickSequenceChips{
+  /* Evita que el contenedor de chips expanda el ancho de la página en modo rápido */
+  flex-wrap:nowrap;
+  width:100%;
+  max-width:100%;
+  overflow-x:auto;
+}
+
+.quickMode .quickSeqChip{
+  /* Las fichas individuales no deben crecer ni encoger: el ancho se mantiene y se desplazan con scroll */
+  flex:0 0 auto;
+  font-size:12px;
+  padding:7px 10px;
+}
 .quickSeqChip{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:9px 12px;background:linear-gradient(180deg,rgba(181,255,43,.20),rgba(181,255,43,.08));border:1px solid rgba(181,255,43,.34);color:#f5ffe1;font-weight:1000;letter-spacing:.06em;box-shadow:0 0 14px rgba(181,255,43,.10);}
 .quickSeqChip.b{background:linear-gradient(180deg,rgba(80,220,255,.18),rgba(80,220,255,.07));border-color:rgba(80,220,255,.34);}
 .quickSeqChip small{display:grid;place-items:center;width:20px;height:20px;border-radius:999px;background:rgba(0,0,0,.34);font-size:11px;color:#fff;}
