@@ -10,10 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,800;1,600;1,800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Actualizamos la versión de las hojas de estilo para romper la caché del navegador -->
 <!-- Bump cache version to ensure latest styles load in v3.35 -->
-<link rel="stylesheet" href="style.css?v=3460" />
+<link rel="stylesheet" href="style.css?v=3470" />
   <!-- bump cache version to ensure latest styles load -->
-  <link rel="stylesheet" href="style-futuristic.css?v=3460" />
-  <link rel="stylesheet" href="style-premium-direction.css?v=3460" />
+  <link rel="stylesheet" href="style-futuristic.css?v=3470" />
+  <link rel="stylesheet" href="style-premium-direction.css?v=3470" />
 </head>
 <body>
 
@@ -56,7 +56,7 @@
          Actualiza este número cada vez que se genere una nueva versión. -->
     <!-- Versión visible: actualiza este número al generar una nueva revisión -->
     <!-- Actualizamos el número de versión a v3.35 -->
-    <div class="splashVersion" id="splashVersion">v3.44</div>
+    <div class="splashVersion" id="splashVersion">v3.47</div>
   </div>
 </div>
 
@@ -1022,7 +1022,7 @@
     <div class="modalHead videoAiHead">
       <div>
         <div class="modalTitle">Vídeo IA</div>
-        <div class="muted">Grabación, calibración y preparación para lectura automática de direcciones.</div>
+        <div class="muted">Grabación, calibración, análisis automático revisable y direcciones tácticas.</div>
       </div>
       <div class="modalActions videoAiHeaderActions">
         <!-- Botón Home para volver al menú inicial -->
@@ -1100,14 +1100,56 @@
 
       <section class="videoAiWorkflow">
         <article class="videoAiStep active"><span>1</span><div><strong>Posición fija</strong><small>Móvil en trípode, pista completa visible y cámara estable.</small></div></article>
-        <article class="videoAiStep"><span>2</span><div><strong>Calibración</strong><small>Marca 4 referencias de la pista sobre el vídeo.</small></div></article>
-        <article class="videoAiStep"><span>3</span><div><strong>Grabación</strong><small>Guarda el vídeo y la calibración para la futura lectura IA.</small></div></article>
+        <article class="videoAiStep"><span>2</span><div><strong>Calibración</strong><small>Marca 4 referencias para convertir vídeo en coordenadas de pista.</small></div></article>
+        <article class="videoAiStep"><span>3</span><div><strong>Auto IA</strong><small>Detecta candidato de pelota, dirección, jugador probable y velocidad estimada.</small></div></article>
+        <article class="videoAiStep"><span>4</span><div><strong>Revisión</strong><small>Acepta los golpes detectados y envíalos a Analítica táctica.</small></div></article>
       </section>
+
+      <section class="videoAiAutoPanel">
+        <div class="videoAiSectionHead">
+          <div>
+            <h3>Análisis automático revisable</h3>
+            <p>Procesa frames en el navegador para detectar movimiento de pelota y crear golpes revisables con dirección, profundidad y velocidad estimada.</p>
+          </div>
+          <span id="videoAiAutoCount">0</span>
+        </div>
+        <div class="videoAiAssistGrid videoAiAutoGrid">
+          <label class="videoAiSelectLabel">Asignación de jugador
+            <select id="videoAiAutoPlayerMode">
+              <option value="auto" selected>Auto por zona</option>
+              <option value="alternate">Alternar A/B</option>
+              <option value="A">Forzar Jugador A</option>
+              <option value="B">Forzar Jugador B</option>
+            </select>
+          </label>
+          <label class="videoAiSelectLabel">Sensibilidad
+            <select id="videoAiAutoSensitivity">
+              <option value="low">Alta detección</option>
+              <option value="medium" selected>Equilibrada</option>
+              <option value="high">Más estricta</option>
+            </select>
+          </label>
+        </div>
+        <div class="videoAiAssistActions videoAiAutoActions">
+          <button class="chip primary" id="btnVideoAIStartAuto" type="button">Iniciar Auto IA</button>
+          <button class="chip" id="btnVideoAIStopAuto" type="button">Detener Auto IA</button>
+          <button class="chip" id="btnVideoAIClearAuto" type="button">Limpiar Auto</button>
+          <button class="chip" id="btnVideoAIDemoAuto" type="button">Demo Auto</button>
+        </div>
+        <div class="videoAiAutoMetrics">
+          <div class="videoAiAutoMetric" id="videoAiAutoCandidate"><strong>Sin candidato</strong><span>Esperando movimiento claro de pelota.</span></div>
+          <div class="videoAiAutoMetric" id="videoAiAutoSpeed"><strong>—</strong><span>última velocidad estimada</span></div>
+          <div class="videoAiAutoMetric" id="videoAiAutoConfidence"><strong>—</strong><span>confianza · —</span></div>
+        </div>
+        <div class="videoAiAutoStatus" id="videoAiAutoStatus">Modo automático preparado. Requiere cámara fija, calibración completa y buena luz.</div>
+        <p class="videoAiAutoNote">Experimental: no sustituye a Hawk‑Eye ni mide velocidad profesional. Genera datos tácticos revisables para acelerar el registro.</p>
+      </section>
+
       <section class="videoAiAssistedPanel">
         <div class="videoAiSectionHead">
           <div>
-            <h3>Análisis asistido</h3>
-            <p>Marca inicio y final de la trayectoria. La web calcula dirección, profundidad y crea eventos para Analítica táctica.</p>
+            <h3>Revisión y análisis asistido</h3>
+            <p>Revisa los golpes automáticos o marca trayectorias manuales. La web calcula dirección, profundidad y crea eventos para Analítica táctica.</p>
           </div>
           <span id="videoAiAssistCount">0</span>
         </div>
@@ -1158,7 +1200,7 @@
         <div class="videoAiSectionHead">
           <div>
             <h3>Datos preparados para IA</h3>
-            <p>Esta base deja listo el flujo para que v3.32/v3.33 detecte trayectorias y direcciones.</p>
+            <p>Incluye calibración, golpes manuales, golpes automáticos revisables, confianza y velocidad estimada.</p>
           </div>
         </div>
         <pre id="videoAiSessionPreview" class="videoAiSessionPreview"></pre>
@@ -1841,7 +1883,7 @@
   window.addEventListener('pageshow', bindAll);
 })();
 </script>
-<script src="app.js?v=3460"></script>
+<script src="app.js?v=3470"></script>
 
 </body>
 </html>

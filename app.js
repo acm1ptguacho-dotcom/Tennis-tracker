@@ -2579,6 +2579,16 @@ const videoAI = {
   markMode:null,
   currentTrajectory:{ start:null, end:null },
   assistedEvents:[],
+  autoRunning:false,
+  autoCanvas:null,
+  autoCtx:null,
+  autoPrevFrame:null,
+  autoTrack:[],
+  autoAnchor:null,
+  autoLastTick:0,
+  autoRaf:null,
+  autoLastEventAt:0,
+  autoStats:{samples:0,candidates:0,lastSpeed:0,lastConfidence:0,lastPlayer:"—"},
   fullscreenActive:false,
   _orientationResizeTimer:null
 };
@@ -2592,7 +2602,7 @@ function videoAIStatus(msg){ const el = $("#videoAiStatus"); if (el) el.textCont
 function currentVideoAISessionPayload(){
   return {
     // Actualizar a la versión 3.33 para los metadatos de sesión de vídeo IA
-    version:"3.43",
+    version:"3.47",
     source:"video_ai_assisted",
     matchId: state?.matchId || null,
     createdAt: new Date().toISOString(),
@@ -2612,9 +2622,21 @@ function currentVideoAISessionPayload(){
       depth: ev.depth,
       code: ev.code,
       confidence: ev.confidence,
+      speedKmh: ev.speedKmh || null,
+      source: ev.source || "video_ai_assisted",
+      auto: !!ev.auto,
+      reviewStatus: ev.reviewStatus || "pending",
       start: ev.start,
       end: ev.end
     })),
+    autoTracking:{
+      enabled: !!videoAI.autoRunning,
+      samples: videoAI.autoStats?.samples || 0,
+      candidates: videoAI.autoStats?.candidates || 0,
+      acceptedEvents: (videoAI.assistedEvents || []).filter(ev=>ev.source === "video_ai_auto_reviewable").length,
+      sensitivity: document.getElementById("videoAiAutoSensitivity")?.value || "medium",
+      playerMode: document.getElementById("videoAiAutoPlayerMode")?.value || "auto"
+    },
     futureEventsSchema:[
       { field:"player", example:"A" },
       { field:"shot", example:"forehand | backhand | serve | volley" },
@@ -2729,6 +2751,266 @@ function videoAIAnalyzeTrajectory(start, end){
   const confidence = Math.max(.52, Math.min(.93, .62 + distance*.48));
   return { courtStart:cs, courtEnd:ce, direction, depth:shotInfo.depth, code:shotInfo.code, confidence:Number(confidence.toFixed(2)) };
 }
+
+function videoAIAutoEventCount(){
+  return (videoAI.assistedEvents || []).filter(ev => ev.source === "video_ai_auto_reviewable").length;
+}
+function videoAISetAutoStatus(msg){
+  const el = $("#videoAiAutoStatus");
+  if (el) el.textContent = msg || "";
+}
+function videoAIGetAutoThreshold(){
+  const v = $("#videoAiAutoSensitivity")?.value || "medium";
+  if (v === "low") return .36;
+  if (v === "high") return .62;
+  return .48;
+}
+function renderVideoAIAutoPanel(){
+  const count = $("#videoAiAutoCount");
+  if (count) count.textContent = String(videoAIAutoEventCount());
+  const btnStart = $("#btnVideoAIStartAuto");
+  const btnStop = $("#btnVideoAIStopAuto");
+  if (btnStart) btnStart.disabled = !!videoAI.autoRunning;
+  if (btnStop) btnStop.disabled = !videoAI.autoRunning;
+  const candidate = videoAI.autoTrack?.[videoAI.autoTrack.length-1] || null;
+  const elCandidate = $("#videoAiAutoCandidate");
+  if (elCandidate){
+    if (candidate){
+      elCandidate.innerHTML = `<strong>${tr("Pelota candidata","Candidate ball")}</strong><span>x ${Math.round(candidate.image.x*100)}%, y ${Math.round(candidate.image.y*100)}% · ${tr("muestras","samples")}: ${videoAI.autoStats?.samples || 0}</span>`;
+    }else{
+      elCandidate.innerHTML = `<strong>${tr("Sin candidato","No candidate")}</strong><span>${tr("Esperando movimiento claro de pelota.","Waiting for clear ball movement.")}</span>`;
+    }
+  }
+  const elSpeed = $("#videoAiAutoSpeed");
+  if (elSpeed){
+    const kmh = videoAI.autoStats?.lastSpeed || 0;
+    elSpeed.innerHTML = `<strong>${kmh ? `${kmh} km/h` : "—"}</strong><span>${tr("última velocidad estimada","last estimated speed")}</span>`;
+  }
+  const elConf = $("#videoAiAutoConfidence");
+  if (elConf){
+    const cf = videoAI.autoStats?.lastConfidence || 0;
+    const pl = videoAI.autoStats?.lastPlayer || "—";
+    elConf.innerHTML = `<strong>${cf ? `${Math.round(cf*100)}%` : "—"}</strong><span>${tr("confianza","confidence")} · ${escapeHtml(pl === "A" || pl === "B" ? playerName(pl) : pl)}</span>`;
+  }
+}
+function videoAIGetAutoCanvas(w=160,h=90){
+  if (!videoAI.autoCanvas){
+    videoAI.autoCanvas = document.createElement("canvas");
+    videoAI.autoCtx = videoAI.autoCanvas.getContext("2d", { willReadFrequently:true });
+  }
+  if (videoAI.autoCanvas.width !== w) videoAI.autoCanvas.width = w;
+  if (videoAI.autoCanvas.height !== h) videoAI.autoCanvas.height = h;
+  return { canvas:videoAI.autoCanvas, ctx:videoAI.autoCtx };
+}
+function videoAIResetAutoTracking(clearEvents=false){
+  videoAI.autoPrevFrame = null;
+  videoAI.autoTrack = [];
+  videoAI.autoAnchor = null;
+  videoAI.autoLastTick = 0;
+  videoAI.autoLastEventAt = 0;
+  videoAI.autoStats = {samples:0,candidates:0,lastSpeed:0,lastConfidence:0,lastPlayer:"—"};
+  if (clearEvents){
+    videoAI.assistedEvents = (videoAI.assistedEvents || []).filter(ev => ev.source !== "video_ai_auto_reviewable");
+    renderVideoAIAssistedPanel();
+  }
+  renderVideoAIAutoPanel();
+  renderVideoAIOverlay();
+}
+function videoAIEstimateSpeedTimed(courtStart, courtEnd, durationMs, fallbackStart, fallbackEnd){
+  if (!courtStart || !courtEnd || !durationMs || durationMs < 120) return videoAIEstimateSpeed(fallbackStart, fallbackEnd);
+  const courtDistance = Math.hypot(courtEnd.x - courtStart.x, courtEnd.y - courtStart.y);
+  // Estimación ligera: escala de pista completa en metros. No es medición profesional.
+  const meters = courtDistance * 23.77;
+  const kmh = (meters / (durationMs/1000)) * 3.6;
+  return Math.round(Math.max(18, Math.min(225, kmh)));
+}
+function videoAIAutoInferPlayer(analysis){
+  const mode = $("#videoAiAutoPlayerMode")?.value || "auto";
+  if (mode === "A" || mode === "B") return mode;
+  if (mode === "alternate"){
+    const count = videoAIAutoEventCount();
+    return count % 2 === 0 ? "A" : "B";
+  }
+  const cs = analysis?.courtStart;
+  const ce = analysis?.courtEnd;
+  if (!cs || !ce) return "A";
+  // Si la trayectoria nace en zona profunda/cercana a cámara, suele corresponder al jugador A.
+  if (cs.y >= .52) return "A";
+  if (cs.y <= .38) return "B";
+  return ce.y < cs.y ? "A" : "B";
+}
+function videoAIAutoCreateEvent(startSample, endSample, quality){
+  if (!startSample || !endSample) return null;
+  const start = startSample.image;
+  const end = endSample.image;
+  const analysis = videoAIAnalyzeTrajectory(start, end);
+  if (!analysis) return null;
+  const player = videoAIAutoInferPlayer(analysis);
+  const shot = videoAIClassifyShot(start, end);
+  const timedSpeed = videoAIEstimateSpeedTimed(analysis.courtStart, analysis.courtEnd, Math.max(1, endSample.ts - startSample.ts), start, end);
+  const mixedConfidence = Math.max(.38, Math.min(.94, ((analysis.confidence || .55) * .55) + ((quality || .5) * .45)));
+  const ev = {
+    id:`via_auto_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+    player,
+    shot,
+    result:"neutral",
+    direction: analysis.direction,
+    depth: analysis.depth,
+    code: analysis.code,
+    confidence: Number(mixedConfidence.toFixed(2)),
+    start:{ x:Number(start.x.toFixed(4)), y:Number(start.y.toFixed(4)), court:analysis.courtStart },
+    end:{ x:Number(end.x.toFixed(4)), y:Number(end.y.toFixed(4)), court:analysis.courtEnd },
+    speedKmh: timedSpeed,
+    source:"video_ai_auto_reviewable",
+    auto:true,
+    reviewStatus:"pending",
+    createdAt:new Date().toISOString()
+  };
+  if (shot === "serve") ev.serveTarget = videoAIEstimateServeTarget(analysis.courtEnd);
+  videoAI.assistedEvents.push(ev);
+  videoAI.autoStats.lastSpeed = timedSpeed;
+  videoAI.autoStats.lastConfidence = ev.confidence;
+  videoAI.autoStats.lastPlayer = player;
+  renderVideoAIAssistedPanel();
+  renderVideoAIAutoPanel();
+  renderVideoAIOverlay();
+  return ev;
+}
+function videoAIAutoMaybeRegister(candidate){
+  if (!candidate?.court) return;
+  if (!videoAI.autoAnchor){
+    videoAI.autoAnchor = candidate;
+    return;
+  }
+  const anchor = videoAI.autoAnchor;
+  const dt = candidate.ts - anchor.ts;
+  const courtMove = Math.hypot(candidate.court.x - anchor.court.x, candidate.court.y - anchor.court.y);
+  const now = candidate.ts || performance.now();
+  if (dt < 520 || now - (videoAI.autoLastEventAt || 0) < 760) return;
+  const threshold = videoAIGetAutoThreshold();
+  if (courtMove < threshold) return;
+  const event = videoAIAutoCreateEvent(anchor, candidate, candidate.quality);
+  if (event){
+    videoAI.autoAnchor = candidate;
+    videoAI.autoLastEventAt = now;
+    videoAIStatus(`Auto IA: ${playerName(event.player)} · ${videoAIAssistDirectionName(event.direction)} ${videoAIAssistDepthName(event.depth)} · ${event.speedKmh} km/h`);
+    videoAISetAutoStatus("Golpe automático detectado. Revísalo en la lista antes de enviarlo a Analítica.");
+  }
+}
+function videoAIDetectBallCandidateFromFrame(data, prev, w, h){
+  let sumX=0, sumY=0, sumWeight=0, count=0, maxDiff=0;
+  const total = w*h;
+  // Muestreo cada 2 px para ahorrar CPU en móvil.
+  for (let y=1; y<h-1; y+=2){
+    for (let x=1; x<w-1; x+=2){
+      const i = (y*w+x)*4;
+      const r=data[i], g=data[i+1], b=data[i+2];
+      const pr=prev[i], pg=prev[i+1], pb=prev[i+2];
+      const diff = Math.abs(r-pr) + Math.abs(g-pg) + Math.abs(b-pb);
+      if (diff < 76) continue;
+      const brightness = (r+g+b)/3;
+      const tennisTint = g > 70 && g >= r*.72 && g >= b*.72;
+      const brightFast = brightness > 142;
+      if (!tennisTint && !brightFast) continue;
+      const weight = diff + (tennisTint ? 45 : 0) + Math.max(0, brightness-90)*.35;
+      sumX += x*weight;
+      sumY += y*weight;
+      sumWeight += weight;
+      count++;
+      if (diff > maxDiff) maxDiff = diff;
+    }
+  }
+  if (!sumWeight || count < 4) return null;
+  const areaRatio = count / Math.max(1,total/4);
+  const smallObjectScore = Math.max(.12, Math.min(1, 1 - areaRatio*4.8));
+  const diffScore = Math.max(.18, Math.min(1, maxDiff/255));
+  const quality = Math.max(.2, Math.min(.95, smallObjectScore*.62 + diffScore*.38));
+  return { x:sumX/sumWeight/w, y:sumY/sumWeight/h, count, quality };
+}
+function videoAIAutoLoop(ts){
+  if (!videoAI.autoRunning) return;
+  videoAI.autoRaf = requestAnimationFrame(videoAIAutoLoop);
+  if (ts - (videoAI.autoLastTick || 0) < 115) return; // ~8 fps para no saturar móvil
+  videoAI.autoLastTick = ts;
+  const video = $("#videoAiPreview");
+  if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
+  const sampleW = 176;
+  const sampleH = Math.max(72, Math.round(sampleW * (video.videoHeight / video.videoWidth)));
+  const { ctx } = videoAIGetAutoCanvas(sampleW, sampleH);
+  if (!ctx) return;
+  try{
+    ctx.drawImage(video, 0, 0, sampleW, sampleH);
+    const image = ctx.getImageData(0,0,sampleW,sampleH);
+    const current = image.data;
+    videoAI.autoStats.samples = (videoAI.autoStats.samples || 0) + 1;
+    if (videoAI.autoPrevFrame){
+      const found = videoAIDetectBallCandidateFromFrame(current, videoAI.autoPrevFrame, sampleW, sampleH);
+      if (found){
+        const imagePoint = { x:clamp01(found.x), y:clamp01(found.y) };
+        const court = videoAIImagePointToCourtNorm(imagePoint);
+        const candidate = { image:imagePoint, court, ts, quality:found.quality, count:found.count };
+        videoAI.autoTrack.push(candidate);
+        if (videoAI.autoTrack.length > 22) videoAI.autoTrack.shift();
+        videoAI.autoStats.candidates = (videoAI.autoStats.candidates || 0) + 1;
+        videoAIAutoMaybeRegister(candidate);
+        renderVideoAIAutoPanel();
+        renderVideoAIOverlay();
+      }
+    }
+    videoAI.autoPrevFrame = new Uint8ClampedArray(current);
+  }catch(e){
+    console.warn("Video AI auto loop failed", e);
+    stopVideoAIAutoTracking(false);
+    videoAISetAutoStatus("El navegador bloqueó la lectura de frames. Prueba cámara local/HTTPS.");
+  }
+}
+async function startVideoAIAutoTracking(){
+  if ((videoAI.calibrationPoints||[]).length < 4){ toast("Primero calibra la pista"); return; }
+  if (!videoAI.stream) await startVideoAICamera();
+  if (!videoAI.stream){ toast("No hay cámara activa"); return; }
+  videoAIResetAutoTracking(false);
+  videoAI.autoRunning = true;
+  videoAISetAutoStatus("Análisis automático activo. Mantén cámara fija y buena luz.");
+  videoAIStatus("Auto IA activo: detectando candidato de pelota y generando golpes revisables.");
+  renderVideoAIAutoPanel();
+  videoAI.autoRaf = requestAnimationFrame(videoAIAutoLoop);
+}
+function stopVideoAIAutoTracking(showStatus=true){
+  videoAI.autoRunning = false;
+  if (videoAI.autoRaf) cancelAnimationFrame(videoAI.autoRaf);
+  videoAI.autoRaf = null;
+  if (showStatus) videoAISetAutoStatus("Análisis automático detenido. Puedes revisar, borrar o enviar golpes a Analítica.");
+  renderVideoAIAutoPanel();
+  renderVideoAIOverlay();
+}
+function clearVideoAIAutoEvents(){
+  videoAIResetAutoTracking(true);
+  videoAISetAutoStatus("Golpes automáticos limpiados.");
+  videoAIStatus("Golpes automáticos eliminados. El modo asistido se mantiene disponible.");
+}
+function demoVideoAIAutoEvents(){
+  if ((videoAI.calibrationPoints||[]).length < 4){
+    videoAI.calibrationPoints = [{x:.18,y:.82},{x:.82,y:.82},{x:.31,y:.32},{x:.69,y:.32}];
+    renderVideoAICalibrationList();
+  }
+  const now = performance.now();
+  const samples = [
+    [{x:.34,y:.76},{x:.66,y:.38},0,.82],
+    [{x:.64,y:.39},{x:.40,y:.70},900,.74],
+    [{x:.42,y:.69},{x:.71,y:.46},1800,.79],
+    [{x:.70,y:.46},{x:.48,y:.77},2700,.71]
+  ];
+  samples.forEach((pair, idx)=>{
+    const a = { image:pair[0], court:videoAIImagePointToCourtNorm(pair[0]), ts:now+pair[2], quality:pair[3], count:6 };
+    const b = { image:pair[1], court:videoAIImagePointToCourtNorm(pair[1]), ts:now+pair[2]+680, quality:pair[3], count:7 };
+    const ev = videoAIAutoCreateEvent(a,b,pair[3]);
+    if (ev && idx % 2) ev.player = "B";
+  });
+  videoAISetAutoStatus("Demo generada: revisa la lista y envíala a Analítica si quieres probar el flujo.");
+  videoAIStatus("Demo Auto IA creada con trayectorias revisables.");
+  renderVideoAIAssistedPanel();
+  renderVideoAIOverlay();
+}
 function renderVideoAIAssistedPanel(){
   const count = $("#videoAiAssistCount");
   if (count) count.textContent = String((videoAI.assistedEvents||[]).length);
@@ -2756,9 +3038,11 @@ function renderVideoAIAssistedPanel(){
   if (list){
     list.innerHTML = (videoAI.assistedEvents||[]).length ? videoAI.assistedEvents.map((ev,i)=>{
       const speed = ev.speedKmh ? `${ev.speedKmh} km/h` : "—";
-      return `<li><b>${i+1}. ${escapeHtml(playerName(ev.player))}</b> · ${escapeHtml(videoAIAssistShotName(ev.shot))} · ${speed} · ${escapeHtml(videoAIAssistDirectionName(ev.direction))} ${escapeHtml(videoAIAssistDepthName(ev.depth))} <small>${escapeHtml(ev.code)} · ${Math.round((ev.confidence||0)*100)}%</small></li>`;
+      const source = ev.source === "video_ai_auto_reviewable" ? "Auto" : "Manual";
+      return `<li><b>${i+1}. ${escapeHtml(playerName(ev.player))}</b> · <em>${escapeHtml(source)}</em> · ${escapeHtml(videoAIAssistShotName(ev.shot))} · ${speed} · ${escapeHtml(videoAIAssistDirectionName(ev.direction))} ${escapeHtml(videoAIAssistDepthName(ev.depth))} <small>${escapeHtml(ev.code)} · ${Math.round((ev.confidence||0)*100)}%</small></li>`;
     }).join("") : `<li>${tr("Sin golpes asistidos guardados todavía.","No assisted shots saved yet.")}</li>`;
   }
+  renderVideoAIAutoPanel();
   renderVideoAISessionPreview();
 }
 function startVideoAIMark(mode){
@@ -2789,6 +3073,9 @@ function saveVideoAIAssistedEvent(){
     start:{ x:Number(start.x.toFixed(4)), y:Number(start.y.toFixed(4)), court:analysis.courtStart },
     end:{ x:Number(end.x.toFixed(4)), y:Number(end.y.toFixed(4)), court:analysis.courtEnd },
     speedKmh,
+    source:"video_ai_assisted",
+    auto:false,
+    reviewStatus:"accepted",
     createdAt:new Date().toISOString()
   };
   if (shot === "serve"){
@@ -2816,24 +3103,25 @@ function videoAIEventToMatchEvent(ev){
   if (!ev) return null;
   if (ev.shot === "serve"){
     const target = ev.serveTarget || "C";
-    return { type:"serve", player:ev.player, code:`S ${target}`, meta:{ target, source:"video_ai_assisted", confidence:ev.confidence } };
+    return { type:"serve", player:ev.player, code:`S ${target}`, meta:{ target, source:ev.source || "video_ai_assisted", confidence:ev.confidence, speedKmh:ev.speedKmh || null } };
   }
   const prefix = ev.shot === "return" ? "R " : "";
-  return { type:"rally", player:ev.player, code:`${prefix}${ev.code}`, meta:{ shot:ev.shot, direction:ev.direction, depth:ev.depth, source:"video_ai_assisted", confidence:ev.confidence } };
+  return { type:"rally", player:ev.player, code:`${prefix}${ev.code}`, meta:{ shot:ev.shot, direction:ev.direction, depth:ev.depth, source:ev.source || "video_ai_assisted", confidence:ev.confidence, speedKmh:ev.speedKmh || null } };
 }
 function sendVideoAIAssistedToAnalytics(){
   const events = (videoAI.assistedEvents || []).map(videoAIEventToMatchEvent).filter(Boolean);
   if (!events.length){ toast("No hay golpes asistidos para enviar"); return; }
   const winner = $("#videoAiAssistWinner")?.value || events[events.length-1]?.player || "A";
   const n = (state.matchPoints || []).length + 1;
+  const hasAuto = (videoAI.assistedEvents || []).some(ev => ev.source === "video_ai_auto_reviewable");
   const point = {
     n,
     winner,
-    reason:"Vídeo IA asistido",
+    reason: hasAuto ? "Vídeo IA automático revisable" : "Vídeo IA asistido",
     server: events.find(e=>e.type==="serve")?.player || state.currentServer || "A",
     side: serveSideLabel ? serveSideLabel() : "deuce",
-    snapshot:`Vídeo IA asistido · ${events.length} golpes`,
-    finishDetail:{ source:"video_ai_assisted", winner, eventCount:events.length },
+    snapshot:`${hasAuto ? "Vídeo IA automático" : "Vídeo IA asistido"} · ${events.length} golpes`,
+    finishDetail:{ source:hasAuto ? "video_ai_auto_reviewable" : "video_ai_assisted", winner, eventCount:events.length },
     important:false,
     importantNote:"",
     events,
@@ -2997,6 +3285,33 @@ function renderVideoAIOverlay(){
   drawPoint(cur.start,"I","rgba(57,213,255,.92)");
   drawPoint(cur.end,"F","rgba(207,255,75,.95)");
 
+  if (videoAI.autoTrack && videoAI.autoTrack.length){
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,196,66,.82)";
+    ctx.lineWidth = Math.max(2,w*.004);
+    ctx.setLineDash([Math.max(5,w*.008), Math.max(6,w*.01)]);
+    ctx.beginPath();
+    videoAI.autoTrack.forEach((sample,i)=>{
+      const x=sample.image.x*w, y=sample.image.y*h;
+      if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+    const last = videoAI.autoTrack[videoAI.autoTrack.length-1];
+    if (last){
+      const x=last.image.x*w, y=last.image.y*h;
+      ctx.fillStyle = "rgba(255,196,66,.95)";
+      ctx.strokeStyle = "rgba(0,0,0,.55)";
+      ctx.lineWidth = Math.max(2,w*.003);
+      ctx.beginPath(); ctx.arc(x,y,Math.max(7,w*.012),0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#102232";
+      ctx.font = `900 ${Math.max(10,w*.018)}px system-ui, sans-serif`;
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText("AI", x, y);
+    }
+    ctx.restore();
+  }
+
   if (videoAI.calibrationMode && pts.length < 4){
     ctx.save();
     ctx.fillStyle = "rgba(255,255,255,.92)";
@@ -3096,6 +3411,7 @@ async function startVideoAICamera(){
   }
 }
 async function stopVideoAICamera(showToast=true){
+  if (videoAI.autoRunning) stopVideoAIAutoTracking(false);
   if (videoAI.recording) stopVideoAIRecording();
   if (videoAI.stream){
     videoAI.stream.getTracks().forEach(t=>t.stop());
@@ -3171,6 +3487,7 @@ function undoVideoAICalibrationPoint(){
   renderVideoAIOverlay();
 }
 function clearVideoAICalibration(){
+  if (videoAI.autoRunning) stopVideoAIAutoTracking(false);
   videoAI.calibrationPoints = [];
   videoAI.calibrationMode = false;
   videoAI.currentTrajectory = { start:null, end:null };
@@ -3226,6 +3543,7 @@ function openVideoAI(){
   renderVideoAIButtons();
   renderVideoAICalibrationList();
   renderVideoAIAssistedPanel();
+  renderVideoAIAutoPanel();
   renderVideoAISessionPreview();
   resizeVideoAIOverlay();
   listVideoAICameras();
@@ -8348,6 +8666,11 @@ if (ov) ov.addEventListener("click", ()=>setMenuOpen(false));
   on("btnVideoAISaveEvent","click", saveVideoAIAssistedEvent);
   on("btnVideoAISendAnalytics","click", sendVideoAIAssistedToAnalytics);
   on("btnVideoAIClearEvents","click", clearVideoAIAssistedEvents);
+  on("btnVideoAIStartAuto","click", startVideoAIAutoTracking);
+  on("btnVideoAIStopAuto","click", ()=>stopVideoAIAutoTracking(true));
+  on("btnVideoAIClearAuto","click", clearVideoAIAutoEvents);
+  on("btnVideoAIDemoAuto","click", demoVideoAIAutoEvents);
+  on("videoAiAutoSensitivity","change", ()=>{ videoAI.autoAnchor = null; renderVideoAIAutoPanel(); });
   on("videoAiCameraSelect","change", ()=>{ if (videoAI.stream) startVideoAICamera(); });
   const videoAiOverlay = $("#videoAiOverlay");
   if (videoAiOverlay) videoAiOverlay.addEventListener("pointerdown", handleVideoAIOverlayPoint, {passive:false});

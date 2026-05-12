@@ -5,14 +5,14 @@
 // - Imágenes: cache-first
 // v3.45: modo rápido independiente, rail superior horizontal y panel simplificado.
 
-const CACHE = "tennis-tracker-web-v3.46-quick-invertidas";
+const CACHE = "tennis-tracker-web-v3.47-video-ai-auto-reviewable";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=3460",
-  "./style-futuristic.css?v=3460",
-  "./style-premium-direction.css?v=3460",
-  "./app.js?v=3460",
+  "./style.css?v=3470",
+  "./style-futuristic.css?v=3470",
+  "./style-premium-direction.css?v=3470",
+  "./app.js?v=3470",
   "./assets/logo.png",
   "./assets/court_top_view.png",
   "./assets/court_clay.png",

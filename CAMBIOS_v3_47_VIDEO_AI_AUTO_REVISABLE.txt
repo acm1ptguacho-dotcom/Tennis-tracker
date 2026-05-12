@@ -1,0 +1,21 @@
+v3.47 · Vídeo IA automático revisable
+
+Cambios principales:
+- Nuevo panel "Análisis automático revisable" dentro de Vídeo IA.
+- Detección local en navegador por muestreo de frames, sin servidor ni librerías externas.
+- Seguimiento de candidato de pelota mediante diferencia de frames y filtrado de movimiento/tono/brillo.
+- Creación automática de golpes revisables con jugador probable, dirección, profundidad, código táctico, confianza y velocidad estimada.
+- Selector de asignación de jugador: auto por zona, alternar A/B, forzar Jugador A o forzar Jugador B.
+- Selector de sensibilidad: alta detección, equilibrada o más estricta.
+- Métricas en vivo: candidato de pelota, última velocidad estimada y confianza.
+- Trazado visual del candidato IA sobre el vídeo con línea discontinua y marcador AI.
+- Botón "Demo Auto" para probar el flujo sin cámara real.
+- Los golpes automáticos se integran en la misma lista de revisión y pueden enviarse a Analítica táctica.
+- Metadatos de sesión ampliados con fuente, velocidad, auto/revisión, sensibilidad y estadísticas de seguimiento.
+- Mantiene el modo asistido manual como respaldo.
+- Caché actualizada a v3470.
+
+Limitaciones indicadas en la propia interfaz:
+- Es experimental y no sustituye una medición profesional tipo Hawk-Eye.
+- La velocidad es estimada.
+- Funciona mejor con cámara fija, buena luz y pista visible.
