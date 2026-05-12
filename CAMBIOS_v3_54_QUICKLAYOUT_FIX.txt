@@ -1,0 +1,9 @@
+v3.54  (12/05/2026)
+---------------------
+
+* Ajustes adicionales en el diseño del modo rápido para cumplir las nuevas especificaciones de pantalla completa y navegación:
+  * Se garantizó que el rail de acciones pueda desplazarse lateralmente incorporando `white-space: nowrap` y `touch-action: pan-x` para permitir scroll horizontal con el dedo en dispositivos móviles.
+  * Se reforzó la ocultación de la pista en modo rápido añadiendo reglas de CSS con mayor especificidad (`body.quickMode #court`) para evitar que se muestre al abrir o cerrar menús laterales.
+  * El panel de direcciones tiene ahora estilos aún más compactos y no expande el ancho del documento al añadir nuevas fichas.
+  * Preparado el contenedor para que barra, panel de secuencia y cuadro de control puedan ocupar la primera pantalla del teléfono, dejando el resto (marcador, detalles de partido) accesible mediante scroll.
+* Actualizado el número de versión visible a v3.54.

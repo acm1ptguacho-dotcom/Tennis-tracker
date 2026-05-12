@@ -2814,6 +2814,11 @@ body.coachMode .coachObject.dragging{opacity:.88;filter:drop-shadow(0 0 14px rgb
 .quickMode .diagramArea .court{
   display:none !important;
 }
+
+/* En modo rápido la pista debe permanecer oculta incluso cuando se activan otros modos (p. ej. abrir el rail). */
+body.quickMode #court{
+  display:none !important;
+}
 .quickMode .quickModePanel{display:flex;}
 .quickMode .timelineSide{display:block;}
 .quickMode .timelineCard{display:none !important;}
@@ -3015,6 +3020,9 @@ body.quickMode:not(.coachMode) .courtWrap.courtRow{
   overflow-y:hidden !important;
   -webkit-overflow-scrolling:touch !important;
   scrollbar-width:none;
+  /* Evita que los elementos pasen a la siguiente línea, permitiendo el desplazamiento horizontal */
+  white-space:nowrap;
+  touch-action:pan-x;
 }
 .quickMode .courtRail::-webkit-scrollbar{display:none;}
 .quickMode .courtRail .quickItem{
