@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modo rápido – Tennis Direction Tracker</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="logo">Modo&nbsp;rápido</div>
+    </header>
+    <div class="quick-container">
+      <!-- Horizontal toolbar with action icons -->
+      <div class="toolbar">
+        <div class="toolbar-button" title="Marcador"><span>📋</span></div>
+        <div class="toolbar-button" title="Finalizar"><span>🏁</span></div>
+        <div class="toolbar-button" title="Nuevo punto"><span>➕</span></div>
+        <div class="toolbar-button" title="Rotar columnas"><span>🔄</span></div>
+        <div class="toolbar-button" title="Deshacer punto"><span>⏪</span></div>
+        <div class="toolbar-button" title="Deshacer golpe"><span>↩️</span></div>
+        <div class="toolbar-button" title="Reiniciar"><span>🔁</span></div>
+      </div>
+      <div>
+        <h2 class="section-title">Control táctico simple</h2>
+        <select class="player-select">
+          <option>Jugador A</option>
+          <option>Jugador B</option>
+        </select>
+      </div>
+      <div class="commands-grid">
+        <!-- Left column: Revés -->
+        <div class="commands-column">
+          <div class="command-label">REVÉS</div>
+          <button class="command-button">
+            <span class="letter">P</span>
+            <span class="description">Paralelo</span>
+          </button>
+          <button class="command-button">
+            <span class="letter">M</span>
+            <span class="description">Medio</span>
+          </button>
+          <button class="command-button">
+            <span class="letter">X</span>
+            <span class="description">Cruzado</span>
+          </button>
+          <button class="command-button">
+            <span class="letter">IP</span>
+            <span class="description">Inv. Paralela</span>
+          </button>
+          <button class="command-button">
+            <span class="letter">IX</span>
+            <span class="description">Inv. Cruzada</span>
+          </button>
+        </div>
+        <!-- Right column: Derecha -->
+        <div class="commands-column">
+          <div class="command-label">DERECHA</div>
+          <button class="command-button">
+            <span class="letter">P</span>
+            <span class="description">Paralelo</span>
+          </button>
+          <button class="command-button">
+            <span class="letter">M</span>
+            <span class="description">Medio</span>
+          </button>
+          <button class="command-button">
+            <span class="letter">X</span>
+            <span class="description">Cruzado</span>
+          </button>
+          <button class="command-button">
+            <span class="letter">IP</span>
+            <span class="description">Inv. Paralela</span>
+          </button>
+          <button class="command-button">
+            <span class="letter">IX</span>
+            <span class="description">Inv. Cruzada</span>
+          </button>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="action-button undo">Deshacer</button>
+        <button class="action-button end">Punto</button>
+      </div>
+      <div class="history-panel">
+        <!-- Placeholder text: actual history will be rendered via JS -->
+        Historial de golpes aparecerá aquí.
+      </div>
+      <div class="match-info">
+        <span>Sets: 0‑0 • Juegos: 0‑0</span>
+        <span class="score">40‑40</span>
+      </div>
+    </div>
+  </body>
+</html>
