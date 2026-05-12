@@ -9232,9 +9232,14 @@ function renderQuickBoard(stage){
   if (!board) return;
   const q = ensureQuickState();
   const shotColumn = (hand)=>{
-    const title = hand === "FH" ? "Derecha" : "Revés";
+    // Construye una columna para derecha (FH) o revés (BH). Se eliminan los textos redundantes de modo rápido
+    // y solo se incluye un botón de invertida por columna: en revés sólo invertida paralela, en derecha sólo invertida cruzada.
+    const title = hand === "FH" ? tr("Derecha","Forehand") : tr("Revés","Backhand");
     const icon = hand === "FH" ? "D" : "R";
-    return `<div class="quickShotColumn ${hand === "FH" ? "forehand" : "backhand"}" data-hand="${hand}"><h3><span>${icon}</span>${title}</h3><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_P"><b>P</b><span>Paralelo</span></button><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_M"><b>M</b><span>Medio</span></button><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_C"><b>X</b><span>Cruzado</span></button><button class="quickShotBtn inverted" type="button" data-qaction="shot_${hand}_IP"><b>IP</b><span>Inv. paralela</span></button><button class="quickShotBtn inverted" type="button" data-qaction="shot_${hand}_IC"><b>IX</b><span>Inv. cruzada</span></button></div>`;
+    const invertBtn = hand === "FH"
+      ? `<button class="quickShotBtn inverted" type="button" data-qaction="shot_${hand}_IC"><b>IX</b><span>${tr("Inv. cruzada","Inv. cross")}</span></button>`
+      : `<button class="quickShotBtn inverted" type="button" data-qaction="shot_${hand}_IP"><b>IP</b><span>${tr("Inv. paralela","Inv. parallel")}</span></button>`;
+    return `<div class="quickShotColumn ${hand === "FH" ? "forehand" : "backhand"}" data-hand="${hand}"><h3><span>${icon}</span>${title}</h3><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_P"><b>P</b><span>${tr("Paralelo","Parallel")}</span></button><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_M"><b>M</b><span>${tr("Centro","Middle")}</span></button><button class="quickShotBtn" type="button" data-qaction="shot_${hand}_C"><b>X</b><span>${tr("Cruzado","Cross")}</span></button>${invertBtn}</div>`;
   };
   if (stage === "serve"){
     board.className = "quickControlBoard serveBoard";

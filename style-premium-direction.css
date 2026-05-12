@@ -1097,7 +1097,9 @@ body:not(.coachMode) .courtRail{
     radial-gradient(180px 120px at 50% 0%, rgba(174,233,41,.13), transparent 64%),
     linear-gradient(180deg, rgba(17,38,53,.92), rgba(7,18,28,.98))!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 16px 34px rgba(0,0,0,.28)!important;
-  overflow:visible!important;
+  /* Permitir scroll vertical cuando hay más botones que espacio */
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
   align-items:center!important;
   justify-content:flex-start!important;
   align-self:stretch!important;
@@ -2823,7 +2825,8 @@ body.coachMode .coachObject.dragging{opacity:.88;filter:drop-shadow(0 0 14px rgb
   width:100%;
   display:none;
   flex-direction:column;
-  gap:12px;
+  /* Espacios reducidos para que el panel ocupe menos altura en móvil */
+  gap:10px;
   border-radius:30px;
   border:1px solid rgba(155,220,255,.24);
   background:
@@ -2831,8 +2834,9 @@ body.coachMode .coachObject.dragging{opacity:.88;filter:drop-shadow(0 0 14px rgb
     radial-gradient(circle at 84% 18%, rgba(85,215,255,.12), transparent 30%),
     linear-gradient(180deg, rgba(26,58,70,.78), rgba(6,17,28,.94));
   box-shadow:0 22px 58px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.10);
-  padding:14px;
-  min-height:520px;
+  /* Menor padding para reducir márgenes laterales */
+  padding:10px;
+  min-height:0;
 }
 .quickModeHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
 .quickModeHead h1{margin:2px 0 4px;font:900 clamp(30px,6vw,48px)/.9 var(--font-display, 'Barlow Condensed', sans-serif);letter-spacing:.01em;color:#f7fbff;}
@@ -2922,10 +2926,41 @@ body.coachMode .coachObject.dragging{opacity:.88;filter:drop-shadow(0 0 14px rgb
   grid-template-areas:
     "quickRail"
     "quickPanel" !important;
-  gap:10px !important;
-  padding:10px !important;
+  /* Reducimos la separación y el padding para que el cuadro entre mejor en móviles */
+  gap:8px !important;
+  padding:6px !important;
   overflow:visible !important;
   align-items:start !important;
+}
+
+/* Ajustes específicos de botones y márgenes para modo rápido */
+body.quickMode .quickShotBtn{
+  /* Aumentamos padding para que los botones se vean más alargados */
+  padding:14px 10px !important;
+  min-height:72px !important;
+}
+body.quickMode .quickServeBtn{
+  padding:14px 10px !important;
+  min-height:72px !important;
+}
+body.quickMode .quickActionBtn{
+  padding:12px 10px !important;
+  min-height:64px !important;
+}
+
+/* Aseguramos que el modo rápido no se rompa al ocultar marcador o rail: prioridad más alta con body.quickMode */
+body.quickMode:not(.coachMode) .diagramGrid{
+  grid-template-columns:1fr !important;
+  gap:8px !important;
+}
+body.quickMode:not(.coachMode) .courtWrap.courtRow{
+  grid-template-columns:1fr !important;
+  grid-template-rows:auto auto !important;
+  grid-template-areas:
+    "quickRail"
+    "quickPanel" !important;
+  gap:8px !important;
+  padding:6px !important;
 }
 .quickMode .quickModePanel{
   grid-area:quickPanel !important;

@@ -56,7 +56,7 @@
          Actualiza este número cada vez que se genere una nueva versión. -->
     <!-- Versión visible: actualiza este número al generar una nueva revisión -->
     <!-- Actualizamos el número de versión a v3.35 -->
-    <div class="splashVersion" id="splashVersion">v3.51</div>
+    <div class="splashVersion" id="splashVersion">v3.52</div>
   </div>
 </div>
 
@@ -361,11 +361,8 @@
     <div class="diagramGrid">
       <div class="courtWrap courtRow">
       <section class="quickModePanel hidden" id="quickModePanel" aria-label="Modo rápido">
+        <!-- En modo rápido se ocultan los textos de título y se coloca el selector de jugador en la cabecera -->
         <div class="quickModeHead">
-          <div class="quickModeTitle">
-            <span class="quickEyebrow">MODO RÁPIDO</span>
-            <h1>Control táctico simple</h1>
-          </div>
           <label class="quickPlayerPick">Jugador A o B
             <select id="quickTrackedPlayer" class="input">
               <option value="A">Jugador A</option>
@@ -374,7 +371,7 @@
           </label>
         </div>
         <div class="quickRotationToast" id="quickRotationToast" aria-live="polite"></div>
-        <section class="quickControlBoard" id="quickControlBoard" aria-label="Comandos de direcciones"></section>
+        <!-- Panel de direcciones jugadas colocado antes del tablero de botones -->
         <section class="quickSequenceScreen" aria-label="Panel de direcciones">
           <div class="quickStatusLine">
             <span class="quickStatusPill" id="quickPointState">—</span>
@@ -383,6 +380,7 @@
           <div class="quickSequenceChips" id="quickSequenceChips"><span class="muted">Sin direcciones</span></div>
           <button class="quickImportantToggle" id="quickImportantToggle" type="button" aria-pressed="false">★ Punto importante</button>
         </section>
+        <section class="quickControlBoard" id="quickControlBoard" aria-label="Comandos de direcciones"></section>
         <div class="quickMiniSummary" id="quickMiniSummary" aria-live="polite"></div>
       </section>
       <div class="court" id="court">

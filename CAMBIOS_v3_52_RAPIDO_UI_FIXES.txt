@@ -1,0 +1,11 @@
+Cambios v3.52 – Modo rápido y rail corregidos
+--------------------------------------------------
+
+* Se ocultaron los títulos “Modo rápido” y “Control táctico simple” para liberar espacio.
+* El selector de jugador A/B permanece como único elemento de cabecera.
+* El panel de direcciones jugadas (quickSequenceScreen) se colocó antes del tablero de botones de direcciones.
+* Se eliminó un botón de invertida en cada columna de direcciones: en revés sólo queda la “invertida paralela” (IP) y en derecha sólo la “invertida cruzada” (IX).
+* Se redujeron los márgenes y el padding del panel para que todo encaje mejor en pantallas móviles y se aumentó el padding de los botones para que sean más alargados.
+* La estructura de cuadrícula del modo rápido ahora se impone con mayor prioridad usando `body.quickMode` para que no se vea afectada al mostrar u ocultar el marcador o el rail.
+* El rail vertical ahora permite scroll vertical para acceder a todos los botones cuando la lista es larga.
+* Actualizado número de versión visible a `v3.52`.
