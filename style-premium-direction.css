@@ -3575,3 +3575,58 @@ body.video-ai-active #videoAiModal .videoAiPointPanel{
   .videoAiPointControls{grid-template-columns:1fr!important;}
   .videoAiPointActions{grid-template-columns:1fr!important;}
 }
+
+/* v3.55 · Quick mode redesign */
+body.quickMode .scoreTv,
+body.quickMode #scoreSection {
+  display: none !important;
+}
+
+/* Override quick mode button appearance: rectangular glassmorphic style with accent glow */
+body.quickMode .quickServeBtn,
+body.quickMode .quickShotBtn,
+body.quickMode .quickActionBtn,
+body.quickMode .quickFinishOption {
+  border-radius: 6px !important;
+  border: 1px solid rgba(96, 195, 255, 0.38) !important;
+  background: linear-gradient(180deg, rgba(20, 38, 58, 0.92), rgba(4, 12, 20, 0.95)) !important;
+}
+
+/* Highlight good actions (winners) in quick mode */
+body.quickMode .quickServeBtn.good,
+body.quickMode .quickActionBtn.good,
+body.quickMode .quickFinishOption.good {
+  border-radius: 6px !important;
+  border-color: rgba(181, 255, 43, 0.55) !important;
+  background: linear-gradient(180deg, rgba(181, 255, 43, 0.40), rgba(80, 145, 20, 0.52)) !important;
+  color: #f8ffe8 !important;
+}
+
+/* Highlight bad actions (faults) in quick mode */
+body.quickMode .quickServeBtn.bad,
+body.quickMode .quickFinishOption.bad {
+  border-radius: 6px !important;
+  border-color: rgba(255, 92, 112, 0.40) !important;
+  background: linear-gradient(180deg, rgba(122, 45, 67, 0.82), rgba(62, 17, 31, 0.94)) !important;
+}
+
+/* Make columns more rectangular in quick mode */
+body.quickMode .quickShotColumn {
+  border-radius: 6px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(0, 0, 0, 0.14) !important;
+}
+
+/* Ensure the quick mode rail scrolls horizontally */
+body.quickMode .courtRail {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  white-space: nowrap !important;
+  touch-action: pan-x !important;
+}
+
+/* Guarantee that the court diagram never appears in quick mode */
+body.quickMode .court,
+body.quickMode #court {
+  display: none !important;
+}
