@@ -5,7 +5,7 @@
 // - Imágenes: cache-first
 // v3.51: agrupación de golpes confirmados en puntos IA para Analítica.
 
-const CACHE = "tennis-tracker-web-v3.55-quickmode-redesign";
+const CACHE = "tennis-tracker-web-v3.56-quickmode-scroll-fix";
 const CORE = [
   "./",
   "./index.html",

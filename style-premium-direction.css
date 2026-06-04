@@ -3630,3 +3630,14 @@ body.quickMode .court,
 body.quickMode #court {
   display: none !important;
 }
+
+/* Force horizontal rail in quick mode, overriding generic rail styles */
+body.quickMode .courtRail {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  white-space: nowrap !important;
+  touch-action: pan-x !important;
+}
