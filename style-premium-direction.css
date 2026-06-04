@@ -2801,6 +2801,73 @@ body.coachMode .coachObject.dragging{opacity:.88;filter:drop-shadow(0 0 14px rgb
 }
 
 /* v3.44 · Modo rápido */
+/*
+  v3.57 – Quick mode modernisation
+  Para ofrecer un aspecto más profesional y coherente con las tendencias actuales, los botones y paneles
+  de Modo rápido se estilizan con líneas rectas, efecto cristal (glassmorphism) y microanimaciones.
+  Se aplican únicamente cuando el cuerpo está en modo rápido para no afectar al resto de la aplicación.
+*/
+
+/* Modernización de botones en Modo rápido */
+body.quickMode .quickServeBtn,
+body.quickMode .quickShotBtn,
+body.quickMode .quickActionBtn,
+body.quickMode .quickFinishOption {
+  /* Bordes rectos suaves para una sensación más profesional */
+  border-radius: 8px !important;
+  /* Contornos luminosos ligeramente más visibles */
+  border: 1px solid rgba(181, 255, 43, 0.36) !important;
+  /* Fondo translúcido con efecto cristal; el contenido del panel trasero se difumina sutilmente */
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(8px) !important;
+  /* Sombra para añadir profundidad y realzar la jerarquía */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.40), 0 0 14px rgba(181, 255, 43, 0.18) !important;
+  /* Animación suave al pasar el dedo: las transiciones afectan a transformaciones y sombras */
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* Ajuste de tipografía y colores en botones de Modo rápido */
+body.quickMode .quickShotBtn b,
+body.quickMode .quickServeBtn b {
+  color: #e3f4a0 !important;
+  text-shadow: 0 0 16px rgba(181, 255, 43, 0.32) !important;
+}
+
+body.quickMode .quickShotBtn span,
+body.quickMode .quickServeBtn span {
+  color: rgba(240, 250, 255, 0.80) !important;
+}
+
+/* Hover: Eleva ligeramente el botón y realza la sombra */
+body.quickMode .quickServeBtn:hover,
+body.quickMode .quickShotBtn:hover,
+body.quickMode .quickActionBtn:hover,
+body.quickMode .quickFinishOption:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 26px rgba(181, 255, 43, 0.35), 0 0 18px rgba(91, 221, 255, 0.22);
+}
+
+/* Ajuste de columnas y panel de control en Modo rápido */
+body.quickMode .quickShotColumn,
+body.quickMode .quickControlBoard {
+  border-radius: 8px !important;
+  backdrop-filter: blur(8px) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(181, 255, 43, 0.18) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Ajuste de los iconos en cabeceras de columnas */
+body.quickMode .quickShotColumn h3 span {
+  border-radius: 6px !important;
+  background: rgba(181, 255, 43, 0.18) !important;
+  border: 1px solid rgba(181, 255, 43, 0.34) !important;
+}
+
+/* Pequeñas microanimaciones en las columnas al rotar o intercambiar */
+body.quickMode .quickShotColumn {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
 .splashQuickAccess .splashLoginWide{
   grid-column: 1 / -1;
   min-height: 84px;
@@ -2879,6 +2946,32 @@ body.quickMode #court{
   width:100%;
   max-width:100%;
   overflow-x:auto;
+}
+
+/* v3.57 – Moderniza el panel de secuencia en modo rápido */
+body.quickMode .quickSequenceScreen {
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(6px) !important;
+  border: 1px solid rgba(181, 255, 43, 0.20) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+body.quickMode .quickSequenceChips {
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(181, 255, 43, 0.18) !important;
+  backdrop-filter: blur(4px) !important;
+}
+body.quickMode .quickSeqChip {
+  background: linear-gradient(180deg, rgba(181,255,43,0.25), rgba(181,255,43,0.1)) !important;
+  border: 1px solid rgba(181,255,43,0.38) !important;
+  border-radius: 999px !important;
+  color: #f5ffe9 !important;
+  box-shadow: 0 0 10px rgba(181,255,43,0.15);
+}
+body.quickMode .quickSeqChip.b {
+  background: linear-gradient(180deg, rgba(80,220,255,0.22), rgba(80,220,255,0.09)) !important;
+  border-color: rgba(80,220,255,0.38) !important;
 }
 
 .quickMode .quickSeqChip{
