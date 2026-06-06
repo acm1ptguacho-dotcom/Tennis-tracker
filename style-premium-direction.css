@@ -232,7 +232,8 @@ body::after{
 .playerModeBtn,
 .analyticsTabBtn,
 .playerIconBtn{
-  border-radius:16px!important;
+  /* Make action buttons more modern and rectangular by reducing the corner rounding */
+  border-radius:8px!important;
   border:1px solid rgba(172,201,226,.16)!important;
   color:var(--td-premium-text)!important;
   background:

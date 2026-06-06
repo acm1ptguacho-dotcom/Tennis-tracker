@@ -23,7 +23,8 @@
   --bad:#f37774;
   --text:#eef6fb;
   --muted:rgba(224,238,249,.72);
-  --radius:22px;
+  /* Sharpen general rounding on panels and buttons to a more rectangular look. */
+  --radius:8px;
   --shadow:0 22px 60px rgba(1,11,22,.34);
   --shadow2:0 12px 32px rgba(2,10,20,.28);
 }

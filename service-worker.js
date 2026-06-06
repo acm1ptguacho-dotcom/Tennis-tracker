@@ -5,13 +5,14 @@
 // - Imágenes: cache-first
 // v3.51: agrupación de golpes confirmados en puntos IA para Analítica.
 
-const CACHE = "tennis-tracker-web-v3.56-quickmode-scroll-fix";
+// Bump cache version to ensure updated styles and scripts load correctly.
+const CACHE = "tennis-tracker-web-v3.58-futuristic-redesign";
 const CORE = [
   "./",
   "./index.html",
-  "./style.css?v=3510",
-  "./style-futuristic.css?v=3510",
-  "./style-premium-direction.css?v=3510",
+  "./style.css?v=3512",
+  "./style-futuristic.css?v=3512",
+  "./style-premium-direction.css?v=3512",
   "./app.js?v=3510",
   "./assets/logo.png",
   "./assets/court_top_view.png",
